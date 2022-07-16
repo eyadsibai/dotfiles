@@ -1,10 +1,10 @@
- { pkgs, ... }: {
-  home.packages = [ 
-  	pkgs.atool 
-  	pkgs.httpie 
-  	pkgs.micro 
-  	pkgs.firefox
-  	pkgs.htop
+{ pkgs, ... }: {
+  home.packages = [
+    pkgs.atool
+    pkgs.httpie
+    pkgs.micro
+    pkgs.firefox
+    pkgs.htop
     pkgs.ncpamixer
     pkgs.zoom-us
     pkgs.dropbox
@@ -85,7 +85,7 @@
     pkgs.mpd-small
     pkgs.ncmpcpp
     pkgs.mopidy
-#    pkgs.mopidy-spotify
+    #    pkgs.mopidy-spotify
     pkgs.alacritty
     pkgs.rofi
     pkgs.nnn
@@ -162,9 +162,10 @@
     pkgs.gcalcli
     pkgs.spotify-tui
     pkgs.ddgr
-#    pkgs.gitAndTools.grv
+    #    pkgs.gitAndTools.grv
     pkgs.glances
-    pkgs.pulsemixer ];
+    pkgs.pulsemixer
+  ];
   programs.bash.enable = true;
   programs.home-manager.enable = true;
   home.username = "eyad";
@@ -174,15 +175,14 @@
   programs.vscode = {
     enable = true;
     extensions = with pkgs.vscode-extensions; [
-    dracula-theme.theme-dracula
-    vscodevim.vim
-    yzhang.markdown-all-in-one
-    golang.go
-  ];
+      dracula-theme.theme-dracula
+      vscodevim.vim
+      yzhang.markdown-all-in-one
+      golang.go
+    ];
   };
-    
-  
+
   news.display = "silent";
-  home.stateVersion = "22.05";  
- home.sessionVariables = { BROWSER = "/usr/bin/firefox"; };
+  home.stateVersion = "22.05";
+  home.sessionVariables = { BROWSER = "/usr/bin/firefox"; };
 }
