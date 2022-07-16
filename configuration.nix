@@ -5,16 +5,14 @@
 { config, pkgs, home-manager, ... }:
 
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
-
+  imports = [ # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
 
   # Make ready for nix flakes
   nix.package = pkgs.nixFlakes;
   nix.extraOptions = ''
-   experimental-features = nix-command flakes
+    experimental-features = nix-command flakes
   '';
 
   # Use the systemd-boot EFI boot loader.
@@ -25,17 +23,22 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
 
-  boot.kernelModules = [ "fuse" "kvm-amd" "msr" "kvm-intel" "amdgpu" "acpi_call" "usbmon" "usbserial" "timer_stats" ];
+  boot.kernelModules = [
+    "fuse"
+    "kvm-amd"
+    "msr"
+    "kvm-intel"
+    "amdgpu"
+    "acpi_call"
+    "usbmon"
+    "usbserial"
+    "timer_stats"
+  ];
 
-  hardware.enableRedistributableFirmware =
-	    true;
-  
+  hardware.enableRedistributableFirmware = true;
 
   networking.hostName = "eyad-nixos"; # Define your hostname.
   #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-
-
 
   hardware.bluetooth = {
     enable = true;
@@ -45,10 +48,8 @@
   services.blueman.enable = true;
   systemd.coredump.enable = true;
 
-
   hardware.cpu.amd.updateMicrocode = true;
   hardware.enableAllFirmware = true;
-
 
   # Set your time zone.
   time.timeZone = "Asia/Riyadh";
@@ -74,15 +75,14 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
-
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
-  
+
   services.xserver.windowManager.i3.enable = true;
   # Configure keymap in X11
   services.xserver.layout = "us,ar";
-  
+
   services.xserver.xkbOptions = "grp:win_space_toggle";
 
   # Enable CUPS to print documents.
@@ -90,16 +90,16 @@
 
   # Enable sound.
   #sound.enable = true;
-  
- #hardware.pulseaudio = {
- # 	enable = true;
- # 	package = pkgs.pulseaudioFull;
- # };
+
+  #hardware.pulseaudio = {
+  # 	enable = true;
+  # 	package = pkgs.pulseaudioFull;
+  # };
 
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
 
-virtualisation = {
+  virtualisation = {
     docker.enable = false;
 
     virtualbox.host = {
@@ -110,19 +110,17 @@ virtualisation = {
     libvirtd.enable = false;
   };
 
-
-
   services.pipewire = {
- #     config.pipewire = {
- #   "context.properties" = {
-      #"link.max-buffers" = 64;
- #     "link.max-buffers" = 16; # version < 3 clients can't handle more than this
- #     "log.level" = 2; # https://docs.pipewire.org/page_daemon.html
-      #"default.clock.rate" = 48000;
-      #"default.clock.quantum" = 1024;
-      #"default.clock.min-quantum" = 32;
-      #"default.clock.max-quantum" = 8192;
- # };
+    #     config.pipewire = {
+    #   "context.properties" = {
+    #"link.max-buffers" = 64;
+    #     "link.max-buffers" = 16; # version < 3 clients can't handle more than this
+    #     "log.level" = 2; # https://docs.pipewire.org/page_daemon.html
+    #"default.clock.rate" = 48000;
+    #"default.clock.quantum" = 1024;
+    #"default.clock.min-quantum" = 32;
+    #"default.clock.max-quantum" = 8192;
+    # };
 
     enable = true;
     alsa.enable = true;
@@ -132,7 +130,6 @@ virtualisation = {
     jack.enable = true;
   };
 
-
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput.enable = true;
 
@@ -140,15 +137,15 @@ virtualisation = {
   users.users.eyad = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" ]; # Enable ‘sudo’ for the user.
-   };
+  };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-  #   vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-   wget
-   yadm
-   git
+    #   vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    wget
+    yadm
+    git
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -159,11 +156,11 @@ virtualisation = {
   #   enableSSHSupport = true;
   # };
 
-    services.fwupd.enable = true;
-  
-  nixpkgs.config.allowUnfree = true; 
-home-manager.useGlobalPkgs = true;
-  						home-manager.users.eyad = import ./home.nix;
+  services.fwupd.enable = true;
+
+  nixpkgs.config.allowUnfree = true;
+  home-manager.useGlobalPkgs = true;
+  home-manager.users.eyad = import ./home.nix;
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
@@ -171,7 +168,7 @@ home-manager.useGlobalPkgs = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
-  
+
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
