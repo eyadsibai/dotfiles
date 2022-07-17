@@ -103,7 +103,10 @@
   security.rtkit.enable = true;
 
   virtualisation = {
-    docker.enable = false;
+    podman = {
+      enable = true;
+      dockerCompat = true;
+    };
 
     virtualbox.host = {
       enable = true;

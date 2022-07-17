@@ -6,7 +6,6 @@
     pkgs.atool
     pkgs.httpie
     pkgs.micro
-    pkgs.firefox
     pkgs.htop
     pkgs.ncpamixer
     pkgs.zoom-us
