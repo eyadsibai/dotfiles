@@ -149,6 +149,7 @@
     wget
     yadm
     git
+    nixfmt
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -165,7 +166,7 @@
   home-manager.useGlobalPkgs = true;
   home-manager.users.eyad = import ./home.nix;
   # List services that you want to enable:
-  services.fstrim.enable =  true;
+  services.fstrim.enable = true;
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
 
