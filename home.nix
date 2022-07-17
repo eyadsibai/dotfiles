@@ -1,5 +1,9 @@
 { pkgs, ... }: {
+
   home.packages = [
+    pkgs.google-chrome
+    pkgs.wget
+
     pkgs.atool
     pkgs.httpie
     pkgs.micro
@@ -13,7 +17,7 @@
     pkgs.slack
     pkgs.bitwarden-cli
     pkgs.sc-im
-    pkgs.curl
+    pkgs.curlFull.dev
     pkgs.ack
     pkgs.rsync
     pkgs.tmux
@@ -39,7 +43,6 @@
     pkgs.urlscan
     pkgs.s3cmd
     pkgs.mycli
-    pkgs.stig
     pkgs.pyradio
     pkgs.termshark
     pkgs.slack-term
@@ -74,9 +77,9 @@
     pkgs.mpv
     pkgs.teams
     pkgs.highlight
-    pkgs.docker
-    pkgs.docker-compose
-    pkgs.docker-ls
+    # pkgs.docker
+    # pkgs.docker-compose
+    # pkgs.docker-ls
     pkgs.nano
     pkgs.nanorc
     pkgs.maven
@@ -88,6 +91,7 @@
     #    pkgs.mopidy-spotify
     pkgs.alacritty
     pkgs.rofi
+    pkgs.rofi-systemd
     pkgs.nnn
     pkgs.zathura
     pkgs.pdftk
@@ -166,8 +170,9 @@
     pkgs.glances
     pkgs.pulsemixer
   ];
+
   programs.bash.enable = true;
-  programs.home-manager.enable = true;
+
   home.username = "eyad";
   home.homeDirectory = "/home/eyad";
 
@@ -179,8 +184,15 @@
       vscodevim.vim
       yzhang.markdown-all-in-one
       golang.go
+      ms-python.python
+      eamodio.gitlens
+      christian-kohler.path-intellisense
+      ms-vscode-remote.remote-ssh
+      ms-vsliveshare.vsliveshare
     ];
   };
+
+  fonts.fontconfig.enable = true;
 
   news.display = "silent";
   home.stateVersion = "22.05";
