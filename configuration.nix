@@ -16,25 +16,28 @@
   '';
 
   # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  boot.cleanTmpDir = true;
-  boot.supportedFilesystems = [ "ntfs" ];
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
 
-  boot.kernelModules = [
-    "fuse"
-    "kvm-amd"
-    "msr"
-    "kvm-intel"
-    "amdgpu"
-    "acpi_call"
-    "usbmon"
-    "usbserial"
-    "timer_stats"
-  ];
+  boot = {
+    loader.systemd-boot.enable = true;
+    loader.efi.canTouchEfiVariables = true;
+    cleanTmpDir = true;
+    supportedFilesystems = [ "ntfs" ];
+    kernelPackages = pkgs.linuxPackages_latest;
+    kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
+    kernelModules = [
+      "fuse"
+      "kvm-amd"
+      "msr"
+      "kvm-intel"
+      "amdgpu"
+      "acpi_call"
+      "usbmon"
+      "usbserial"
+      "timer_stats"
+    ];
+  };
 
+  # NOTE: required for the wireless card
   hardware.enableRedistributableFirmware = true;
 
   networking.hostName = "eyad-nixos"; # Define your hostname.
