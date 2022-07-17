@@ -26,4 +26,6 @@
 
     };
   };
+
+  programs.kitty.enable = true;
 }
