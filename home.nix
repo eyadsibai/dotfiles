@@ -1,9 +1,12 @@
 { config, pkgs, ... }: {
 
-  imports = [ ./apps/terminal/alacritty.nix
-  ./apps/terminal/bash.nix
-  ./apps/internet/firefox.nix
-  ./apps/programming/vscode.nix ];
+  imports = [
+    ./apps/terminal/alacritty.nix
+    ./apps/terminal/bash.nix
+    ./apps/internet/firefox.nix
+    ./apps/programming/vscode.nix
+    ./apps/utilities/redshift.nix
+  ];
 
   home.packages = [
     pkgs.google-chrome
@@ -196,9 +199,6 @@
   home.keyboard.options = "grp:win_space_toggle";
 
   programs.command-not-found.enable = true;
-  
-
-
 
   fonts.fontconfig.enable = true;
 
