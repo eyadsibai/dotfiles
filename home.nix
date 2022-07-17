@@ -1,9 +1,8 @@
-{ pkgs, ... }: {
+{ config, pkgs, ... }: {
 
   home.packages = [
     pkgs.google-chrome
     pkgs.wget
-
     pkgs.atool
     pkgs.httpie
     pkgs.micro
@@ -190,6 +189,22 @@
       ms-vscode-remote.remote-ssh
       ms-vsliveshare.vsliveshare
     ];
+  };
+
+  programs.firefox = {
+    enable = true;
+    extensions = with pkgs.nur.repos.rycee.firefox-addons; [
+      ublock-origin
+      vimium
+      bitwarden
+      buster-captcha-solver
+    ];
+
+    profiles.default = {
+      id = 0;
+      name = "eyad";
+      isDefault = true;
+    };
   };
 
   fonts.fontconfig.enable = true;
