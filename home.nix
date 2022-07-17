@@ -1,7 +1,7 @@
 { config, pkgs, ... }: {
 
   imports = [
-    ./apps/terminal/terminals.nix
+    ./apps/terminal/terminal.nix
     ./apps/terminal/shell.nix
     ./apps/terminal/terminal_tools.nix
     ./apps/internet/browsers.nix
@@ -9,8 +9,6 @@
     ./apps/utilities/redshift.nix
 
   ];
-
-  fonts_pkgs = with pkgs; [ dejavu_fonts fira-code jetbrains-mono ];
 
   home.packages = [
     #    pkgs.gitAndTools.grv
@@ -114,7 +112,6 @@
     pkgs.qutebrowser
     pkgs.rclone
     pkgs.reaverwps-t6x
-    pkgs.redshift
     pkgs.rlwrap
     pkgs.rmlint
     pkgs.rofi
@@ -135,7 +132,6 @@
     pkgs.st
     pkgs.steam
     pkgs.stig
-    pkgs.sxhkd
     pkgs.sxhkd
     pkgs.sysstat
     pkgs.tdesktop
@@ -174,7 +170,7 @@
     pkgs.zathura
     pkgs.zoom-us
 
-  ] ++ fonts_pkgs;
+  ] ++ [ pkgs.dejavu_fonts pkgs.fira-code pkgs.jetbrains-mono ];
 
   # home.username = "e";
   # home.homeDirectory = "$HOME";
