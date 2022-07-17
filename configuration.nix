@@ -84,9 +84,9 @@
 
   services.xserver.windowManager.i3.enable = true;
   # Configure keymap in X11
-  services.xserver.layout = "us,ar";
+  # services.xserver.layout = "us,ar";
 
-  services.xserver.xkbOptions = "grp:win_space_toggle";
+  # services.xserver.xkbOptions = "grp:win_space_toggle";
 
   # Enable CUPS to print documents.
   services.printing.enable = true;

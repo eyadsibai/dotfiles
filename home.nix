@@ -1,5 +1,7 @@
 { config, pkgs, ... }: {
 
+  imports = [ ./apps/alacritty.nix ];
+
   home.packages = [
     pkgs.google-chrome
     pkgs.wget
@@ -87,7 +89,6 @@
     pkgs.ncmpcpp
     pkgs.mopidy
     #    pkgs.mopidy-spotify
-    pkgs.alacritty
     pkgs.rofi
     pkgs.rofi-systemd
     pkgs.nnn
@@ -167,12 +168,31 @@
     #    pkgs.gitAndTools.grv
     pkgs.glances
     pkgs.pulsemixer
+    pkgs.nerdfonts
+    pkgs.fira-code
+    pkgs.jetbrains-mono
+    pkgs.corefonts
+    pkgs.dejavu_fonts
+    pkgs.source-code-pro
+    pkgs.ubuntu_font_family
+
   ];
 
   programs.bash.enable = true;
+  programs.zsh = {
+    enable = true;
+    oh-my-zsh = {
+      enable = true;
+      plugins = [ "git" "thefuck" ];
+      theme = "robbyrussell";
+    };
+  };
 
-  home.username = "eyad";
-  home.homeDirectory = "/home/eyad";
+  # home.username = "e";
+  # home.homeDirectory = "$HOME";
+  home.enableNixpkgsReleaseCheck = true;
+  home.keyboard.layout = "us,ar";
+  home.keyboard.options = "grp:win_space_toggle";
 
   programs.command-not-found.enable = true;
   programs.vscode = {
@@ -205,6 +225,7 @@
       isDefault = true;
     };
   };
+
 
   fonts.fontconfig.enable = true;
 
