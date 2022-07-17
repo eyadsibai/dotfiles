@@ -1,6 +1,7 @@
 { pkgs, ... }:
 
-{programs.vscode = {
+{
+  programs.vscode = {
     enable = true;
     extensions = with pkgs.vscode-extensions; [
       dracula-theme.theme-dracula
@@ -13,4 +14,5 @@
       ms-vscode-remote.remote-ssh
       ms-vsliveshare.vsliveshare
     ];
-  };}
+  };
+}
