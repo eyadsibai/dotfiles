@@ -1,6 +1,9 @@
 { config, pkgs, ... }: {
 
-  imports = [ ./apps/alacritty.nix ];
+  imports = [ ./apps/terminal/alacritty.nix
+  ./apps/terminal/bash.nix
+  ./apps/internet/firefox.nix
+  ./apps/programming/vscode.nix ];
 
   home.packages = [
     pkgs.google-chrome
@@ -77,9 +80,6 @@
     pkgs.mpv
     pkgs.teams
     pkgs.highlight
-    # pkgs.docker
-    # pkgs.docker-compose
-    # pkgs.docker-ls
     pkgs.nano
     pkgs.nanorc
     pkgs.maven
@@ -175,6 +175,7 @@
     pkgs.dejavu_fonts
     pkgs.source-code-pro
     pkgs.ubuntu_font_family
+    pkgs.whatsapp-for-linux
 
   ];
 
@@ -195,36 +196,8 @@
   home.keyboard.options = "grp:win_space_toggle";
 
   programs.command-not-found.enable = true;
-  programs.vscode = {
-    enable = true;
-    extensions = with pkgs.vscode-extensions; [
-      dracula-theme.theme-dracula
-      vscodevim.vim
-      yzhang.markdown-all-in-one
-      golang.go
-      ms-python.python
-      eamodio.gitlens
-      christian-kohler.path-intellisense
-      ms-vscode-remote.remote-ssh
-      ms-vsliveshare.vsliveshare
-    ];
-  };
+  
 
-  programs.firefox = {
-    enable = true;
-    extensions = with pkgs.nur.repos.rycee.firefox-addons; [
-      ublock-origin
-      vimium
-      bitwarden
-      buster-captcha-solver
-    ];
-
-    profiles.default = {
-      id = 0;
-      name = "eyad";
-      isDefault = true;
-    };
-  };
 
 
   fonts.fontconfig.enable = true;
