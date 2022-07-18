@@ -19,6 +19,18 @@
   programs.chromium = {
     enable = true;
     package = pkgs.google-chrome;
+    extensions = [
+      { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
+      {
+        id = "dcpihecpambacapedldabdbpakmachpb";
+        updateUrl =
+          "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/updates.xml";
+      }
+    ];
   };
+
+  programs.librewolf = { enable = true; };
+
+  programs.qutebrowser = { enable = true; };
 
 }

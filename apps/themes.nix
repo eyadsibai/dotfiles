@@ -1,0 +1,4 @@
+{pkgs, ...}: {
+
+  # programs.gitui.theme
+}
