@@ -27,8 +27,8 @@
   services.dropbox.enable = true;
   services.espanso.enable = true;
   services.flameshot.enable = true;
-  services.fusuma.enable = true;
-  services.git-sync.enable = true;
+  # services.fusuma.enable = true;
+  # services.git-sync.enable = true;
   services.gromit-mpx.enable = true;
   services.hound.enable = true;
   services.mopidy = {
@@ -39,7 +39,7 @@
 
   services.mpd.enable = true;
   services.mpdris2.enable = true;
-  services.playerctl.enable = true;
+  services.playerctld.enable = true;
   services.spotifyd.enable = true;
   services.sxhkd.enable = true;
   services.xcape.enable = true;
