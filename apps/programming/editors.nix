@@ -15,4 +15,19 @@
       ms-vsliveshare.vsliveshare
     ];
   };
+
+  programs.helix = {
+    enable = true;
+    languages = [
+      {
+        auto-format = false;
+        name = "rust";
+      }
+      { name = "python"; }
+    ];
+  };
+
+  programs.neovim = { enable = true; };
+
+  programs.newsboat = { enable = true; };
 }
