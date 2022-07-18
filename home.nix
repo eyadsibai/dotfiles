@@ -6,7 +6,7 @@
     ./apps/terminal/terminal_apps.nix
     ./apps/internet/browsers.nix
     ./apps/programming/editors.nix
-    ./apps/utilities/redshift.nix
+    ./apps/utilities/services.nix
     ./apps/internet/chat.nix
     ./apps/internet/email.nix
     ./apps/programming/langs.nix
