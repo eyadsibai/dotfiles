@@ -155,6 +155,8 @@
   home.keyboard.layout = "us,ar";
   home.keyboard.options = "grp:win_space_toggle";
 
+  home.file.".ackrc".source = ./files/.ackrc;
+
   fonts.fontconfig.enable = true;
 
   news.display = "silent";
