@@ -108,10 +108,10 @@
       dockerCompat = true;
     };
 
-    virtualbox.host = {
-      enable = true;
-      enableExtensionPack = true;
-    };
+    # virtualbox.host = {
+    #   enable = true;
+    #   enableExtensionPack = true;
+    # };
 
     libvirtd.enable = false;
   };
