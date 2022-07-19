@@ -2,6 +2,42 @@
 
   programs.htop = { enable = true; };
 
+  programs.broot = {
+    enable = true;
+    enableBashIntegration = true;
+    enableZshIntegration = true;
+    enableFishIntegration = true;
+    verbs = {
+      "p" = { execution = ":parent"; };
+      "edit" = {
+        shortcut = "e";
+        execution = "$EDITOR {file}";
+      };
+      "ctrl-c" = { execution = ":quit"; };
+      "create {subpath}" = { execution = "$EDITOR {directory}/{subpath}"; };
+      "view" = { execution = "less {file}"; };
+      "blop {name}\\.{type}" = {
+        execution =
+          "/bin/mkdir {parent}/{type} && /usr/bin/nvim {parent}/{type}/{name}.{type}";
+        from_shell = true;
+      };
+    };
+
+  };
+
+  programs.bat = {
+    enable = true;
+    config = { pager = "less -FR"; };
+    themes = {
+      dracula = builtins.readFile (pkgs.fetchFromGitHub {
+        owner = "dracula";
+        repo = "sublime"; # Bat uses sublime syntax for its themes
+        rev = "26c57ec282abcaa76e57e055f38432bd827ac34e";
+        sha256 = "019hfl4zbn4vm4154hh3bwk6hm7bdxbr1hdww83nabxwjn99ndhv";
+      } + "/Dracula.tmTheme");
+    };
+  };
+
   programs.feh = {
     enable = true;
     keybindings = {
