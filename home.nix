@@ -25,7 +25,6 @@
     pkgs.bitwarden
     pkgs.bitwarden-cli
     pkgs.brave
-    pkgs.broot
     pkgs.calcurse
     pkgs.catimg
     pkgs.cava
@@ -89,6 +88,7 @@
     pkgs.pulseaudio-ctl
     pkgs.pulsemixer
     pkgs.pyradio
+    pkgs.rainbowstream
     pkgs.rclone
     pkgs.reaverwps-t6x
     pkgs.rlwrap
@@ -114,6 +114,7 @@
     pkgs.termdown
     pkgs.terminal-parrot
     pkgs.termshark
+    pkgs.tig
     pkgs.thefuck
     pkgs.tldr
     pkgs.tree
