@@ -7,21 +7,31 @@
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableFishIntegration = true;
-    verbs = {
-      "p" = { execution = ":parent"; };
-      "edit" = {
+    verbs = [
+      {
+        invocation = "p";
+        execution = ":parent";
+      }
+      {
+        invocation = "edit";
         shortcut = "e";
         execution = "$EDITOR {file}";
-      };
-      "ctrl-c" = { execution = ":quit"; };
-      "create {subpath}" = { execution = "$EDITOR {directory}/{subpath}"; };
-      "view" = { execution = "less {file}"; };
-      "blop {name}\\.{type}" = {
+      }
+      {
+        invocation = "create {subpath}";
+        execution = "$EDITOR {directory}/{subpath}";
+      }
+      {
+        invocation = "view";
+        execution = "less {file}";
+      }
+      {
+        invocation = "blop {name}\\.{type}";
         execution =
           "/bin/mkdir {parent}/{type} && /usr/bin/nvim {parent}/{type}/{name}.{type}";
         from_shell = true;
-      };
-    };
+      }
+    ];
 
   };
 
