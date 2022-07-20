@@ -7,9 +7,12 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
+    flake-utils.url = "github:numtide/flake-utils";
+    nix-colors.url = "github:misterio77/nix-colors";
   };
 
-  outputs = { self, nixpkgs, home-manager, nixos-hardware, nur, ... }:
+  outputs =
+    { self, nixpkgs, nixos-hardware, nur, home-manager, nix-colors, ... }:
     let
       system = "x86_64-linux";
 
@@ -33,11 +36,18 @@
         eyad-nixos = lib.nixosSystem {
           inherit system pkgs;
 
+          # specialArgs = { inherit inputs; };
+
           modules = [
             nur.nixosModules.nur
             nixos-hardware.nixosModules.lenovo-thinkpad
-            home-manager.nixosModules.home-manager
             ./configuration.nix
+
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.users.eyad = { imports = [ ./home.nix ]; };
+            }
           ];
 
         };

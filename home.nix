@@ -1,4 +1,4 @@
-{ config, pkgs, ... }: {
+{ config, pkgs, nix-colors, ... }: {
 
   imports = [
     ./apps/terminal/terminal.nix
@@ -149,13 +149,13 @@
     pkgs.ubuntu_font_family
   ];
 
-  # home.username = "e";
-  # home.homeDirectory = "$HOME";
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
   home.keyboard.options = "grp:win_space_toggle";
 
-  home.file.".ackrc".source = ./files/.ackrc;
+  # home.file.".ackrc".source = ./files/.ackrc;
+  home.file.".ackrc".source =
+    config.lib.file.mkOutOfStoreSymlink ./files/.ackrc;
 
   fonts.fontconfig.enable = true;
 
