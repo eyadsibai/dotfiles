@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, home-manager, ... }:
+{ config, pkgs, ... }:
 
 {
   imports = [ # Include the results of the hardware scan.
@@ -14,7 +14,7 @@
   nix.extraOptions = ''
     experimental-features = nix-command flakes
   '';
-
+  nix.settings.auto-optimise-store = true;
   # Use the systemd-boot EFI boot loader.
 
   boot = {
@@ -82,7 +82,24 @@
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
 
-  services.xserver.windowManager.i3.enable = true;
+  environment.gnome.excludePackages =
+    (with pkgs; [ gnome-photos gnome-tour kgx ]) ++ (with pkgs.gnome; [
+      cheese # webcam tool
+      gnome-music
+      gnome-terminal
+      gedit # text editor
+      epiphany # web browser
+      geary # email reader
+      evince # document viewer
+      gnome-characters
+      totem # video player
+      tali # poker game
+      iagno # go game
+      hitori # sudoku game
+      atomix # puzzle game
+    ]);
+
+  # services.xserver.windowManager.i3.enable = true;
   # Configure keymap in X11
   # services.xserver.layout = "us,ar";
 
@@ -145,6 +162,9 @@
     extraGroups = [ "wheel" "networkmanager" ]; # Enable ‘sudo’ for the user.
     hashedPassword =
       "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
+    openssh.authorizedKeys.keys = [
+      # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
+    ];
   };
 
   # List packages installed in system profile. To search, run:
@@ -152,7 +172,6 @@
   environment.systemPackages = with pkgs; [
     #   vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
-    yadm
     git
     nixfmt
   ];
@@ -168,12 +187,20 @@
   services.fwupd.enable = true;
 
   nixpkgs.config.allowUnfree = true;
-  home-manager.useGlobalPkgs = true;
-  home-manager.users.eyad = import ./home.nix;
+  # home-manager.useGlobalPkgs = true;
+  # home-manager.users.eyad = import ./home.nix;
   # List services that you want to enable:
   services.fstrim.enable = true;
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
+
+  services.openssh = {
+    enable = true;
+    # Forbid root login through SSH.
+    permitRootLogin = "no";
+    # Use keys only. Remove if you want to SSH using password (not recommended)
+    passwordAuthentication = false;
+  };
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];

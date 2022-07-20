@@ -105,24 +105,25 @@
 
     # diff tool
     delta = { enable = true; };
-    attributes = ["* text=auto"
-    "*.sh text eol=lf"
-    "*.7z filter=lfs diff=lfs merge=lfs -text"
-    "*.br filter=lfs diff=lfs merge=lfs -text"
-    "*.gz filter=lfs diff=lfs merge=lfs -text"
-    "*.tar filter=lfs diff=lfs merge=lfs -text"
-    "*.zip filter=lfs diff=lfs merge=lfs -text"
+    attributes = [
+      "* text=auto"
+      "*.sh text eol=lf"
+      "*.7z filter=lfs diff=lfs merge=lfs -text"
+      "*.br filter=lfs diff=lfs merge=lfs -text"
+      "*.gz filter=lfs diff=lfs merge=lfs -text"
+      "*.tar filter=lfs diff=lfs merge=lfs -text"
+      "*.zip filter=lfs diff=lfs merge=lfs -text"
 
-    "*.pdf filter=lfs diff=lfs merge=lfs -text"
-    "*.gif filter=lfs diff=lfs merge=lfs -text"
-    "*.ico filter=lfs diff=lfs merge=lfs -text"
-    "*.jpg filter=lfs diff=lfs merge=lfs -text"
-    "*.pdf filter=lfs diff=lfs merge=lfs -text"
-    "*.png filter=lfs diff=lfs merge=lfs -text"
-    "*.psd filter=lfs diff=lfs merge=lfs -text"
-    "*.webp filter=lfs diff=lfs merge=lfs -text"
-    "*.woff2 filter=lfs diff=lfs merge=lfs -text"
-    "*.exe filter=lfs diff=lfs merge=lfs -text"
+      "*.pdf filter=lfs diff=lfs merge=lfs -text"
+      "*.gif filter=lfs diff=lfs merge=lfs -text"
+      "*.ico filter=lfs diff=lfs merge=lfs -text"
+      "*.jpg filter=lfs diff=lfs merge=lfs -text"
+      "*.pdf filter=lfs diff=lfs merge=lfs -text"
+      "*.png filter=lfs diff=lfs merge=lfs -text"
+      "*.psd filter=lfs diff=lfs merge=lfs -text"
+      "*.webp filter=lfs diff=lfs merge=lfs -text"
+      "*.woff2 filter=lfs diff=lfs merge=lfs -text"
+      "*.exe filter=lfs diff=lfs merge=lfs -text"
     ];
 
     # diff tool
