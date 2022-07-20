@@ -50,22 +50,7 @@
 
         };
 
-      } //
-
-        flake-utils.lib.eachDefaultSystem (system:
-          let pkgs = nixpkgs.legacyPackages.${system};
-          in rec {
-            devShells = {
-              # default = import ./shell.nix { inherit pkgs; };
-              # cc = import ./shells/cc.nix { inherit pkgs; };
-              # go = import ./shells/go.nix { inherit pkgs; };
-              # grpc = import ./shells/grpc.nix { inherit pkgs; };
-              # java = import ./shells/java.nix { inherit pkgs; };
-              # node = import ./shells/node.nix { inherit pkgs; };
-              python = import ./shells/python.nix { inherit pkgs; };
-              # rust = import ./shells/rust.nix { inherit pkgs; };
-            };
-          });
+      };
 
     };
 

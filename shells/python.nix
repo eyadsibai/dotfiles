@@ -1,13 +1,7 @@
-
-# This file is controlled by /etc/dotfiles/README.org
-{ pkgs ? import <nixpkgs> { } }:
+{ pkgs, ... }:
 
 with pkgs;
 mkShell {
-  buildInputs = [
-    python310Packages.pip
-    python310Packages.pip-tools
-  ];
-  shellHook = ''
-  '';
+  buildInputs = [ python310Packages.pip python310Packages.pip-tools ];
+  shellHook = "";
 }
