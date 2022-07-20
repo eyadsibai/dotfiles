@@ -205,7 +205,7 @@
   #   enable = true;
   # };
 
-  programs.pywal = { enable = true; };
+  programs.pywal = { enable = false; };
 
   programs.rbw = { enable = true; };
 

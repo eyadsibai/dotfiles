@@ -159,6 +159,7 @@
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.eyad = {
     isNormalUser = true;
+    shell = pkgs.zsh;
     extraGroups = [ "wheel" "networkmanager" ]; # Enable ‘sudo’ for the user.
     hashedPassword =
       "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
@@ -187,8 +188,7 @@
   services.fwupd.enable = true;
 
   nixpkgs.config.allowUnfree = true;
-  # home-manager.useGlobalPkgs = true;
-  # home-manager.users.eyad = import ./home.nix;
+
   # List services that you want to enable:
   services.fstrim.enable = true;
   # Enable the OpenSSH daemon.
