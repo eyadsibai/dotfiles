@@ -223,7 +223,7 @@
 
   programs.ssh = { enable = true; };
 
-  programs.starship = { enable = true; };
+  # programs.starship = { enable = true; };
 
   programs.taskwarrior = { enable = true; };
 

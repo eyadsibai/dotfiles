@@ -15,10 +15,10 @@
       theme = "robbyrussell";
     };
 
-    enableAutosuggestions = true;
-    enableCompletion = true;
-    enableSyntaxHighlighting = true;
-    autocd = true;
+    # enableAutosuggestions = true;
+    # enableCompletion = true;
+    # enableSyntaxHighlighting = true;
+    # autocd = true;
   };
 
   programs.fish = { enable = true; };
