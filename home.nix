@@ -121,7 +121,6 @@
     pkgs.w3m
     pkgs.wavemon
     pkgs.wget
-    pkgs.whatsapp-for-linux
     pkgs.wifite2
     pkgs.wine
     pkgs.wireshark-cli
@@ -133,7 +132,7 @@
     pkgs.youtube-dl
     pkgs.yq
 
-  ]
+  ];
 
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
@@ -143,9 +142,8 @@
   home.file.".ackrc".source =
     config.lib.file.mkOutOfStoreSymlink ./files/.ackrc;
 
-  
   # Nicely reload system units when changing configs
-  systemd.user.startServices = "sd-switch";
+  #  systemd.user.startServices = "sd-switch";
 
   news.display = "silent";
   home.stateVersion = "22.05";
