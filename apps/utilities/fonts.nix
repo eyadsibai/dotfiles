@@ -1,4 +1,4 @@
-{ pkgs, ... }: { 
+{ pkgs, ... }: {
 
   home.packages = with pkgs; [
 
@@ -8,9 +8,9 @@
     pkgs.nerdfonts
     pkgs.source-code-pro
     pkgs.ubuntu_font_family
-  
+
   ];
 
-    fonts.fontconfig.enable = true;
+  fonts.fontconfig.enable = true;
 
 }

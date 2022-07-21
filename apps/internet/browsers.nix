@@ -1,6 +1,5 @@
 { config, pkgs, ... }:
 
-
 let addons = pkgs.nur.repos.rycee.firefox-addons;
 in {
 

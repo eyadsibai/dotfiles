@@ -24,7 +24,7 @@
           permittedInsecurePackages = [ "electron-12.2.3" ];
         };
 
-        overlays = [ nur.overlay ];
+        overlays = [ nur.overlay (import ./overlays/whatsapp.nix) ];
 
       };
 

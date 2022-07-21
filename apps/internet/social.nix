@@ -1,21 +1,20 @@
-{ pkgs, ... }: 
+{ pkgs, ... }:
 
-
-
-{ 
+{
   home.packages = with pkgs; [
-        discord
-            signal-desktop
+    discord
+    signal-desktop
     skypeforlinux
     slack
     slack-term
-        zoom-us
+    zoom-us
     element-desktop
-        pkgs.tdesktop
-    pkgs.teams
+    pkgs.tdesktop
+    teams
+    whatsapp-for-linux
+
   ];
-  
-  programs.hexchat = { enable = true; }; 
-  
-  
-  }
+
+  programs.hexchat = { enable = true; };
+
+}
