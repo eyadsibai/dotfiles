@@ -59,12 +59,12 @@
     };
   };
 
-  programs.dircolors = {
-    enable = true;
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-    enableFishIntegration = true;
-  };
+  # programs.dircolors = {
+  #   enable = true;
+  #   enableBashIntegration = true;
+  #   enableZshIntegration = true;
+  #   enableFishIntegration = true;
+  # };
 
   programs.direnv = {
     enable = true;

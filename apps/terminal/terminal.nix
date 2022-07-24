@@ -17,7 +17,7 @@
 
       font = {
         normal.family = "JetbrainsMono Nerd Font";
-        size = 8.0;
+        size = 6.0;
       };
 
       window.opacity = 0.3;
