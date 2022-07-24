@@ -1,4 +1,4 @@
-{pkgs, ...}:
+{ pkgs, ... }:
 
 let
   ac = "#1E88E5";
@@ -23,10 +23,10 @@ let
   quinternary = "#20203d";
 
   # Red
-  urgency = "#e74c3c"; 
+  urgency = "#e74c3c";
 
-  in
-{services.polybar = {
+in {
+  services.polybar = {
     enable = true;
 
     package = pkgs.polybarFull.override {
@@ -508,4 +508,5 @@ let
         content-background = bg;
       };
     };
-  };}
+  };
+}
