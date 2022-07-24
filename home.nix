@@ -18,6 +18,7 @@
   home.packages = [
     #    pkgs.gitAndTools.grv
     #    pkgs.mopidy-spotify
+    pkgs.any-nix-shell
     pkgs.ack
     pkgs.arandr
     pkgs.asciinema
