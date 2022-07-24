@@ -147,8 +147,8 @@ in {
 
         format-muted = "<label-muted>";
         format-muted-padding = 1;
-        # format-muted-foreground = secondary;
-        format-muted-foreground = urgency;
+        format-muted-foreground = secondary;
+        # format-muted-foreground = urgency;
 
         format-muted-background = tertiary;
         # format-muted-prefix = "婢 ";
