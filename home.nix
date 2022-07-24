@@ -12,6 +12,7 @@
     ./apps/programming/langs.nix
     ./apps/utilities/fonts.nix
     ./apps/wm/i3/i3.nix
+    ./apps/office/office.nix
 
   ];
 
