@@ -1,4 +1,5 @@
-services.picom = {
+{ pkgs, ... }: {
+  services.picom = {
     enable = true;
     # package = pkgs.callPackage ../packages/compton-unstable.nix { };
     # experimentalBackends = true;
@@ -38,3 +39,4 @@ services.picom = {
     #   mark-ovredir-focused = true;
     # '';
   };
+}
