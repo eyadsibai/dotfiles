@@ -41,7 +41,10 @@
   hardware.enableRedistributableFirmware = true;
 
   networking.hostName = "eyad-nixos"; # Define your hostname.
-  networking.networkmanager.enable = true;
+  networking.networkmanager = {
+    enable = true;
+    plugins = [ pkgs.networkmanager-openvpn ];
+  };
   #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   hardware.bluetooth = {

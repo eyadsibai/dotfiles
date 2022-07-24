@@ -134,6 +134,7 @@
     pkgs.youtube-dl
     pkgs.yq
     pkgs.brightnessctl
+    pkgs.nixfmt
 
   ];
 
@@ -146,8 +147,8 @@
     config.lib.file.mkOutOfStoreSymlink ./config_files/.ackrc;
 
   home.file.".config/networkmanager-dmenu/config.ini".text = ''
-  [dmenu]
-  dmenu_command = ${pkgs.rofi}/bin/rofi -dmenu
+    [dmenu]
+    dmenu_command = ${pkgs.rofi}/bin/rofi -dmenu
   '';
 
   xsession = {
