@@ -39,7 +39,7 @@
           modules = [
             nur.nixosModules.nur
             nixos-hardware.nixosModules.lenovo-thinkpad
-            ./configuration.nix
+            ./system/configuration.nix
 
             home-manager.nixosModules.home-manager
             {

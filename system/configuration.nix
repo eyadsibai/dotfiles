@@ -1,14 +1,7 @@
 { config, pkgs, ... }:
 
 {
-  imports = [ ./hardware-configuration.nix ];
-
-  nix.package = pkgs.nixFlakes;
-  nix.settings = { auto-optimise-store = true; };
-
-  nix.extraOptions = ''
-    experimental-features = nix-command flakes
-  '';
+  imports = [ ./hardware-configuration.nix ./networking.nix ];
 
   nix = {
     # Automate garbage collection
@@ -16,6 +9,13 @@
       automatic = true;
       dates = "weekly";
       options = "--delete-older-than 7d";
+    };
+
+    package = pkgs.nixFlakes;
+
+    settings = {
+      auto-optimise-store = true;
+      extra-experimental-features = [ "nix-command" "flakes" ];
     };
 
   };
@@ -43,20 +43,6 @@
   # NOTE: required for the wireless card
   hardware.enableRedistributableFirmware = true;
 
-  networking = {
-    hostName = "eyad-nixos";
-    networkmanager = {
-      enable = true;
-      plugins = [ pkgs.networkmanager-openvpn ];
-    };
-    wireless.enable = false; # Enables wireless support via wpa_supplicant.
-    useDHCP = false; # deprecated
-    interfaces = {
-      enp3s0f0.useDHCP = true;
-      wlp1s0.useDHCP = true;
-    };
-  };
-
   hardware.bluetooth = {
     enable = true;
     package = pkgs.bluezFull;
@@ -73,10 +59,6 @@
 
   time.timeZone = "Asia/Riyadh";
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
   console = {
@@ -92,37 +74,15 @@
   services.usbmuxd.enable = true;
 
   # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.displayManager.gdm.wayland = false;
+  # services.xserver.displayManager.gdm.enable = true;
+  # services.xserver.displayManager.gdm.wayland = false;
 
   # services.xserver.desktopManager.gnome.enable = true;
 
-  # services.xserver.displayManager.lightdm.enable = true;
+  services.xserver.displayManager.lightdm.enable = true;
   services.xserver.desktopManager.xterm.enable = true;
 
   services.gnome.gnome-keyring.enable = true;
-
-  # environment.gnome.excludePackages =
-  #   (with pkgs; [ gnome-photos gnome-tour kgx ]) ++ (with pkgs.gnome; [
-  #     cheese # webcam tool
-  #     gnome-music
-  #     gnome-terminal
-  #     gedit # text editor
-  #     epiphany # web browser
-  #     geary # email reader
-  #     evince # document viewer
-  #     gnome-characters
-  #     totem # video player
-  #     tali # poker game
-  #     iagno # go game
-  #     hitori # sudoku game
-  #     atomix # puzzle game
-  #   ]);
-
-  # services.xserver.windowManager.i3 = {
-  #   enable = true;
-  #   package = pkgs.i3-gaps;
-  #   };
 
   # Configure keymap in X11
   services.xserver.layout = "us,ar";
@@ -133,7 +93,7 @@
   services.printing.enable = true;
 
   # Enable sound.
-  sound.enable = true;
+  # sound.enable = true;
 
   # hardware.pulseaudio = {
   # 	enable = false;
@@ -157,39 +117,20 @@
   };
 
   services.pipewire = {
-    #     config.pipewire = {
-    #   "context.properties" = {
-    #"link.max-buffers" = 64;
-    #     "link.max-buffers" = 16; # version < 3 clients can't handle more than this
-    #     "log.level" = 2; # https://docs.pipewire.org/page_daemon.html
-    #"default.clock.rate" = 48000;
-    #"default.clock.quantum" = 1024;
-    #"default.clock.min-quantum" = 32;
-    #"default.clock.max-quantum" = 8192;
-    # };
-
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
     jack.enable = true;
   };
 
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.eyad = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "video"
-      "audio"
-      "plugdev"
-    ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "wheel" "networkmanager" "video" "audio" "plugdev" ];
     hashedPassword =
       "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
     openssh.authorizedKeys.keys = [
@@ -197,8 +138,6 @@
     ];
   };
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
   environment.systemPackages = with pkgs; [ vim wget git ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -220,7 +159,6 @@
 
   services.openssh = {
     enable = true;
-    # Forbid root login through SSH.
     permitRootLogin = "no";
     # Use keys only. Remove if you want to SSH using password (not recommended)
     passwordAuthentication = false;
@@ -245,13 +183,6 @@
       waitPID=$!
     '';
   }];
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
