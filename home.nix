@@ -143,7 +143,13 @@
 
   # home.file.".ackrc".source = ./files/.ackrc;
   home.file.".ackrc".source =
-    config.lib.file.mkOutOfStoreSymlink ./files/.ackrc;
+    config.lib.file.mkOutOfStoreSymlink ./config_files/.ackrc;
+
+  home.file.".config/networkmanager-dmenu/config.ini".text = ''
+  [dmenu]
+  dmenu_command = ${pkgs.rofi}/bin/rofi -dmenu
+  # dmenu_command = /etc/profiles/per-user/eyad/bin/rofi
+  '';
 
   xsession = {
     enable = true;
