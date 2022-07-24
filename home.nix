@@ -28,7 +28,6 @@
     pkgs.aws
     pkgs.bitwarden
     pkgs.bitwarden-cli
-    pkgs.brave
     pkgs.calcurse
     pkgs.catimg
     pkgs.cava
@@ -86,7 +85,6 @@
     pkgs.pdfgrep
     pkgs.pdftk
     pkgs.pgcli
-    pkgs.pulseaudio
     pkgs.pulseaudio-ctl
     pkgs.pulsemixer
     pkgs.pyradio
@@ -136,7 +134,6 @@
     pkgs.yq
     pkgs.brightnessctl
     pkgs.nixfmt
-
   ];
 
   home.enableNixpkgsReleaseCheck = true;

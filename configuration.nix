@@ -133,14 +133,13 @@
   services.printing.enable = true;
 
   # Enable sound.
-  #sound.enable = true;
+  sound.enable = true;
 
-  #hardware.pulseaudio = {
-  # 	enable = true;
+  # hardware.pulseaudio = {
+  # 	enable = false;
   # 	package = pkgs.pulseaudioFull;
   # };
 
-  hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
 
   virtualisation = {
