@@ -49,7 +49,7 @@
       enable = true;
       plugins = [ pkgs.networkmanager-openvpn ];
     };
-    wireless.enable = true; # Enables wireless support via wpa_supplicant.
+    wireless.enable = false; # Enables wireless support via wpa_supplicant.
     useDHCP = false; # deprecated
     interfaces = {
       enp3s0f0.useDHCP = true;
