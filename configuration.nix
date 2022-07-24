@@ -81,7 +81,7 @@
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-  services.xervers.layout = "en";
+  # services.xserver.layout = "en";
   # xkbOptions = "eurosign:e";
 
   services.usbmuxd.enable = true;
@@ -91,32 +91,36 @@
   # services.xserver.desktopManager.gnome.enable = true;
 
   services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.xterm.enable = true;
+  services.xserver.desktopManager.xterm.enable = false;
 
   services.gnome.gnome-keyring.enable = true;
 
-  environment.gnome.excludePackages =
-    (with pkgs; [ gnome-photos gnome-tour kgx ]) ++ (with pkgs.gnome; [
-      cheese # webcam tool
-      gnome-music
-      gnome-terminal
-      gedit # text editor
-      epiphany # web browser
-      geary # email reader
-      evince # document viewer
-      gnome-characters
-      totem # video player
-      tali # poker game
-      iagno # go game
-      hitori # sudoku game
-      atomix # puzzle game
-    ]);
+  # environment.gnome.excludePackages =
+  #   (with pkgs; [ gnome-photos gnome-tour kgx ]) ++ (with pkgs.gnome; [
+  #     cheese # webcam tool
+  #     gnome-music
+  #     gnome-terminal
+  #     gedit # text editor
+  #     epiphany # web browser
+  #     geary # email reader
+  #     evince # document viewer
+  #     gnome-characters
+  #     totem # video player
+  #     tali # poker game
+  #     iagno # go game
+  #     hitori # sudoku game
+  #     atomix # puzzle game
+  #   ]);
 
-  # services.xserver.windowManager.i3.enable = true;
+  # services.xserver.windowManager.i3 = {
+  #   enable = true;
+  #   package = pkgs.i3-gaps;
+  #   };
+
   # Configure keymap in X11
-  # services.xserver.layout = "us,ar";
+  services.xserver.layout = "us,ar";
 
-  # services.xserver.xkbOptions = "grp:win_space_toggle";
+  services.xserver.xkbOptions = "grp:win_space_toggle";
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -232,6 +236,14 @@
       (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
     ];
   };
+
+  services.xserver.desktopManager.session = [{
+    name = "HomeManager";
+    start = ''
+      ${pkgs.runtimeShell} $HOME/.hm-xsession &
+      waitPID=$!
+    '';
+  }];
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
 

@@ -26,6 +26,8 @@ let
 
 in {
   xsession.enable = true;
+  xsession.scriptPath = ".hm-xsession";
+
   xsession.windowManager.i3 = {
     enable = true;
     package = pkgs.i3-gaps;
@@ -118,7 +120,7 @@ in {
   services.polybar = {
     enable = true;
 
-    package = pkgs.polybar.override {
+    package = pkgs.polybarFull.override {
       i3GapsSupport = true;
       alsaSupport = true;
     };
