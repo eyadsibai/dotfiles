@@ -12,7 +12,7 @@ final: prev: {
     };
 
     buildInputs = [
-
+      prev.glib-networking
       prev.gtkmm3
       prev.libayatana-appindicator
       prev.webkitgtk
