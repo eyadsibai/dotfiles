@@ -11,7 +11,7 @@
     ./apps/internet/email.nix
     ./apps/programming/langs.nix
     ./apps/utilities/fonts.nix
-    ./apps/i3.nix
+    ./apps/wm/i3/i3.nix
 
   ];
 
@@ -132,6 +132,7 @@
     pkgs.xdragon
     pkgs.youtube-dl
     pkgs.yq
+    pkgs.brightnessctl
 
   ];
 
@@ -142,6 +143,11 @@
   # home.file.".ackrc".source = ./files/.ackrc;
   home.file.".ackrc".source =
     config.lib.file.mkOutOfStoreSymlink ./files/.ackrc;
+
+  xsession = {
+    enable = true;
+    scriptPath = ".hm-xsession";
+  };
 
   # Nicely reload system units when changing configs
   #  systemd.user.startServices = "sd-switch";

@@ -1,4 +1,5 @@
-{ pkgs, lib, ... }:
+{pkgs, ...}:
+
 let
   ac = "#1E88E5";
   mf = "#383838";
@@ -22,102 +23,10 @@ let
   quinternary = "#20203d";
 
   # Red
-  urgency = "#e74c3c";
+  urgency = "#e74c3c"; 
 
-in {
-  xsession.enable = true;
-  xsession.scriptPath = ".hm-xsession";
-
-  xsession.windowManager.i3 = {
-    enable = true;
-    package = pkgs.i3-gaps;
-
-    config = rec {
-      modifier = "Mod4";
-      bars = [ ];
-
-      window.border = 0;
-
-      gaps = {
-        inner = 15;
-        outer = 5;
-      };
-
-      keybindings = lib.mkOptionDefault {
-        "XF86AudioMute" = "exec amixer set Master toggle";
-        "XF86AudioLowerVolume" = "exec amixer set Master 4%-";
-        "XF86AudioRaiseVolume" = "exec amixer set Master 4%+";
-        "XF86MonBrightnessDown" = "exec brightnessctl set 4%-";
-        "XF86MonBrightnessUp" = "exec brightnessctl set 4%+";
-        "${modifier}+Return" = "exec ${pkgs.alacritty}/bin/alacritty";
-        "${modifier}+d" = "exec ${pkgs.rofi}/bin/rofi -modi drun -show drun";
-        "${modifier}+Shift+d" = "exec ${pkgs.rofi}/bin/rofi -show window";
-        "${modifier}+b" = "exec ${pkgs.brave}/bin/brave";
-        "${modifier}+Shift+x" = "exec systemctl suspend";
-      };
-
-      startup = [
-        {
-          command = "exec i3-msg workspace 1";
-          always = true;
-          notification = false;
-        }
-        {
-          command = "systemctl --user restart polybar.service";
-          always = true;
-          notification = false;
-        }
-        {
-          command = "${pkgs.feh}/bin/feh --bg-scale ~/background.png";
-          always = true;
-          notification = false;
-        }
-      ];
-    };
-  };
-
-  services.picom = {
-    enable = true;
-    # package = pkgs.callPackage ../packages/compton-unstable.nix { };
-    experimentalBackends = true;
-
-    # blur = true;
-    # blurExclude = [ "window_type = 'dock'" "window_type = 'desktop'" ];
-
-    fade = true;
-    fadeDelta = 5;
-
-    shadow = true;
-    shadowOffsets = [ (-7) (-7) ];
-    shadowOpacity = 0.7;
-    shadowExclude = [ "window_type *= 'normal' && ! name ~= ''" ];
-    # noDockShadow = true;
-    # noDNDShadow = true;
-
-    activeOpacity = 1.0;
-    inactiveOpacity = 0.8;
-    menuOpacity = 0.8;
-
-    backend = "glx";
-    vSync = true;
-
-    # settings = ''
-    #   shadow-radius = 7;
-    #   clear-shadow = true;
-    #   frame-opacity = 0.7;
-    #   blur-method = "dual_kawase";
-    #   blur-strength = 5;
-    #   alpha-step = 0.06;
-    #   detect-client-opacity = true;
-    #   detect-rounded-corners = true;
-    #   paint-on-overlay = true;
-    #   detect-transient = true;
-    #   mark-wmwin-focused = true;
-    #   mark-ovredir-focused = true;
-    # '';
-  };
-
-  services.polybar = {
+  in
+{services.polybar = {
     enable = true;
 
     package = pkgs.polybarFull.override {
@@ -599,5 +508,4 @@ in {
         content-background = bg;
       };
     };
-  };
-}
+  };}
