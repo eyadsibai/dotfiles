@@ -41,6 +41,7 @@
   hardware.enableRedistributableFirmware = true;
 
   networking.hostName = "eyad-nixos"; # Define your hostname.
+  networking.networkmanager.enable = true;
   #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   hardware.bluetooth = {
@@ -50,6 +51,9 @@
 
   services.blueman.enable = true;
   systemd.coredump.enable = true;
+  services.tlp.enable = true;
+
+  # hardware.ledger.enable = true;
 
   hardware.cpu.amd.updateMicrocode = true;
   hardware.enableAllFirmware = true;
@@ -70,17 +74,26 @@
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
-  # console = {
-  #   font = "Lat2-Terminus16";
-  #   keyMap = "us";
-  # };
+  console = {
+    font = "Lat2-Terminus16";
+    keyMap = "us";
+  };
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
+  services.xervers.layout = "en";
+  # xkbOptions = "eurosign:e";
+
+  services.usbmuxd.enable = true;
 
   # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  # services.xserver.displayManager.gdm.enable = true;
+  # services.xserver.desktopManager.gnome.enable = true;
+
+  services.xserver.displayManager.lightdm.enable = true;
+  services.xserver.desktopManager.xterm.enable = true;
+
+  services.gnome.gnome-keyring.enable = true;
 
   environment.gnome.excludePackages =
     (with pkgs; [ gnome-photos gnome-tour kgx ]) ++ (with pkgs.gnome; [
@@ -160,7 +173,13 @@
   users.users.eyad = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+      "audio"
+      "plugdev"
+    ]; # Enable ‘sudo’ for the user.
     hashedPassword =
       "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
     openssh.authorizedKeys.keys = [
@@ -174,7 +193,7 @@
     #   vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     git
-    nixfmt
+    # nixfmt
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -202,6 +221,17 @@
     passwordAuthentication = false;
   };
 
+  fonts = {
+    enableDefaultFonts = true;
+    fontDir.enable = true;
+    fonts = with pkgs; [
+      corefonts
+      dejavu_fonts
+      source-code-pro
+      ubuntu_font_family
+      (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
+    ];
+  };
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
 
