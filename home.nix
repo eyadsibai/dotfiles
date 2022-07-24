@@ -11,6 +11,7 @@
     ./apps/internet/email.nix
     ./apps/programming/langs.nix
     ./apps/utilities/fonts.nix
+    ./apps/i3.nix
 
   ];
 
@@ -136,7 +137,7 @@
 
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
-  home.keyboard.options = "grp:win_space_toggle";
+  home.keyboard.options = [ "grp:win_space_toggle" ];
 
   # home.file.".ackrc".source = ./files/.ackrc;
   home.file.".ackrc".source =
