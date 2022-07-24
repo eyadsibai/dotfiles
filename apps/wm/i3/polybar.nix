@@ -362,8 +362,8 @@ in {
       };
 
       "module/wireless-network" = {
-       type = "internal/network";
-       interval = "wlp1s0";
+        type = "internal/network";
+        interval = "wlp1s0";
       };
 
       #--------------------SOLID TRANSITIONS--------------------#
