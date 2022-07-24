@@ -139,7 +139,7 @@ in {
       "module/audio" = {
         type = "internal/alsa";
 
-        format-volume = "墳 VOL <label-volume>";
+        format-volume = "墳 <label-volume>";
         format-volume-padding = 1;
         format-volume-foreground = secondary;
         format-volume-background = tertiary;
@@ -147,13 +147,15 @@ in {
 
         format-muted = "<label-muted>";
         format-muted-padding = 1;
-        format-muted-foreground = secondary;
-        format-muted-background = tertiary;
-        format-muted-prefix = "婢 ";
-        format-muted-prefix-foreground = urgency;
-        format-muted-overline = bg;
+        # format-muted-foreground = secondary;
+        format-muted-foreground = urgency;
 
-        label-muted = "VOL Muted";
+        format-muted-background = tertiary;
+        # format-muted-prefix = "婢 ";
+        # format-muted-prefix-foreground = urgency;
+        format-muted-overline = bg;
+        label-muted = "婢";
+        # label-muted = "VOL Muted";
       };
 
       "module/battery" = {
