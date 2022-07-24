@@ -2,7 +2,7 @@
 
 {
 
-  home.packages = with pkgs; [ pkgs.jetbrains.idea-community ];
+  home.packages = with pkgs; [ jetbrains.idea-community ];
 
   programs.vscode = {
     enable = true;
