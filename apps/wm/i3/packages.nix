@@ -1,4 +1,4 @@
 {pkgs, ...}:
 {
-  home.packages = [pkgs.networkmanager_dmenu pkgs.haskellPackages.network-manager-tui];
+  home.packages = with pkgs; [networkmanager_dmenu haskellPackages.network-manager-tui rofi-rbw];
 }
