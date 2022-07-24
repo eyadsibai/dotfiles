@@ -1,8 +1,6 @@
 { pkgs, lib, ... }: {
 
-  imports = [ ./picom.nix ./polybar.nix  ./packages.nix];
-
-
+  imports = [ ./picom.nix ./polybar.nix ./packages.nix ];
 
   xsession.windowManager.i3 = {
     enable = true;
@@ -21,14 +19,19 @@
 
       keybindings = lib.mkOptionDefault {
         "XF86AudioMute" = "exec ${pkgs.alsaUtils}/bin/amixer set Master toggle";
-        "XF86AudioLowerVolume" = "exec ${pkgs.alsaUtils}/bin/amixer set Master 5%-";
-        "XF86AudioRaiseVolume" = "exec ${pkgs.alsaUtils}/bin/amixer set Master 5%+";
-        "XF86MonBrightnessDown" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set 4%-";
-        "XF86MonBrightnessUp" = "exec ${pkgs.brightnessctl}/bin/brightnessctl set 4%+";
+        "XF86AudioLowerVolume" =
+          "exec ${pkgs.alsaUtils}/bin/amixer set Master 5%-";
+        "XF86AudioRaiseVolume" =
+          "exec ${pkgs.alsaUtils}/bin/amixer set Master 5%+";
+        "XF86MonBrightnessDown" =
+          "exec ${pkgs.brightnessctl}/bin/brightnessctl set 4%-";
+        "XF86MonBrightnessUp" =
+          "exec ${pkgs.brightnessctl}/bin/brightnessctl set 4%+";
         "${modifier}+Return" = "exec ${pkgs.alacritty}/bin/alacritty";
         "${modifier}+d" = "exec ${pkgs.rofi}/bin/rofi -modi drun -show drun";
         "${modifier}+Shift+d" = "exec ${pkgs.rofi}/bin/rofi -show window";
-        "${modifier}+n" = "exec ${pkgs.networkmanager_dmenu}/bin/networkmanager_dmenu";
+        "${modifier}+n" =
+          "exec ${pkgs.networkmanager_dmenu}/bin/networkmanager_dmenu";
         "${modifier}+p" = "exec ${pkgs.rofi-rbw}/bin/rofi-rbw";
 
         "${modifier}+Shift+x" = "exec systemctl suspend";

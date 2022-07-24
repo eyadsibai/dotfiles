@@ -43,5 +43,4 @@
   services.spotifyd.enable = true;
   services.sxhkd.enable = true;
   services.xcape.enable = true;
-  # services.polybar.enable = true;
 }

@@ -12,6 +12,8 @@
     pkgs.tdesktop
     teams
     whatsapp-for-linux
+    gitter
+    cawbird
 
   ];
 

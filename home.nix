@@ -53,7 +53,6 @@
     pkgs.gcalcli
     pkgs.git-crypt
     pkgs.gitAndTools.tig
-    pkgs.gitter
     pkgs.glances
     pkgs.gotop
     pkgs.gtop
@@ -63,7 +62,6 @@
     pkgs.httping
     pkgs.jp2a
     pkgs.khal
-    pkgs.maven
     pkgs.mc
     pkgs.mediainfo
     pkgs.mpc_cli
@@ -85,7 +83,6 @@
     pkgs.pdfgrep
     pkgs.pdftk
     pkgs.pgcli
-    pkgs.pulseaudio-ctl
     pkgs.pulsemixer
     pkgs.pyradio
     pkgs.rainbowstream
@@ -134,6 +131,7 @@
     pkgs.yq
     pkgs.brightnessctl
     pkgs.nixfmt
+    pkgs.bpytop
   ];
 
   home.enableNixpkgsReleaseCheck = true;
