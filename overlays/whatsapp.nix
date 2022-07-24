@@ -16,6 +16,11 @@ final: prev: {
       prev.gtkmm3
       prev.libayatana-appindicator
       prev.webkitgtk
+      prev.gst_all_1.gst-libav
+      prev.gst_all_1.gst-plugins-bad
+      prev.gst_all_1.gst-plugins-base
+      prev.gst_all_1.gst-plugins-good
+
     ];
   });
 }
