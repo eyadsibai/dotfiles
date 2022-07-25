@@ -212,6 +212,8 @@
   programs.rofi = {
     enable = true;
     plugins = [ pkgs.rofi-calc ];
+    terminal = "${pkgs.alacritty}/bin/alacritty";
+    theme = "${pkgs.rofi}/share/rofi/themes/DarkBlue.rasi";
   };
 
   programs.skim = {
