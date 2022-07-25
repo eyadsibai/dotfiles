@@ -9,10 +9,14 @@
     nur.url = "github:nix-community/NUR";
     flake-utils.url = "github:numtide/flake-utils";
     nix-colors.url = "github:misterio77/nix-colors";
+    fenix = {
+      url = "github:nix-community/fenix"; # rust
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, nixos-hardware, nur, home-manager, nix-colors
-    , flake-utils, ... }:
+    , flake-utils, fenix, ... }:
     let
       system = "x86_64-linux";
 
@@ -43,7 +47,7 @@
             home-manager.nixosModules.home-manager
             {
               home-manager.useGlobalPkgs = true;
-              # home-manager.useUserPackages = true;
+              home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "backup";
               home-manager.users.eyad = { imports = [ ./home.nix ]; };
             }
@@ -51,17 +55,20 @@
         };
       };
     } // (flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = nixpkgs.legacyPackages.${system};
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        fenixPkgs = fenix.packages.${system};
       in {
         devShells = {
-          default = import ./shells/shell.nix { inherit pkgs; };
+          default = import ./shell.nix { inherit pkgs; };
           cc = import ./shells/cc.nix { inherit pkgs; };
           go = import ./shells/go.nix { inherit pkgs; };
           java = import ./shells/java.nix { inherit pkgs; };
           node = import ./shells/node.nix { inherit pkgs; };
           python = import ./shells/python.nix { inherit pkgs; };
-          rust = import ./shells/rust.nix { inherit pkgs; };
+          rust = import ./shells/rust.nix { inherit pkgs fenixPkgs; };
           ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
+          sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
           # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
         };
       }));

@@ -16,6 +16,7 @@
       christian-kohler.path-intellisense
       ms-vscode-remote.remote-ssh
       ms-vsliveshare.vsliveshare
+      jnoortheen.nix-ide
     ];
   };
 

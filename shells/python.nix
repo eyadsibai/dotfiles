@@ -2,6 +2,6 @@
 
 with pkgs;
 mkShell {
-  buildInputs = [ python310Packages.pip python310Packages.pip-tools ];
+  buildInputs = with python310Packages; [ pip pip-tools black flake8 ];
   shellHook = "";
 }
