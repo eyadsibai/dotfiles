@@ -207,11 +207,18 @@
 
   programs.pywal = { enable = false; };
 
-  programs.rbw = { enable = true; };
+  programs.rbw = {
+    enable = true;
+    settings = {
+      email = "eyad.alsibai@gmail.com";
+      lock_timeout = 172800;
+      pinentry = "tty";
+    };
+  };
 
   programs.rofi = {
     enable = true;
-    plugins = [ pkgs.rofi-calc ];
+    plugins = [ pkgs.rofi-calc pkgs.rofi-emoji pkgs.rofimoji ];
     terminal = "${pkgs.alacritty}/bin/alacritty";
     theme = "${pkgs.rofi}/share/rofi/themes/DarkBlue.rasi";
   };

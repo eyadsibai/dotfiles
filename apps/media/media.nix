@@ -1,4 +1,4 @@
 { pkgs, ... }: {
 
-  home.packages = with pkgs; [ spotify-tui ];
+  home.packages = with pkgs; [ spotify-tui spotify ];
 }

@@ -19,10 +19,10 @@ mkShell {
     python310Packages.mlflow
     tensorflow-lite
     python310Packages.tensorflow
-    python310Packages.shap
+    #python310Packages.shap
     python310Packages.pytorch
     python310Packages.pytorch-lightning
-    python310Packages.pytorch-metric-learning
+    # python310Packages.pytorch-metric-learning
     dvc
     # python310Packages.pyjanitor
 

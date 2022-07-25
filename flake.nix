@@ -53,7 +53,20 @@
         };
 
       };
-
-    };
+    } // (flake-utils.lib.eachDefaultSystem (system:
+      let pkgs = nixpkgs.legacyPackages.${system};
+      in {
+        devShells = {
+          default = import ./shells/shell.nix { inherit pkgs; };
+          cc = import ./shells/cc.nix { inherit pkgs; };
+          go = import ./shells/go.nix { inherit pkgs; };
+          java = import ./shells/java.nix { inherit pkgs; };
+          node = import ./shells/node.nix { inherit pkgs; };
+          python = import ./shells/python.nix { inherit pkgs; };
+          rust = import ./shells/rust.nix { inherit pkgs; };
+          ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
+          # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
+        };
+      }));
 
 }
