@@ -13,6 +13,7 @@
     ./apps/utilities/fonts.nix
     ./apps/wm/i3/i3.nix
     ./apps/office/office.nix
+    ./custom_config/default.nix
 
   ];
 
@@ -138,14 +139,6 @@
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
   home.keyboard.options = [ "grp:win_space_toggle" ];
-
-  home.file.".ackrc".source =
-    config.lib.file.mkOutOfStoreSymlink ./config_files/.ackrc;
-
-  home.file.".config/networkmanager-dmenu/config.ini".text = ''
-    [dmenu]
-    dmenu_command = ${pkgs.rofi}/bin/rofi -dmenu
-  '';
 
   xsession = {
     enable = true;
