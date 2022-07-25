@@ -43,6 +43,10 @@
     pkgs.corefonts
     pkgs.curlFull.dev
     pkgs.curseofwar
+    pkgs.dive
+    pkgs.cntr
+    pkgs.bridge-utils
+    pkgs.tcpdump
     pkgs.ddgr
     pkgs.dialog
     pkgs.ditaa
