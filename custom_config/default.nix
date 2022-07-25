@@ -1,4 +1,5 @@
 {pkgs, ...}:{
 
-  imports = [./networkmanager_dmenu.nix];
+  imports = [./networkmanager_dmenu.nix
+  ./ack.nix];
 }
