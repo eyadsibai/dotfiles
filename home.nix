@@ -82,8 +82,6 @@
     pkgs.nitrogen
     pkgs.nload
     pkgs.pavucontrol
-    pkgs.pdfgrep
-    pkgs.pdftk
     pkgs.pgcli
     pkgs.pulsemixer
     pkgs.pyradio
@@ -97,8 +95,6 @@
     pkgs.sc-im
     pkgs.screenkey
     pkgs.speedtest-cli
-    pkgs.spotify
-    pkgs.spotify-tui
     pkgs.st
     pkgs.steam
     pkgs.stig
@@ -122,7 +118,6 @@
     pkgs.wavemon
     pkgs.wget
     pkgs.wifite2
-    pkgs.wine
     pkgs.wireshark-cli
     pkgs.wpgtk
     pkgs.xclip

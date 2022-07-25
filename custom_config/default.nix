@@ -1,5 +1,4 @@
-{pkgs, ...}:{
+{ pkgs, ... }: {
 
-  imports = [./networkmanager_dmenu.nix
-  ./ack.nix];
+  imports = [ ./networkmanager_dmenu.nix ./ack.nix ];
 }
