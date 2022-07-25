@@ -19,6 +19,8 @@
   home.packages = [
     #    pkgs.gitAndTools.grv
     #    pkgs.mopidy-spotify
+    pkgs.xsel
+    pkgs.xclip
     pkgs.any-nix-shell
     pkgs.ack
     pkgs.arandr
@@ -31,7 +33,6 @@
     pkgs.calcurse
     pkgs.catimg
     pkgs.cava
-    pkgs.cawbird
     pkgs.chafa
     pkgs.clerk
     pkgs.cli-visualizer
