@@ -31,7 +31,6 @@
       lib = nixpkgs.lib;
 
     in {
-
       nixosConfigurations = {
         eyad-nixos = lib.nixosSystem {
           inherit system pkgs;
@@ -49,9 +48,7 @@
               home-manager.users.eyad = { imports = [ ./home.nix ]; };
             }
           ];
-
         };
-
       };
     } // (flake-utils.lib.eachDefaultSystem (system:
       let pkgs = nixpkgs.legacyPackages.${system};
