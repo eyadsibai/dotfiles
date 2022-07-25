@@ -216,12 +216,6 @@
     };
   };
 
-  programs.rofi = {
-    plugins = [ pkgs.rofi-calc pkgs.rofi-emoji pkgs.rofimoji ];
-    terminal = "${pkgs.alacritty}/bin/alacritty";
-    theme = "${pkgs.rofi}/share/rofi/themes/DarkBlue.rasi";
-  };
-
   programs.skim = {
     enable = true;
     enableBashIntegration = true;

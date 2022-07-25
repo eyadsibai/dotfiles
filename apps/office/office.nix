@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{ config, pkgs, inputs, ... }: {
 
   home.packages = [ pkgs.pdfgrep pkgs.pdftk ];
 
@@ -6,5 +6,5 @@
 
   programs.texlive.enable = true;
 
-  programs.zathura.enable = true;
+  programs.zathura = {enable = true;};
 }
