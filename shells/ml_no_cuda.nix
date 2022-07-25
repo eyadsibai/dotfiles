@@ -10,8 +10,8 @@ mkShell {
     python310Packages.numpy
     python310Packages.scipy
     python310Packages.jupyter
+    python310Packages.ipython
     python310Packages.thinc
-
     vowpal-wabbit
     python310Packages.vowpalwabbit
     python310Packages.imgaug
@@ -25,7 +25,6 @@ mkShell {
     # python310Packages.pytorch-metric-learning
     dvc
     # python310Packages.pyjanitor
-
   ];
   shellHook = "";
 }
