@@ -13,8 +13,8 @@
       window.border = 0;
 
       gaps = {
-        inner = 15;
-        outer = 5;
+        inner = 14;
+        outer = -2;
       };
 
       keybindings = lib.mkOptionDefault {

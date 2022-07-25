@@ -13,10 +13,28 @@
       url = "github:nix-community/fenix"; # rust
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+     base16.url = github:SenchoPens/base16.nix;
+     base16.inputs.nixpkgs.follows = "nixpkgs";
+
+     base16-schemes = {
+    url = github:base16-project/base16-schemes;
+    flake = false;
+    };
+
+  base16-zathura = {
+    url = github:haozeke/base16-zathura;
+    flake = false;
+  };
+
+  base16-vim = {
+    url = github:base16-project/base16-vim;
+    flake = false;
+  };
   };
 
   outputs = { self, nixpkgs, nixos-hardware, nur, home-manager, nix-colors
-    , flake-utils, fenix, ... }:
+    , flake-utils, fenix, base16, base16-schemes, ... } @inputs:
     let
       system = "x86_64-linux";
 
@@ -39,7 +57,10 @@
         eyad-nixos = lib.nixosSystem {
           inherit system pkgs;
 
+
           modules = [
+            # base16.nixosModule
+            # { scheme = "${base16-schemes}/nord.yaml"; }
             nur.nixosModules.nur
             nixos-hardware.nixosModules.lenovo-thinkpad
             ./system/configuration.nix
@@ -49,9 +70,17 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "backup";
-              home-manager.users.eyad = { imports = [ ./home.nix ]; };
+              home-manager.users.eyad = { imports = [ ./home.nix
+              # ./theming.nix
+              ]; };
+
             }
+
           ];
+
+          specialArgs = {
+          inherit inputs;
+          };
         };
       };
     } // (flake-utils.lib.eachDefaultSystem (system:
