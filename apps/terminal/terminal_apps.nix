@@ -145,7 +145,7 @@
 
   programs.just = {
     enable = true;
-    # enableZshIntegration = true;
+    enableZshIntegration = true;
     enableBashIntegration = true;
     enableFishIntegration = true;
   };
@@ -163,7 +163,7 @@
   programs.mcfly = {
     enable = true;
     enableBashIntegration = true;
-    # enableZshIntegration = true;
+    enableZshIntegration = true;
     enableFishIntegration = true;
   };
 
@@ -177,7 +177,7 @@
   programs.navi = {
     enable = true;
     enableBashIntegration = true;
-    # enableZshIntegration = true;
+    enableZshIntegration = true;
     enableFishIntegration = true;
   };
 
@@ -189,7 +189,7 @@
   programs.nix-index = {
     enable = true;
     enableBashIntegration = true;
-    # enableZshIntegration = true;
+    enableZshIntegration = true;
     enableFishIntegration = true;
   };
 
@@ -205,7 +205,7 @@
   #   enable = true;
   # };
 
-  programs.pywal = { enable = false; };
+  # programs.pywal = { enable = false; };
 
   programs.rbw = {
     enable = true;
