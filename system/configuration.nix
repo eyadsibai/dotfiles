@@ -20,7 +20,7 @@
 
   };
 
-# Thermals and cooling
+  # Thermals and cooling
   services.thermald.enable = true;
 
   boot = {
@@ -101,21 +101,19 @@
     xkbOptions = "grp:win_space_toggle,eurosign:e";
   };
 
-
   services.usbmuxd.enable = true;
 
   services.gnome.gnome-keyring.enable = true;
 
   services.netdata = {
-   enable = true;
-   config = {
-     global = {
-       "default port" = "19999";
-       "bind to" = "127.0.0.1";
-     };
-   };
+    enable = true;
+    config = {
+      global = {
+        "default port" = "19999";
+        "bind to" = "127.0.0.1";
+      };
+    };
   };
-
 
   # this is required for mounting android phones over mtp://
   services.gvfs.enable = true;
