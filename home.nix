@@ -1,18 +1,11 @@
 { config, pkgs, nix-colors, ... }: {
 
   imports = [
-    ./apps/terminal/terminal.nix
-    ./apps/terminal/shell.nix
-    ./apps/terminal/terminal_apps.nix
-    ./apps/internet/browsers.nix
-    ./apps/programming/editors.nix
-    ./apps/utilities/services.nix
-    ./apps/internet/social.nix
-    ./apps/internet/email.nix
-    ./apps/programming/langs.nix
-    ./apps/utilities/fonts.nix
-    ./apps/wm/i3/i3.nix
-    ./apps/office/office.nix
+    ./apps/terminal/default.nix
+    ./apps/internet/default.nix
+    ./apps/programming/default.nix
+    ./apps/others/default.nix
+    ./apps/wm/i3/default.nix
     ./custom_config/default.nix
 
   ];
@@ -37,7 +30,7 @@
     bridge-utils
     brightnessctl
     cachix # nix caching
-    calcurse
+    calcurse # A calendar and scheduling application for the command line
     calibre # e-book reader
     catimg
     cava
@@ -73,6 +66,7 @@
     glow # terminal markdown viewer
     gnomecast # chromecast local files
     gotop
+    gotty
     gtop
     hakuneko
     haxor-news
@@ -96,6 +90,7 @@
     mpvScripts.convert
     mpvScripts.mpris
     multilockscreen # fast lockscreen based on i3lock
+    mosh # ssh replacesment
     mycli
     nano
     nanorc
@@ -120,6 +115,7 @@
     pyradio
     rainbowstream
     ranger # terminal file explorer
+    remind
     rclone
     reaverwps-t6x
     ripgrep # fast grep
@@ -139,6 +135,8 @@
     sysstat
     tcpdump
     teamviewer
+    teleport
+    tmate
     termdown
     terminal-parrot
     termshark
@@ -168,6 +166,7 @@
     yad # yet another dialog - fork of zenity
     youtube-dl
     yq
+    vdirsyncer
     zip
   ];
 

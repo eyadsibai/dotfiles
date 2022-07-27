@@ -1,5 +1,39 @@
 { pkgs, ... }: {
 
+  home.packages = with pkgs; [
+    swaglyrics
+    streamlink
+    # clog-cli
+    doing
+    buku
+    papis
+    timetrap
+    timewarrior
+    eureka-ideas
+    taskell
+    nb
+    ledger
+    ticker
+    sent
+    bandwhich
+    up
+    ts
+    yank
+    yq
+    glances
+    tiptop
+    libqalculate
+    wego
+    translate-shell
+    visidata
+    dasel
+    iredis
+    usql
+    lazydocker
+    wp-cli
+    http-prompt
+  ];
+
   programs.htop = {
     enable = true;
     settings = {

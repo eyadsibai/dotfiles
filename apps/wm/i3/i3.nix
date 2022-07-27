@@ -1,7 +1,5 @@
 { pkgs, lib, ... }: {
 
-  imports = [ ./picom.nix ./polybar.nix ./packages.nix ];
-
   xsession.windowManager.i3 = {
     enable = true;
     package = pkgs.i3-gaps;

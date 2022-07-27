@@ -60,8 +60,10 @@
 
   services.blueman.enable = true;
   systemd.coredump.enable = true;
-  services.tlp = {enable = true;
-  settings = {USB_AUTOSUSPEND=0;};};
+  services.tlp = {
+    enable = true;
+    settings = { USB_AUTOSUSPEND = 0; };
+  };
 
   # hardware.ledger.enable = true;
 
