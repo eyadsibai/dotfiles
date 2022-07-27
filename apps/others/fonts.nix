@@ -10,7 +10,7 @@
     font-awesome # awesome fonts
     material-design-icons # fonts with glyphs
     ubuntu_font_family
-
+    line-awesome
   ];
 
   fonts.fontconfig.enable = true;
