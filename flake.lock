@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1658255652,
-        "narHash": "sha256-Uzb9wmFfKTcv12UjPNA+qUxpMrkJt1GLjZ4ZMyCZqgE=",
+        "lastModified": 1658847131,
+        "narHash": "sha256-X6Mml7cT0YR3WCD5fkUhpRVV5ZPcwdcDsND8r8xMqTE=",
         "owner": "SenchoPens",
         "repo": "base16.nix",
-        "rev": "4b57d524bbcbc3cdb0ee3de3f0c025dbc861732c",
+        "rev": "6b404cda2e04ca3cf5ca7b877af9c469e1386acb",
         "type": "github"
       },
       "original": {
@@ -55,11 +55,11 @@
     "base16-vim": {
       "flake": false,
       "locked": {
-        "lastModified": 1658528784,
-        "narHash": "sha256-UZ0odVrkqtAsuRMCQdM0TMhCUYidlfZMNDHwwYSqBuI=",
+        "lastModified": 1658866499,
+        "narHash": "sha256-C+Gfh8Eq0kCyO6dcas1jhwZIpO51A4344qYrUxGmcho=",
         "owner": "base16-project",
         "repo": "base16-vim",
-        "rev": "c9abf3eda38291e63ef8096d5142c41a170d2486",
+        "rev": "ea08faf4487f755c90924376927e619325593762",
         "type": "github"
       },
       "original": {
@@ -207,11 +207,11 @@
     },
     "nur": {
       "locked": {
-        "lastModified": 1658766050,
-        "narHash": "sha256-c6iyt3h3crC7NPf6YTD4G+Y3HEwVjuZYOSaMSzMqVXM=",
+        "lastModified": 1658900208,
+        "narHash": "sha256-vIbno0dPXnbrUAU/4Rj5+hhJoQ5o4a/VxJZpJcZHnhY=",
         "owner": "nix-community",
         "repo": "NUR",
-        "rev": "2599e014153184576a261f3d6634fed4285797c9",
+        "rev": "4c8757b1a5ea02fe50c28707618de0e7d12d4851",
         "type": "github"
       },
       "original": {

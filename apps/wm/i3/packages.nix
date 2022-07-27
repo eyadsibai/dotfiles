@@ -6,7 +6,7 @@
     alsaUtils
   ];
 
-    programs.rofi = {
+  programs.rofi = {
     enable = true;
     plugins = [ pkgs.rofi-calc pkgs.rofi-emoji pkgs.rofimoji ];
     terminal = "${pkgs.alacritty}/bin/alacritty";

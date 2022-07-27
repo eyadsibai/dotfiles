@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 
 {
-  imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix];
+  imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ];
 
   nix = {
     # Automate garbage collection
@@ -21,12 +21,22 @@
   };
 
   boot = {
-    loader.systemd-boot.enable = true;
+    loader.systemd-boot = {
+      enable = true;
+      # Bigger console font
+      consoleMode = "2";
+      # Prohibits gaining root access by passing init=/bin/sh as a kernel parameter
+      editor = false;
+      # memtest86.enable = true;
+    };
+
+    plymouth.enable = true;
     loader.efi.canTouchEfiVariables = true;
     cleanTmpDir = true;
     supportedFilesystems = [ "ntfs" ];
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
+
     kernelModules = [
       "fuse"
       "kvm-amd"
@@ -50,7 +60,8 @@
 
   services.blueman.enable = true;
   systemd.coredump.enable = true;
-  services.tlp.enable = true;
+  services.tlp = {enable = true;
+  settings = {USB_AUTOSUSPEND=0;};};
 
   # hardware.ledger.enable = true;
 
@@ -106,7 +117,6 @@
     libvirtd.enable = false;
   };
 
-
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput.enable = true;
 
@@ -147,6 +157,8 @@
     passwordAuthentication = false;
   };
 
+  security.apparmor.enable = false;
+
   fonts = {
     enableDefaultFonts = true;
     fontDir.enable = true;
@@ -167,6 +179,16 @@
     '';
   }];
 
+  # No access time and continuous TRIM for SSD
+  fileSystems."/".options = [ "noatime" "discard" ];
+
+  # Sysctl params
+  boot.kernel.sysctl = {
+    "fs.inotify.max_user_watches" = 524288; # Allow VS Code to watch more files
+  };
+
+  hardware.opengl.enable = true;
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
@@ -176,4 +198,3 @@
   system.stateVersion = "21.05"; # Did you read the comment?
 
 }
-

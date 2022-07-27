@@ -2,12 +2,14 @@
 
   home.packages = with pkgs; [
 
-    pkgs.dejavu_fonts
-    pkgs.fira-code
-    pkgs.jetbrains-mono
-    pkgs.nerdfonts
-    pkgs.source-code-pro
-    pkgs.ubuntu_font_family
+    dejavu_fonts
+    fira-code
+    jetbrains-mono
+    nerdfonts
+    source-code-pro
+    font-awesome # awesome fonts
+    material-design-icons # fonts with glyphs
+    ubuntu_font_family
 
   ];
 
