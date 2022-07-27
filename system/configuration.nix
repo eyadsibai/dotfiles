@@ -20,11 +20,14 @@
 
   };
 
+# Thermals and cooling
+  services.thermald.enable = true;
+
   boot = {
     loader.systemd-boot = {
       enable = true;
       # Bigger console font
-      consoleMode = "2";
+      # consoleMode = "2";
       # Prohibits gaining root access by passing init=/bin/sh as a kernel parameter
       editor = false;
       # memtest86.enable = true;
@@ -56,6 +59,7 @@
   hardware.bluetooth = {
     enable = true;
     package = pkgs.bluezFull;
+    powerOnBoot = true;
   };
 
   services.blueman.enable = true;
@@ -80,27 +84,41 @@
   };
 
   # Enable the X11 windowing system.
-  services.xserver.enable = true;
-  # services.xserver.layout = "en";
-  # xkbOptions = "eurosign:e";
+  services.xserver = {
+    enable = true;
+    displayManager = {
+      lightdm.enable = true;
+      gdm.enable = false;
+      gdm.wayland = false;
+
+    };
+    desktopManager = {
+      xterm.enable = false;
+      gnome.enable = false;
+    };
+
+    layout = "us,ar";
+    xkbOptions = "grp:win_space_toggle,eurosign:e";
+  };
+
 
   services.usbmuxd.enable = true;
 
-  # Enable the GNOME Desktop Environment.
-  # services.xserver.displayManager.gdm.enable = true;
-  # services.xserver.displayManager.gdm.wayland = false;
-
-  # services.xserver.desktopManager.gnome.enable = true;
-
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.xterm.enable = true;
-
   services.gnome.gnome-keyring.enable = true;
 
-  # Configure keymap in X11
-  services.xserver.layout = "us,ar";
+  services.netdata = {
+   enable = true;
+   config = {
+     global = {
+       "default port" = "19999";
+       "bind to" = "127.0.0.1";
+     };
+   };
+  };
 
-  services.xserver.xkbOptions = "grp:win_space_toggle";
+
+  # this is required for mounting android phones over mtp://
+  services.gvfs.enable = true;
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -110,6 +128,7 @@
       enable = true;
       dockerCompat = true;
     };
+    lxd.enable = true;
 
     # virtualbox.host = {
     #   enable = true;
@@ -125,7 +144,7 @@
   users.users.eyad = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" "plugdev" ];
+    extraGroups = [ "wheel" "networkmanager" ];
     hashedPassword =
       "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
     openssh.authorizedKeys.keys = [
@@ -150,8 +169,6 @@
   # List services that you want to enable:
   services.fstrim.enable = true;
   # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
-
   services.openssh = {
     enable = true;
     permitRootLogin = "no";
@@ -164,6 +181,7 @@
   fonts = {
     enableDefaultFonts = true;
     fontDir.enable = true;
+    enableGhostscriptFonts = true;
     fonts = with pkgs; [
       corefonts
       dejavu_fonts
