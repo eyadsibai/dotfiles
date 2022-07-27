@@ -1,7 +1,8 @@
-{pkgs, ...}: {
-  environment.systemPackages = with pkgs; [
-    easyeffects # optional for audio post processing
-  ];
+{ pkgs, ... }: {
+  environment.systemPackages = with pkgs;
+    [
+      easyeffects # optional for audio post processing
+    ];
 
   security.rtkit.enable = true;
 

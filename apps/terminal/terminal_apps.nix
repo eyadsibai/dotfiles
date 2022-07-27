@@ -1,6 +1,12 @@
 { pkgs, ... }: {
 
-  programs.htop = { enable = true; };
+  programs.htop = {
+    enable = true;
+    settings = {
+      sort_direction = true;
+      sort_key = "PERCENT_CPU";
+    };
+  };
 
   programs.broot = {
     enable = true;
@@ -68,8 +74,9 @@
 
   programs.direnv = {
     enable = true;
+    nix-direnv.enable = true;
     enableBashIntegration = true;
-    # enableZshIntegration = true;
+    enableZshIntegration = true;
     # enableFishIntegration = true;
   };
 
@@ -80,8 +87,11 @@
 
   programs.fzf = {
     enable = true;
+    defaultCommand = "fd --type file --follow"; # FZF_DEFAULT_COMMAND
+    defaultOptions = [ "--height 20%" ]; # FZF_DEFAULT_OPTS
+    fileWidgetCommand = "fd --type file --follow"; # FZF_CTRL_T_COMMAND
     enableBashIntegration = true;
-    # enableZshIntegration = true;
+    enableZshIntegration = true;
     enableFishIntegration = true;
   };
 
@@ -143,12 +153,12 @@
 
   programs.jq = { enable = true; };
 
-  programs.just = {
-    enable = true;
-    enableZshIntegration = true;
-    enableBashIntegration = true;
-    enableFishIntegration = true;
-  };
+  # programs.just = {
+  #   enable = true;
+  #   enableZshIntegration = true;
+  #   enableBashIntegration = true;
+  #   enableFishIntegration = true;
+  # };
 
   programs.lazygit = { enable = true; };
 
