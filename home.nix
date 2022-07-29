@@ -1,12 +1,9 @@
 { config, pkgs, nix-colors, ... }: {
 
   imports = [
-    ./apps/terminal/default.nix
-    ./apps/internet/default.nix
-    ./apps/others/default.nix
+    ./apps/default.nix
     ./apps/wm/i3/default.nix
-    ./custom_config/default.nix
-
+    ./apps/custom_config/default.nix
   ];
 
   home.packages = with pkgs; [
@@ -203,6 +200,8 @@
       };
     };
   };
+
+  # TODO https://github.com/LukeSmithxyz/voidrice/
 
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";

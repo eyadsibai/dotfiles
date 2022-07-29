@@ -12,6 +12,9 @@
       enp3s0f0.useDHCP = true;
       wlp1s0.useDHCP = true;
     };
+    # wireless.networks."xyz" = {
+    #   psk = "11111";
+    # };
   };
 
   # Open ports in the firewall.

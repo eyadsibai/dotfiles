@@ -216,7 +216,15 @@
 
   };
 
-  programs.mpv = { enable = true; };
+  programs.mpv = {
+    enable = true;
+    bindings = {
+      l = "seek 5";
+      h = "seek -5";
+      k = "seek 60";
+      S = "cycle sub";
+    };
+  };
 
   programs.navi = {
     enable = true;

@@ -16,7 +16,11 @@
     cawbird
     haxor-news
     rainbowstream
-
+    caprine-bin
+    wire-desktop
+    kotatogram-desktop
+    gurk-rs
+    vk-messenger
   ];
 
   programs.hexchat = { enable = true; };
