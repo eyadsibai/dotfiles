@@ -65,7 +65,7 @@ in {
 
         modules-left = "distro-icon dulS ddrT i3 dulT";
         modules-center = "title";
-        modules-right = "durT audio wireless-network ddlT date";
+        modules-right = "durT audio ddlT wireless-network date";
 
         locale = "en_US.UTF-8";
       };
@@ -363,7 +363,22 @@ in {
 
       "module/wireless-network" = {
         type = "internal/network";
-        interval = "wlp1s0";
+        interface = "wlp1s0";
+        interval = 1;
+        accumulate-stats = true;
+
+        format-connected = "<label-connected>";
+        label-connected = "%ifname%";
+        label-connected-background = bg;
+        label-connected-foreground = primary;
+        label-connected-padding = 1;
+
+        format-disconnected = "<label-disconnected>";
+        label-disconnected = "offline";
+        label-disconnected-background = bg;
+        label-disconnected-foreground = primary;
+        label-disconnected-padding = 1;
+
       };
 
       #--------------------SOLID TRANSITIONS--------------------#
