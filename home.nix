@@ -60,6 +60,7 @@
     fff
     flatpak
     gcalcli
+    google-chrome
     gimp # gnu image manipulation program
     git-crypt
     glances

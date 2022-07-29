@@ -151,7 +151,27 @@
     ];
   };
 
-  environment.systemPackages = with pkgs; [ vim wget git ];
+ environment.systemPackages = with pkgs; [
+    vim wget git wine
+
+    # support both 32- and 64-bit applications
+    # wine64WowPackages.stable
+
+    # support 32-bit only
+    # wine64
+
+    # support 64-bit only
+    # (wine.override { wineBuild = "wine64"; })
+
+    # wine-staging (version with experimental features)
+    # wineWowPackages.staging
+
+    # winetricks and other programs depending on wine need to use the same wine version
+    # (winetricks.override { wine = wineWowPackages.staging; })
+
+    # native wayland support (unstable)
+    # wineWowPackages.waylandFull
+  ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

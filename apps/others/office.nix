@@ -1,6 +1,6 @@
 { config, pkgs, inputs, ... }: {
 
-  home.packages = [ pkgs.pdfgrep pkgs.pdftk ];
+  home.packages = with pkgs; [ pdfgrep pdftk libreoffice-fresh ];
 
   programs.sioyek = { enable = true; };
 
