@@ -2,8 +2,19 @@
 
 {
 
-  home.packages = with pkgs; [ jetbrains.idea-community ];
+  home.packages = with pkgs; [
+    jetbrains.idea-community
+    atom
+    nano
+    nanorc
+    pgcli # modern postgres client
+    mycli
+    s3cmd
 
+  ];
+  # programs.go = { enable = true; };
+  programs.java = { enable = true; };
+  # programs.sbt = { enable = true; };
   programs.vscode = {
     enable = true;
     extensions = with pkgs.vscode-extensions; [

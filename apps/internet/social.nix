@@ -9,11 +9,13 @@
     slack-term
     zoom-us
     element-desktop
-    pkgs.tdesktop
+    tdesktop
     teams
     whatsapp-for-linux
     gitter
     cawbird
+    haxor-news
+    rainbowstream
 
   ];
 

@@ -8,7 +8,7 @@
 
   programs.rofi = {
     enable = true;
-    plugins = [ pkgs.rofi-calc pkgs.rofi-emoji pkgs.rofimoji ];
+    plugins = with pkgs; [ rofi-calc rofi-emoji ];
     terminal = "${pkgs.alacritty}/bin/alacritty";
     theme = "${pkgs.rofi}/share/rofi/themes/DarkBlue.rasi";
   };

@@ -151,8 +151,11 @@
     ];
   };
 
- environment.systemPackages = with pkgs; [
-    vim wget git wine
+  environment.systemPackages = with pkgs; [
+    vim
+    wget
+    git
+    wine
 
     # support both 32- and 64-bit applications
     # wine64WowPackages.stable

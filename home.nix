@@ -30,14 +30,10 @@
     bridge-utils
     brightnessctl
     cachix # nix caching
-    calcurse # A calendar and scheduling application for the command line
     calibre # e-book reader
     catimg
-    cava
     chafa
     clerk
-    cli-visualizer
-    cmus
     cntr
     cobang # qr-code scanner
     cointop
@@ -60,9 +56,7 @@
     fff
     flatpak
     gcalcli
-    google-chrome
     gimp # gnu image manipulation program
-    git-crypt
     glances
     glow # terminal markdown viewer
     gnomecast # chromecast local files
@@ -70,7 +64,6 @@
     gotty
     gtop
     hakuneko
-    haxor-news
     highlight
     httpie
     httping
@@ -79,7 +72,6 @@
     jitsi-meet-electron # open source video calls and chat
     jmtpfs # mount mtp devices
     jp2a
-    khal
     killall # kill processes by name
     libnotify # notify-send command
     libreoffice # office suite
@@ -92,9 +84,6 @@
     mpvScripts.mpris
     multilockscreen # fast lockscreen based on i3lock
     mosh # ssh replacesment
-    mycli
-    nano
-    nanorc
     ncdu # disk space info (a better du)
     ncpamixer
     neofetch # command-line system information
@@ -108,13 +97,11 @@
     nload
     nyancat # the famous rainbow cat!
     pavucontrol # pulseaudio volume control
-    pgcli # modern postgres client
     playerctl # music player controller
     prettyping # a nicer ping
     protonvpn-gui # official proton vpn client
     pulsemixer # pulseaudio mixer
     pyradio
-    rainbowstream
     ranger # terminal file explorer
     remind
     rclone
@@ -124,13 +111,11 @@
     rmlint
     rnix-lsp # nix lsp server
     rsync
-    s3cmd
     sc-im
     screenkey
     simple-scan # scanner gui
     simplescreenrecorder # screen recorder gui
     speedtest-cli
-    st
     steam
     stig
     sysstat
@@ -169,6 +154,7 @@
     yq
     vdirsyncer
     zip
+    zotero
   ];
 
   home.enableNixpkgsReleaseCheck = true;
