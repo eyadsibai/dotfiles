@@ -3,7 +3,6 @@
   imports = [
     ./apps/terminal/default.nix
     ./apps/internet/default.nix
-    ./apps/programming/default.nix
     ./apps/others/default.nix
     ./apps/wm/i3/default.nix
     ./custom_config/default.nix
