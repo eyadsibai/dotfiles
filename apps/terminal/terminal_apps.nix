@@ -206,9 +206,9 @@
 
   programs.mcfly = {
     enable = true;
-    # enableBashIntegration = true;
+    enableBashIntegration = true;
     enableZshIntegration = true;
-    # enableFishIntegration = true;
+    enableFishIntegration = true;
   };
 
   programs.micro = {
