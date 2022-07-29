@@ -8,5 +8,6 @@
     ./office.nix
     ./services.nix
     ./development.nix
+    ./terminal/default.nix
   ];
 }
