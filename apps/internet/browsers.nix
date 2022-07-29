@@ -3,6 +3,7 @@
 let addons = pkgs.nur.repos.rycee.firefox-addons;
 in {
 
+  home.packages = with pkgs; [ google-chrome ];
   # Browsers
   programs.firefox = {
     enable = true;
@@ -43,7 +44,7 @@ in {
       {
         id = "dcpihecpambacapedldabdbpakmachpb";
         updateUrl =
-          "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/updates.xml";
+          "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/src/updates/updates.xml";
       }
     ];
   };
