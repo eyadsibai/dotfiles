@@ -4,6 +4,7 @@
     haskellPackages.network-manager-tui
     rofi-rbw
     alsaUtils
+    lxappearance
   ];
 
   programs.rofi = {

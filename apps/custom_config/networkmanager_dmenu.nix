@@ -1,5 +1,5 @@
 { config, pkgs, ... }: {
-  home.file.".config/networkmanager-dmenu/config.ini".text = ''
+  xdg.configFile."networkmanager-dmenu/config.ini".text = ''
     [dmenu]
     dmenu_command = ${pkgs.rofi}/bin/rofi -dmenu
     rofi_highlight = True
