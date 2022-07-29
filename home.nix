@@ -64,8 +64,6 @@
     httpie
     httping
     hyperfine # command-line benchmarking tool
-    insomnia # rest client with graphql support
-    jitsi-meet-electron # open source video calls and chat
     jmtpfs # mount mtp devices
     jp2a
     killall # kill processes by name
@@ -76,8 +74,8 @@
     mpc_cli
     mpd-small
     mps-youtube
-    mpvScripts.convert
-    mpvScripts.mpris
+    # mpvScripts.convert
+    # mpvScripts.mpris
     multilockscreen # fast lockscreen based on i3lock
     mosh # ssh replacesment
     ncdu # disk space info (a better du)
@@ -85,8 +83,6 @@
     neofetch # command-line system information
     nethogs
     nettools
-    ngrok # secure tunneling to localhost
-    nheko # matrix messaging client
     nitrogen
     nix-index # locate packages containing certain nixpkgs
     nixfmt
@@ -97,7 +93,6 @@
     prettyping # a nicer ping
     protonvpn-gui # official proton vpn client
     pulsemixer # pulseaudio mixer
-    pyradio
     ranger # terminal file explorer
     remind
     rclone
@@ -105,7 +100,6 @@
     ripgrep # fast grep
     rlwrap
     rmlint
-    rnix-lsp # nix lsp server
     rsync
     sc-im
     screenkey
@@ -120,20 +114,16 @@
     teleport
     tmate
     termdown
-    terminal-parrot
     termshark
     thefuck
-    tig
     tldr # summary of a man page
     tree # display files in a tree view
     tty-clock
-    tuir
     units
     unrar
     unzip
     urlscan
     urlview
-    vlc # media player
     w3m
     wavemon
     wget
@@ -202,6 +192,7 @@
   };
 
   # TODO https://github.com/LukeSmithxyz/voidrice/
+  # https://github.com/mitchellh/nixos-config
 
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";

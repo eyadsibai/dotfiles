@@ -19,6 +19,7 @@ mkShell {
       tensorflow
       pytorch
       pytorch-lightning
+      pymc3
       # pytorch-metric-learning
       # pyjanitor
       # shap

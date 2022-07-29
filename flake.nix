@@ -9,6 +9,7 @@
     nur.url = "github:nix-community/NUR";
     flake-utils.url = "github:numtide/flake-utils";
     nix-colors.url = "github:misterio77/nix-colors";
+    neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     fenix = {
       url = "github:nix-community/fenix"; # rust
       inputs.nixpkgs.follows = "nixpkgs";
@@ -46,7 +47,11 @@
           permittedInsecurePackages = [ "electron-12.2.3" ];
         };
 
-        overlays = [ nur.overlay (import ./overlays/whatsapp.nix) ];
+        overlays = [
+          nur.overlay
+          (import ./overlays/whatsapp.nix)
+          inputs.neovim-nightly-overlay.overlay
+        ];
 
       };
 
