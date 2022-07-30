@@ -30,14 +30,14 @@
         # vscodevim.vim
         # yzhang.markdown-all-in-one
         # golang.go
-        #   ms-python.python
+        # ms-python.python
         # eamodio.gitlens
         # christian-kohler.path-intellisense
         # ms-vscode-remote.remote-ssh
         # ms-vsliveshare.vsliveshare
         # jnoortheen.nix-ide
       ];
-    #userSettings = {  "update.channel" = "none";};
+    userSettings = { "update.channel" = "none"; };
   };
 
   programs.helix = {
