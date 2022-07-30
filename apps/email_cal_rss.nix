@@ -3,6 +3,7 @@
   home.packages = with pkgs; [
     khal
     calcurse # A calendar and scheduling application for the command line
+    gcalcli
 
   ];
   programs.himalaya = { enable = true; };

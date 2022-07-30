@@ -2,13 +2,16 @@
   description = "A very basic flake";
 
   inputs = {
+    # nixpkgs.url = "nixpkgs/nixos-22.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
+    # home-manager.url = "github:nix-community/home-manager/release-22.05";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     flake-utils.url = "github:numtide/flake-utils";
     nix-colors.url = "github:misterio77/nix-colors";
+    nix-doom-emacs.url = "github:nix-community/nix-doom-emacs";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     fenix = {
       url = "github:nix-community/fenix"; # rust
@@ -35,7 +38,7 @@
   };
 
   outputs = { self, nixpkgs, nixos-hardware, nur, home-manager, nix-colors
-    , flake-utils, fenix, base16, base16-schemes, ... }@inputs:
+    , flake-utils, fenix, base16, base16-schemes, nix-doom-emacs, ... }@inputs:
     let
       system = "x86_64-linux";
 
@@ -74,13 +77,15 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "backup";
-              home-manager.users.eyad = {
-                imports = [
-                  ./home.nix
-                  # ./theming.nix
-                ];
-              };
-
+              home-manager.users.eyad = lib.mkMerge [
+                nix-doom-emacs.hmModule
+                {
+                  imports = [
+                    ./home.nix
+                    # ./theming.nix
+                  ];
+                }
+              ];
             }
 
           ];

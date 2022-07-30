@@ -6,7 +6,7 @@
   nix = {
     # Automate garbage collection
     gc = {
-      automatic = true;
+      automatic = false;
       dates = "weekly";
       options = "--delete-older-than 7d";
     };
@@ -126,7 +126,7 @@
       enable = true;
       dockerCompat = true;
     };
-    lxd.enable = true;
+    # lxd.enable = true; # broken on unstable
 
     # virtualbox.host = {
     #   enable = true;

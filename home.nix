@@ -13,7 +13,6 @@
     ani-cli
     any-nix-shell # fish support for nix shell
     arandr # simple GUI for xrandr
-    asciinema
     asciinema # record the terminal
     atool
     audacious # simple music player
@@ -51,7 +50,6 @@
     fdupes
     fff
     flatpak
-    gcalcli
     gimp # gnu image manipulation program
     glances
     glow # terminal markdown viewer
@@ -68,14 +66,13 @@
     jp2a
     killall # kill processes by name
     libnotify # notify-send command
-    libreoffice # office suite
     mc
     mediainfo
     mpc_cli
     mpd-small
     mps-youtube
-    # mpvScripts.convert
-    # mpvScripts.mpris
+    mpvScripts.convert
+    mpvScripts.mpris
     multilockscreen # fast lockscreen based on i3lock
     mosh # ssh replacesment
     ncdu # disk space info (a better du)
@@ -193,6 +190,7 @@
 
   # TODO https://github.com/LukeSmithxyz/voidrice/
   # https://github.com/mitchellh/nixos-config
+  # https://github.com/jwiegley/nix-config
 
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";
