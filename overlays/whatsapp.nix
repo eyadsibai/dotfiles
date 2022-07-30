@@ -7,6 +7,7 @@ final: prev: {
       repo = pname;
 
       rev = "v${version}";
+      # sha265 = lib.fakeSha256;
       # sha256 = "0000000000000000000000000000000000000000000000000000";
       sha256 = "V1QxPN99BAEnBvrfHyml0OsaS8msZXjkzvzItLqf8B0=";
     };
@@ -24,4 +25,3 @@ final: prev: {
     ];
   });
 }
-

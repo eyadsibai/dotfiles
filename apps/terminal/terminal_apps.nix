@@ -3,7 +3,7 @@
   home.packages = with pkgs; [
     swaglyrics
     streamlink
-    # clog-cli
+    clog-cli
     doing
     buku
     papis
@@ -45,7 +45,7 @@
   programs.broot = {
     enable = true;
     enableBashIntegration = true;
-    # enableZshIntegration = true;
+    enableZshIntegration = true;
     enableFishIntegration = true;
     verbs = [
       {
@@ -209,11 +209,6 @@
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableFishIntegration = true;
-  };
-
-  programs.micro = {
-    enable = true;
-
   };
 
   programs.mpv = {

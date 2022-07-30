@@ -2,12 +2,16 @@
 
 {
 
+  programs.micro = {
+    enable = true;
+
+  };
   home.packages = with pkgs; [
     jetbrains.idea-community
     atom
     nano
     nanorc
-    pgcli # modern postgres client
+    # pgcli # modern postgres client
     mycli
     s3cmd
     tig
@@ -16,22 +20,24 @@
 
   ];
   # programs.go = { enable = true; };
-  programs.java = { enable = true; };
+  # programs.java = { enable = true; };
   # programs.sbt = { enable = true; };
   programs.vscode = {
     enable = true;
-    extensions = with pkgs.vscode-extensions; [
-      dracula-theme.theme-dracula
-      vscodevim.vim
-      yzhang.markdown-all-in-one
-      golang.go
-      ms-python.python
-      eamodio.gitlens
-      christian-kohler.path-intellisense
-      ms-vscode-remote.remote-ssh
-      ms-vsliveshare.vsliveshare
-      jnoortheen.nix-ide
-    ];
+    extensions = with pkgs.vscode-extensions;
+      [
+        # dracula-theme.theme-dracula
+        # vscodevim.vim
+        # yzhang.markdown-all-in-one
+        # golang.go
+        #   ms-python.python
+        # eamodio.gitlens
+        # christian-kohler.path-intellisense
+        # ms-vscode-remote.remote-ssh
+        # ms-vsliveshare.vsliveshare
+        # jnoortheen.nix-ide
+      ];
+    #userSettings = {  "update.channel" = "none";};
   };
 
   programs.helix = {
@@ -46,5 +52,10 @@
   };
 
   programs.neovim = { enable = true; };
+
+  programs.doom-emacs = {
+    enable = false;
+    doomPrivateDir = ./doom.d;
+  };
 
 }
