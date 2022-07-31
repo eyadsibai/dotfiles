@@ -9,5 +9,6 @@
     ./services.nix
     ./development.nix
     ./terminal/default.nix
+    ./system.nix
   ];
 }
