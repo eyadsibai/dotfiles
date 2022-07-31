@@ -24,6 +24,7 @@
     nheko # matrix messaging client
     jitsi-meet-electron # open source video calls and chat
     tuir
+    tiptop
 
   ];
 

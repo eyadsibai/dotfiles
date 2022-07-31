@@ -71,7 +71,7 @@ in {
       DEFAULT = "https://www.google.com/search?q={}";
       git = "https://github.com/search?q={}";
       nix = "https://search.nixos.org/packages?query={}&channel=unstable";
-      pip = "https://pypi.org/search/?q={}";
+      # pip = "https://pypi.org/search/?q={}";
       yt = "https://www.youtube.com/results?search_query={}";
       protondb = "https://www.protondb.com/search?q={}";
       repology = "https://repology.org/projects/?search={}";
@@ -85,9 +85,9 @@ in {
       nixpkgs = "https://github.com/NixOS/nixpkgs";
       nixpkgs-prs = "https://github.com/NixOS/nixpkgs/pulls";
       nixpkgs-issues = "https://github.com/NixOS/nixpkgs/issues";
-      nixpkgs-tracker = "https://nixpk.gs/pr-tracker.html";
+      # nixpkgs-tracker = "https://nixpk.gs/pr-tracker.html";
       nixpkgs-manual = "https://nixos.org/manual/nixpkgs/unstable";
-      hydra-trunk = "https://hydra.nixos.org/jobset/nixpkgs/trunk";
+      # hydra-trunk = "https://hydra.nixos.org/jobset/nixpkgs/trunk";
       nixos-manual = "https://nixos.org/nixos/manual";
       nixos-options = "https://search.nixos.org/options?channel=unstable";
       home-manager = "https://github.com/nix-community/home-manager";
@@ -95,9 +95,9 @@ in {
       home-manager-options =
         "https://rycee.gitlab.io/home-manager/options.html";
       repology = "https://repology.org/projects";
-      dotfiles = "https://github.com/ivarWithoutBones/dotfiles";
+      # dotfiles = "https://github.com/ivarWithoutBones/dotfiles";
       ashley-dotfiles = "https://github.com/kira64xyz/ashley-nix";
-      cppreference = "https://en.cppreference.com/w/cpp";
+      # cppreference = "https://en.cppreference.com/w/cpp";
       protonmail = "https://mail.protonmail.com/inbox";
       nur-actions = "https://github.com/IvarWithoutBones/NUR/actions";
       youtube = "https://www.youtube.com/";

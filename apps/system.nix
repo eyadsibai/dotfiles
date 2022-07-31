@@ -7,6 +7,10 @@
     glances
     killall # kill processes by name
     ranger # terminal file explorer
+    lazydocker
+    cachix # nix caching
+    gotop
+    gtop
 
   ];
 

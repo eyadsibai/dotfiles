@@ -22,7 +22,6 @@
     bitwarden-cli # command-line client for the password manager
     bridge-utils
     brightnessctl
-    cachix # nix caching
     calibre # e-book reader
     catimg
     chafa
@@ -49,9 +48,7 @@
     gimp # gnu image manipulation program
     glow # terminal markdown viewer
     # gnomecast # chromecast local files
-    gotop
     gotty
-    gtop
     hakuneko
     highlight
     httpie
@@ -95,7 +92,6 @@
     simple-scan # scanner gui
     simplescreenrecorder # screen recorder gui
     speedtest-cli
-    steam
     stig
     sysstat
     tcpdump
@@ -180,6 +176,7 @@
     };
   };
 
+  # programs.steam.enable = true;
   # TODO https://github.com/LukeSmithxyz/voidrice/
   # https://github.com/mitchellh/nixos-config
   # https://github.com/jwiegley/nix-config
@@ -189,5 +186,5 @@
 
   news.display = "silent";
   home.stateVersion = "22.05";
-  home.sessionVariables = { BROWSER = "/usr/bin/firefox"; };
+  home.sessionVariables = { BROWSER = "${pkgs.firefox}/bin/firefox"; };
 }

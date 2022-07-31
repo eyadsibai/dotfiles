@@ -20,16 +20,12 @@
     ts
     yank
     yq
-    glances
-    tiptop
     libqalculate
     wego
     translate-shell
     visidata
     dasel
-    iredis
-    usql
-    lazydocker
+
     wp-cli
     http-prompt
   ];
@@ -103,7 +99,7 @@
     nix-direnv.enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
-    # enableFishIntegration = true;
+    enableFishIntegration = false;
   };
 
   programs.exa = {
@@ -119,7 +115,7 @@
     fileWidgetCommand = "fd --type file --follow"; # FZF_CTRL_T_COMMAND
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableFishIntegration = true;
+    enableFishIntegration = false;
   };
 
   programs.jq = { enable = true; };
@@ -150,7 +146,7 @@
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableFishIntegration = true;
+    enableFishIntegration = false;
   };
 
   programs.ncspot = { enable = true; };
@@ -160,7 +156,7 @@
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableFishIntegration = true;
+    enableFishIntegration = false;
   };
 
   programs.nnn = { enable = true; };
@@ -190,7 +186,7 @@
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableFishIntegration = true;
+    enableFishIntegration = false;
   };
 
   programs.ssh = { enable = true; };
@@ -207,7 +203,7 @@
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableFishIntegration = true;
+    enableFishIntegration = false;
   };
 
   programs.zellij.enable = true;
@@ -216,7 +212,7 @@
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableFishIntegration = true;
+    enableFishIntegration = false;
 
   };
 

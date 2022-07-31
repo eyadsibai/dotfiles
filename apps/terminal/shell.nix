@@ -14,8 +14,6 @@
   #     plugins = [ "git" "thefuck" ];
   #     theme = "robbyrussell";
   #   };
-
-  # autocd = true;
   # };
 
   programs.zsh = {
@@ -23,6 +21,7 @@
     enableAutosuggestions = true;
     enableSyntaxHighlighting = true;
     enableCompletion = true;
+    autocd = true;
     plugins = [
 
       {
@@ -38,5 +37,5 @@
     ];
   };
 
-  programs.fish = { enable = true; };
+  programs.fish = { enable = false; };
 }

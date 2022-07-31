@@ -17,7 +17,8 @@
     tig
     ngrok # secure tunneling to localhost
     insomnia # rest client with graphql support
-
+    iredis
+    usql
   ];
   # programs.go = { enable = true; };
   # programs.java = { enable = true; };
@@ -51,11 +52,15 @@
     ];
   };
 
-  programs.neovim = { enable = true; };
+  programs.neovim = {
+    enable = true;
+    viAlias = true;
+    vimAlias = true;
+  };
 
   programs.doom-emacs = {
-    enable = false;
-    doomPrivateDir = ./doom.d;
+    enable = true;
+    doomPrivateDir = ./custom_config/doom-emacs;
   };
 
   programs.gh = {
