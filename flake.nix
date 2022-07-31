@@ -77,15 +77,13 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.backupFileExtension = "backup";
-              home-manager.users.eyad = lib.mkMerge [
-                nix-doom-emacs.hmModule
-                {
-                  imports = [
-                    ./home.nix
-                    # ./theming.nix
-                  ];
-                }
-              ];
+              home-manager.users.eyad = {
+                imports = [
+                  nix-doom-emacs.hmModule
+                  ./home.nix
+                  # ./theming.nix
+                ];
+              };
             }
 
           ];

@@ -10,6 +10,7 @@
     vlc # media player
     mps-youtube
     youtube-dl
+    ytcc
 
   ];
 
