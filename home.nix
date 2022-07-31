@@ -20,8 +20,6 @@
     aws
     bitwarden
     bitwarden-cli # command-line client for the password manager
-    bottom # alternative to htop & ytop
-    bpytop
     bridge-utils
     brightnessctl
     cachix # nix caching
@@ -39,19 +37,16 @@
     ddgr
     dialog
     ditaa
-    dive # explore docker layers
     drawio # diagram design
     duf # disk usage/free utility
     espeak
     etcher
-    exa # a better `ls`
     farbfeld
     fd # "find" for files
     fdupes
     fff
     flatpak
     gimp # gnu image manipulation program
-    glances
     glow # terminal markdown viewer
     gnomecast # chromecast local files
     gotop
@@ -64,13 +59,11 @@
     hyperfine # command-line benchmarking tool
     jmtpfs # mount mtp devices
     jp2a
-    killall # kill processes by name
     libnotify # notify-send command
     mc
     mediainfo
     mpc_cli
     mpd-small
-    mps-youtube
     mpvScripts.convert
     mpvScripts.mpris
     multilockscreen # fast lockscreen based on i3lock
@@ -90,7 +83,6 @@
     prettyping # a nicer ping
     protonvpn-gui # official proton vpn client
     pulsemixer # pulseaudio mixer
-    ranger # terminal file explorer
     remind
     rclone
     reaverwps-t6x
@@ -133,11 +125,11 @@
     xsel # clipboard support (also for neovim)
     xsv
     yad # yet another dialog - fork of zenity
-    youtube-dl
     yq
     vdirsyncer
     zip
     zotero
+    obsidian
   ];
 
   home.enableNixpkgsReleaseCheck = true;
