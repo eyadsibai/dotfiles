@@ -48,7 +48,7 @@
     flatpak
     gimp # gnu image manipulation program
     glow # terminal markdown viewer
-    gnomecast # chromecast local files
+    # gnomecast # chromecast local files
     gotop
     gotty
     gtop

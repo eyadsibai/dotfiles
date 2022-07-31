@@ -73,7 +73,6 @@
     };
   };
 
-
   programs.git = {
     enable = true;
 
@@ -115,6 +114,5 @@
 
   programs.gitui = { enable = true; };
   programs.lazygit = { enable = true; };
-
 
 }
