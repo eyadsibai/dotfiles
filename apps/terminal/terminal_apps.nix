@@ -122,7 +122,6 @@
     enableFishIntegration = true;
   };
 
-
   programs.jq = { enable = true; };
 
   # programs.just = {
@@ -131,7 +130,6 @@
   #   enableBashIntegration = true;
   #   enableFishIntegration = true;
   # };
-
 
   programs.less = { enable = true; };
 
@@ -148,14 +146,12 @@
     enableFishIntegration = true;
   };
 
-
   programs.navi = {
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableFishIntegration = true;
   };
-
 
   programs.ncspot = { enable = true; };
 

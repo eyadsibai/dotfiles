@@ -1,6 +1,6 @@
-{pkgs, ...}: {
+{ pkgs, ... }: {
 
-home.packages = with pkgs; [
+  home.packages = with pkgs; [
     bpytop
     bottom # alternative to htop & ytop (btm)
     dive # explore docker layers
@@ -8,8 +8,7 @@ home.packages = with pkgs; [
     killall # kill processes by name
     ranger # terminal file explorer
 
-];
-
+  ];
 
   programs.htop = {
     enable = true;

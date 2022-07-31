@@ -13,7 +13,7 @@
 
   ];
 
-    services.mopidy = {
+  services.mopidy = {
     enable = false;
     extensionPackages =
       [ pkgs.mopidy-mpris pkgs.mopidy-soundcloud pkgs.mopidy-youtube ];
