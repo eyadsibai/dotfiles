@@ -11,7 +11,7 @@
     material-design-icons # fonts with glyphs
     ubuntu_font_family
     line-awesome
-    iosevka-bin
+#    iosevka-bin
   ];
 
   fonts.fontconfig.enable = true;
