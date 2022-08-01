@@ -16,12 +16,13 @@
     ngrok # secure tunneling to localhost
     insomnia # rest client with graphql support
      beekeeper-studio
+     vscode
   ];
   # programs.go = { enable = true; };
   # programs.java = { enable = true; };
   # programs.sbt = { enable = true; };
   programs.vscode = {
-    enable = true;
+    enable = false;
     # extensions = with pkgs.vscode-extensions;
       # [
         # dracula-theme.theme-dracula
