@@ -15,14 +15,15 @@
     tig
     ngrok # secure tunneling to localhost
     insomnia # rest client with graphql support
+     beekeeper-studio
   ];
   # programs.go = { enable = true; };
   # programs.java = { enable = true; };
   # programs.sbt = { enable = true; };
   programs.vscode = {
     enable = true;
-    extensions = with pkgs.vscode-extensions;
-      [
+    # extensions = with pkgs.vscode-extensions;
+      # [
         # dracula-theme.theme-dracula
         # vscodevim.vim
         # yzhang.markdown-all-in-one
@@ -33,8 +34,8 @@
         # ms-vscode-remote.remote-ssh
         # ms-vsliveshare.vsliveshare
         # jnoortheen.nix-ide
-      ];
-    userSettings = { "update.channel" = "none"; };
+      # ];
+    # userSettings = { "update.channel" = "none"; };
   };
 
   programs.helix = {

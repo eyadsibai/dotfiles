@@ -126,6 +126,7 @@
     zip
     zotero
     obsidian
+    exercism
   ];
 
   home.enableNixpkgsReleaseCheck = true;

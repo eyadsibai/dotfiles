@@ -22,5 +22,6 @@ pkgs.mkShell {
 
     gotop
     gtop
+    procs
   ];
 }
