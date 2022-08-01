@@ -33,6 +33,8 @@
         "${modifier}+p" = "exec ${pkgs.rofi-rbw}/bin/rofi-rbw";
 
         "${modifier}+Shift+x" = "exec systemctl suspend";
+        "Print" = "exec ${pkgs.flameshot}/bin/flameshot gui";
+
       };
 
       startup = [

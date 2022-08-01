@@ -11,14 +11,10 @@
     atom
     nano
     nanorc
-    # pgcli # modern postgres client
-    mycli
     s3cmd
     tig
     ngrok # secure tunneling to localhost
     insomnia # rest client with graphql support
-    iredis
-    usql
   ];
   # programs.go = { enable = true; };
   # programs.java = { enable = true; };

@@ -20,6 +20,8 @@ mkShell {
       pytorch
       pytorch-lightning
       pymc3
+      videocr
+      mlrose
       # pytorch-metric-learning
       # pyjanitor
       # shap
