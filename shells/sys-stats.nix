@@ -17,8 +17,8 @@ pkgs.mkShell {
 
     # network state
     ethtool
-        bpytop
-            bottom # alternative to htop & ytop (btm)
+    bpytop
+    bottom # alternative to htop & ytop (btm)
 
     gotop
     gtop

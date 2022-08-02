@@ -22,9 +22,9 @@
     t-rec
     reviewdog
     # pgcli # modern postgres client # TODO crash on install
-   mycli
-   iredis
-   usql
+    mycli
+    iredis
+    usql
   ];
   # programs.go = { enable = true; };
   # programs.java = { enable = true; };
@@ -32,18 +32,18 @@
   programs.vscode = {
     enable = false;
     # extensions = with pkgs.vscode-extensions;
-      # [
-        # dracula-theme.theme-dracula
-        # vscodevim.vim
-        # yzhang.markdown-all-in-one
-        # golang.go
-        # ms-python.python
-        # eamodio.gitlens
-        # christian-kohler.path-intellisense
-        # ms-vscode-remote.remote-ssh
-        # ms-vsliveshare.vsliveshare
-        # jnoortheen.nix-ide
-      # ];
+    # [
+    # dracula-theme.theme-dracula
+    # vscodevim.vim
+    # yzhang.markdown-all-in-one
+    # golang.go
+    # ms-python.python
+    # eamodio.gitlens
+    # christian-kohler.path-intellisense
+    # ms-vscode-remote.remote-ssh
+    # ms-vsliveshare.vsliveshare
+    # jnoortheen.nix-ide
+    # ];
     # userSettings = { "update.channel" = "none"; };
   };
 
