@@ -11,6 +11,7 @@
     mps-youtube
     youtube-dl
     ytcc
+    darktable
 
   ];
 
