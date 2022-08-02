@@ -127,6 +127,7 @@
     zotero
     obsidian
     exercism
+    peek
   ];
 
   home.enableNixpkgsReleaseCheck = true;

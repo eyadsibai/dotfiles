@@ -22,6 +22,7 @@ mkShell {
       pymc3
       videocr
       mlrose
+      tesseract5
       # pytorch-metric-learning
       # pyjanitor
       # shap
