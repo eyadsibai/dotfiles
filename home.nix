@@ -61,8 +61,6 @@
     mediainfo
     mpc_cli
     mpd-small
-    mpvScripts.convert
-    mpvScripts.mpris
     multilockscreen # fast lockscreen based on i3lock
     mosh # ssh replacesment
     ncdu # disk space info (a better du)
@@ -128,6 +126,8 @@
     obsidian
     exercism
     peek
+    imagemagick
+    # jrnl
   ];
 
   home.enableNixpkgsReleaseCheck = true;

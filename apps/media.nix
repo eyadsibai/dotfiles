@@ -16,8 +16,16 @@
 
   services.mopidy = {
     enable = false;
-    extensionPackages =
-      [ pkgs.mopidy-mpris pkgs.mopidy-soundcloud pkgs.mopidy-youtube ];
+    extensionPackages = with pkgs; [
+      mopidy-mpris
+      mopidy-soundcloud
+      mopidy-youtube
+      mopidy-mpd
+      mopidy-tunein
+      mopidy-ytmusic
+      mopidy-podcast
+      # mopidy-muse
+    ];
   };
 
   services.mpd.enable = true;
@@ -33,5 +41,12 @@
       k = "seek 60";
       S = "cycle sub";
     };
+    scripts = with pkgs; [
+      mpvScripts.mpris
+      mpvScripts.convert
+      mpvScripts.cutter
+      mpvScripts.autoload
+      mpvScripts.thumbnail
+    ];
   };
 }
