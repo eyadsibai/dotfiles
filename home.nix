@@ -152,7 +152,6 @@
         font = "FiraCode Nerd Font";
       };
 
-      # TODO: doesn't seem to work?
       shortcuts = {
         close = "ctrl+space";
         close_all = "ctrl+shift+space";
