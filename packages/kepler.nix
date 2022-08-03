@@ -12,7 +12,7 @@ yarn2nix.mkYarnPackage {
     cp $out/node_modules/kepler.gl/umd/keplergl.min.js $out/
     rm -rf $out/node_modules
     rm -rf $out/bin
-  '';2
+  '';
 
   src = fetchgit {
     rev = "5620599c05672c1d04d256679d0ff969aa6d77bb";

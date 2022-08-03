@@ -16,8 +16,8 @@
     settings = {
       auto-optimise-store = true;
       extra-experimental-features = [ "nix-command" "flakes" ];
+      max-jobs = 8;
     };
-
   };
 
   # Thermals and cooling
@@ -38,19 +38,32 @@
     cleanTmpDir = true;
     supportedFilesystems = [ "ntfs" ];
     kernelPackages = pkgs.linuxPackages_latest;
-    kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" ];
+    kernelParams = [
+      "acpi_osi=Linux"
+      "acpi_backlight=none"
+      "processor.max_cstate=4"
+      "iommu=soft"
+      "idle=nomwait"
+    ];
 
     kernelModules = [
       "fuse"
       "kvm-amd"
       "msr"
-      "kvm-intel"
+      # "kvm-intel"
       "amdgpu"
       "acpi_call"
       "usbmon"
       "usbserial"
       "timer_stats"
     ];
+  };
+
+  services.avahi = {
+    enable = true;
+    nssmdns = true;
+    publish.addresses = true;
+    publish.domain = true;
   };
 
   # NOTE: required for the wireless card
@@ -90,8 +103,9 @@
       lightdm.enable = true;
       gdm.enable = false;
       gdm.wayland = false;
-
     };
+
+    videoDrivers = [ "amdgpu" ];
     desktopManager = {
       xterm.enable = false;
       gnome.enable = false;
@@ -198,6 +212,7 @@
     permitRootLogin = "no";
     # Use keys only. Remove if you want to SSH using password (not recommended)
     passwordAuthentication = false;
+    allowSFTP = true;
   };
 
   security.apparmor.enable = false;
@@ -238,8 +253,9 @@
   };
 
   hardware.opengl.enable = true;
+  hardware.opengl.driSupport32Bit = true;
   programs.steam = {
-    enable = true;
+    enable = false;
     remotePlay.openFirewall =
       true; # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall =
