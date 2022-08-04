@@ -59,7 +59,7 @@
 
         config = {
           allowUnfree = true;
-          permittedInsecurePackages = [ "electron-12.2.3" ];
+          permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
         };
 
         overlays = [
@@ -133,7 +133,7 @@
       r = import ./shells/r.nix { inherit pkgs; };
       port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
       load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
-      password = import ./shells/penetration/password.nix {inherit pkgs;};
+      password = import ./shells/penetration/password.nix { inherit pkgs; };
     in
     {
       devShells = {

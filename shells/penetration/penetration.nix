@@ -1,16 +1,15 @@
+airgeddon
+  truecrack
+  wifite2
+  bmon
+  netdiscover
+  nmap
+  nmon
+  snscrape
 
-    airgeddon
-    truecrack
-    wifite2
-    bmon
-    netdiscover
-    nmap
-    nmon
-    snscrape
-
-    # ### Exploitation ###
-    metasploit
-    sqlmap
+  # ### Exploitation ###
+  metasploit
+  sqlmap
 
 
 # ### Recon ###
