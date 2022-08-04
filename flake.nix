@@ -132,6 +132,7 @@
       db = import ./shells/db_dev.nix { inherit pkgs; };
       r = import ./shells/r.nix { inherit pkgs; };
       port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
+      load-testing = import ./shells/penetration/load-testing.nix {inherit pkgs;};
     in
     {
       devShells = {
@@ -139,8 +140,9 @@
         db = db;
         r = r;
         port-scanners = port-scanners;
+        load-testing = load-testing;
         python = python;
-        penetration-full = mergeEnvs [ port-scanners python ];
+        penetration-full = mergeEnvs [ port-scanners load-testing ];
         # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
       };
     }));
