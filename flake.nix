@@ -37,8 +37,20 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixos-hardware, nur, home-manager, nix-colors
-    , flake-utils, fenix, base16, base16-schemes, nix-doom-emacs, ... }@inputs:
+  outputs =
+    { self
+    , nixpkgs
+    , nixos-hardware
+    , nur
+    , home-manager
+    , nix-colors
+    , flake-utils
+    , fenix
+    , base16
+    , base16-schemes
+    , nix-doom-emacs
+    , ...
+    }@inputs:
     let
       system = "x86_64-linux";
 
@@ -60,7 +72,8 @@
 
       lib = nixpkgs.lib;
 
-    in {
+    in
+    {
       nixosConfigurations = {
         eyad-nixos = lib.nixosSystem {
           inherit system pkgs;
@@ -92,24 +105,25 @@
         };
       };
     } // (flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        fenixPkgs = fenix.packages.${system};
-      in {
-        devShells = {
-          default = import ./shell.nix { inherit pkgs; };
-          cc = import ./shells/cc.nix { inherit pkgs; };
-          go = import ./shells/go.nix { inherit pkgs; };
-          java = import ./shells/java.nix { inherit pkgs; };
-          node = import ./shells/node.nix { inherit pkgs; };
-          python = import ./shells/python.nix { inherit pkgs; };
-          rust = import ./shells/rust.nix { inherit pkgs fenixPkgs; };
-          ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
-          sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
-          db = import ./shells/db_dev.nix { inherit pkgs; };
-          r = import ./shells/r.nix { inherit pkgs;};
-          # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
-        };
-      }));
+    let
+      pkgs = nixpkgs.legacyPackages.${system};
+      fenixPkgs = fenix.packages.${system};
+    in
+    {
+      devShells = {
+        default = import ./shell.nix { inherit pkgs; };
+        cc = import ./shells/cc.nix { inherit pkgs; };
+        go = import ./shells/go.nix { inherit pkgs; };
+        java = import ./shells/java.nix { inherit pkgs; };
+        node = import ./shells/node.nix { inherit pkgs; };
+        python = import ./shells/python.nix { inherit pkgs; };
+        rust = import ./shells/rust.nix { inherit pkgs fenixPkgs; };
+        ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
+        sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
+        db = import ./shells/db_dev.nix { inherit pkgs; };
+        r = import ./shells/r.nix { inherit pkgs; };
+        # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
+      };
+    }));
 
 }
