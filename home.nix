@@ -127,6 +127,7 @@
     exercism
     peek
     imagemagick
+    onionshare
     # jrnl
   ];
 

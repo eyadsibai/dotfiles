@@ -107,6 +107,7 @@
           ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
           sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
           db = import ./shells/db_dev.nix { inherit pkgs; };
+          r = import ./shells/r.nix { inherit pkgs;};
           # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
         };
       }));

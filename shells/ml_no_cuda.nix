@@ -25,7 +25,7 @@ mkShell {
       tesseract5
       # pytorch-metric-learning
       # pyjanitor
-      # shap
-    ] ++ [ dvc tensorflow-lite vowpal-wabbit opencv3 ];
+      shap
+    ] ++ [ dvc tensorflow-lite vowpal-wabbit opencv3 jax jaxlib ];
   shellHook = "";
 }
