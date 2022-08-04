@@ -133,6 +133,7 @@
       r = import ./shells/r.nix { inherit pkgs; };
       port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
       load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
+      password = import ./shells/penetration/password.nix {inherit pkgs;};
     in
     {
       devShells = {
@@ -141,8 +142,9 @@
         r = r;
         port-scanners = port-scanners;
         load-testing = load-testing;
+        password = password;
         python = python;
-        penetration-full = mergeEnvs [ port-scanners load-testing ];
+        penetration-full = mergeEnvs [ port-scanners load-testing password ];
         # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
       };
     }));

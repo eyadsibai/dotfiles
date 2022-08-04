@@ -3,6 +3,7 @@ with pkgs;
 mkShell {
 
   buildInputs = [
+    apktool
     cantoolz
     chipsec
     esptool
@@ -19,4 +20,3 @@ mkShell {
   ];
   shellHook = "";
 }
-    

@@ -1,10 +1,4 @@
-{ pkgs, ... }:
-with pkgs;
-mkShell {
-  # https://github.com/NixOS/nixpkgs/issues/81418
-  # https://github.com/fabaff/nix-security-box
 
-  buildInputs = [
     airgeddon
     truecrack
     wifite2
@@ -12,21 +6,12 @@ mkShell {
     netdiscover
     nmap
     nmon
-    sherlock
     snscrape
-    socialscan
 
     # ### Exploitation ###
     metasploit
     sqlmap
-  ];
-  shellHook = "";
-}
 
-
-# ### Hardware ###
-# apktool
-# routersploit
 
 # ### Recon ###
 # cloudbrute
@@ -96,7 +81,6 @@ mkShell {
 # # backdoor-factory = todo
 # # bed = todo
 # # beef-xss = nur.repos.makefu.beef
-# bettercap
 # python3Packages.binwalk-full
 # # bluelog = todo
 # # blueranger = todo
@@ -211,7 +195,6 @@ mkShell {
 # hping
 # # httprint = todo
 # httrack
-# (thc-hydra.override { withGUI = true; })
 # # hyperion = todo
 # # iaxflood = todo
 # # ike-scan = todo
@@ -302,10 +285,8 @@ mkShell {
 # python3Packages.patator
 # pdfcrack
 # # pdfid = todo
-# pdf-parser
 # pev
 # # pipal = todo
-# pixiewps
 # # plaso = todo
 # # plecost = todo
 # # polenum = todo
@@ -329,7 +310,6 @@ mkShell {
 # # rainbowcrack = todo
 # rarcrack
 # # rcracki-mt = todo
-# reaverwps
 # # rebind = todo
 # # recon-ng = todo
 # # recordmydesktop = cantfind
