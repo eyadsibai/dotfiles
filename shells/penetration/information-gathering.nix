@@ -11,6 +11,7 @@ mkShell {
     socialscan
     theharvester
     urlhunter
+    sherlock
   ];
   shellHook = "";
 }

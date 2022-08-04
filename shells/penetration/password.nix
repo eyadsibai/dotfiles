@@ -19,8 +19,8 @@ mkShell {
     ncrack
     nth
     phrasendrescher
-    patator
-    thc-hydra
+    # patator
+    (thc-hydra.override { withGUI = true; })
     truecrack
   ];
   shellHook = "";
