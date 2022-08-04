@@ -12,4 +12,5 @@ let
       Robyn
     ];
   };
-in pkgs.mkShell { buildInputs = with pkgs; [ RStudio-with-my-packages ]; }
+in
+pkgs.mkShell { buildInputs = with pkgs; [ RStudio-with-my-packages ]; }

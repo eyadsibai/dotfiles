@@ -1,5 +1,5 @@
 { pkgs, ... }:
-
+# TODO https://nixos.wiki/wiki/Workgroup:DataScience
 with pkgs;
 mkShell {
   buildInputs = with python310Packages;

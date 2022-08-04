@@ -70,7 +70,7 @@
     nettools
     nitrogen
     nix-index # locate packages containing certain nixpkgs
-    nixfmt
+    nixpkgs-fmt
     nload
     nyancat # the famous rainbow cat!
     pavucontrol # pulseaudio volume control
