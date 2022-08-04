@@ -1,4 +1,3 @@
-
 { yarn2nix, fetchgit }:
 
 yarn2nix.mkYarnPackage {
