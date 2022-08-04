@@ -72,6 +72,18 @@
 
       lib = nixpkgs.lib;
 
+      mergeEnvs = envs: pkgs.mkShell (builtins.foldl'
+        (a: v: {
+          buildInputs = a.buildInputs ++ v.buildInputs;
+          nativeBuildInputs = a.nativeBuildInputs ++ v.nativeBuildInputs;
+          propagatedBuildInputs = a.propagatedBuildInputs ++ v.propagatedBuildInputs;
+          propagatedNativeBuildInputs = a.propagatedNativeBuildInputs ++ v.propagatedNativeBuildInputs;
+          shellHook = a.shellHook + "\n" + v.shellHook;
+        })
+        (pkgs.mkShell { })
+        envs);
+
+
     in
     {
       nixosConfigurations = {
@@ -108,20 +120,27 @@
     let
       pkgs = nixpkgs.legacyPackages.${system};
       fenixPkgs = fenix.packages.${system};
+      default = import ./shell.nix { inherit pkgs; };
+      cc = import ./shells/cc.nix { inherit pkgs; };
+      go = import ./shells/go.nix { inherit pkgs; };
+      java = import ./shells/java.nix { inherit pkgs; };
+      node = import ./shells/node.nix { inherit pkgs; };
+      python = import ./shells/python.nix { inherit pkgs; };
+      rust = import ./shells/rust.nix { inherit pkgs fenixPkgs; };
+      ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
+      sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
+      db = import ./shells/db_dev.nix { inherit pkgs; };
+      r = import ./shells/r.nix { inherit pkgs; };
+      port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
     in
     {
       devShells = {
-        default = import ./shell.nix { inherit pkgs; };
-        cc = import ./shells/cc.nix { inherit pkgs; };
-        go = import ./shells/go.nix { inherit pkgs; };
-        java = import ./shells/java.nix { inherit pkgs; };
-        node = import ./shells/node.nix { inherit pkgs; };
-        python = import ./shells/python.nix { inherit pkgs; };
-        rust = import ./shells/rust.nix { inherit pkgs fenixPkgs; };
-        ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
-        sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
-        db = import ./shells/db_dev.nix { inherit pkgs; };
-        r = import ./shells/r.nix { inherit pkgs; };
+        default = default;
+        db = db;
+        r = r;
+        port-scanners = port-scanners;
+        python = python;
+        penetration-full = mergeEnvs [ port-scanners python ];
         # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
       };
     }));

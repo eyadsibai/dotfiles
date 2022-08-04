@@ -110,8 +110,6 @@
     w3m
     wavemon
     wget
-    wifite2
-    wireshark-cli
     wpgtk
     xclip
     xdotool
