@@ -126,6 +126,10 @@
     peek
     imagemagick
     onionshare
+    # nur.repos.wolfangaukang.iptvnator
+    # nur.repos.wolfangaukang.sherlock
+    nur.repos.wolfangaukang.nuclear
+    # upwork
     # jrnl
   ];
 

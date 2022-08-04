@@ -1,24 +1,8 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
-  imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ];
+  imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix ];
 
-  nix = {
-    # Automate garbage collection
-    gc = {
-      automatic = false;
-      dates = "weekly";
-      options = "--delete-older-than 7d";
-    };
-
-    package = pkgs.nixFlakes;
-
-    settings = {
-      auto-optimise-store = true;
-      extra-experimental-features = [ "nix-command" "flakes" ];
-      max-jobs = 8;
-    };
-  };
 
   # Thermals and cooling
   services.thermald.enable = true;
@@ -172,7 +156,6 @@
     git
     # openvpn
     wine
-
     # support both 32- and 64-bit applications
     # wine64WowPackages.stable
 
@@ -195,10 +178,10 @@
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  programs.gnupg.agent = {
+    enable = true;
+    #   enableSSHSupport = true;
+  };
 
   services.fwupd.enable = true;
 
@@ -216,25 +199,6 @@
   };
 
   security.apparmor.enable = false;
-
-  fonts = {
-    enableDefaultFonts = true;
-    fontDir.enable = true;
-    enableGhostscriptFonts = true;
-    fonts = with pkgs; [
-      corefonts
-      dejavu_fonts
-      source-code-pro
-      ubuntu_font_family
-      fira-code
-      jetbrains-mono
-      font-awesome # awesome fonts
-      material-design-icons # fonts with glyphs
-      ubuntu_font_family
-      line-awesome
-      (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
-    ];
-  };
 
   services.xserver.desktopManager.session = [{
     name = "HomeManager";
