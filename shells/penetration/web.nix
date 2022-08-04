@@ -4,6 +4,7 @@ mkShell {
 
   buildInputs = [
     brakeman
+    burpsuite
     cameradar
     cariddi
     chopchop
@@ -11,10 +12,12 @@ mkShell {
     corsair-scan
     crlfsuite
     dalfox
+    dirb
     dismap
     dontgo403
     galer
     gau
+    gobuster
     gospider
     gotestwaf
     gowitness
@@ -38,13 +41,15 @@ mkShell {
     subjs
     swaggerhole
     uddup
+    urlhunter
     wad
     webanalyze
     whatweb
     wprecon
     wpscan
+    wfuzz
     wuzz
+    zap
   ];
   shellHook = "";
 }
-    

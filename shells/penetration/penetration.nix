@@ -24,21 +24,6 @@ mkShell {
 }
 
 
-
-# ### Forensics ###
-# capstone
-# ddrescue
-# ext4magic
-# extundelete
-# ghidra-bin
-# git
-# p0f
-# pdf-parser
-# # python39Packages.binwalk
-# # python39Packages.distorm3
-# sleuthkit
-# volatility
-
 # ### Hardware ###
 # apktool
 # routersploit
@@ -64,16 +49,7 @@ mkShell {
 # pwnat
 
 # ### Passwords ###
-# brutespray
-# chntpw
-# crowbar
-# crunch
-# hashcat
-# hcxtools
-# john
-# # python36Packages.patator
-# phrasendrescher
-# thc-hydra
+
 
 # ### Reverse ###
 # binutils
@@ -101,14 +77,7 @@ mkShell {
 # sqlmap
 # vulnix
 
-# ### Web ###
-# # burpsuite
-# dirb
-# gobuster
-# urlhunter
-# wfuzz
-# # wpscan
-# zap
+
 
 # # "0trace" = todo
 # # ace-voip = todo
@@ -116,7 +85,6 @@ mkShell {
 # # aeskeyfind = todo
 # # afflib-tools = todo
 # aflplusplus
-# aircrack-ng
 # apacheHttpd
 # # apache-users = todo
 # apktool
@@ -170,7 +138,6 @@ mkShell {
 # # dbd = todo
 # # dc3dd = todo
 # dcfldd
-# ddrescue
 # # default-mysql-server = todo
 # # dex2jar = nur.repos.makefu.dex2jar
 # # dhcpig = todo
@@ -325,7 +292,6 @@ mkShell {
 # # oscanner = todo
 # # outguess = todo
 # # owasp-mantra-ff = todo
-# p0f
 # p7zip
 # # pack = todo
 # # padbuster = todo
@@ -484,11 +450,9 @@ mkShell {
 # # windows-privesc-check = todo
 # # winregfs = todo
 # # wordlists = todo
-# wpscan
 # # xmount = todo
 # # xplico = todo
 # # xprobe = todo
 # # xsser = todo
 # yara
 # # yersinia = todo
-# zap

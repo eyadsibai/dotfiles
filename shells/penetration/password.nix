@@ -7,8 +7,11 @@ mkShell {
     bruteforce-luks
     brutespray
     crunch
+    chntpw
+    crowbar
     hashcat
     hashcat-utils
+    hcxtools
     hashdeep
     john
     medusa
@@ -16,10 +19,9 @@ mkShell {
     ncrack
     nth
     phrasendrescher
-    python3Packages.patator
+    patator
     thc-hydra
     truecrack
   ];
   shellHook = "";
 }
-    
