@@ -13,6 +13,7 @@
     nix-colors.url = "github:misterio77/nix-colors";
     nix-doom-emacs.url = "github:nix-community/nix-doom-emacs";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
+    mach-nix.url = "github:DavHau/mach-nix";
     fenix = {
       url = "github:nix-community/fenix"; # rust
       inputs.nixpkgs.follows = "nixpkgs";
@@ -49,6 +50,7 @@
     , base16
     , base16-schemes
     , nix-doom-emacs
+    , mach-nix
     , ...
     }@inputs:
     let
@@ -125,7 +127,7 @@
       go = import ./shells/go.nix { inherit pkgs; };
       java = import ./shells/java.nix { inherit pkgs; };
       node = import ./shells/node.nix { inherit pkgs; };
-      python = import ./shells/python.nix { inherit pkgs; };
+      python = import ./shells/python.nix { inherit pkgs mach-nix nixpkgs; };
       rust = import ./shells/rust.nix { inherit pkgs fenixPkgs; };
       ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
       sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
