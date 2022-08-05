@@ -129,6 +129,7 @@
     # nur.repos.wolfangaukang.iptvnator
     # nur.repos.wolfangaukang.sherlock
     nur.repos.wolfangaukang.nuclear
+    yandex-disk
     # upwork
     # jrnl
   ];
