@@ -20,6 +20,26 @@ in {
       betterttv
       h264ify
       umatrix
+      a11ycss
+      add-custom-search-engine
+      adnauseam
+      anonaddy
+      behave
+      auto-tab-discard
+      behind-the-overlay-revival
+      better-tweetdeck
+      betterttv
+      bukubrow
+      bypass-paywalls-clean
+      clearurls
+      flagfox
+      grammarly
+      search-by-image
+      unpaywall
+      facebook-container
+      ff2mpv
+      floccus
+      fraidycat
       (buildFirefoxXpiAddon {
         pname = "Video-DownloadHelper";
         version = "7.6.0";
