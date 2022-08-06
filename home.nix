@@ -131,7 +131,7 @@
     nur.repos.wolfangaukang.nuclear
     yandex-disk
     # upwork
-    # jrnl
+    jrnl
   ];
 
   home.enableNixpkgsReleaseCheck = true;

@@ -217,6 +217,8 @@
   };
 
   hardware.opengl.enable = true;
+  hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau ];
+
   hardware.opengl.driSupport32Bit = true;
   programs.steam = {
     enable = false;
