@@ -1,10 +1,9 @@
 final: prev: {
-  whatsapp-for-linux = prev.whatsapp-for-linux.overrideAttrs (_: rec {
+  whatsapp-for-linux = prev.whatsapp-for-linux.overrideAttrs (old: rec {
     version = "1.4.5";
-    pname = "whatsapp-for-linux";
     src = prev.fetchFromGitHub {
       owner = "eneshecan";
-      repo = pname;
+      repo = "${old.pname}";
 
       rev = "v${version}";
       # sha265 = lib.fakeSha256;
@@ -21,7 +20,6 @@ final: prev: {
       prev.gst_all_1.gst-plugins-bad
       prev.gst_all_1.gst-plugins-base
       prev.gst_all_1.gst-plugins-good
-
     ];
   });
 }
