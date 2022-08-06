@@ -132,6 +132,7 @@
     yandex-disk
     # upwork
     jrnl
+    python310Packages.mistune_2_0
   ];
 
   home.enableNixpkgsReleaseCheck = true;
@@ -191,5 +192,16 @@
 
   news.display = "silent";
   home.stateVersion = "22.05";
-  home.sessionVariables = { BROWSER = "${pkgs.firefox}/bin/firefox"; };
+  home.sessionVariables = { BROWSER = "${pkgs.firefox}/bin/firefox"; }; # should be in the browsers.nix
+
+  # xdg.mimeApps.enable = true;
+  xdg.userDirs.desktop = "$HOME/desktop";
+  xdg.userDirs.documents = "$HOME/documents";
+  xdg.userDirs.download = "$HOME/downloads";
+  xdg.userDirs.music = "$HOME/music";
+  xdg.userDirs.pictures = "$HOME/pictures";
+  xdg.userDirs.videos = "$HOME/videos";
+  xdg.userDirs.public = "$HOME/templates";
+  xdg.userDirs.Templates = "$HOME/templates";
+  # xdg.mimeApps.defaultApplications
 }
