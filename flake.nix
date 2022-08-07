@@ -1,12 +1,24 @@
 {
-  description = "A very basic flake";
+  description = "My Ultimate Flake";
 
   inputs = {
     # nixpkgs.url = "nixpkgs/nixos-22.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    # home-manager.url = "github:nix-community/home-manager/release-22.05";
-    home-manager.url = "github:nix-community/home-manager";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager = {url = "github:nix-community/home-manager";
+    # url = "github:nix-community/home-manager/release-22.05";
+    inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    darwin-nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-20.09-darwin";
+
+    darwin = {
+url = "github:lnl7/nix-darwin/master";
+    inputs.nixpkgs.follows = "darwin-nixpkgs";
+    };
+
+
+
+
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     flake-utils.url = "github:numtide/flake-utils";
@@ -50,7 +62,8 @@
     , base16
     , base16-schemes
     , nix-doom-emacs
-    , mach-nix
+    , mach-nix,
+    darwin
     , ...
     }@inputs:
     let
@@ -117,6 +130,12 @@
 
           specialArgs = { inherit inputs; };
         };
+      };
+
+      darwinConfiguration."" = darwin.lib.darwinSystem {
+        system = "x86_64-darwin";
+        modules = [];
+        inputs = {inherit darwin};
       };
     } // (flake-utils.lib.eachDefaultSystem (system:
     let
