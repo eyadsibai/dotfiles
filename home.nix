@@ -198,9 +198,9 @@
     XDG_BIN_HOME = "\${HOME}/.local/bin";
     XDG_DATA_HOME = "\${HOME}/.local/share";
 
-    PATH = [
-      "\${XDG_BIN_HOME}"
-    ];
+   # PATH = [
+   #   "\${XDG_BIN_HOME}"
+   # ];
     BROWSER = "${pkgs.firefox}/bin/firefox";
   }; # should be in the browsers.nix
 
