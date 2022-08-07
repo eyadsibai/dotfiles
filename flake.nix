@@ -128,7 +128,7 @@
       java = import ./shells/java.nix { inherit pkgs; };
       node = import ./shells/node.nix { inherit pkgs; };
       python = import ./shells/python.nix { inherit pkgs mach-nix nixpkgs; };
-      rust = import ./shells/rust.nix { inherit pkgs fenixPkgs; };
+      rust = import ./shells/rust.nix { inherit pkgs; };
       ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
       sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
       db = import ./shells/db_dev.nix { inherit pkgs; };
@@ -142,6 +142,7 @@
         default = default;
         db = db;
         r = r;
+        rust = rust;
         port-scanners = port-scanners;
         load-testing = load-testing;
         password = password;

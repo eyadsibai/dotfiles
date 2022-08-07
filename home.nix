@@ -192,7 +192,17 @@
 
   news.display = "silent";
   home.stateVersion = "22.05";
-  home.sessionVariables = { BROWSER = "${pkgs.firefox}/bin/firefox"; }; # should be in the browsers.nix
+  home.sessionVariables = rec {
+    XDG_CACHE_HOME = "\${HOME}/.cache";
+    XDG_CONFIG_HOME = "\${HOME}/.config";
+    XDG_BIN_HOME = "\${HOME}/.local/bin";
+    XDG_DATA_HOME = "\${HOME}/.local/share";
+
+    PATH = [
+      "\${XDG_BIN_HOME}"
+    ];
+    BROWSER = "${pkgs.firefox}/bin/firefox";
+  }; # should be in the browsers.nix
 
   # xdg.mimeApps.enable = true;
   xdg.userDirs.desktop = "$HOME/desktop";
@@ -201,7 +211,7 @@
   xdg.userDirs.music = "$HOME/music";
   xdg.userDirs.pictures = "$HOME/pictures";
   xdg.userDirs.videos = "$HOME/videos";
-  xdg.userDirs.public = "$HOME/templates";
-  xdg.userDirs.Templates = "$HOME/templates";
+  xdg.userDirs.publicShare = "$HOME/public";
+  xdg.userDirs.templates = "$HOME/templates";
   # xdg.mimeApps.defaultApplications
 }
