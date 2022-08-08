@@ -1,9 +1,9 @@
 { config, pkgs, nix-colors, ... }: {
 
   imports = [
-    ./apps/default.nix
-    ./apps/wm/i3/default.nix
-    ./apps/custom_config/default.nix
+    ../../../apps/default.nix
+    ../../../apps/wm/i3/default.nix
+    ../../../apps/custom_config/default.nix
   ];
 
   home.packages = with pkgs; [
