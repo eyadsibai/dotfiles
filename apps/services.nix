@@ -42,4 +42,14 @@
 
   services.sxhkd.enable = true;
   services.xcape.enable = true;
+
+  services.unclutter.enable = true;
+  services.udiskie = {
+    enable = true;
+    automount = true;
+    notify = true;
+    tray = "never";
+
+  };
+
 }
