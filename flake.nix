@@ -1,12 +1,25 @@
 {
-  description = "A very basic flake";
+  description = "My Ultimate Flake";
 
   inputs = {
     # nixpkgs.url = "nixpkgs/nixos-22.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    # home-manager.url = "github:nix-community/home-manager/release-22.05";
-    home-manager.url = "github:nix-community/home-manager";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      # url = "github:nix-community/home-manager/release-22.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    darwin-nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-20.09-darwin";
+
+    darwin = {
+      url = "github:lnl7/nix-darwin/master";
+      inputs.nixpkgs.follows = "darwin-nixpkgs";
+    };
+
+
+
+
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     flake-utils.url = "github:numtide/flake-utils";
@@ -51,6 +64,7 @@
     , base16-schemes
     , nix-doom-emacs
     , mach-nix
+    , darwin
     , ...
     }@inputs:
     let
@@ -118,35 +132,34 @@
           specialArgs = { inherit inputs; };
         };
       };
+
+      darwinConfiguration."" = darwin.lib.darwinSystem {
+        system = "x86_64-darwin";
+        modules = [ ];
+        inputs = { inherit darwin; };
+      };
     } // (flake-utils.lib.eachDefaultSystem (system:
     let
       pkgs = nixpkgs.legacyPackages.${system};
       fenixPkgs = fenix.packages.${system};
-      default = import ./shell.nix { inherit pkgs; };
-      cc = import ./shells/cc.nix { inherit pkgs; };
-      go = import ./shells/go.nix { inherit pkgs; };
-      java = import ./shells/java.nix { inherit pkgs; };
-      node = import ./shells/node.nix { inherit pkgs; };
-      python = import ./shells/python.nix { inherit pkgs mach-nix nixpkgs; };
-      rust = import ./shells/rust.nix { inherit pkgs; };
-      ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
-      sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
-      db = import ./shells/db_dev.nix { inherit pkgs; };
-      r = import ./shells/r.nix { inherit pkgs; };
-      port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
-      load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
-      password = import ./shells/penetration/password.nix { inherit pkgs; };
+
     in
     {
-      devShells = {
-        default = default;
-        db = db;
-        r = r;
-        rust = rust;
-        port-scanners = port-scanners;
-        load-testing = load-testing;
-        password = password;
-        python = python;
+      devShells = rec {
+        default = import ./shell.nix { inherit pkgs; };
+        cc = import ./shells/cc.nix { inherit pkgs; };
+        go = import ./shells/go.nix { inherit pkgs; };
+        java = import ./shells/java.nix { inherit pkgs; };
+        node = import ./shells/node.nix { inherit pkgs; };
+        python = import ./shells/python.nix { inherit pkgs mach-nix nixpkgs; };
+        rust = import ./shells/rust.nix { inherit pkgs; };
+        ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
+        sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
+        db = import ./shells/db_dev.nix { inherit pkgs; };
+        r = import ./shells/r.nix { inherit pkgs; };
+        port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
+        load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
+        password = import ./shells/penetration/password.nix { inherit pkgs; };
         penetration-full = mergeEnvs [ port-scanners load-testing password ];
         # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
       };
