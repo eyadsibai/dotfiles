@@ -3,13 +3,12 @@
 let addons = pkgs.nur.repos.rycee.firefox-addons;
 in {
 
-  home.packages = with pkgs; [ google-chrome nur.repos.wolfangaukang.vdhcoapp  ff2mpv];
+  home.packages = with pkgs; [ google-chrome nur.repos.wolfangaukang.vdhcoapp ff2mpv ];
   # Browsers
   programs.firefox = {
     enable = true;
     package = pkgs.wrapFirefox pkgs.firefox-unwrapped {
       forceWayland = false;
-      extraNativeMessagingHosts = [ pkgs.nur.repos.wolfangaukang.vdhcoapp ];
     };
     extensions = with addons; [
       ublock-origin
@@ -130,6 +129,11 @@ in {
     settings = {
       colors.webpage.preferred_color_scheme = "dark";
       content.javascript.can_access_clipboard = true;
+    };
+
+    aliases = {
+      paywall = "open https://12ft.io/proxy?q={url}";
+      google-cache = "open https://www.google.com/search?q=cache:{url}";
     };
 
     keyBindings = {

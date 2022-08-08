@@ -4,6 +4,7 @@
   environment.systemPackages = with pkgs; [
     cachix
   ];
+
   nix = {
     # Automate garbage collection
     gc = {
@@ -32,7 +33,7 @@
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         "eyadsibai.cachix.org-1:7+k2Qd+uu7AGrS1AvO59mZJWn6PIvQAXK4EzAlqTSLA="
       ];
-		trusted-users = ["root" "eyad"];
+      trusted-users = [ "root" "eyad" ];
     };
     daemonIOSchedClass = "idle";
     daemonCPUSchedPolicy = "idle";
