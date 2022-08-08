@@ -4,6 +4,9 @@
   inputs = {
     # nixpkgs.url = "nixpkgs/nixos-22.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
+    nur.url = "github:nix-community/NUR";
+
     home-manager = {
       url = "github:nix-community/home-manager";
       # url = "github:nix-community/home-manager/release-22.05";
@@ -18,19 +21,11 @@
     };
 
 
-
-
-    nixos-hardware.url = "github:NixOS/nixos-hardware";
-    nur.url = "github:nix-community/NUR";
     flake-utils.url = "github:numtide/flake-utils";
     nix-colors.url = "github:misterio77/nix-colors";
     nix-doom-emacs.url = "github:nix-community/nix-doom-emacs";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     mach-nix.url = "github:DavHau/mach-nix";
-    fenix = {
-      url = "github:nix-community/fenix"; # rust
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
 
     base16.url = "github:SenchoPens/base16.nix";
     base16.inputs.nixpkgs.follows = "nixpkgs";
@@ -52,14 +47,12 @@
   };
 
   outputs =
-    { self
-    , nixpkgs
+    { nixpkgs
     , nixos-hardware
     , nur
     , home-manager
     , nix-colors
     , flake-utils
-    , fenix
     , base16
     , base16-schemes
     , nix-doom-emacs
@@ -80,7 +73,7 @@
 
         overlays = [
           nur.overlay
-          (import ./overlays/whatsapp.nix)
+          (import ./overlay/whatsapp.nix)
           inputs.neovim-nightly-overlay.overlay
         ];
 
@@ -133,15 +126,14 @@
         };
       };
 
-      darwinConfiguration."" = darwin.lib.darwinSystem {
-        system = "x86_64-darwin";
-        modules = [ ];
-        inputs = { inherit darwin; };
-      };
+      # darwinConfiguration."" = darwin.lib.darwinSystem {
+      #   # system = "x86_64-darwin";
+      #   modules = [ ];
+      #   inputs = { inherit darwin; };
+      # };
     } // (flake-utils.lib.eachDefaultSystem (system:
     let
       pkgs = nixpkgs.legacyPackages.${system};
-      fenixPkgs = fenix.packages.${system};
 
     in
     {
