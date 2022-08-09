@@ -1,9 +1,9 @@
 { config, pkgs, nix-colors, ... }: {
 
   imports = [
-    ../../../apps/default.nix
-    ../../../apps/wm/i3/default.nix
-    ../../../apps/custom_config/default.nix
+    ../../../../apps/default.nix
+    ../../../../apps/wm/i3/default.nix
+    ../../../../apps/custom_config/default.nix
   ];
 
   home.packages = with pkgs; [
@@ -78,7 +78,7 @@
     prettyping # a nicer ping
     protonvpn-gui # official proton vpn client
     pulsemixer # pulseaudio mixer
-    remind
+    # remind
     rclone
     reaverwps-t6x
     ripgrep # fast grep
