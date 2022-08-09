@@ -13,13 +13,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    darwin-nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-20.09-darwin";
+    darwin-nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-22.05-darwin";
 
     darwin = {
       url = "github:lnl7/nix-darwin/master";
       inputs.nixpkgs.follows = "darwin-nixpkgs";
     };
-
 
     flake-utils.url = "github:numtide/flake-utils";
     nix-colors.url = "github:misterio77/nix-colors";
@@ -103,6 +102,7 @@
             # { scheme = "${base16-schemes}/nord.yaml"; }
             nur.nixosModules.nur
             nixos-hardware.nixosModules.lenovo-thinkpad
+            nixpkgs.nixosModules.notDetected
             ./hosts/linux/eyad-nixos/nixos/configuration.nix
 
             home-manager.nixosModules.home-manager
