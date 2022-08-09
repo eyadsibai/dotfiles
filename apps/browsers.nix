@@ -2,7 +2,7 @@
 
 let addons = pkgs.nur.repos.rycee.firefox-addons;
 in {
-imports = [./qutebrowser.nix];
+  imports = [ ./qutebrowser.nix ];
 
   home.packages = with pkgs; [ google-chrome nur.repos.wolfangaukang.vdhcoapp ff2mpv ];
   # Browsers

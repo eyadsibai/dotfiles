@@ -103,7 +103,7 @@
             # { scheme = "${base16-schemes}/nord.yaml"; }
             nur.nixosModules.nur
             nixos-hardware.nixosModules.lenovo-thinkpad
-            ./hosts/linux/eyad-nixos/configuration.nix
+            ./hosts/linux/eyad-nixos/nixos/configuration.nix
 
             home-manager.nixosModules.home-manager
             {
@@ -113,7 +113,7 @@
               home-manager.users.eyad = {
                 imports = [
                   nix-doom-emacs.hmModule
-                  ./hosts/linux/eyad-nixos/home.nix
+                  ./hosts/linux/eyad-nixos/home-manager/home.nix
                   # ./theming.nix
                 ];
               };
