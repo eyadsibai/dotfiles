@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ inputs, config, pkgs, lib, ... }:
 {
 
   environment.systemPackages = with pkgs; [
@@ -6,7 +6,16 @@
   ];
 
   nix = {
-    # Automate garbage collection
+
+    # This will add each flake input as a registry
+    # To make nix3 commands consistent with your flake
+    registry = lib.mapAttrs (_: value: { flake = value; }) inputs;
+
+    # This will additionally add your inputs to the system's legacy channels
+    # Making legacy nix commands consistent as well, awesome!
+    nixPath = lib.mapAttrsToList (key: value: "${key}=${value.to.path}") config.nix.registry;
+
+
     gc = {
       automatic = false;
       dates = "weekly";
@@ -18,7 +27,7 @@
 
     settings = {
       auto-optimise-store = true;
-      extra-experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = [ "nix-command" "flakes" ];
       cores = lib.mkDefault 8;
       max-jobs = lib.mkDefault 8;
       substituters = [
