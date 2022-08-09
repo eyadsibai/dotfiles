@@ -215,6 +215,6 @@
   xdg.userDirs.publicShare = "$HOME/public";
   xdg.userDirs.templates = "$HOME/templates";
   # xdg.mimeApps.defaultApplications
-
+  services.kdeconnect.enable = true;
 
 }

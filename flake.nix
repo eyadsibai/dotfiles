@@ -72,8 +72,8 @@
         };
 
         overlays = [
+          (import ./overlay { inherit inputs; })
           nur.overlay
-          (import ./overlay/whatsapp.nix)
           inputs.neovim-nightly-overlay.overlay
         ];
 
@@ -91,7 +91,6 @@
         })
         (pkgs.mkShell { })
         envs);
-
 
     in
     {
