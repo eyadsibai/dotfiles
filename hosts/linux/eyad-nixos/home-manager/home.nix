@@ -4,6 +4,7 @@
     ../../../../apps/default.nix
     ../../../../apps/wm/i3/default.nix
     ../../../../apps/custom_config/default.nix
+    # inputs.nix-doom-emacs.hmModule
     # inputs.nix-colors.homeManagerModule
   ];
 

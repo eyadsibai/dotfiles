@@ -112,14 +112,12 @@
               home-manager.backupFileExtension = "backup";
               home-manager.users.eyad = {
                 imports = [
-                  nix-doom-emacs.hmModule
+                  inputs.nix-doom-emacs.hmModule
                   ./hosts/linux/eyad-nixos/home-manager/home.nix
                   # ./theming.nix
                 ];
               };
-              # extraSpecialArgs = { inherit inputs; };
             }
-
           ];
 
           specialArgs = { inherit inputs; };
