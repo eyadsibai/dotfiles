@@ -1,9 +1,10 @@
-{ config, pkgs, nix-colors, ... }: {
+{ inputs, lib, config, pkgs, nix-colors, ... }: {
 
   imports = [
     ../../../../apps/default.nix
     ../../../../apps/wm/i3/default.nix
     ../../../../apps/custom_config/default.nix
+    # inputs.nix-colors.homeManagerModule
   ];
 
   home.packages = with pkgs; [

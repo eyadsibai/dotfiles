@@ -117,11 +117,13 @@
                   # ./theming.nix
                 ];
               };
+              # extraSpecialArgs = { inherit inputs; };
             }
 
           ];
 
           specialArgs = { inherit inputs; };
+          # extraSpecialArgs = { inherit inputs; };
         };
       };
 
