@@ -26,7 +26,6 @@
     tuir
     tiptop
     weechat
-
   ];
 
   programs.hexchat = { enable = true; };
