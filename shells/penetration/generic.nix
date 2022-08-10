@@ -1,6 +1,6 @@
 # Generic tools (terminals, packers, clients, etc.)
 
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { }, ... }:
 
 {
   environment.systemPackages = with pkgs; [

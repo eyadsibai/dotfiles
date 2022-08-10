@@ -24,4 +24,5 @@ pkgs.mkShell {
     gtop
     procs
   ];
+  shellHook = "";
 }

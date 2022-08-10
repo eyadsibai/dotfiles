@@ -1,6 +1,6 @@
 # Proxy tools for MitM scenarios
 
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { }, ... }:
 
 {
   environment.systemPackages = with pkgs; [

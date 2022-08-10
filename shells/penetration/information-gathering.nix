@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { }, ... }:
 with pkgs;
 mkShell {
 
@@ -15,4 +15,3 @@ mkShell {
   ];
   shellHook = "";
 }
-    

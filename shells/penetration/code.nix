@@ -1,6 +1,6 @@
 # Code analysing tools, incl. search for secrets and alike in code
 
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { }, ... }:
 
 {
   environment.systemPackages = with pkgs; [
