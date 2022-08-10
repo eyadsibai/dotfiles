@@ -45,22 +45,9 @@
     };
   };
 
-  outputs =
-    { nixpkgs
-    , nixos-hardware
-    , nur
-    , home-manager
-    , nix-colors
-    , flake-utils
-    , base16
-    , base16-schemes
-    , nix-doom-emacs
-    , mach-nix
-    , darwin
-    , ...
-    }@inputs:
+  outputs = inputs:
     let
-      forAllSystems = nixpkgs.lib.genAttrs systems;
+      forAllSystems = inputs.nixpkgs.lib.genAttrs systems;
       systems = [
         "aarch64-linux"
         "i686-linux"
@@ -69,15 +56,21 @@
         "x86_64-darwin"
       ];
 
-    in
-    rec {
+      lib = import ./lib { inherit inputs; };
+
       # Your custom packages and modifications
       overlays = {
         default =
-          (import ./overlay { inherit inputs; });
+          (import ./overlay {
+            inherit inputs;
+          });
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
       };
+
+    in
+    rec {
+      # inherit lib;
 
       # Reusable nixos modules you might want to export
       # These are usually stuff you would upstream into nixpkgs
@@ -99,16 +92,28 @@
             };
           }
         );
-
       # Devshell for bootstrapping
-      # Acessible through 'nix develop' or 'nix-shell' (legacy)
+      # Acessible through 'nix develop'
       devShells = forAllSystems
         (system:
-          let pkgs = legacyPackages.${system}; in rec {
+          let
+            pkgs = legacyPackages.${system};
+            mergeEnvs = envs: pkgs.mkShell (builtins.foldl'
+              (a: v: {
+                buildInputs = a.buildInputs ++ v.buildInputs;
+                nativeBuildInputs = a.nativeBuildInputs ++ v.nativeBuildInputs;
+                propagatedBuildInputs = a.propagatedBuildInputs ++ v.propagatedBuildInputs;
+                propagatedNativeBuildInputs = a.propagatedNativeBuildInputs ++ v.propagatedNativeBuildInputs;
+                shellHook = a.shellHook + "\n" + v.shellHook;
+              })
+              (pkgs.mkShell { })
+              envs);
+          in
+          rec {
 
-            default = legacyPackages.${system}.callPackage ./shell.nix { };
-            cc = legacyPackages.${system}.callPackage ./shells/cc.nix { };
-            go = legacyPackages.${system}.callPackage ./shells/go.nix { };
+            default = pkgs.callPackage ./shell.nix { };
+            cc = pkgs.callPackage ./shells/cc.nix { };
+            go = pkgs.callPackage ./shells/go.nix { };
             java = import ./shells/java.nix { inherit pkgs; }; # demonstrate two ways
             node = import ./shells/node.nix { inherit pkgs; };
             python = import ./shells/python.nix { inherit pkgs inputs; };
@@ -120,28 +125,21 @@
             port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
             load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
             password = import ./shells/penetration/password.nix { inherit pkgs; };
-            # penetration-full = mergeEnvs [ port-scanners load-testing password ];
+            penetration-full = mergeEnvs [ port-scanners load-testing password ];
           });
 
 
-
-
-
-
       nixosConfigurations = {
-        eyad-nixos = nixpkgs.lib.nixosSystem {
+        eyad-nixos = inputs.nixpkgs.lib.nixosSystem {
           pkgs = legacyPackages.x86_64-linux;
 
           modules = [
             ./hosts/linux/eyad-nixos/nixos/configuration.nix
-            # base16.nixosModule
-            # { scheme = "${base16-schemes}/nord.yaml"; }
-            nur.nixosModules.nur
-            nixos-hardware.nixosModules.lenovo-thinkpad
-            nixpkgs.nixosModules.notDetected
+            inputs.nur.nixosModules.nur
+            inputs.nixos-hardware.nixosModules.lenovo-thinkpad
+            inputs.nixpkgs.nixosModules.notDetected
 
-
-            home-manager.nixosModules.home-manager
+            inputs.home-manager.nixosModules.home-manager
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
@@ -150,11 +148,12 @@
                 imports = [
                   inputs.nix-doom-emacs.hmModule
                   ./hosts/linux/eyad-nixos/home-manager/home.nix
-                  # ./theming.nix
-                ] ++ (builtins.attrValues homeManagerModules); # Import our reusable home-manager modules;
+                  # Import our reusable home-manager modules;
+                ] ++ (builtins.attrValues homeManagerModules);
               };
             }
-          ] ++ (builtins.attrValues nixosModules); # Import our reusable nixos modules;
+            # Import our reusable nixos modules;
+          ] ++ (builtins.attrValues nixosModules);
 
           specialArgs = {
             inherit inputs;
@@ -163,9 +162,3 @@
       };
     };
 }
-
-# darwinConfiguration."" = darwin.lib.darwinSystem {
-#   # system = "x86_64-darwin";
-#   modules = [ ];
-#   inputs = { inherit darwin; };
-# };
