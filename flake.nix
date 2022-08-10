@@ -13,11 +13,17 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    darwin-nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-22.05-darwin";
+    nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-22.05-darwin";
 
     darwin = {
       url = "github:lnl7/nix-darwin/master";
-      inputs.nixpkgs.follows = "darwin-nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-darwin";
+    };
+
+    home-manager-darwin = {
+      url = "github:nix-community/home-manager";
+      # url = "github:nix-community/home-manager/release-22.05";
+      inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
 
     flake-utils.url = "github:numtide/flake-utils";
@@ -128,9 +134,7 @@
             penetration-full = mergeEnvs [ port-scanners load-testing password ];
           });
 
-
-      nixosConfigurations = {
-        eyad-nixos = inputs.nixpkgs.lib.nixosSystem {
+      nixosConfigurations."eyad-nixos" = inputs.nixpkgs.lib.nixosSystem {
           pkgs = legacyPackages.x86_64-linux;
 
           modules = [
@@ -159,6 +163,20 @@
             inherit inputs;
           };
         };
+
+
+      darwinConfiguration."eyad-mac" = inputs.darwin.lib.darwinSystem {
+      system = "aarch64-darwin";
+
+      modules = [./hosts/mac/darwin/nixos/configuration.nix
+      inputs.home-manager.darwinModule.home-manager
+      {
+home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+      }];
       };
+
     };
+
+
 }
