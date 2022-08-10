@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { } }:
 # TODO https://nixos.wiki/wiki/Workgroup:DataScience
 with pkgs;
 mkShell {

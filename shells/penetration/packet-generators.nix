@@ -1,6 +1,6 @@
 # Tools to generate packets
 
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { }, ... }:
 with pkgs;
 mkShell {
 

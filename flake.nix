@@ -60,50 +60,86 @@
     , ...
     }@inputs:
     let
-      system = "x86_64-linux";
-
-      pkgs = import nixpkgs {
-        inherit system;
-
-        config = {
-          allowUnfree = true;
-          permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
-        };
-
-        overlays = [
-          (import ./overlay { inherit inputs; })
-          nur.overlay
-          inputs.neovim-nightly-overlay.overlay
-        ];
-
-      };
-
-      lib = nixpkgs.lib;
-
-      mergeEnvs = envs: pkgs.mkShell (builtins.foldl'
-        (a: v: {
-          buildInputs = a.buildInputs ++ v.buildInputs;
-          nativeBuildInputs = a.nativeBuildInputs ++ v.nativeBuildInputs;
-          propagatedBuildInputs = a.propagatedBuildInputs ++ v.propagatedBuildInputs;
-          propagatedNativeBuildInputs = a.propagatedNativeBuildInputs ++ v.propagatedNativeBuildInputs;
-          shellHook = a.shellHook + "\n" + v.shellHook;
-        })
-        (pkgs.mkShell { })
-        envs);
+      forAllSystems = nixpkgs.lib.genAttrs systems;
+      systems = [
+        "aarch64-linux"
+        "i686-linux"
+        "x86_64-linux"
+        "aarch64-darwin"
+        "x86_64-darwin"
+      ];
 
     in
-    {
+    rec {
+      # Your custom packages and modifications
+      overlays = {
+        default =
+          (import ./overlay { inherit inputs; });
+        nur = inputs.nur.overlay;
+        neovim = inputs.neovim-nightly-overlay.overlay;
+      };
+
+      # Reusable nixos modules you might want to export
+      # These are usually stuff you would upstream into nixpkgs
+      nixosModules = import ./modules/nixos;
+      # Reusable home-manager modules you might want to export
+      # These are usually stuff you would upstream into home-manager
+      homeManagerModules = import ./modules/home-manager;
+
+      # Reexport nixpkgs with our overlays applied
+      # Acessible on our configurations, and through nix build, shell, run, etc.
+      legacyPackages = forAllSystems
+        (system:
+          import inputs.nixpkgs {
+            inherit system;
+            overlays = builtins.attrValues overlays;
+            config = {
+              allowUnfree = true;
+              permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
+            };
+          }
+        );
+
+      # Devshell for bootstrapping
+      # Acessible through 'nix develop' or 'nix-shell' (legacy)
+      devShells = forAllSystems
+        (system:
+          let pkgs = legacyPackages.${system}; in rec {
+
+            default = legacyPackages.${system}.callPackage ./shell.nix { };
+            cc = legacyPackages.${system}.callPackage ./shells/cc.nix { };
+            go = legacyPackages.${system}.callPackage ./shells/go.nix { };
+            java = import ./shells/java.nix { inherit pkgs; }; # demonstrate two ways
+            node = import ./shells/node.nix { inherit pkgs; };
+            python = import ./shells/python.nix { inherit pkgs inputs; };
+            rust = import ./shells/rust.nix { inherit pkgs; };
+            ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
+            sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
+            db = import ./shells/db_dev.nix { inherit pkgs; };
+            r = import ./shells/r.nix { inherit pkgs; };
+            port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
+            load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
+            password = import ./shells/penetration/password.nix { inherit pkgs; };
+            # penetration-full = mergeEnvs [ port-scanners load-testing password ];
+          });
+
+
+
+
+
+
       nixosConfigurations = {
-        eyad-nixos = lib.nixosSystem {
-          inherit system pkgs;
+        eyad-nixos = nixpkgs.lib.nixosSystem {
+          pkgs = legacyPackages.x86_64-linux;
 
           modules = [
+            ./hosts/linux/eyad-nixos/nixos/configuration.nix
             # base16.nixosModule
             # { scheme = "${base16-schemes}/nord.yaml"; }
             nur.nixosModules.nur
             nixos-hardware.nixosModules.lenovo-thinkpad
             nixpkgs.nixosModules.notDetected
-            ./hosts/linux/eyad-nixos/nixos/configuration.nix
+
 
             home-manager.nixosModules.home-manager
             {
@@ -115,45 +151,21 @@
                   inputs.nix-doom-emacs.hmModule
                   ./hosts/linux/eyad-nixos/home-manager/home.nix
                   # ./theming.nix
-                ];
+                ] ++ (builtins.attrValues homeManagerModules); # Import our reusable home-manager modules;
               };
             }
-          ];
+          ] ++ (builtins.attrValues nixosModules); # Import our reusable nixos modules;
 
-          specialArgs = { inherit inputs; };
-          # extraSpecialArgs = { inherit inputs; };
+          specialArgs = {
+            inherit inputs;
+          };
         };
       };
-
-      # darwinConfiguration."" = darwin.lib.darwinSystem {
-      #   # system = "x86_64-darwin";
-      #   modules = [ ];
-      #   inputs = { inherit darwin; };
-      # };
-    } // (flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs = nixpkgs.legacyPackages.${system};
-
-    in
-    {
-      devShells = rec {
-        default = import ./shell.nix { inherit pkgs; };
-        cc = import ./shells/cc.nix { inherit pkgs; };
-        go = import ./shells/go.nix { inherit pkgs; };
-        java = import ./shells/java.nix { inherit pkgs; };
-        node = import ./shells/node.nix { inherit pkgs; };
-        python = import ./shells/python.nix { inherit pkgs mach-nix nixpkgs; };
-        rust = import ./shells/rust.nix { inherit pkgs; };
-        ml = import ./shells/ml_no_cuda.nix { inherit pkgs; };
-        sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
-        db = import ./shells/db_dev.nix { inherit pkgs; };
-        r = import ./shells/r.nix { inherit pkgs; };
-        port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
-        load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
-        password = import ./shells/penetration/password.nix { inherit pkgs; };
-        penetration-full = mergeEnvs [ port-scanners load-testing password ];
-        # android = import ./android.nix {inherit pkgs android-nixpkgs ; };
-      };
-    }));
-
+    };
 }
+
+# darwinConfiguration."" = darwin.lib.darwinSystem {
+#   # system = "x86_64-darwin";
+#   modules = [ ];
+#   inputs = { inherit darwin; };
+# };

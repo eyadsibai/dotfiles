@@ -1,5 +1,5 @@
 # Bluetooth tools
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { }, ... }:
 with pkgs;
 mkShell {
 

@@ -1,6 +1,6 @@
 # Tools for working with Android/iOS devices
 
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { }, ... }:
 with pkgs;
 mkShell {
 

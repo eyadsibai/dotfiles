@@ -1,6 +1,6 @@
 # Kubernetes infrastructure and Windows-related tools, incl. SMB
 
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { }, ... }:
 
 {
   environment.systemPackages = with pkgs; [

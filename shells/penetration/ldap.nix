@@ -1,6 +1,6 @@
 # LDAP tools
 
-{ pkgs, ... }:
+{ pkgs ? import <nixpkgs> { }, ... }:
 
 {
   environment.systemPackages = with pkgs; [
