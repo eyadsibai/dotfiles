@@ -45,6 +45,9 @@
         "danth.cachix.org-1:wpodfSL7suXRc/rJDZZUptMa1t4MJ795hemRN0q84vI="
       ];
       trusted-users = [ "root" "eyad" ];
+
+      sandbox = true;
+
     };
     daemonIOSchedClass = "idle";
     daemonCPUSchedPolicy = "idle";
