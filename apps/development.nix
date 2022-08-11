@@ -104,6 +104,7 @@
       "*.webp filter=lfs diff=lfs merge=lfs -text"
       "*.woff2 filter=lfs diff=lfs merge=lfs -text"
       "*.exe filter=lfs diff=lfs merge=lfs -text"
+
     ];
 
     # diff tool
