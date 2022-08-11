@@ -1,1 +1,5 @@
-
+{ pkgs, ... }: {
+  imports = [
+    ./sxhkd.nix
+  ];
+}
