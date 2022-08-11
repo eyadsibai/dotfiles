@@ -75,14 +75,6 @@
 
       lib = import ./lib { inherit inputs; };
 
-      # Your custom packages and modifications
-      overlays = {
-        default = import ./overlay {
-          inherit inputs;
-        };
-        nur = inputs.nur.overlay;
-        neovim = inputs.neovim-nightly-overlay.overlay;
-      };
     in
     rec {
       # inherit lib;
@@ -93,6 +85,16 @@
       # Reusable home-manager modules you might want to export
       # These are usually stuff you would upstream into home-manager
       homeManagerModules = import ./modules/home-manager;
+
+
+      # Your custom packages and modifications
+      overlays = {
+        default = import ./overlay {
+          inherit inputs lib;
+        };
+        nur = inputs.nur.overlay;
+        neovim = inputs.neovim-nightly-overlay.overlay;
+      };
 
       # Reexport nixpkgs with our overlays applied
       # Acessible on our configurations, and through nix build, shell, run, etc.
