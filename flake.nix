@@ -7,6 +7,11 @@
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     nix-index-database.url = "github:Mic92/nix-index-database";
+    sops-nix =
+      {
+        url = github:Mic92/sops-nix;
+        inputs.nixpkgs.follows = "nixpkgs";
+      };
     home-manager = {
       url = "github:nix-community/home-manager";
       # url = "github:nix-community/home-manager/release-22.05";
@@ -30,6 +35,7 @@
     nix-doom-emacs.url = "github:nix-community/nix-doom-emacs";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     mach-nix.url = "github:DavHau/mach-nix";
+    nixpkgs-firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
 
     # THEMING
 
@@ -61,8 +67,7 @@
     let
       forAllSystems = inputs.nixpkgs.lib.genAttrs systems;
       systems = [
-        "aarch64-linux"
-        "i686-linux"
+        # "aarch64-linux"
         "x86_64-linux"
         "aarch64-darwin"
         "x86_64-darwin"
@@ -147,7 +152,7 @@
         modules =
           [
             ./hosts/linux/eyad-nixos/nixos/configuration.nix
-
+            inputs.sops-nix.nixosModules.sops
             inputs.nixos-hardware.nixosModules.lenovo-thinkpad
             inputs.nixpkgs.nixosModules.notDetected
             inputs.nur.nixosModules.nur
@@ -177,10 +182,11 @@
       };
 
       darwinConfiguration."eyad-mac" = inputs.darwin.lib.darwinSystem {
-        system = "aarch64-darwin";
+        pkgs = legacyPackages.aarch64-darwin;
 
         modules = [
           ./hosts/mac/darwin/nixos/configuration.nix
+          { pkgs.overlays = [ inputs.firefox-darwin.overlay ]; }
           inputs.home-manager.darwinModule.home-manager
           {
             home-manager.useGlobalPkgs = true;
