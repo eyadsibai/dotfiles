@@ -68,9 +68,9 @@
       # Your custom packages and modifications
       overlays = {
         default =
-          (import ./overlay {
+          import ./overlay {
             inherit inputs;
-          });
+          };
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
       };
