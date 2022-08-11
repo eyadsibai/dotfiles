@@ -1,7 +1,6 @@
-{
-  pkgs,
-  lib,
-  ...
+{ pkgs
+, lib
+, ...
 }: {
   programs.bash = {
     enable = true;
@@ -37,5 +36,5 @@
     ];
   };
 
-  programs.fish = {enable = false;};
+  programs.fish = { enable = false; };
 }

@@ -1,9 +1,8 @@
-{
-  inputs,
-  lib,
-  pkgs,
-  nix-colors,
-  ...
+{ inputs
+, lib
+, pkgs
+, nix-colors
+, ...
 }: {
   imports = [
     ../../../../apps/default.nix
@@ -148,7 +147,7 @@
 
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
-  home.keyboard.options = ["grp:win_space_toggle"];
+  home.keyboard.options = [ "grp:win_space_toggle" ];
 
   xsession = {
     enable = true;

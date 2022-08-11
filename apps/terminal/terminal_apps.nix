@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{ pkgs, ... }: {
   home.packages = with pkgs; [
     swaglyrics
     streamlink
@@ -62,7 +62,7 @@
 
   programs.bat = {
     enable = true;
-    config = {pager = "less -FR";};
+    config = { pager = "less -FR"; };
     themes = {
       dracula = builtins.readFile (pkgs.fetchFromGitHub
         {
@@ -71,7 +71,7 @@
           rev = "26c57ec282abcaa76e57e055f38432bd827ac34e";
           sha256 = "019hfl4zbn4vm4154hh3bwk6hm7bdxbr1hdww83nabxwjn99ndhv";
         }
-        + "/Dracula.tmTheme");
+      + "/Dracula.tmTheme");
     };
   };
 
@@ -95,7 +95,7 @@
 
   programs.direnv = {
     enable = true;
-    nix-direnv = {enable = true;};
+    nix-direnv = { enable = true; };
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableFishIntegration = false;
@@ -110,14 +110,14 @@
   programs.fzf = {
     enable = true;
     defaultCommand = "fd --type file --follow"; # FZF_DEFAULT_COMMAND
-    defaultOptions = ["--height 20%"]; # FZF_DEFAULT_OPTS
+    defaultOptions = [ "--height 20%" ]; # FZF_DEFAULT_OPTS
     fileWidgetCommand = "fd --type file --follow"; # FZF_CTRL_T_COMMAND
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableFishIntegration = false;
   };
 
-  programs.jq = {enable = true;};
+  programs.jq = { enable = true; };
 
   # programs.just = {
   #   enable = true;
@@ -126,13 +126,13 @@
   #   enableFishIntegration = true;
   # };
 
-  programs.less = {enable = true;};
+  programs.less = { enable = true; };
 
-  programs.lf = {enable = true;};
+  programs.lf = { enable = true; };
 
-  programs.lsd = {enable = true;};
+  programs.lsd = { enable = true; };
 
-  programs.man = {enable = true;};
+  programs.man = { enable = true; };
 
   programs.mcfly = {
     enable = true;
@@ -148,7 +148,7 @@
     enableFishIntegration = false;
   };
 
-  programs.ncspot = {enable = true;};
+  programs.ncspot = { enable = true; };
 
   # programs.command-not-found.enable = true;
   programs.nix-index = {
@@ -160,13 +160,13 @@
 
   home.file.".cache/nix-index".source = pkgs.nix-index-database;
 
-  programs.nnn = {enable = true;};
+  programs.nnn = { enable = true; };
 
-  programs.noti = {enable = true;};
+  programs.noti = { enable = true; };
 
-  programs.pandoc = {enable = true;};
+  programs.pandoc = { enable = true; };
 
-  programs.pet = {enable = true;};
+  programs.pet = { enable = true; };
 
   # programs.piston-cli = {
   #   enable = true;
@@ -190,15 +190,15 @@
     enableFishIntegration = false;
   };
 
-  programs.ssh = {enable = true;};
+  programs.ssh = { enable = true; };
 
   # programs.starship = { enable = true; };
 
-  programs.taskwarrior = {enable = true;};
+  programs.taskwarrior = { enable = true; };
 
-  programs.tmux = {enable = true;};
+  programs.tmux = { enable = true; };
 
-  programs.topgrade = {enable = true;};
+  programs.topgrade = { enable = true; };
 
   programs.watson = {
     enable = true;

@@ -1,7 +1,6 @@
-{
-  pkgs,
-  lib,
-  ...
+{ pkgs
+, lib
+, ...
 }: {
   xsession.windowManager.i3 = {
     enable = true;
@@ -9,7 +8,7 @@
 
     config = rec {
       modifier = "Mod4";
-      bars = [];
+      bars = [ ];
 
       window.border = 0;
 

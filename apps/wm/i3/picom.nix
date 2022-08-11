@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{ pkgs, ... }: {
   services.picom = {
     enable = true;
     # package = pkgs.callPackage ../packages/compton-unstable.nix { };

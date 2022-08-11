@@ -1,4 +1,5 @@
-{pkgs ? import <nixpkgs> {}}: let
+{ pkgs ? import <nixpkgs> { } }:
+let
   RStudio-with-my-packages = pkgs.rstudioWrapper.override {
     packages = with pkgs.rPackages; [
       ggplot2
@@ -11,4 +12,4 @@
     ];
   };
 in
-  pkgs.mkShell {buildInputs = with pkgs; [RStudio-with-my-packages];}
+pkgs.mkShell { buildInputs = with pkgs; [ RStudio-with-my-packages ]; }

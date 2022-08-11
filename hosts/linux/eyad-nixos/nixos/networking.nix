@@ -1,14 +1,13 @@
-{
-  inputs,
-  config,
-  pkgs,
-  ...
+{ inputs
+, config
+, pkgs
+, ...
 }: {
   networking = {
     hostName = "eyad-nixos";
     networkmanager = {
       enable = true;
-      plugins = [pkgs.networkmanager-openvpn];
+      plugins = [ pkgs.networkmanager-openvpn ];
     };
     wireless.enable = false; # Enables wireless support via wpa_supplicant.
     useDHCP = false; # deprecated

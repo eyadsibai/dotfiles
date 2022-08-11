@@ -1,5 +1,5 @@
 # Terminal tools
-{pkgs ? import <nixpkgs> {}, ...}: {
+{ pkgs ? import <nixpkgs> { }, ... }: {
   environment.systemPackages = with pkgs; [
     cutecom
     minicom
