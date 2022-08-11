@@ -9,6 +9,7 @@
     ../../../../apps/wm/i3
     ../../../../apps/custom_config
     ../../../../hosts/common/home-manager
+    ../../../../hosts/linux/common/home-manager
 
     # inputs.nix-doom-emacs.hmModule
     # inputs.nix-colors.homeManagerModule
@@ -137,7 +138,7 @@
     # nur.repos.wolfangaukang.sherlock
     nur.repos.wolfangaukang.nuclear
     yandex-disk
-    upwork
+    # upwork
     jrnl
     gparted
     python310Packages.mistune_2_0

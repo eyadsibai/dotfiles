@@ -167,7 +167,7 @@
               home-manager.users.eyad = {
                 imports =
                   [
-                    ./hosts/linux/eyad-nixos/home-manager/home.nix
+                    ./hosts/linux/eyad-nixos/home-manager
                     inputs.nix-doom-emacs.hmModule
                     # Import our reusable home-manager modules;
                   ]

@@ -44,7 +44,6 @@
   # services.gromit-mpx.enable = true;
   services.hound.enable = false;
 
-  services.sxhkd.enable = true;
   services.xcape.enable = true;
 
   services.unclutter.enable = true;
