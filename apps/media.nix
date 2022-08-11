@@ -1,5 +1,4 @@
-{ pkgs, ... }: {
-
+{pkgs, ...}: {
   home.packages = with pkgs; [
     spotify-tui
     spotify
@@ -12,7 +11,6 @@
     youtube-dl
     ytcc
     darktable
-
   ];
 
   services.mopidy = {
@@ -33,7 +31,7 @@
   services.mpdris2.enable = true;
   services.playerctld.enable = true;
   services.spotifyd.enable = true;
-  programs.ncmpcpp = { enable = true; };
+  programs.ncmpcpp = {enable = true;};
   programs.mpv = {
     enable = true;
     bindings = {

@@ -1,4 +1,9 @@
-{ lib, config, pkgs, ... }: {
+{
+  lib,
+  config,
+  pkgs,
+  ...
+}: {
   # services.redshift = {
   #   enable = false;
   #   settings = {
@@ -49,7 +54,5 @@
     automount = true;
     notify = true;
     tray = "never";
-
   };
-
 }

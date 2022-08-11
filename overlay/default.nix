@@ -1,8 +1,7 @@
 # This file defines two overlays and composes them
-{ inputs, ... }:
-let
+{inputs, ...}: let
   # This one brings our custom packages from the 'pkgs' directory
-  additions = final: _prev: import ../pkgs { pkgs = final; };
+  additions = final: _prev: import ../pkgs {pkgs = final;};
 
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
@@ -31,12 +30,10 @@ let
       ];
     });
 
-    nix-index-database = final.runCommandLocal "nix-index-database" { } ''
+    nix-index-database = final.runCommandLocal "nix-index-database" {} ''
       mkdir -p $out
       ln -s ${inputs.nix-index-database.legacyPackages.${prev.system}.database} $out/files
     '';
-
-
   };
 in
-inputs.nixpkgs.lib.composeManyExtensions [ additions modifications ]
+  inputs.nixpkgs.lib.composeManyExtensions [additions modifications]

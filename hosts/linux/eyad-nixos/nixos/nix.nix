@@ -1,20 +1,22 @@
-{ inputs, config, pkgs, lib, ... }:
 {
-
+  inputs,
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
   environment.systemPackages = with pkgs; [
     cachix
   ];
 
   nix = {
-
     # This will add each flake input as a registry
     # To make nix3 commands consistent with your flake
-    registry = lib.mapAttrs (_: value: { flake = value; }) inputs;
+    registry = lib.mapAttrs (_: value: {flake = value;}) inputs;
 
     # This will additionally add your inputs to the system's legacy channels
     # Making legacy nix commands consistent as well, awesome!
     nixPath = lib.mapAttrsToList (key: value: "${key}=${value.to.path}") config.nix.registry;
-
 
     gc = {
       automatic = false;
@@ -24,10 +26,9 @@
 
     package = pkgs.nixFlakes;
 
-
     settings = {
       auto-optimise-store = true;
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = ["nix-command" "flakes"];
       cores = lib.mkDefault 8;
       max-jobs = lib.mkDefault 8;
       substituters = [
@@ -42,11 +43,9 @@
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         "eyadsibai.cachix.org-1:7+k2Qd+uu7AGrS1AvO59mZJWn6PIvQAXK4EzAlqTSLA="
       ];
-      trusted-users = [ "root" "eyad" ];
+      trusted-users = ["root" "eyad"];
     };
     daemonIOSchedClass = "idle";
     daemonCPUSchedPolicy = "idle";
-
   };
-
 }

@@ -1,6 +1,4 @@
-{ pkgs, ... }:
-
-let
+{pkgs, ...}: let
   ac = "#1E88E5";
   mf = "#383838";
 
@@ -24,9 +22,7 @@ let
 
   # Red
   urgency = "#e74c3c";
-
-in
-{
+in {
   services.polybar = {
     enable = true;
 
@@ -125,8 +121,7 @@ in
 
       "module/distro-icon" = {
         type = "custom/script";
-        exec =
-          "${pkgs.coreutils}/bin/uname -r | ${pkgs.coreutils}/bin/cut -d- -f1";
+        exec = "${pkgs.coreutils}/bin/uname -r | ${pkgs.coreutils}/bin/cut -d- -f1";
         interval = 999999999;
 
         format = " <label>";
@@ -379,7 +374,6 @@ in
         label-disconnected-background = bg;
         label-disconnected-foreground = primary;
         label-disconnected-padding = 1;
-
       };
 
       #--------------------SOLID TRANSITIONS--------------------#

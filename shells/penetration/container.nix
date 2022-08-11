@@ -1,8 +1,5 @@
 # Container analysing tools
-
-{ pkgs ? import <nixpkgs> { }, ... }:
-
-{
+{pkgs ? import <nixpkgs> {}, ...}: {
   environment.systemPackages = with pkgs; [
     cdk-go
     clair

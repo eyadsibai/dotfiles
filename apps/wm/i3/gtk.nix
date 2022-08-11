@@ -1,7 +1,5 @@
-{ pkgs, ... }:
-
-{
-  home.packages = [ pkgs.nordic pkgs.arc-icon-theme pkgs.lxappearance ];
+{pkgs, ...}: {
+  home.packages = [pkgs.nordic pkgs.arc-icon-theme pkgs.lxappearance];
 
   home.file.".gtkrc-2.0" = {
     text = ''
