@@ -1,9 +1,10 @@
-{ inputs, lib, config, pkgs, nix-colors, ... }: {
+{ inputs, lib, pkgs, nix-colors, ... }: {
 
   imports = [
     ../../../../apps/default.nix
     ../../../../apps/wm/i3/default.nix
     ../../../../apps/custom_config/default.nix
+
     # inputs.nix-doom-emacs.hmModule
     # inputs.nix-colors.homeManagerModule
   ];
@@ -71,7 +72,6 @@
     nethogs
     nettools
     nitrogen
-    nix-index # locate packages containing certain nixpkgs
     nixpkgs-fmt
     nload
     nyancat # the famous rainbow cat!
@@ -134,8 +134,10 @@
     yandex-disk
     # upwork
     jrnl
+    gparted
     python310Packages.mistune_2_0
     notion-app-enhanced
+    comma
   ];
 
   home.enableNixpkgsReleaseCheck = true;

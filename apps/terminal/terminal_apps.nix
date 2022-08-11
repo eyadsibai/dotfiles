@@ -160,6 +160,8 @@
     enableFishIntegration = false;
   };
 
+  home.file.".cache/nix-index".source = pkgs.nix-index-database;
+
   programs.nnn = { enable = true; };
 
   programs.noti = { enable = true; };

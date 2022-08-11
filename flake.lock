@@ -526,6 +526,21 @@
         "type": "github"
       }
     },
+    "nix-index-database": {
+      "locked": {
+        "lastModified": 1659844098,
+        "narHash": "sha256-w4DhlFAQ+sHyfh/r26r5R68/wIue4gkWEc3XPqiFMaM=",
+        "owner": "Mic92",
+        "repo": "nix-index-database",
+        "rev": "4e277cf60f0a2172ebdb920ba37c0efbadfbb429",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "nix-index-database",
+        "type": "github"
+      }
+    },
     "nix-straight": {
       "flake": false,
       "locked": {
@@ -806,6 +821,7 @@
         "neovim-nightly-overlay": "neovim-nightly-overlay",
         "nix-colors": "nix-colors",
         "nix-doom-emacs": "nix-doom-emacs",
+        "nix-index-database": "nix-index-database",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_4",
         "nixpkgs-darwin": "nixpkgs-darwin",

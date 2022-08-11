@@ -6,7 +6,7 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
-
+    nix-index-database.url = "github:Mic92/nix-index-database";
     home-manager = {
       url = "github:nix-community/home-manager";
       # url = "github:nix-community/home-manager/release-22.05";
@@ -49,6 +49,7 @@
       url = "github:base16-project/base16-vim";
       flake = false;
     };
+
   };
 
   outputs = inputs:
@@ -139,10 +140,10 @@
 
         modules = [
           ./hosts/linux/eyad-nixos/nixos/configuration.nix
+
           inputs.nur.nixosModules.nur
           inputs.nixos-hardware.nixosModules.lenovo-thinkpad
           inputs.nixpkgs.nixosModules.notDetected
-
           inputs.home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
@@ -150,8 +151,8 @@
             home-manager.backupFileExtension = "backup";
             home-manager.users.eyad = {
               imports = [
-                inputs.nix-doom-emacs.hmModule
                 ./hosts/linux/eyad-nixos/home-manager/home.nix
+                inputs.nix-doom-emacs.hmModule
                 # Import our reusable home-manager modules;
               ] ++ (builtins.attrValues homeManagerModules);
             };

@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ lib, config, pkgs, ... }:
 
 let addons = pkgs.nur.repos.rycee.firefox-addons;
 in {
@@ -51,13 +51,14 @@ in {
       })
       (buildFirefoxXpiAddon rec {
         pname = "ticktick";
-        version = "1.1.3.6";
+        version = "1.1.5.0";
         addonId = "{52198036-5173-4877-a8e8-62474781798d}";
-        url = "https://addons.mozilla.org/firefox/downloads/file/3511196/ticktick_todo_task_list_reminder-${version}-fx.xpi?src=";
-        sha256 = "10abqz3p2z00g49ya3xvpn3ii0klsvsby16r1hm3hzmafd6klkqi";
+        url = "https://addons.mozilla.org/firefox/downloads/file/3972098/ticktick_todo-${version}.xpi";
+        sha256 = "sha256-wVczdaWzzuBC8DwqcFT4g/KkAK6UCfD0LjIHQMiettA=";
         meta = { };
       })
     ];
+
 
     profiles."eyad" = {
       # id = 0;
