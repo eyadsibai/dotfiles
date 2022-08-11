@@ -1,0 +1,7 @@
+keys:
+  # Users
+  - &users
+    - &eyad
+
+creation_rules:
+  - path_regex: hosts/
