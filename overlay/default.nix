@@ -31,6 +31,13 @@ let
         prev.gst_all_1.gst-plugins-good
       ];
     });
+
+    nix-index-database = final.runCommandLocal "nix-index-database" { } ''
+      mkdir -p $out
+      ln -s ${inputs.nix-index-database.legacyPackages.${prev.system}.database} $out/files
+    '';
+
+
   };
 in
 inputs.nixpkgs.lib.composeManyExtensions [ additions modifications ]
