@@ -44,7 +44,7 @@ in
   };
 
   config = mkIf (attrLength nm.profiles > 0) {
-    environment.etc = (foldlAttrs
+    environment.etc = foldlAttrs
       (accum:
         { name, value }:
         accum // {
@@ -52,6 +52,6 @@ in
             mkProfile value;
         })
       { }
-      nm.profiles);
+      nm.profiles;
   };
 }

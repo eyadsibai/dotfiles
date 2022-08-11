@@ -13,7 +13,6 @@ let
       src = prev.fetchFromGitHub {
         owner = "eneshecan";
         repo = "${oldAttrs.pname}";
-
         rev = "v${version}";
         # sha265 = lib.fakeSha256;
         # sha256 = "0000000000000000000000000000000000000000000000000000";
