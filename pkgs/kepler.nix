@@ -1,5 +1,7 @@
-{ yarn2nix, fetchgit }:
-
+{
+  yarn2nix,
+  fetchgit,
+}:
 yarn2nix.mkYarnPackage {
   name = "kepler";
 
@@ -18,5 +20,4 @@ yarn2nix.mkYarnPackage {
     url = "https://github.com/uber/kepler.gl";
     sha256 = "16yn98clq90slcyiaj6qvbfcg1csisjs8gsrn6j0p79alf8lk2hq";
   };
-
 }

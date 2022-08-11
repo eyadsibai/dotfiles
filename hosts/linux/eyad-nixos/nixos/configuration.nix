@@ -1,8 +1,10 @@
-{ config, pkgs, lib, ... }:
-
 {
-  imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix ];
-
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
+  imports = [./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix];
 
   # Thermals and cooling
   services.thermald.enable = true;
@@ -20,7 +22,7 @@
     plymouth.enable = true;
     loader.efi.canTouchEfiVariables = true;
     cleanTmpDir = true;
-    supportedFilesystems = [ "ntfs" ];
+    supportedFilesystems = ["ntfs"];
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "acpi_osi=Linux"
@@ -63,7 +65,10 @@
   systemd.coredump.enable = true;
   services.tlp = {
     enable = true;
-    settings = { USB_AUTOSUSPEND = 0; RUNTIME_PM_BLACKLIST = "05:00.3 04:00.3 04:00.4"; };
+    settings = {
+      USB_AUTOSUSPEND = 0;
+      RUNTIME_PM_BLACKLIST = "05:00.3 04:00.3 04:00.4";
+    };
   };
 
   # hardware.ledger.enable = true;
@@ -89,7 +94,7 @@
       gdm.wayland = false;
     };
 
-    videoDrivers = [ "amdgpu" ];
+    videoDrivers = ["amdgpu"];
     desktopManager = {
       xterm.enable = false;
       gnome.enable = false;
@@ -139,12 +144,10 @@
   services.xserver.libinput.enable = true;
   users.mutableUsers = true;
   users.users.eyad = {
-
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" ];
-    hashedPassword =
-      "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
+    extraGroups = ["wheel" "networkmanager"];
+    hashedPassword = "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
     openssh.authorizedKeys.keys = [
       # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
     ];
@@ -200,16 +203,18 @@
 
   security.apparmor.enable = false;
 
-  services.xserver.desktopManager.session = [{
-    name = "HomeManager";
-    start = ''
-      ${pkgs.runtimeShell} $HOME/.hm-xsession &
-      waitPID=$!
-    '';
-  }];
+  services.xserver.desktopManager.session = [
+    {
+      name = "HomeManager";
+      start = ''
+        ${pkgs.runtimeShell} $HOME/.hm-xsession &
+        waitPID=$!
+      '';
+    }
+  ];
 
   # No access time and continuous TRIM for SSD
-  fileSystems."/".options = [ "noatime" "discard" ];
+  fileSystems."/".options = ["noatime" "discard"];
 
   # Sysctl params
   boot.kernel.sysctl = {
@@ -217,7 +222,7 @@
   };
 
   hardware.opengl.enable = true;
-  hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau ];
+  hardware.opengl.extraPackages = [pkgs.libvdpau-va-gl pkgs.vaapiVdpau];
 
   hardware.opengl.driSupport32Bit = true;
   programs.steam = {
@@ -234,5 +239,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "22.05"; # Did you read the comment?
-
 }

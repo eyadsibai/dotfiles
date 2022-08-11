@@ -1,10 +1,11 @@
-{ pkgs, lib, ... }:
-
 {
+  pkgs,
+  lib,
+  ...
+}: {
   programs.bash = {
     enable = true;
     initExtra = "neofetch";
-
   };
 
   # programs.zsh = {
@@ -23,7 +24,6 @@
     enableCompletion = true;
     autocd = true;
     plugins = [
-
       {
         name = "powerlevel10k";
         src = pkgs.zsh-powerlevel10k;
@@ -34,9 +34,8 @@
         src = lib.cleanSource ./p10k-config;
         file = "p10k.zsh";
       }
-
     ];
   };
 
-  programs.fish = { enable = false; };
+  programs.fish = {enable = false;};
 }

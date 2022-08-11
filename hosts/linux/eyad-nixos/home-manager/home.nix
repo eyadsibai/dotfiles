@@ -1,5 +1,10 @@
-{ inputs, lib, pkgs, nix-colors, ... }: {
-
+{
+  inputs,
+  lib,
+  pkgs,
+  nix-colors,
+  ...
+}: {
   imports = [
     ../../../../apps/default.nix
     ../../../../apps/wm/i3/default.nix
@@ -138,11 +143,12 @@
     python310Packages.mistune_2_0
     notion-app-enhanced
     comma
+    statix
   ];
 
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
-  home.keyboard.options = [ "grp:win_space_toggle" ];
+  home.keyboard.options = ["grp:win_space_toggle"];
 
   xsession = {
     enable = true;
@@ -220,5 +226,4 @@
   xdg.userDirs.templates = "$HOME/templates";
   # xdg.mimeApps.defaultApplications
   services.kdeconnect.enable = true;
-
 }

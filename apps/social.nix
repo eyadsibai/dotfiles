@@ -1,6 +1,4 @@
-{ pkgs, ... }:
-
-{
+{pkgs, ...}: {
   home.packages = with pkgs; [
     discord
     signal-desktop
@@ -28,6 +26,5 @@
     weechat
   ];
 
-  programs.hexchat = { enable = true; };
-
+  programs.hexchat = {enable = true;};
 }

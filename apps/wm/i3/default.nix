@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{pkgs, ...}: {
   imports = [
     ./picom.nix
     ./polybar.nix
@@ -6,5 +6,4 @@
     ./i3.nix
     # ./gtk.nix
   ];
-
 }
