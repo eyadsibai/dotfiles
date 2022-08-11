@@ -135,45 +135,47 @@
           });
 
       nixosConfigurations."eyad-nixos" = inputs.nixpkgs.lib.nixosSystem {
-          pkgs = legacyPackages.x86_64-linux;
+        pkgs = legacyPackages.x86_64-linux;
 
-          modules = [
-            ./hosts/linux/eyad-nixos/nixos/configuration.nix
-            inputs.nur.nixosModules.nur
-            inputs.nixos-hardware.nixosModules.lenovo-thinkpad
-            inputs.nixpkgs.nixosModules.notDetected
+        modules = [
+          ./hosts/linux/eyad-nixos/nixos/configuration.nix
+          inputs.nur.nixosModules.nur
+          inputs.nixos-hardware.nixosModules.lenovo-thinkpad
+          inputs.nixpkgs.nixosModules.notDetected
 
-            inputs.home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.backupFileExtension = "backup";
-              home-manager.users.eyad = {
-                imports = [
-                  inputs.nix-doom-emacs.hmModule
-                  ./hosts/linux/eyad-nixos/home-manager/home.nix
-                  # Import our reusable home-manager modules;
-                ] ++ (builtins.attrValues homeManagerModules);
-              };
-            }
-            # Import our reusable nixos modules;
-          ] ++ (builtins.attrValues nixosModules);
+          inputs.home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "backup";
+            home-manager.users.eyad = {
+              imports = [
+                inputs.nix-doom-emacs.hmModule
+                ./hosts/linux/eyad-nixos/home-manager/home.nix
+                # Import our reusable home-manager modules;
+              ] ++ (builtins.attrValues homeManagerModules);
+            };
+          }
+          # Import our reusable nixos modules;
+        ] ++ (builtins.attrValues nixosModules);
 
-          specialArgs = {
-            inherit inputs;
-          };
+        specialArgs = {
+          inherit inputs;
         };
+      };
 
 
       darwinConfiguration."eyad-mac" = inputs.darwin.lib.darwinSystem {
-      system = "aarch64-darwin";
+        system = "aarch64-darwin";
 
-      modules = [./hosts/mac/darwin/nixos/configuration.nix
-      inputs.home-manager.darwinModule.home-manager
-      {
-home-manager.useGlobalPkgs = true;
+        modules = [
+          ./hosts/mac/darwin/nixos/configuration.nix
+          inputs.home-manager.darwinModule.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-      }];
+          }
+        ];
       };
 
     };
