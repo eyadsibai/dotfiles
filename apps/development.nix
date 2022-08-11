@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{ pkgs, ... }: {
   programs.micro = {
     enable = true;
   };
@@ -50,7 +50,7 @@
         auto-format = false;
         name = "rust";
       }
-      {name = "python";}
+      { name = "python"; }
     ];
   };
 
@@ -84,7 +84,7 @@
     enable = true;
 
     # diff tool
-    delta = {enable = true;};
+    delta = { enable = true; };
     attributes = [
       "* text=auto"
       "*.sh text eol=lf"
@@ -116,9 +116,9 @@
     #   enable = true;
     # };
 
-    lfs = {enable = true;};
+    lfs = { enable = true; };
   };
 
-  programs.gitui = {enable = true;};
-  programs.lazygit = {enable = true;};
+  programs.gitui = { enable = true; };
+  programs.lazygit = { enable = true; };
 }

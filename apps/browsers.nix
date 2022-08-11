@@ -1,14 +1,15 @@
-{
-  lib,
-  config,
-  pkgs,
-  ...
-}: let
+{ lib
+, config
+, pkgs
+, ...
+}:
+let
   addons = pkgs.nur.repos.rycee.firefox-addons;
-in {
-  imports = [./qutebrowser.nix];
+in
+{
+  imports = [ ./qutebrowser.nix ];
 
-  home.packages = with pkgs; [google-chrome nur.repos.wolfangaukang.vdhcoapp ff2mpv];
+  home.packages = with pkgs; [ google-chrome nur.repos.wolfangaukang.vdhcoapp ff2mpv ];
   # Browsers
   programs.firefox = {
     enable = true;
@@ -50,7 +51,7 @@ in {
         addonId = "{b9db16a4-6edc-47ec-a1f4-b86292ed211d}";
         url = "https://addons.mozilla.org/firefox/downloads/file/3804074/video_downloadhelper-${version}-fx.xpi";
         sha256 = "sha256-vVHZwQZOhpogQDAS4BAxm0bvCrcrsz8ioxDdOqsnelM=";
-        meta = {};
+        meta = { };
       })
       (buildFirefoxXpiAddon rec {
         pname = "ticktick";
@@ -58,7 +59,7 @@ in {
         addonId = "{52198036-5173-4877-a8e8-62474781798d}";
         url = "https://addons.mozilla.org/firefox/downloads/file/3972098/ticktick_todo-${version}.xpi";
         sha256 = "sha256-wVczdaWzzuBC8DwqcFT4g/KkAK6UCfD0LjIHQMiettA=";
-        meta = {};
+        meta = { };
       })
     ];
 
@@ -66,7 +67,7 @@ in {
       # id = 0;
       # name = "eyad";
       isDefault = true;
-      bookmarks = {};
+      bookmarks = { };
       settings = {
         "app.update.auto" = false;
         "browser.crashReports.unsubmittedCheck.enabled" = false;
@@ -124,7 +125,7 @@ in {
     enable = true;
     # package = pkgs.google-chrome;
     extensions = [
-      {id = "cjpalhdlnbpafiamejdnhcphjbkeiagm";} # ublock origin
+      { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
       {
         id = "dcpihecpambacapedldabdbpakmachpb";
         updateUrl = "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/src/updates/updates.xml";
@@ -132,5 +133,5 @@ in {
     ];
   };
 
-  programs.librewolf = {enable = true;};
+  programs.librewolf = { enable = true; };
 }

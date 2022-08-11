@@ -1,7 +1,6 @@
-{
-  lib,
-  config,
-  ...
+{ lib
+, config
+, ...
 }:
 with lib; let
   nm = config.networking.networkmanager;
@@ -14,10 +13,10 @@ with lib; let
       mode = "0400"; # readonly (user)
       text =
         (foldlAttrs
-          (accum: {
-            name,
-            value,
-          }: ''
+          (accum: { name
+                  , value
+                  ,
+                  }: ''
             ${accum}
 
             [${name}] ${mkProfileEntry value}'')
@@ -31,43 +30,45 @@ with lib; let
     then throw "error 2"
     else
       foldlAttrs
-      (accum: {
-        name,
-        value,
-      }: ''
-        ${accum}
-        ${name}=${toString value}'') ""
-      entryAttrs;
+        (accum: { name
+                , value
+                ,
+                }: ''
+          ${accum}
+          ${name}=${toString value}'') ""
+        entryAttrs;
 
   foldlAttrs = op: nul: attrs:
-    foldl (accum: {
-      fst,
-      snd,
-    }:
-      op accum (nameValuePair fst snd))
-    nul
-    (lists.zipLists (attrNames attrs) (attrValues attrs));
+    foldl
+      (accum: { fst
+              , snd
+              ,
+              }:
+        op accum (nameValuePair fst snd))
+      nul
+      (lists.zipLists (attrNames attrs) (attrValues attrs));
 
   attrLength = attrs: length (attrValues attrs);
-in {
+in
+{
   options.networking.networkmanager.profiles = mkOption {
     type = types.attrs;
-    default = {};
+    default = { };
   };
 
   config = mkIf (attrLength nm.profiles > 0) {
     environment.etc =
       foldlAttrs
-      (accum: {
-        name,
-        value,
-      }:
-        accum
-        // {
-          "NetworkManager/system-connections/${name}.nmconnection" =
-            mkProfile value;
-        })
-      {}
-      nm.profiles;
+        (accum: { name
+                , value
+                ,
+                }:
+          accum
+          // {
+            "NetworkManager/system-connections/${name}.nmconnection" =
+              mkProfile value;
+          })
+        { }
+        nm.profiles;
   };
 }

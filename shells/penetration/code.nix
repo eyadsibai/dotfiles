@@ -1,5 +1,5 @@
 # Code analysing tools, incl. search for secrets and alike in code
-{pkgs ? import <nixpkgs> {}, ...}: {
+{ pkgs ? import <nixpkgs> { }, ... }: {
   environment.systemPackages = with pkgs; [
     cargo-audit
     credential-detector
