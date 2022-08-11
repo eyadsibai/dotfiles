@@ -1,5 +1,5 @@
 # This file defines two overlays and composes them
-{ inputs, ... }:
+{ inputs, lib, ... }:
 let
   # This one brings our custom packages from the 'pkgs' directory
   additions = final: _prev: import ../pkgs { pkgs = final; };
@@ -30,6 +30,17 @@ let
         prev.gst_all_1.gst-plugins-good
       ];
     });
+
+    apple-silicon = final: prev: lib.optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
+      # Add access to x86 packages system is running Apple Silicon
+      pkgs-x86 = import inputs.nixpkgs {
+        system = "x86_64-darwin";
+        config = {
+          allowUnfree = true;
+          permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
+        };
+      };
+    };
 
     nix-index-database = final.runCommandLocal "nix-index-database" { } ''
       mkdir -p $out

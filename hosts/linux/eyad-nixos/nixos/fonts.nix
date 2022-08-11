@@ -8,6 +8,7 @@
     enableGhostscriptFonts = true;
     fonts = with pkgs; [
       corefonts
+      recursive
       dejavu_fonts
       source-code-pro
       ubuntu_font_family

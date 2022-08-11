@@ -5,9 +5,10 @@
 , ...
 }: {
   imports = [
-    ../../../../apps/default.nix
-    ../../../../apps/wm/i3/default.nix
-    ../../../../apps/custom_config/default.nix
+    ../../../../apps
+    ../../../../apps/wm/i3
+    ../../../../apps/custom_config
+    ../../../../hosts/common/home-manager
 
     # inputs.nix-doom-emacs.hmModule
     # inputs.nix-colors.homeManagerModule
@@ -136,7 +137,7 @@
     # nur.repos.wolfangaukang.sherlock
     nur.repos.wolfangaukang.nuclear
     yandex-disk
-    # upwork
+    upwork
     jrnl
     gparted
     python310Packages.mistune_2_0

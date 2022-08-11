@@ -7,9 +7,7 @@ let
   addons = pkgs.nur.repos.rycee.firefox-addons;
 in
 {
-  imports = [ ./qutebrowser.nix ];
-
-  home.packages = with pkgs; [ google-chrome nur.repos.wolfangaukang.vdhcoapp ff2mpv ];
+  home.packages = with pkgs; [ nur.repos.wolfangaukang.vdhcoapp ff2mpv ];
   # Browsers
   programs.firefox = {
     enable = true;
@@ -120,18 +118,4 @@ in
       };
     };
   };
-
-  programs.chromium = {
-    enable = true;
-    # package = pkgs.google-chrome;
-    extensions = [
-      { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
-      {
-        id = "dcpihecpambacapedldabdbpakmachpb";
-        updateUrl = "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/src/updates/updates.xml";
-      }
-    ];
-  };
-
-  programs.librewolf = { enable = true; };
 }
