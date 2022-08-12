@@ -1,6 +1,5 @@
-{ pkgs, ... }: {
-
-  home.packages = [ pkgs.tig ];
+{pkgs, ...}: {
+  home.packages = [pkgs.tig];
   programs.gh = {
     enable = true;
     enableGitCredentialHelper = true;
@@ -20,7 +19,7 @@
     enable = true;
 
     # diff tool
-    delta = { enable = true; };
+    delta = {enable = true;};
     attributes = [
       "* text=auto"
       "*.sh text eol=lf"
@@ -40,7 +39,6 @@
       "*.webp filter=lfs diff=lfs merge=lfs -text"
       "*.woff2 filter=lfs diff=lfs merge=lfs -text"
       "*.exe filter=lfs diff=lfs merge=lfs -text"
-
     ];
 
     # diff tool
@@ -53,9 +51,9 @@
     #   enable = true;
     # };
 
-    lfs = { enable = true; };
+    lfs = {enable = true;};
   };
 
-  programs.gitui = { enable = true; };
-  programs.lazygit = { enable = true; };
+  programs.gitui = {enable = true;};
+  programs.lazygit = {enable = true;};
 }
