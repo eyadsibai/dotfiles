@@ -162,11 +162,12 @@
                   home-manager.useGlobalPkgs = true;
                   home-manager.useUserPackages = true;
                   home-manager.backupFileExtension = "backup";
+                  home-manager.extraSpecialArgs = { inherit inputs; };
                   home-manager.users.eyad = {
                     imports =
                       [
                         ./hosts/linux/eyad-nixos/home-manager
-                        inputs.nix-doom-emacs.hmModule
+
                         # Import our reusable home-manager modules;
                       ]
                       ++ (builtins.attrValues homeManagerModules);
@@ -183,6 +184,7 @@
             pkgs = legacyPackages.aarch64-darwin;
             modules = [
               ./hosts/mac/darwin/nixos/configuration.nix
+              # https://gitlab.com/azazel/ender-config/-/blob/master/flake.nix#L50
               { pkgs.overlays = [ inputs.firefox-darwin.overlay ]; }
               inputs.home-manager.darwinModule.home-manager
               {

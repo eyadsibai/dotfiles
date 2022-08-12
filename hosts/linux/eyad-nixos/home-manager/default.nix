@@ -11,14 +11,16 @@
     ../../../../apps/custom_config
     ../../../common/home-manager
     ../../common/home-manager
-    # inputs.nix-doom-emacs.hmModule
-    # inputs.nix-colors.homeManagerModule
+    inputs.nix-doom-emacs.hmModule
+
+    inputs.nix-colors.homeManagerModule
   ];
   home.packages =
     with pkgs;
     [
       #  gitAndTools.grv
       #  mopidy-spotify
+      graphviz
       ack
       ani-cli
       any-nix-shell
