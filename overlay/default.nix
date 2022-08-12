@@ -1,8 +1,11 @@
 # This file defines two overlays and composes them
-{ inputs, lib, ... }:
-let
+{
+  inputs,
+  lib,
+  ...
+}: let
   # This one brings our custom packages from the 'pkgs' directory
-  additions = final: _prev: import ../pkgs { pkgs = final; };
+  additions = final: _prev: import ../pkgs {pkgs = final;};
 
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
@@ -31,21 +34,22 @@ let
       ];
     });
 
-    apple-silicon = final: prev: lib.optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
-      # Add access to x86 packages system is running Apple Silicon
-      pkgs-x86 = import inputs.nixpkgs {
-        system = "x86_64-darwin";
-        config = {
-          allowUnfree = true;
-          permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
+    apple-silicon = final: prev:
+      lib.optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
+        # Add access to x86 packages system is running Apple Silicon
+        pkgs-x86 = import inputs.nixpkgs {
+          system = "x86_64-darwin";
+          config = {
+            allowUnfree = true;
+            permittedInsecurePackages = ["electron-12.2.3" "electron-13.6.9"];
+          };
         };
       };
-    };
 
-    nix-index-database = final.runCommandLocal "nix-index-database" { } ''
+    nix-index-database = final.runCommandLocal "nix-index-database" {} ''
       mkdir -p $out
       ln -s ${inputs.nix-index-database.legacyPackages.${prev.system}.database} $out/files
     '';
   };
 in
-inputs.nixpkgs.lib.composeManyExtensions [ additions modifications ]
+  inputs.nixpkgs.lib.composeManyExtensions [additions modifications]

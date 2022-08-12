@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{pkgs, ...}: {
   programs.micro = {
     enable = true;
   };
@@ -49,8 +49,8 @@
         auto-format = false;
         name = "rust";
       }
-      { name = "python"; }
-      { name = "nix"; }
+      {name = "python";}
+      {name = "nix";}
     ];
   };
 
@@ -64,5 +64,4 @@
     enable = true;
     doomPrivateDir = ./custom_config/doom-emacs;
   };
-
 }

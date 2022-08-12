@@ -1,5 +1,5 @@
 # Proxy tools for MitM scenarios
-{ pkgs ? import <nixpkgs> { }, ... }: {
+{pkgs ? import <nixpkgs> {}, ...}: {
   environment.systemPackages = with pkgs; [
     bettercap
     burpsuite
