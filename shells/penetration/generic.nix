@@ -1,5 +1,5 @@
 # Generic tools (terminals, packers, clients, etc.)
-{ pkgs ? import <nixpkgs> { }, ... }: {
+{pkgs ? import <nixpkgs> {}, ...}: {
   environment.systemPackages = with pkgs; [
     chrony
     clamav

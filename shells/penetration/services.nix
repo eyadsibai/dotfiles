@@ -1,46 +1,46 @@
 # Tools for testing various services (SSH, SNMP, etc.)
-{ pkgs ? import <nixpkgs> { }, ... }:
+{pkgs ? import <nixpkgs> {}, ...}:
 with pkgs;
-mkShell {
-  buildInputs = [
-    checkip
-    ike-scan
-    metasploit
-    nuclei
-    traitor
+  mkShell {
+    buildInputs = [
+      checkip
+      ike-scan
+      metasploit
+      nuclei
+      traitor
 
-    # E-Mail
-    swaks
+      # E-Mail
+      swaks
 
-    # Databases
-    mongoaudit
-    sqlmap
+      # Databases
+      mongoaudit
+      sqlmap
 
-    # SNMP
-    onesixtyone
-    snmpcheck
+      # SNMP
+      onesixtyone
+      snmpcheck
 
-    # SSH
-    sshchecker
-    ssh-audit
-    ssh-mitm
-    ssb
+      # SSH
+      sshchecker
+      ssh-audit
+      ssh-mitm
+      ssb
 
-    # IDS/IPS/WAF
-    teler
-    waf-tester
-    wafw00f
+      # IDS/IPS/WAF
+      teler
+      waf-tester
+      wafw00f
 
-    # CI
-    oshka
+      # CI
+      oshka
 
-    # Terraform
-    terrascan
-    tfsec
+      # Terraform
+      terrascan
+      tfsec
 
-    # Supply chain
-    chain-bench
-    witness
-  ];
-  shellHook = "";
-}
+      # Supply chain
+      chain-bench
+      witness
+    ];
+    shellHook = "";
+  }

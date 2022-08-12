@@ -1,7 +1,8 @@
-{ lib
-, config
-, pkgs
-, ...
+{
+  lib,
+  config,
+  pkgs,
+  ...
 }: {
   # services.redshift = {
   #   enable = false;
@@ -35,12 +36,4 @@
   # services.git-sync.enable = true;
   # services.gromit-mpx.enable = true;
   services.hound.enable = false;
-
-
-  services.udiskie = {
-    enable = true;
-    automount = true;
-    notify = true;
-    tray = "never";
-  };
 }
