@@ -1,3 +1,1 @@
-{pkgs, ...}: {
-  services.sxhkd.enable = true;
-}
+{ pkgs, ... }: { services.sxhkd.enable = true; }

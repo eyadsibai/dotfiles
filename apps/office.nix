@@ -1,12 +1,10 @@
+{ config
+, pkgs
+, inputs
+, ...
+}:
 {
-  config,
-  pkgs,
-  inputs,
-  ...
-}: {
-  home.packages = with pkgs; [pdfgrep pdftk libreoffice-fresh];
-
-  programs.sioyek = {enable = true;};
-
+  home.packages = with pkgs; [ pdfgrep pdftk libreoffice-fresh ];
+  programs.sioyek = { enable = true; };
   programs.texlive.enable = true;
 }

@@ -1,13 +1,12 @@
+{ pkgs
+, lib
+, ...
+}:
 {
-  pkgs,
-  lib,
-  ...
-}: {
   programs.bash = {
     enable = true;
     initExtra = "neofetch";
   };
-
   # programs.zsh = {
   #   enable = true;
   #   oh-my-zsh = {
@@ -16,7 +15,6 @@
   #     theme = "robbyrussell";
   #   };
   # };
-
   programs.zsh = {
     enable = true;
     enableAutosuggestions = true;
@@ -36,6 +34,5 @@
       }
     ];
   };
-
-  programs.fish = {enable = false;};
+  programs.fish = { enable = false; };
 }

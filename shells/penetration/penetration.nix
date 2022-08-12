@@ -1,14 +1,14 @@
 airgeddon
-truecrack
-wifite2
-bmon
-netdiscover
-nmap
-nmon
-snscrape
-# ### Exploitation ###
-metasploit
-sqlmap
+  truecrack
+  wifite2
+  bmon
+  netdiscover
+  nmap
+  nmon
+  snscrape
+  # ### Exploitation ###
+  metasploit
+  sqlmap
 # ### Recon ###
 # cloudbrute
 # dnsenum
@@ -423,4 +423,3 @@ sqlmap
 # # xsser = todo
 # yara
 # # yersinia = todo
-

@@ -1,6 +1,1 @@
-{inputs, ...}: let
-  inherit (inputs) self nixpkgs;
-  inherit (self) outputs;
-in rec
-{
-}
+{ inputs, ... }: let inherit ( inputs ) self nixpkgs; inherit ( self ) outputs; in rec { }

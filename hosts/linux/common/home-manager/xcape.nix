@@ -1,3 +1,1 @@
-{pkgs, ...}: {
-  services.xcape.enable = true;
-}
+{ pkgs, ... }: { services.xcape.enable = true; }

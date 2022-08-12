@@ -1,5 +1,1 @@
-{pkgs, ...}: {
-  services.picom = {
-    enable = true;
-  };
-}
+{ pkgs, ... }: { services.picom = { enable = true; }; }

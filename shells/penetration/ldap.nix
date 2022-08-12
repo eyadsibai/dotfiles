@@ -1,9 +1,5 @@
 # LDAP tools
-{pkgs ? import <nixpkgs> {}, ...}: {
-  environment.systemPackages = with pkgs; [
-    adenum
-    ldapmonitor
-    ldapdomaindump
-    ldeep
-  ];
-}
+{ pkgs ? import <nixpkgs> { }
+, ...
+}:
+{ environment.systemPackages = with pkgs; [ adenum ldapmonitor ldapdomaindump ldeep ]; }

@@ -1,6 +1,9 @@
-{pkgs ? import <nixpkgs> {}, ...}:
+{ pkgs ? import <nixpkgs> { }
+, ...
+}:
 with pkgs;
-  mkShell {
+mkShell
+  {
     buildInputs = [
       authoscope
       bruteforce-luks
@@ -19,7 +22,7 @@ with pkgs;
       nth
       phrasendrescher
       # patator
-      (thc-hydra.override {withGUI = true;})
+      ( thc-hydra.override { withGUI = true; } )
       truecrack
     ];
     shellHook = "";
