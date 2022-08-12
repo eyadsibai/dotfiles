@@ -1,4 +1,7 @@
-{pkgs, ...}: {
+{ pkgs
+, ...
+}:
+{
   imports = [
     ./email_cal_rss.nix
     ./social.nix

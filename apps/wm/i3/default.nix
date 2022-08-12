@@ -1,4 +1,7 @@
-{pkgs, ...}: {
+{ pkgs
+, ...
+}:
+{
   imports = [
     ./picom.nix
     ./polybar.nix

@@ -1,8 +1,11 @@
-{pkgs, ...}: {
-  home.packages = [pkgs.nordic pkgs.arc-icon-theme pkgs.lxappearance];
-
+{ pkgs
+, ...
+}:
+{
+  home.packages = [ pkgs.nordic pkgs.arc-icon-theme pkgs.lxappearance ];
   home.file.".gtkrc-2.0" = {
-    text = ''
+    text =
+      ''
       gtk-theme-name="Nordic-darker"
       gtk-icon-theme-name="Arc"
       gtk-font-name="Iosevka 11"
@@ -16,11 +19,11 @@
       gtk-xft-antialias=1
       gtk-xft-hinting=1
       gtk-xft-hintstyle="hintmedium"
-    '';
+      '';
   };
-
   home.file.".config/gtk-2.0/gtkfilechooser.ini" = {
-    text = ''
+    text =
+      ''
       [Filechooser Settings]
       LocationMode=path-bar
       ShowHidden=false
@@ -32,11 +35,11 @@
       SortColumn=name
       SortOrder=ascending
       StartupMode=recent
-    '';
+      '';
   };
-
   home.file.".config/gtk-3.0/settings.ini" = {
-    text = ''
+    text =
+      ''
       [Settings]
       gtk-theme-name=Nordic-darker
       gtk-icon-theme-name=Arc
@@ -51,6 +54,6 @@
       gtk-xft-antialias=1
       gtk-xft-hinting=1
       gtk-xft-hintstyle=hintmedium
-    '';
+      '';
   };
 }

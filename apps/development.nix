@@ -1,26 +1,31 @@
-{pkgs, ...}: {
-  programs.micro = {
-    enable = true;
-  };
-  home.packages = with pkgs; [
-    jetbrains.idea-community
-    atom
-    nano
-    nanorc
-    s3cmd
-    # awscli2 # TODO crash on install
-    ngrok # secure tunneling to localhost
-    insomnia # rest client with graphql support
-    beekeeper-studio
-    vscode
-    earthly
-    t-rec
-    reviewdog
-    # pgcli # modern postgres client # TODO crash on install
-    mycli
-    iredis
-    usql
-  ];
+{ pkgs
+, ...
+}:
+{
+  programs.micro = { enable = true; };
+  home.packages =
+    with pkgs;
+    [
+      jetbrains.idea-community
+      atom
+      nano
+      nanorc
+      s3cmd
+      # awscli2 # TODO crash on install
+      ngrok
+      # secure tunneling to localhost
+      insomnia
+      # rest client with graphql support
+      beekeeper-studio
+      vscode
+      earthly
+      t-rec
+      reviewdog
+      # pgcli # modern postgres client # TODO crash on install
+      mycli
+      iredis
+      usql
+    ];
   # programs.go = { enable = true; };
   # programs.java = { enable = true; };
   # programs.sbt = { enable = true; };
@@ -41,7 +46,6 @@
     # ];
     # userSettings = { "update.channel" = "none"; };
   };
-
   programs.helix = {
     enable = true;
     languages = [
@@ -49,17 +53,15 @@
         auto-format = false;
         name = "rust";
       }
-      {name = "python";}
-      {name = "nix";}
+      { name = "python"; }
+      { name = "nix"; }
     ];
   };
-
   programs.neovim = {
     enable = true;
     viAlias = true;
     vimAlias = true;
   };
-
   programs.doom-emacs = {
     enable = true;
     doomPrivateDir = ./custom_config/doom-emacs;

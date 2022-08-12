@@ -1,8 +1,1 @@
-{
-  lib,
-  config,
-  pkgs,
-  ...
-}: {
-  programs.librewolf = {enable = true;};
-}
+{ lib, config, pkgs, ... }: { programs.librewolf = { enable = true; }; }
