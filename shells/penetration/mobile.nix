@@ -4,7 +4,7 @@
 }:
 with pkgs;
 mkShell
-  {
-    buildInputs = [ abootimg androguard apkeep apkleaks apktool dex2jar genymotion ghost simg2img trueseeing ];
-    shellHook = "";
-  }
+{
+  buildInputs = [ abootimg androguard apkeep apkleaks apktool dex2jar genymotion ghost simg2img trueseeing ];
+  shellHook = "";
+}

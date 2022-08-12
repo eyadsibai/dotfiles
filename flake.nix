@@ -64,18 +64,23 @@
     in
     rec {
       # inherit lib;
-      # Reusable nixos modules you might want to export
-      # These are usually stuff you would upstream into nixpkgs
-      nixosModules = import ./modules/nixos;
-      # Reusable home-manager modules you might want to export
-      # These are usually stuff you would upstream into home-manager
-      homeManagerModules = import ./modules/home-manager;
       # Your custom packages and modifications
       overlays = {
         default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
       };
+
+
+      # Reusable nixos modules you might want to export
+      # These are usually stuff you would upstream into nixpkgs
+      nixosModules = import ./modules/nixos;
+      # Reusable home-manager modules you might want to export
+      # These are usually stuff you would upstream into home-manager
+      homeManagerModules = import ./modules/home-manager;
+
+      templates = import ./templates;
+
       # Reexport nixpkgs with our overlays applied
       # Acessible on our configurations, and through nix build, shell, run, etc.
       legacyPackages =
@@ -117,7 +122,7 @@
                           shellHook = a.shellHook + "\n" + v.shellHook;
                         }
                       )
-                      ( pkgs.mkShell { } )
+                      (pkgs.mkShell { })
                       envs
                   );
             in
@@ -164,12 +169,12 @@
                         inputs.nix-doom-emacs.hmModule
                         # Import our reusable home-manager modules;
                       ]
-                        ++ ( builtins.attrValues homeManagerModules );
+                      ++ (builtins.attrValues homeManagerModules);
                   };
                 }
                 # Import our reusable nixos modules;
               ]
-                ++ ( builtins.attrValues nixosModules );
+              ++ (builtins.attrValues nixosModules);
             specialArgs = { inherit inputs; };
           };
       darwinConfiguration."eyad-mac" =

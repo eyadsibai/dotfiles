@@ -45,7 +45,7 @@ let
         final:
         prev:
         lib.optionalAttrs
-          ( prev.stdenv.system == "aarch64-darwin" )
+          (prev.stdenv.system == "aarch64-darwin")
           {
             # Add access to x86 packages system is running Apple Silicon
             pkgs-x86 =
@@ -64,8 +64,8 @@ let
           "nix-index-database"
           { }
           ''
-          mkdir -p $out
-          ln -s ${ inputs.nix-index-database.legacyPackages.${ prev.system }.database } $out/files
+            mkdir -p $out
+            ln -s ${ inputs.nix-index-database.legacyPackages.${ prev.system }.database } $out/files
           '';
     };
 in

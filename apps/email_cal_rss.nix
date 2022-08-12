@@ -19,17 +19,17 @@
     autoReload = true;
     extraConfig =
       ''
-      feed-sort-order unreadarticlecount-asc
-      show-read-feeds no
-      show-read-articles  no
-      # solarized
-      color background         default   default
-      color listnormal         default   default
-      color listnormal_unread  default   default
-      color listfocus          black     cyan
-      color listfocus_unread   black     cyan
-      color info               default   black
-      color article            default   default
+        feed-sort-order unreadarticlecount-asc
+        show-read-feeds no
+        show-read-articles  no
+        # solarized
+        color background         default   default
+        color listnormal         default   default
+        color listnormal_unread  default   default
+        color listfocus          black     cyan
+        color listfocus_unread   black     cyan
+        color info               default   black
+        color article            default   default
       '';
     urls = [
       { url = "https://lukesmith.xyz/rss.xml"; }

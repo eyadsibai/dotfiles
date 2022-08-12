@@ -169,8 +169,8 @@
       name = "HomeManager";
       start =
         ''
-        ${ pkgs.runtimeShell } $HOME/.hm-xsession &
-        waitPID=$!
+          ${ pkgs.runtimeShell } $HOME/.hm-xsession &
+          waitPID=$!
         '';
     }
   ];
