@@ -1,4 +1,5 @@
 { inputs
+, lib
 , config
 , pkgs
 , ...
@@ -23,10 +24,10 @@
     # };
   };
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  networking.firewall.enable = false;
+  networking.firewall.allowedTCPPorts = [ ] ++ lib.lists.range 1714 1764; # kdeconnect
+  networking.firewall.allowedUDPPorts = [ ] ++ lib.lists.range 1714 1764; # kdeconnect
+
+  networking.firewall.enable = true;
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
