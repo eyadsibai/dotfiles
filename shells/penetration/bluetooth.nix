@@ -4,7 +4,7 @@
 }:
 with pkgs;
 mkShell
-  {
-    buildInputs = [ bluez bluewalker bleak redfang ubertooth ];
-    shellHook = "";
-  }
+{
+  buildInputs = [ bluez bluewalker bleak redfang ubertooth ];
+  shellHook = "";
+}

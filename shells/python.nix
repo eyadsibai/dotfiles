@@ -14,20 +14,20 @@ let
       {
         requirements =
           ''
-          # pandas
-          black
+            # pandas
+            black
           '';
       };
 in
 pkgs.mkShell
-  {
-    buildInputs = [
-      ( pkgs.${ python }.withPackages ( ps: with ps; [ pip pyflakes isort ] ) )
-      #  pkgs.nodePackages.pyright
-      #  pkgs.nodePackages.prettier
-      #  pkgs.docker
-      #  pkgs.glpk
-      pythonShell
-    ];
-    shellHook = "";
-  }
+{
+  buildInputs = [
+    (pkgs.${ python }.withPackages (ps: with ps; [ pip pyflakes isort ]))
+    #  pkgs.nodePackages.pyright
+    #  pkgs.nodePackages.prettier
+    #  pkgs.docker
+    #  pkgs.glpk
+    pythonShell
+  ];
+  shellHook = "";
+}

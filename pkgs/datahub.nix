@@ -1,9 +1,9 @@
 with import
   <nixpkgs>
-  {
-    config.allowUnfree = true;
-    # firefox-bin is unfree
-  };
+{
+  config.allowUnfree = true;
+  # firefox-bin is unfree
+};
 let
   datahub =
     runCommand
@@ -18,15 +18,15 @@ let
             };
       }
       ''
-      ${ gzip }/bin/gunzip -c $src > data-linux
-      mkdir -p $out/bin
-      cp data-linux $out/bin/
-      chmod +x $out/bin/data-linux
+        ${ gzip }/bin/gunzip -c $src > data-linux
+        mkdir -p $out/bin
+        cp data-linux $out/bin/
+        chmod +x $out/bin/data-linux
       '';
 in
 buildEnv
-  rec {
-    name = "datahub";
-    paths = [ datahub ];
-    buildInputs = paths;
-  }
+rec {
+  name = "datahub";
+  paths = [ datahub ];
+  buildInputs = paths;
+}

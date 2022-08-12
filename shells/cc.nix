@@ -3,7 +3,7 @@
 }:
 with pkgs;
 mkShell
-  {
-    buildInputs = [ gdb ccls cmake boost gnumake gcc-unwrapped ];
-    shellHook = "";
-  }
+{
+  buildInputs = [ gdb ccls cmake boost gnumake gcc-unwrapped ];
+  shellHook = "";
+}

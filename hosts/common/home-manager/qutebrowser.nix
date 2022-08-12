@@ -66,7 +66,7 @@
               sha256 = "sha256-skZYKoB8KSf8VG+5vqlSkg1q7uNZxIY/AizgtPxYyjQ=";
             }
         )
-        + "blood(c)";
+      + "blood(c)";
   };
   xdg.configFile."qutebrowser/greasemonkey/youtube-sponsorblock.js".source =
     pkgs.fetchurl
@@ -88,25 +88,25 @@
   # Dark mode for pages that do not natively support it
   xdg.configFile."qutebrowser/greasemonkey/dark-reader.js".text =
     ''
-    // ==UserScript==
-    // @name          Dark Reader (Unofficial)
-    // @icon          https://darkreader.org/images/darkreader-icon-256x256.png
-    // @namespace     DarkReader
-    // @description	  Inverts the brightness of pages to reduce eye strain
-    // @version       4.9.52
-    // @author        https://github.com/darkreader/darkreader#contributors
-    // @homepageURL   https://darkreader.org/ | https://github.com/darkreader/darkreader
-    // @run-at        document-end
-    // @grant         none
-    // @include       http*
-    // @exclude       *://*google*.*/*
-    // @require       https://cdn.jsdelivr.net/npm/darkreader/darkreader.min.js
-    // @noframes
-    // ==/UserScript==
-    DarkReader.enable({
-      brightness: 100,
-      contrast: 100,
-      sepia: 0
-    });
+      // ==UserScript==
+      // @name          Dark Reader (Unofficial)
+      // @icon          https://darkreader.org/images/darkreader-icon-256x256.png
+      // @namespace     DarkReader
+      // @description    Inverts the brightness of pages to reduce eye strain
+      // @version       4.9.52
+      // @author        https://github.com/darkreader/darkreader#contributors
+      // @homepageURL   https://darkreader.org/ | https://github.com/darkreader/darkreader
+      // @run-at        document-end
+      // @grant         none
+      // @include       http*
+      // @exclude       *://*google*.*/*
+      // @require       https://cdn.jsdelivr.net/npm/darkreader/darkreader.min.js
+      // @noframes
+      // ==/UserScript==
+      DarkReader.enable({
+        brightness: 100,
+        contrast: 100,
+        sepia: 0
+      });
     '';
 }
