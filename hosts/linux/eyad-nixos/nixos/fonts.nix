@@ -1,6 +1,7 @@
-{ config
-, pkgs
-, ...
+{
+  config,
+  pkgs,
+  ...
 }: {
   fonts = {
     enableDefaultFonts = true;
@@ -18,7 +19,7 @@
       material-design-icons # fonts with glyphs
       ubuntu_font_family
       line-awesome
-      (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
+      (nerdfonts.override {fonts = ["FiraCode" "JetBrainsMono"];})
     ];
   };
 }

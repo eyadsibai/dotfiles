@@ -30,23 +30,13 @@
   services.clipmenu.enable = false;
   services.dropbox.enable = true;
   services.espanso.enable = false;
-  services.flameshot = {
-    enable = true;
-    settings = {
-      General = {
-        disabledTrayIcon = true;
-        showStartupLaunchMessage = false;
-      };
-    };
-  };
+
   # services.fusuma.enable = true;
   # services.git-sync.enable = true;
   # services.gromit-mpx.enable = true;
   services.hound.enable = false;
 
-  services.xcape.enable = true;
 
-  services.unclutter.enable = true;
   services.udiskie = {
     enable = true;
     automount = true;

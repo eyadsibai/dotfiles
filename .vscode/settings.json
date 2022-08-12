@@ -1,0 +1,6 @@
+{
+    "nix.enableLanguageServer": false,
+    "nix.formatterPath": "alejandra",
+    "nixEnvSelector.suggestion": false,
+    "nixEnvSelector.packages": []
+}

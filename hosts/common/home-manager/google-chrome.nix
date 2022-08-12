@@ -1,8 +1,8 @@
-{ lib
-, config
-, pkgs
-, ...
-}:
 {
-  home.packages = with pkgs; [ google-chrome ];
+  lib,
+  config,
+  pkgs,
+  ...
+}: {
+  home.packages = with pkgs; [google-chrome];
 }

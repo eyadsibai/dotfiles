@@ -1,15 +1,16 @@
-{ inputs
-, lib
-, pkgs
-, nix-colors
-, ...
+{
+  inputs,
+  lib,
+  pkgs,
+  nix-colors,
+  ...
 }: {
   imports = [
     ../../../../apps
     ../../../../apps/wm/i3
     ../../../../apps/custom_config
-    ../../../../hosts/common/home-manager
-    ../../../../hosts/linux/common/home-manager
+    ../../../common/home-manager
+    ../../common/home-manager
 
     # inputs.nix-doom-emacs.hmModule
     # inputs.nix-colors.homeManagerModule
@@ -149,7 +150,7 @@
 
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
-  home.keyboard.options = [ "grp:win_space_toggle" ];
+  home.keyboard.options = ["grp:win_space_toggle"];
 
   xsession = {
     enable = true;

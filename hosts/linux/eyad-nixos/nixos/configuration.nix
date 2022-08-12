@@ -1,9 +1,10 @@
-{ config
-, pkgs
-, lib
-, ...
+{
+  config,
+  pkgs,
+  lib,
+  ...
 }: {
-  imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix ];
+  imports = [./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix];
 
   # Thermals and cooling
   services.thermald.enable = true;
@@ -21,7 +22,7 @@
     plymouth.enable = true;
     loader.efi.canTouchEfiVariables = true;
     cleanTmpDir = true;
-    supportedFilesystems = [ "ntfs" ];
+    supportedFilesystems = ["ntfs"];
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
       "acpi_osi=Linux"
@@ -93,7 +94,7 @@
       gdm.wayland = false;
     };
 
-    videoDrivers = [ "amdgpu" ];
+    videoDrivers = ["amdgpu"];
     desktopManager = {
       xterm.enable = false;
       gnome.enable = false;
@@ -145,7 +146,7 @@
   users.users.eyad = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" ];
+    extraGroups = ["wheel" "networkmanager"];
     hashedPassword = "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
     openssh.authorizedKeys.keys = [
       # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
@@ -213,7 +214,7 @@
   ];
 
   # No access time and continuous TRIM for SSD
-  fileSystems."/".options = [ "noatime" "discard" ];
+  fileSystems."/".options = ["noatime" "discard"];
 
   # Sysctl params
   boot.kernel.sysctl = {
@@ -221,7 +222,7 @@
   };
 
   hardware.opengl.enable = true;
-  hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau ];
+  hardware.opengl.extraPackages = [pkgs.libvdpau-va-gl pkgs.vaapiVdpau];
 
   hardware.opengl.driSupport32Bit = true;
   programs.steam = {
