@@ -15,12 +15,12 @@
 
 
 {writeShellApplication, curl, jq}: writeShellApplication {
-  name = "whatsmyip";
+  name = "whatismyip";
 
   runtimeInputs = [ curl jq ];
 
   text = ''
-    curl http://httpbin.org/get \
-    jq --raw-output .origin
+    curl -s http://httpbin.org/get \
+     | jq --raw-output .origin
   '';
 }
