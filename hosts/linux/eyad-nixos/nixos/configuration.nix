@@ -102,6 +102,8 @@
     podman = {
       enable = true;
       dockerCompat = true;
+      dockerSocket.enable = true;
+      defaultNetwork.dnsname.enabme = true;
     };
     # lxd.enable = true; # broken on unstable
     # virtualbox.host = {
@@ -116,7 +118,7 @@
   users.users.eyad = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" ];
+    extraGroups = [ "wheel" "networkmanager" "podman" ];
     hashedPassword =
       "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
     openssh.authorizedKeys.keys = [
@@ -126,11 +128,14 @@
   environment.systemPackages =
     with pkgs;
     [
+      arion # support docker-compose ... etc
       vim
       wget
       git
       # openvpn
       wine
+      docker-client # not needed when virtualization.docker.enable = true;
+
       # support both 32- and 64-bit applications
       # wine64WowPackages.stable
       # support 32-bit only
