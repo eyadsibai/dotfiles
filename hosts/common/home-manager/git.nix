@@ -38,6 +38,15 @@
       "*.woff2 filter=lfs diff=lfs merge=lfs -text"
       "*.exe filter=lfs diff=lfs merge=lfs -text"
     ];
+ignores = [".direnv" ".vscode"
+".DS_Store"
+"ehthumbs.db"
+"Icon?"
+"Thumbs.db"
+"2*~"
+"*.swp"
+"*.swo"];
+
     # diff tool
     # diff-so-fancy = {
     #   enable = true;

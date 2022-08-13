@@ -18,6 +18,9 @@
   home.packages =
     with pkgs;
     [
+      ### PERSONAL
+      flakify
+      # whatismyip
       #  gitAndTools.grv
       #  mopidy-spotify
       graphviz

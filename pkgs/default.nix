@@ -1,7 +1,8 @@
 # When you add custom packages, list them here
 # These are similar to nixpkgs packages
-{ pkgs
+{ pkgs,...
 }:
 {
-  # example = pkgs.callPackage ./example { };
+  flakify = pkgs.callPackage ./flakify {};
+  whatismyip = pkgs.callPackage ./whatismyip {};
 }
