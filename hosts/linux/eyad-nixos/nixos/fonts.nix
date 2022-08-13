@@ -23,6 +23,7 @@
         # fonts with glyphs
         ubuntu_font_family
         line-awesome
+        cascadia-code
         (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
       ];
   };
