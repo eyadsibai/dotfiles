@@ -20,7 +20,7 @@
     [
       ### PERSONAL
       flakify
-      # whatismyip
+      whatismyip
       #  gitAndTools.grv
       #  mopidy-spotify
       graphviz
