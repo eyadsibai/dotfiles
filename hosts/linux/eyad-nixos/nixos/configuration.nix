@@ -103,7 +103,8 @@
       enable = true;
       dockerCompat = true;
       dockerSocket.enable = true;
-      defaultNetwork.dnsname.enabme = true;
+      defaultNetwork.dnsname.enable = true;
+
     };
     # lxd.enable = true; # broken on unstable
     # virtualbox.host = {
@@ -135,7 +136,7 @@
       # openvpn
       wine
       docker-client # not needed when virtualization.docker.enable = true;
-
+      podman-compose
       # support both 32- and 64-bit applications
       # wine64WowPackages.stable
       # support 32-bit only
