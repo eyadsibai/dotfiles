@@ -18,16 +18,16 @@ let
           (
             oldAttrs:
             rec {
-              version = "1.4.5";
+              version = "1.4.6";
               src =
                 prev.fetchFromGitHub
                   {
                     owner = "eneshecan";
                     repo = "${ oldAttrs.pname }";
                     rev = "v${ version }";
-                    # sha265 = lib.fakeSha256;
+                    #                     sha256 = prev.lib.fakeSha256;
                     # sha256 = "0000000000000000000000000000000000000000000000000000";
-                    sha256 = "V1QxPN99BAEnBvrfHyml0OsaS8msZXjkzvzItLqf8B0=";
+                    sha256 = "sha256-fpLjdEgglbc9kMHTGEPq7+UDB2Qh5e54l8mDOls79LA=";
                   };
               buildInputs = [
                 prev.glib-networking
@@ -38,7 +38,10 @@ let
                 prev.gst_all_1.gst-plugins-bad
                 prev.gst_all_1.gst-plugins-base
                 prev.gst_all_1.gst-plugins-good
+
               ];
+
+              # propagatedBuildInputs = [ prev.ffmpeg ];
             }
           );
       apple-silicon =

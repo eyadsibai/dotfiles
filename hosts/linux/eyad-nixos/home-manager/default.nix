@@ -69,7 +69,7 @@
       # "find" for files
       fdupes
       fff
-      flatpak
+      ffmpeg
       gimp
       # gnu image manipulation program
       glow

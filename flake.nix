@@ -142,6 +142,7 @@
               port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
               load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
               password = import ./shells/penetration/password.nix { inherit pkgs; };
+              mysql = import ./shells/mysql.nix {inherit pkgs; };
               penetration-full = mergeEnvs [ port-scanners load-testing password ];
             }
           );
