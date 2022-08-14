@@ -134,13 +134,7 @@
   };
   programs.ncspot = { enable = true; };
   # programs.command-not-found.enable = true;
-  programs.nix-index = {
-    enable = true;
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-    enableFishIntegration = false;
-  };
-  home.file.".cache/nix-index".source = pkgs.nix-index-database;
+
   programs.nnn = { enable = true; };
   programs.noti = { enable = true; };
   programs.pandoc = { enable = true; };

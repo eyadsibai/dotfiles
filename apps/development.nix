@@ -2,7 +2,6 @@
 , ...
 }:
 {
-  programs.micro = { enable = true; };
   home.packages =
     with pkgs;
     [
@@ -54,16 +53,9 @@
         name = "rust";
       }
       { name = "python"; }
-      { name = "nix"; }
+      { name = "nix"; auto-format = true; }
     ];
   };
-  programs.neovim = {
-    enable = true;
-    viAlias = true;
-    vimAlias = true;
-  };
-  programs.doom-emacs = {
-    enable = true;
-    doomPrivateDir = ./custom_config/doom-emacs;
-  };
+
+
 }

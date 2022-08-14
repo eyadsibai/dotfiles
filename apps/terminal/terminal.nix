@@ -4,7 +4,6 @@
 , ...
 }:
 {
-  home.packages = with pkgs; [ st ];
   programs.alacritty = {
     enable = true;
     settings = {
