@@ -1,1 +1,1 @@
-{ lib, config, pkgs, ... }: { imports = [ ./qutebrowser.nix ./firefox ./git ./nix-index.nix ./micro ]; }
+{ lib, config, pkgs, ... }: { imports = [ ./qutebrowser ./firefox ./git ./nix-index ./micro ./picom ]; }
