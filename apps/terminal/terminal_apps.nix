@@ -93,9 +93,9 @@
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableFishIntegration = false;
-config = {
-global = {warn_timeout="1m";};
-};
+    config = {
+      global = { warn_timeout = "1m"; };
+    };
   };
   programs.fzf = {
     enable = true;

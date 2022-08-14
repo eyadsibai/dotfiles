@@ -49,6 +49,10 @@
   };
   services.blueman.enable = true;
   systemd.coredump.enable = true;
+
+  services.flatpak.enable = true;
+  xdg.portal.enable = true;
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   services.tlp = {
     enable = true;
     settings = {
@@ -188,7 +192,7 @@
     # Allow VS Code to watch more files
   };
   hardware.opengl.enable = true;
-  hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau ];
+  hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau pkgs.amdvlk pkgs.rocm-opencl-icd ];
   hardware.opengl.driSupport32Bit = true;
   programs.steam = {
     enable = false;
