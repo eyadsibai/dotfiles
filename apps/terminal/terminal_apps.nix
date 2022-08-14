@@ -143,14 +143,7 @@
   #   enable = true;
   # };
   # programs.pywal = { enable = false; };
-  programs.rbw = {
-    enable = true;
-    settings = {
-      email = "eyad.alsibai@gmail.com";
-      lock_timeout = 172800;
-      pinentry = "tty";
-    };
-  };
+
   programs.skim = {
     enable = true;
     enableBashIntegration = true;
