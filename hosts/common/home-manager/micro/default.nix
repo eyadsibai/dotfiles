@@ -10,7 +10,7 @@
       "backup" = true;
       "basename" = false;
       "colorcolumn" = 0;
-      "colorscheme" = "gruvbox";
+      "colorscheme" = "simple";
       "comment" = true;
       "cursorline" = true;
       "diff" = true;
@@ -35,7 +35,7 @@
       "mouse" = true;
       "paste" = false;
       "pluginchannels" = [
-        "https=//raw.githubusercontent.com/micro-editor/plugin-channel/master/channel.json"
+        "https://raw.githubusercontent.com/micro-editor/plugin-channel/master/channel.json"
       ];
       "pluginrepos" = [ ];
       "readonly" = false;
@@ -66,5 +66,5 @@
     };
   };
 
-  xdg.configFile."micro/keybinding.json".source = ./keybinding.json;
+  xdg.configFile."micro/bindings.json".source = ./bindings.json;
 }
