@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 case "$(uname -s)" in
   Linux)
-    nixos-rebuild --flake . "$@"
+    sudo nixos-rebuild --flake . "$@"
     ;;
   Darwin)
     nix --experimental-features 'nix-command flakes' build ".#darwinConfigurations.$(hostname -s).system"
@@ -15,4 +16,3 @@ case "$(uname -s)" in
     exit 1
     ;;
 esac
-
