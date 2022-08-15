@@ -8,7 +8,6 @@
   imports = [
     ../../../../apps
     ../../../../apps/wm/i3
-    ../../../../apps/custom_config
     ../../../common/home-manager
     ../../common/home-manager
     inputs.nix-doom-emacs.hmModule
@@ -18,6 +17,7 @@
   home.packages =
     with pkgs;
     [
+      git-crypt
       ### PERSONAL
       flakify
       whatismyip

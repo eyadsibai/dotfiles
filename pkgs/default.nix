@@ -6,4 +6,5 @@
 {
   flakify = pkgs.callPackage ./flakify { };
   whatismyip = pkgs.callPackage ./whatismyip { };
+  linkhandler = pkgs.callPackage ./linkhandler { };
 }

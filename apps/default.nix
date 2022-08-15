@@ -11,6 +11,5 @@
     ./development.nix
     ./terminal/default.nix
     ./system.nix
-    ./custom_config/default.nix
   ];
 }

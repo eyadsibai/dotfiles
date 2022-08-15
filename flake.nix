@@ -3,6 +3,9 @@
   inputs = {
     # nixpkgs.url = "nixpkgs/nixos-22.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
+
+    bleeding-edge.url = "github:nixos/nixpkgs/master";
+
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     nix-index-database.url = "github:Mic92/nix-index-database";
@@ -30,6 +33,13 @@
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     mach-nix.url = "github:DavHau/mach-nix";
     nixpkgs-firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
+
+    mpv-iptv =
+      {
+        url = "github:junners/mpv-iptv";
+        flake = false;
+      };
+
     # THEMING
     nix-colors.url = "github:misterio77/nix-colors";
     base16 = {
@@ -142,7 +152,7 @@
               port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
               load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
               password = import ./shells/penetration/password.nix { inherit pkgs; };
-              mysql = import ./shells/mysql.nix {inherit pkgs; };
+              mysql = import ./shells/mysql.nix { inherit pkgs; };
               penetration-full = mergeEnvs [ port-scanners load-testing password ];
             }
           );
