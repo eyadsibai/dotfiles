@@ -16,8 +16,8 @@
         };
       };
       font = {
-        normal.family = "JetbrainsMono Nerd Font";
-        size = 6.0;
+        # normal.family = "JetbrainsMono Nerd Font";
+        size = 7.0;
       };
       window.opacity = 0.3;
       shell = { program = "${ pkgs.zsh }/bin/zsh"; };
