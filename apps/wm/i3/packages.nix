@@ -3,7 +3,7 @@
 }:
 {
   home.packages =
-    with pkgs; [ networkmanager_dmenu haskellPackages.network-manager-tui rofi-rbw alsaUtils lxappearance ];
+    with pkgs; [ haskellPackages.network-manager-tui rofi-rbw alsaUtils lxappearance ];
   programs.rofi = {
     enable = true;
     plugins = with pkgs; [ rofi-calc rofi-emoji ];

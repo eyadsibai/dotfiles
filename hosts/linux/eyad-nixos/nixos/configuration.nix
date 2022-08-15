@@ -3,8 +3,12 @@
 , lib
 , ...
 }:
+let
+  secrets = import ../secrets;
+in
 {
   imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix ];
+
   # Thermals and cooling
   services.thermald.enable = true;
   boot = {
@@ -125,8 +129,8 @@
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "wheel" "networkmanager" "podman" ];
-    hashedPassword =
-      "$6$Yus5zggqZoBmm/2q$XCdVkAvX6.9TXnxotti5tUcAokV8u38tKwWbKg9HcJdpUohdsidOr32K/ER5wfhLJraUJQMeS6zqFBPu8MJQe/";
+    hashedPassword = secrets.passwd.eyad;
+
     openssh.authorizedKeys.keys = [
       # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
     ];
@@ -177,7 +181,7 @@
   security.apparmor.enable = false;
 
 
-   security.sudo.extraConfig = ''
+  security.sudo.extraConfig = ''
     Defaults lecture = never
     Defaults  insults
 
