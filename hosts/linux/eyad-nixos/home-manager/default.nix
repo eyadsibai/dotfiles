@@ -14,6 +14,8 @@
 
     inputs.nix-colors.homeManagerModule
   ];
+
+
   home.packages =
     with pkgs;
     [
@@ -241,6 +243,7 @@
     #   "\${XDG_BIN_HOME}"
     # ];
     BROWSER = "${ pkgs.firefox }/bin/firefox";
+      MOZ_USE_XINPUT2 = "1"; # for firefox touchpad support
   };
   # should be in the browsers.nix
   # xdg.mimeApps.enable = true;
