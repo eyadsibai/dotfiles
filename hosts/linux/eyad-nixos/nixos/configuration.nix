@@ -52,7 +52,9 @@
 
   services.flatpak.enable = true;
   xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ]; # add xdg-desktopn-portal-wlr for wayland
+  xdg.portal.gtkUsePortal = true;
+
   services.tlp = {
     enable = true;
     settings = {
@@ -119,7 +121,7 @@
   };
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput.enable = true;
-  users.mutableUsers = true;
+  users.mutableUsers = false;
   users.users.eyad = {
     isNormalUser = true;
     shell = pkgs.zsh;
@@ -159,7 +161,7 @@
   # programs.mtr.enable = true;
   programs.gnupg.agent = {
     enable = true;
-    #   enableSSHSupport = true;
+    enableSSHSupport = true;
   };
   services.fwupd.enable = true;
   nixpkgs.config.allowUnfree = true;
@@ -174,6 +176,15 @@
     allowSFTP = true;
   };
   security.apparmor.enable = false;
+
+  programs.qt5ct.enable = true;
+
+   security.sudo.extraConfig = ''
+    Defaults lecture = never
+    Defaults  insults
+
+  '';
+
   services.xserver.desktopManager.session = [
     {
       name = "HomeManager";
