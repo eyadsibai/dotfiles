@@ -8,10 +8,10 @@
   outputs = inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs {
+        pkgs = import inputs.nixpkgs {
           inherit system;
 
-          overlays = [ devshell.overlay ];
+          overlays = [ inputs.devshell.overlay ];
         };
 
       in
