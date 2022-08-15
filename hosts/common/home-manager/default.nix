@@ -14,5 +14,6 @@
     ./kitty
     ./spotify
     ./rofi
+    ./bitwarden
   ];
 }
