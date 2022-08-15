@@ -30,7 +30,7 @@
       # open source video calls and chat
       tuir
       tiptop
-      weechat
+      # weechat
     ];
-  programs.hexchat = { enable = true; };
+  # programs.hexchat = { enable = true; };
 }

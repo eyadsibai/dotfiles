@@ -4,7 +4,7 @@
 , ...
 }:
 let
-  secrets = import ../secrets;
+  secrets = import ../../../../secrets;
 in
 {
   imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix ];
@@ -129,7 +129,7 @@ in
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "wheel" "networkmanager" "podman" ];
-    hashedPassword = secrets.passwd.eyad;
+    hashedPassword = secrets.eyad-nixos.passwd.eyad;
 
     openssh.authorizedKeys.keys = [
       # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect

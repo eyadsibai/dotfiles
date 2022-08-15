@@ -5,8 +5,6 @@
   home.packages =
     with pkgs;
     [
-      spotify-tui
-      spotify
       cava
       cli-visualizer
       cmus
@@ -36,7 +34,6 @@
   services.mpd.enable = true;
   services.mpdris2.enable = true;
   services.playerctld.enable = true;
-  services.spotifyd.enable = true;
   programs.ncmpcpp = { enable = true; };
 
 }
