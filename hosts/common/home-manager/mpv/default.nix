@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 {
   programs.mpv = {
     enable = true;
@@ -33,7 +33,7 @@
       "MOUSE_BTN5" = "add volume 2";
       "MOUSE_BTN6" = "add volume -2";
 
-      "P" = "show-progress";
+      "o" = "show-progress";
       # Mouse wheels, touchpad or other input devices that have axes
       # if the input devices supports precise scrolling it will also scale the
       # numeric value accordingly
@@ -50,7 +50,10 @@
     scripts =
       with pkgs; [ mpvScripts.mpris mpvScripts.convert mpvScripts.cutter mpvScripts.autoload mpvScripts.thumbnail ];
   };
+  xdg.configFile."mpv/scripts/iptv.lua".source = "${inputs.mpv-iptv}/iptv.lua";
+
 }
+
 
 
 

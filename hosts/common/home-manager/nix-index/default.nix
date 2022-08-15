@@ -7,6 +7,6 @@
     enableFishIntegration = config.programs.fish.enable;
   };
 
-#  builtins.trace ${config.programs.fish.enable}
+  #  builtins.trace ${config.programs.fish.enable}
   home.file.".cache/nix-index".source = pkgs.nix-index-database;
 }
