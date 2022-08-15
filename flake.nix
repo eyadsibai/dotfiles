@@ -78,6 +78,7 @@
         default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
+
       };
 
 
@@ -100,7 +101,18 @@
               inputs.nixpkgs
               {
                 inherit system;
-                overlays = builtins.attrValues overlays;
+                overlays = builtins.attrValues overlays ++ [
+                  (_final: _prev: {
+                    bleeding-edge = import inputs.bleeding-edge
+                      {
+                        inherit system;
+                        config = {
+                          allowUnfree = true;
+                        };
+                      };
+                  })
+                ];
+
                 config = {
                   allowUnfree = true;
                   permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
