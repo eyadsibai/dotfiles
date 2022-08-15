@@ -53,7 +53,6 @@
   services.flatpak.enable = true;
   xdg.portal.enable = true;
   xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ]; # add xdg-desktopn-portal-wlr for wayland
-  xdg.portal.gtkUsePortal = true;
 
   services.tlp = {
     enable = true;
@@ -177,7 +176,6 @@
   };
   security.apparmor.enable = false;
 
-  programs.qt5ct.enable = true;
 
    security.sudo.extraConfig = ''
     Defaults lecture = never
