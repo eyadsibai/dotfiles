@@ -19,6 +19,8 @@
   home.packages =
     with pkgs;
     [
+      cookiecutter
+
       git-crypt
       ### PERSONAL
       flakify
