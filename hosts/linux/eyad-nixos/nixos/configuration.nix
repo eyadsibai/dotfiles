@@ -25,7 +25,7 @@ in
     cleanTmpDir = true;
     supportedFilesystems = [ "ntfs" ];
     kernelPackages = pkgs.linuxPackages_latest;
-    kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "iommu=soft" "idle=nomwait" ];
+    kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "iommu=soft" "idle=nomwait" "tpm_tis.interrupts=0" ];
     kernelModules = [
       "fuse"
       "kvm-amd"
