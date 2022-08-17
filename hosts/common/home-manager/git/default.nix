@@ -13,7 +13,16 @@
         co = "pr checkout";
         pv = "pr view";
       };
+      editor = "";
     };
+
+    # to package later
+    # https://github.com/seachicken/gh-poi
+    # https://github.com/k1LoW/gh-grep
+    # https://github.com/gennaro-tedesco/gh-s
+    # https://github.com/gennaro-tedesco/gh-i
+    extensions = [ pkgs.gh-eco pkgs.gh-dash pkgs.gh-ost pkgs.gh-cal ];
+
   };
   programs.git = {
     enable = true;
