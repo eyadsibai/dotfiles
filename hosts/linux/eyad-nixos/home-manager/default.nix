@@ -1,7 +1,6 @@
 { inputs
 , lib
 , pkgs
-, nix-colors
 , ...
 }:
 let
@@ -22,7 +21,6 @@ in
     with pkgs;
     [
       cookiecutter
-
       git-crypt
       ### PERSONAL
       flakify
