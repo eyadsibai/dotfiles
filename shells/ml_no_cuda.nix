@@ -7,29 +7,38 @@ mkShell
   buildInputs =
     with python310Packages;
     [
-      pip
-      pip-tools
-      pandas
-      numpy
-      scipy
-      jupyter
-      ipython
-      thinc
-      vowpalwabbit
-      imgaug
-      matplotlib
-      mlflow
-      tensorflow
-      pytorch
-      pytorch-lightning
-      pymc3
-      videocr
-      mlrose
-      tesseract5
+      # pip
+      # pip-tools
+      # pandas
+      # numpy
+      # scipy
+      # jupyter
+      # ipython
+      # thinc
+      # vowpalwabbit
+      # imgaug
+      # matplotlib
+      # mlflow
+      # tensorflow
+      # pytorch
+      # pytorch-lightning
+      # pymc3
+      # videocr
+      # mlrose
+      # tesseract5
       # pytorch-metric-learning
       # pyjanitor
-      shap
+      # shap
     ]
-    ++ [ dvc tensorflow-lite vowpal-wabbit opencv3 jax jaxlib ];
+    ++ [
+      # dvc
+      # tensorflow-lite
+      # vowpal-wabbit
+      # opencv3
+      # jax
+      # jaxlib
+      rgf
+      fast-rgf
+    ];
   shellHook = "";
 }

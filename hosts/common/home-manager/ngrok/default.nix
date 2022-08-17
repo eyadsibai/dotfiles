@@ -1,9 +1,9 @@
 { pkgs
 , ...
 }:
-# let
-#   secrets = import ../../../../secrets;
-# in
+let
+  secrets = import ../../../../secrets;
+in
 {
   home.packages = [
     pkgs.ngrok
