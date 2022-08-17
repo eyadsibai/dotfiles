@@ -4,7 +4,7 @@
 }:
 {
   programs.bash = {
-    enable = true;
+    enable = false;
     initExtra = "neofetch";
   };
   # programs.zsh = {
