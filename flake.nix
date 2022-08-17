@@ -200,9 +200,10 @@
               ++ (builtins.attrValues nixosModules);
             specialArgs = { inherit inputs; };
           };
-      darwinConfiguration."eyad-mac" =
+      darwinConfigurations."eyad-mac" =
         inputs.darwin.lib.darwinSystem
-          {
+           {
+			system = "aarch64-darwin";
             pkgs = legacyPackages.aarch64-darwin;
             modules = [
               ./hosts/mac/darwin/nixos/configuration.nix
