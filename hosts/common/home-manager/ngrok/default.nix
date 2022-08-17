@@ -1,12 +1,11 @@
 { config
 , pkgs
-  # , authtoken
+, secrets
 , ...
 }:
 {
   xdg.configFile."ngrok/ngrok.yml".text = ''
     version: "2"
-
+    authtoken: ${secrets.ngrok.authtoken}
   '';
-  # authtoken: ${authtoken}
 }
