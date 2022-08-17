@@ -4,6 +4,9 @@
 , nix-colors
 , ...
 }:
+let
+  secrets = import ../../../../secrets;
+in
 {
   imports = [
     ../../../../apps
@@ -11,7 +14,6 @@
     ../../../common/home-manager
     ../../common/home-manager
     inputs.nix-doom-emacs.hmModule
-
     inputs.nix-colors.homeManagerModule
   ];
 
@@ -73,7 +75,7 @@
       # "find" for files
       fdupes
       fff
-      ffmpeg
+      ffmpeg_5-full
       gimp
       # gnu image manipulation program
       glow
@@ -245,7 +247,7 @@
     #   "\${XDG_BIN_HOME}"
     # ];
     BROWSER = "${ pkgs.firefox }/bin/firefox";
-      MOZ_USE_XINPUT2 = "1"; # for firefox touchpad support
+    MOZ_USE_XINPUT2 = "1"; # for firefox touchpad support
   };
   # should be in the browsers.nix
   # xdg.mimeApps.enable = true;

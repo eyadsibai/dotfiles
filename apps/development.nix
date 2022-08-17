@@ -6,7 +6,6 @@
     with pkgs;
     [
       jetbrains.idea-community
-      atom
       nano
       nanorc
       s3cmd
@@ -24,6 +23,7 @@
       mycli
       iredis
       usql
+      vieb
     ];
   # programs.go = { enable = true; };
   # programs.java = { enable = true; };
