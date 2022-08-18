@@ -8,6 +8,7 @@
     ../../common/home-manager/git
     ../../common/home-manager/direnv
     ../../../apps/terminal/shell.nix
+    ../../common/home-manager/kitty
     # ../../common/home-manager/firefox
   ];
 
@@ -29,7 +30,6 @@
     micro
     vscode
     firefox-bin
-    kitty
     terminal-notifier
     any-nix-shell
   ] ++ lib.optionals stdenv.isDarwin [
