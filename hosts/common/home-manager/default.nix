@@ -8,7 +8,7 @@
     ./picom
     ./mpv
     ./newsboat
-    ./ngrok
+    # ./ngrok
     ./alacritty
     ./networkmanager_dmenu
     ./kitty
@@ -18,12 +18,12 @@
     ./polybar
     ./social
     ./accounts
-    ./sxhkd.nix
-    ./zathura.nix
-    ./xcape.nix
-    ./feh.nix
-    ./unclutter.nix
-    ./flameshot.nix
+    ./sxhkd
+    ./zathura
+    ./xcape
+    ./feh
+    ./unclutter
+    ./flameshot
     ./direnv
   ];
 }

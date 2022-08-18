@@ -4,14 +4,15 @@
 , ...
 }:
 let
-  secrets = import ../../../../secrets;
+  secrets = import ../../../secrets;
 in
 {
+  # inherit secrets;
   imports = [
-    ../../../common/apps
-    ../../../../apps/wm/i3
-    ../../../common/home-manager
-    ../../common/home-manager
+    ../../common/apps
+    ../../common/apps/wm/i3
+    # ../../../common/home-manager
+    # ../../common/home-manager
 
     inputs.nix-doom-emacs.hmModule
     inputs.nix-colors.homeManagerModule
@@ -230,12 +231,6 @@ in
     };
   };
 
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-
-  };
   # TODO https://github.com/LukeSmithxyz/voidrice/
   # https://github.com/mitchellh/nixos-config
   # https://github.com/jwiegley/nix-config
