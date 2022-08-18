@@ -1,7 +1,9 @@
-{ pkgs ? import <nixpkgs> { }, ... }:
+{ pkgs ? import <nixpkgs> { }
+, ...
+}:
 with pkgs;
-mkShell {
-
+mkShell
+{
   buildInputs = [
     brakeman
     burpsuite

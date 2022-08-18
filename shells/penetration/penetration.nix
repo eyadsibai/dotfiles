@@ -6,12 +6,9 @@ airgeddon
   nmap
   nmon
   snscrape
-
   # ### Exploitation ###
   metasploit
   sqlmap
-
-
 # ### Recon ###
 # cloudbrute
 # dnsenum
@@ -27,14 +24,10 @@ airgeddon
 # theharvester
 # wireshark
 # wireshark-cli
-
 # ### Backdoors ###
 # httptunnel
 # pwnat
-
 # ### Passwords ###
-
-
 # ### Reverse ###
 # binutils
 # elfutils
@@ -46,7 +39,6 @@ airgeddon
 # snowman
 # valgrind
 # yara
-
 # ### Sniffing ###
 # bettercap
 # dsniff
@@ -54,15 +46,11 @@ airgeddon
 # rshijack
 # sipp
 # sniffglue
-
 # ### Vuln analisys ###
 # grype
 # lynis
 # sqlmap
 # vulnix
-
-
-
 # # "0trace" = todo
 # # ace-voip = todo
 # # aesfix = todo
