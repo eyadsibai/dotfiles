@@ -7,9 +7,9 @@ case "$(uname -s)" in
     ;;
   Darwin)
     nix --experimental-features 'nix-command flakes' build ".#darwinConfigurations.$(hostname -s).system"
-    if test "$@" != "build"; then
-      ./result/sw/bin/darwin-rebuild --flake ".#$(hostname -s)" "$@"
-    fi
+
+    # darwin-rebuild --flake ".#$(hostname -s)" "$@"
+    ./result/sw/bin/darwin-rebuild activate --flake ".#$(hostname -s)" "$@"
     ;;
   *)
     echo "I don't know how to build on a $(uname -s) system."

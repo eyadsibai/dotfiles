@@ -8,10 +8,7 @@
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     nix-index-database.url = "github:Mic92/nix-index-database";
-    sops-nix = {
-      url = github:Mic92/sops-nix;
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+
     home-manager = {
       url = "github:nix-community/home-manager";
       # url = "github:nix-community/home-manager/release-22.05";
@@ -31,7 +28,7 @@
     nix-doom-emacs.url = "github:nix-community/nix-doom-emacs";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
     mach-nix.url = "github:DavHau/mach-nix";
-    nixpkgs-firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
+    firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
 
     mpv-iptv =
       {
@@ -111,7 +108,9 @@
                         };
                       };
                   })
-                ];
+                ] ++ (inputs.nixpkgs.lib.optionalAttrs
+                  (builtins.elem
+                    system [ "aarch64-darwin" "x86_64-darwin" ]) [ inputs.firefox-darwin.overlay ]);
 
                 config = {
                   allowUnfree = true;
@@ -174,7 +173,6 @@
             modules =
               [
                 ./hosts/linux/eyad-nixos/nixos/configuration.nix
-                inputs.sops-nix.nixosModules.sops
                 inputs.nixos-hardware.nixosModules.lenovo-thinkpad
                 inputs.nixpkgs.nixosModules.notDetected
                 inputs.nur.nixosModules.nur
@@ -202,21 +200,24 @@
           };
       darwinConfigurations."eyad-mac" =
         inputs.darwin.lib.darwinSystem
-           {
-			system = "aarch64-darwin";
+          {
+            system = "aarch64-darwin";
             pkgs = legacyPackages.aarch64-darwin;
             modules = [
-              ./hosts/mac/darwin/configuration.nix
               # https://gitlab.com/azazel/ender-config/-/blob/master/flake.nix#L50
-              { pkgs.overlays = [ inputs.firefox-darwin.overlay ]; }
-              inputs.home-manager.darwinModule.home-manager
-              {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-              }
+              # { pkgs.overlays = [ inputs.firefox-darwin.overlay ]; }
+              ./hosts/darwin/eyad-mac/configuration.nix
+
+              #    inputs.home-manager.darwinModule.home-manager
+              #    {
+              #      home-manager.useGlobalPkgs = true;
+              #      home-manager.useUserPackages = true;
+              #    }
             ];
+            specialArgs = { inherit inputs; };
+
           };
-        };
+    };
 
 
 
