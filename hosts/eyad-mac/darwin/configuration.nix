@@ -48,12 +48,7 @@
   networking.hostName = "eyad-mac";
   networking.localHostName = "eyad-mac";
   environment.systemPackages = with pkgs; [
-    micro
-    vscode
-    firefox-bin
-    kitty
-    terminal-notifier
-    nix
+
   ];
 
   # https://github.com/nix-community/home-manager/issues/423

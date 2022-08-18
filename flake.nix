@@ -65,6 +65,10 @@
         "x86_64-darwin"
       ];
       lib = import ./lib { inherit inputs; };
+      nixConfig = {
+        allowUnfree = true;
+        permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
+      };
     in
     rec {
       # inherit lib;
@@ -76,14 +80,10 @@
         poetry2nix = inputs.poetry2nix.overlay;
       };
 
-
       # Reusable nixos modules you might want to export
       # These are usually stuff you would upstream into nixpkgs
       nixosModules = import ./modules/nixos;
-      # Reusable home-manager modules you might want to export
-      # These are usually stuff you would upstream into home-manager
       homeManagerModules = import ./modules/home-manager;
-
       darwinModules = import ./modules/darwin;
 
       templates = import ./templates;
@@ -103,27 +103,22 @@
                     bleeding-edge = import inputs.bleeding-edge
                       {
                         inherit system;
-                        config = {
-                          allowUnfree = true;
-                        };
+                        config = nixConfig;
                       };
 
                     apple-x86 = import inputs.nixpkgs
                       {
                         system = "x86_64-darwin";
-                        config = {
-                          allowUnfree = true;
-                        };
+                        config = nixConfig;
                       };
+
+                    firefox-darwin = import inputs.firefox-darwin.overlay;
                   })
                 ] ++ (inputs.nixpkgs.lib.lists.optionals
                   (builtins.elem
                     system [ "aarch64-darwin" "x86_64-darwin" ]) [ inputs.firefox-darwin.overlay ]);
 
-                config = {
-                  allowUnfree = true;
-                  permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
-                };
+                config = nixConfig;
               }
           );
       # Devshell for bootstrapping
@@ -239,7 +234,4 @@
 
           };
     };
-
-
-
 }
