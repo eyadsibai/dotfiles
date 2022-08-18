@@ -3,6 +3,6 @@
 }:
 {
   home.packages =
-    with pkgs; [ haskellPackages.network-manager-tui alsaUtils lxappearance ];
+    with pkgs; [ haskellPackages.network-manager-tui lxappearance ];
 
 }

@@ -15,5 +15,8 @@
     ./spotify
     ./rofi
     ./bitwarden
+    ./polybar
+    ./social
+    ./accounts
   ];
 }
