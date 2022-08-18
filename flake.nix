@@ -196,7 +196,7 @@
                   home-manager.users.eyad = {
                     imports =
                       [
-                        ./hosts/linux/eyad-nixos/home-manager
+                        ./hosts/eyad-nixos/home-manager/home.nix
 
                         # Import our reusable home-manager modules;
                       ]

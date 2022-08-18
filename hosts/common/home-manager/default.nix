@@ -24,5 +24,6 @@
     ./feh.nix
     ./unclutter.nix
     ./flameshot.nix
+    ./direnv
   ];
 }
