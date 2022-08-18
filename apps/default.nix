@@ -4,12 +4,11 @@
 {
   imports = [
     ./email_cal_rss.nix
-    ./social.nix
     ./media.nix
     ./office.nix
     ./services.nix
     ./development.nix
-    ./terminal/default.nix
+    ./terminal
     ./system.nix
   ];
 }
