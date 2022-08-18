@@ -55,6 +55,8 @@
       flake = false;
     };
     stylix.url = "github:danth/stylix";
+
+    poetry2nix.url = "github:nix-community/poetry2nix";
   };
   outputs =
     inputs:
@@ -75,7 +77,7 @@
         default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
-
+        poetry2nix = inputs.poetry2nix.overlay;
       };
 
 
