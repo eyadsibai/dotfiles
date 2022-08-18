@@ -7,6 +7,7 @@
     ../../common/home-manager/htop
     ../../common/home-manager/git
     ../../common/home-manager/direnv
+    ../../../apps/terminal/shell.nix
     # ../../common/home-manager/firefox
   ];
 
@@ -30,6 +31,7 @@
     firefox-bin
     kitty
     terminal-notifier
+    any-nix-shell
   ] ++ lib.optionals stdenv.isDarwin [
     # not needed but nice to demo for future refactoring
     m-cli
