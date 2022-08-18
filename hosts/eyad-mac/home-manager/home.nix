@@ -25,6 +25,13 @@
     jq
     cachix
     apple-x86.idris2
+    comma
+    micro
+    vscode
+    firefox-bin
+    # firefox-darwin.firefox-bin
+    kitty
+    terminal-notifier
   ] ++ lib.optionals stdenv.isDarwin [
     # not needed but nice to demo for future refactoring
     m-cli
