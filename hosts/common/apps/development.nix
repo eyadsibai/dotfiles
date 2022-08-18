@@ -10,7 +10,6 @@
       nanorc
       s3cmd
       # awscli2 # TODO crash on install
-      ngrok
       # secure tunneling to localhost
       insomnia
       # rest client with graphql support
