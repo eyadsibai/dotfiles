@@ -6,7 +6,10 @@
   imports = [
     ../../common/home-manager/htop
     ../../common/home-manager/git
+    # ../../common/home-manager/firefox
   ];
+
+  # programs.firefox.package = pkgs.firefox-bin;
 
   # https://github.com/malob/nixpkgs/blob/master/home/default.nix
 
@@ -28,8 +31,7 @@
     comma
     micro
     vscode
-    firefox-bin
-    # firefox-darwin.firefox-bin
+    firefox-darwin.firefox-bin
     kitty
     terminal-notifier
   ] ++ lib.optionals stdenv.isDarwin [
