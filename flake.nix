@@ -1,7 +1,6 @@
 {
   description = "My Ultimate Flake";
   inputs = {
-    # nixpkgs.url = "nixpkgs/nixos-22.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
     bleeding-edge.url = "github:nixos/nixpkgs/master";
 
@@ -11,10 +10,8 @@
 
     home-manager = {
       url = "github:nix-community/home-manager";
-      # url = "github:nix-community/home-manager/release-22.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-22.05-darwin";
     darwin = {
       url = "github:lnl7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -111,17 +108,22 @@
                         system = "x86_64-darwin";
                         config = nixConfig;
                       };
-
-                    firefox-darwin = import inputs.nixpkgs
-                      {
-                        config = nixConfig;
-                        overlays = [ inputs.firefox-darwin.overlay ];
-                      };
-
                   })
                 ] ++ (inputs.nixpkgs.lib.lists.optionals
                   (builtins.elem
-                    system [ "aarch64-darwin" "x86_64-darwin" ]) [ inputs.firefox-darwin.overlay ]);
+                    system [ "aarch64-darwin" "x86_64-darwin" ]) [ inputs.firefox-darwin.overlay ]) ++
+                  inputs.nixpkgs.lib.lists.singleton (
+                    # Sub in x86 version of packages that don't build on Apple Silicon yet
+                    final: prev: (inputs.nixpkgs.lib.optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
+                      inherit (final.apple-x86_64)
+                        idris2
+                        # nix-index
+                        # niv
+                        # purescript
+                        ;
+                    })
+                  );
+
 
                 config = nixConfig;
               }
