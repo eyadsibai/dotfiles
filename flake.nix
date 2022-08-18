@@ -209,14 +209,13 @@
             pkgs = legacyPackages.aarch64-darwin;
             modules = [
               # https://gitlab.com/azazel/ender-config/-/blob/master/flake.nix#L50
-              # { pkgs.overlays = [ inputs.firefox-darwin.overlay ]; }
               ./hosts/darwin/eyad-mac/configuration.nix
 
-              #    inputs.home-manager.darwinModule.home-manager
-              #    {
-              #      home-manager.useGlobalPkgs = true;
-              #      home-manager.useUserPackages = true;
-              #    }
+              inputs.home-manager.darwinModule.home-manager
+              {
+                home-manager.useGlobalPkgs = true;
+                home-manager.useUserPackages = true;
+              }
             ];
             specialArgs = { inherit inputs; };
 
