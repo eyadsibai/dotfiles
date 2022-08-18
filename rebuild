@@ -6,10 +6,7 @@ case "$(uname -s)" in
     sudo nixos-rebuild switch --flake .#"$@"
     ;;
   Darwin)
-    nix --experimental-features 'nix-command flakes' build ".#darwinConfigurations.$(hostname -s).system"
-
-    # darwin-rebuild --flake ".#$(hostname -s)" "$@"
-    ./result/sw/bin/darwin-rebuild activate --flake ".#$(hostname -s)" "$@"
+    darwin-rebuild switch --flake ".#$(hostname -s)" "$@"
     ;;
   *)
     echo "I don't know how to build on a $(uname -s) system."

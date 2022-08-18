@@ -6,6 +6,19 @@
 {
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
+  users.nix.configureBuildUsers = true;
+
+  nix.trustedUsers = [
+    "@admin"
+  ];
+
+  nix.extraOptions = ''
+    auto-optimise-store = true
+    experimental-features = nix-command flakes
+  '' + lib.optionalString (pkgs.system == "aarch64-darwin") ''
+    extra-platforms = x86_64-darwin aarch64-darwin
+  '';
+
   homebrew = {
     enable = true;
     autoUpdate = false;
@@ -23,14 +36,13 @@
     enableSyntaxHighlighting = true;
   };
   programs.tmux.enable = true;
-  programs.vim.enable = true;
   #  services.mopidy.enable = true;
   system.keyboard.enableKeyMapping = true;
   system.keyboard.remapCapsLockToControl = true;
   # system.keyboard.remapCapsLockToEscape = true;
 
   # Add ability to used TouchID for sudo authentication
-  security.pam.enableSudoTouchIdAuth = true;
+  # security.pam.enableSudoTouchIdAuth = true;
   # programs.fish.enable = true;
   networking.computerName = "eyad-mac";
   networking.hostName = "eyad-mac";
@@ -41,16 +53,17 @@
     firefox-bin
     kitty
     terminal-notifier
+    nix
   ];
 
   # https://github.com/nix-community/home-manager/issues/423
   environment.variables = {
     TERMINFO_DIRS = "${pkgs.kitty.terminfo.outPath}/share/terminfo";
   };
-  programs.nix-index.enable = true;
+  # programs.nix-index.enable = true;
 
   # Fonts
-  fonts.enableFontDir = true;
+  fonts.fontDir.enable = true;
   fonts.fonts = with pkgs; [
     recursive
     (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })

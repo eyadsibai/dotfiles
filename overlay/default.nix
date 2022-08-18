@@ -44,9 +44,9 @@ let
               # propagatedBuildInputs = [ prev.ffmpeg ];
             }
           );
+
+      # did not work I had to add it in the the flake file directly
       apple-silicon =
-        final:
-        prev:
         lib.optionalAttrs
           (prev.stdenv.system == "aarch64-darwin")
           {
