@@ -4,7 +4,7 @@
 , ...
 }:
 let
-  secrets = import ../../../../secrets;
+  secrets = import ../../../secrets;
 in
 {
   imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix ];
@@ -207,8 +207,9 @@ in
   hardware.opengl.enable = true;
   hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau pkgs.amdvlk pkgs.rocm-opencl-icd ];
   hardware.opengl.driSupport32Bit = true;
+
   programs.steam = {
-    enable = false;
+    enable = true;
     remotePlay.openFirewall = true;
     # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true;
