@@ -7,14 +7,7 @@
     enable = false;
     initExtra = "neofetch";
   };
-  # programs.zsh = {
-  #   enable = true;
-  #   oh-my-zsh = {
-  #     enable = true;
-  #     plugins = [ "git" "thefuck" ];
-  #     theme = "robbyrussell";
-  #   };
-  # };
+
   programs.zsh = {
     enable = true;
     enableAutosuggestions = true;
