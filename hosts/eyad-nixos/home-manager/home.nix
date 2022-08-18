@@ -11,8 +11,7 @@ in
   imports = [
     ../../common/apps
     ../../common/apps/wm/i3
-    # ../../../common/home-manager
-    # ../../common/home-manager
+    ../../common/home-manager
 
     inputs.nix-doom-emacs.hmModule
     inputs.nix-colors.homeManagerModule

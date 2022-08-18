@@ -1,4 +1,5 @@
-{ pkgs, ... }: {
+{ pkgs, secrets, ... }: {
+
   imports = [
     ./qutebrowser
     ./firefox
@@ -8,7 +9,7 @@
     ./picom
     ./mpv
     ./newsboat
-    # ./ngrok
+    ./ngrok
     ./alacritty
     ./networkmanager_dmenu
     ./kitty
