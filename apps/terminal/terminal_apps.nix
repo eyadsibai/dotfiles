@@ -92,7 +92,7 @@
     nix-direnv = { enable = true; };
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableFishIntegration = false;
+    # enableFishIntegration = false;
     config = {
       global = { warn_timeout = "1m"; };
     };
