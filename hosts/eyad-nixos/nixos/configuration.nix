@@ -7,7 +7,7 @@ let
   secrets = import ../../../secrets;
 in
 {
-  imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix ];
+  imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix ./steam.nix ];
 
   # Thermals and cooling
   services.thermald.enable = true;
@@ -184,7 +184,6 @@ in
   security.sudo.extraConfig = ''
     Defaults lecture = never
     Defaults  insults
-
   '';
 
   services.xserver.desktopManager.session = [
@@ -208,13 +207,6 @@ in
   hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau pkgs.amdvlk pkgs.rocm-opencl-icd ];
   hardware.opengl.driSupport32Bit = true;
 
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    # Open ports in the firewall for Steam Remote Play
-    dedicatedServer.openFirewall = true;
-    # Open ports in the firewall for Source Dedicated Server
-  };
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
