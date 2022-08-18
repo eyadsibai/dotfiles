@@ -1,0 +1,6 @@
+{
+    "nix.enableLanguageServer": false,
+    "nixEnvSelector.suggestion": false,
+    "nixEnvSelector.packages": [],
+    "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix"
+}
