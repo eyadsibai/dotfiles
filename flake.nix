@@ -19,11 +19,7 @@
       url = "github:lnl7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
-    home-manager-darwin = {
-      url = "github:nix-community/home-manager";
-      # url = "github:nix-community/home-manager/release-22.05";
-      inputs.nixpkgs.follows = "nixpkgs-darwin";
-    };
+
     flake-utils.url = "github:numtide/flake-utils";
     nix-doom-emacs.url = "github:nix-community/nix-doom-emacs";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
