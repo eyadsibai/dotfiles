@@ -1,6 +1,9 @@
-{ pkgs
+{ config
+, pkgs
 , ...
 }:
+# assert config.programs.bash.enable;
+
 {
   home.packages =
     with pkgs;
@@ -32,11 +35,13 @@
       wp-cli
       http-prompt
     ];
+
+
   programs.broot = {
     enable = true;
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-    enableFishIntegration = true;
+    enableBashIntegration = config.programs.bash.enable;
+    enableZshIntegration = config.programs.zsh.enable;
+    enableFishIntegration = config.programs.fish.enable;
     verbs = [
       {
         invocation = "p";
@@ -90,8 +95,8 @@
   programs.direnv = {
     enable = true;
     nix-direnv = { enable = true; };
-    enableBashIntegration = true;
-    enableZshIntegration = true;
+    enableBashIntegration = config.programs.bash.enable;
+    enableZshIntegration = config.programs.zsh.enable;
     # enableFishIntegration = false;
     config = {
       global = { warn_timeout = "1m"; };
@@ -105,9 +110,9 @@
     # FZF_DEFAULT_OPTS
     fileWidgetCommand = "fd --type file --follow";
     # FZF_CTRL_T_COMMAND
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-    enableFishIntegration = false;
+    enableBashIntegration = config.programs.bash.enable;
+    enableZshIntegration = config.programs.zsh.enable;
+    enableFishIntegration = config.programs.fish.enable;
   };
   programs.jq = { enable = true; };
   # programs.just = {
@@ -122,15 +127,15 @@
   programs.man = { enable = true; };
   programs.mcfly = {
     enable = true;
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-    enableFishIntegration = true;
+    enableBashIntegration = config.programs.bash.enable;
+    enableZshIntegration = config.programs.zsh.enable;
+    enableFishIntegration = config.programs.fish.enable;
   };
   programs.navi = {
     enable = true;
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-    enableFishIntegration = false;
+    enableBashIntegration = config.programs.bash.enable;
+    enableZshIntegration = config.programs.zsh.enable;
+    enableFishIntegration = config.programs.fish.enable;
   };
   programs.ncspot = { enable = true; };
   # programs.command-not-found.enable = true;
@@ -146,9 +151,9 @@
 
   programs.skim = {
     enable = true;
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-    enableFishIntegration = false;
+    enableBashIntegration = config.programs.bash.enable;
+    enableZshIntegration = config.programs.zsh.enable;
+    enableFishIntegration = config.programs.fish.enable;
   };
   programs.ssh = { enable = true; };
   # programs.starship = { enable = true; };
@@ -164,8 +169,8 @@
   programs.zellij.enable = true;
   programs.zoxide = {
     enable = true;
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-    enableFishIntegration = false;
+    enableBashIntegration = config.programs.bash.enable;
+    enableZshIntegration = config.programs.zsh.enable;
+    enableFishIntegration = config.programs.fish.enable;
   };
 }
