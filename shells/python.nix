@@ -14,20 +14,29 @@ let
       {
         requirements =
           ''
-            # pandas
-            black
+             # pandas
+            #  black
           '';
       };
+
+
+  myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
+    projectDir = ./.;
+    python = pkgs."${python}";
+    preferWheels = true;
+  };
 in
 pkgs.mkShell
 {
   buildInputs = [
-    (pkgs.${ python }.withPackages (ps: with ps; [ pip pyflakes isort ]))
+    (pkgs.${ python }.withPackages (ps: with ps;
+    [ pip pyflakes isort ]))
     #  pkgs.nodePackages.pyright
     #  pkgs.nodePackages.prettier
     #  pkgs.docker
     #  pkgs.glpk
     pythonShell
+    myPoetryEnv
   ];
   shellHook = "";
 }
