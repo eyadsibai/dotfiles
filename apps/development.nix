@@ -16,7 +16,7 @@
       # rest client with graphql support
       beekeeper-studio
       vscode
-      earthly
+      # earthly
       t-rec
       reviewdog
       # pgcli # modern postgres client # TODO crash on install
