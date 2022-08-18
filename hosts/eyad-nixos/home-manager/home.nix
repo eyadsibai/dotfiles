@@ -12,6 +12,8 @@ in
     ../../../../apps/wm/i3
     ../../../common/home-manager
     ../../common/home-manager
+    ../../common/home-manager/direnv
+
     inputs.nix-doom-emacs.hmModule
     inputs.nix-colors.homeManagerModule
   ];
