@@ -14,10 +14,10 @@
       # url = "github:nix-community/home-manager/release-22.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-22.05-darwin";
+    # nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-22.05-darwin";
     darwin = {
       url = "github:lnl7/nix-darwin/master";
-      inputs.nixpkgs.follows = "nixpkgs-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     flake-utils.url = "github:numtide/flake-utils";
@@ -107,9 +107,15 @@
                           allowUnfree = true;
                         };
                       };
+
+                    apple-x86 = import inputs.nixpkgs
+                      {
+                        system = "x86_64-darwin";
+                        config = {
+                          allowUnfree = true;
+                        };
+                      };
                   })
-
-
                 ] ++ (inputs.nixpkgs.lib.lists.optionals
                   (builtins.elem
                     system [ "aarch64-darwin" "x86_64-darwin" ]) [ inputs.firefox-darwin.overlay ]);
@@ -174,7 +180,7 @@
             pkgs = legacyPackages.x86_64-linux;
             modules =
               [
-                ./hosts/linux/eyad-nixos/nixos/configuration.nix
+                ./hosts/eyad-nixos/nixos/configuration.nix
                 inputs.nixos-hardware.nixosModules.lenovo-thinkpad
                 inputs.nixpkgs.nixosModules.notDetected
                 inputs.nur.nixosModules.nur
@@ -207,9 +213,9 @@
             pkgs = legacyPackages.aarch64-darwin;
             modules = [
               # https://gitlab.com/azazel/ender-config/-/blob/master/flake.nix#L50
-              ./hosts/darwin/eyad-mac/configuration.nix
+              ./hosts/eyad-mac/darwin/configuration.nix
 
-              inputs.home-manager.darwinModule.home-manager
+              inputs.home-manager.darwinModules.home-manager
               {
                 home-manager.useGlobalPkgs = true;
                 home-manager.useUserPackages = true;
@@ -218,13 +224,14 @@
                 home-manager.users.eyad = {
                   imports =
                     [
-                      ./hosts/linux/eyad-nixos/home-manager
+                      ./hosts/eyad-mac/home-manager/home.nix
 
                       # Import our reusable home-manager modules;
-                    ]
-                    ++ (builtins.attrValues homeManagerModules);
+
+                    ] ++ (builtins.attrValues homeManagerModules);
                 };
               }
+
             ]
             ++ (builtins.attrValues darwinModules);
 
