@@ -8,7 +8,7 @@
   services.nix-daemon.enable = true;
   homebrew = {
     enable = true;
-    autoUpdate = true;
+    autoUpdate = false;
     cleanup = "zap";
     brews = [ "mas" ];
     casks = [ ];
@@ -31,9 +31,9 @@
   networking.computerName = "eyad-mac";
   networking.hostName = "eyad-mac";
   networking.localHostName = "eyad-mac";
-  users.users.eyad.packages = [
+  environment.systemPackages = [
     pkgs.micro
     pkgs.vscode
-    #  pkgsM1.firefox-bin
+    pkgs.firefox-devedition-bin
   ];
 }
