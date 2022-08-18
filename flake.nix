@@ -110,7 +110,9 @@
                         };
                       };
                   })
-                ] ++ (inputs.nixpkgs.lib.optionalAttrs
+
+
+                ] ++ (inputs.nixpkgs.lib.lists.optionals
                   (builtins.elem
                     system [ "aarch64-darwin" "x86_64-darwin" ]) [ inputs.firefox-darwin.overlay ]);
 
