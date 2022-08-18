@@ -162,9 +162,9 @@
   programs.topgrade = { enable = true; };
   programs.watson = {
     enable = true;
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-    enableFishIntegration = false;
+    enableBashIntegration = config.programs.bash.enable;
+    enableZshIntegration = config.programs.zsh.enable;
+    enableFishIntegration = config.programs.fish.enable;
   };
   programs.zellij.enable = true;
   programs.zoxide = {
