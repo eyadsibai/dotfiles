@@ -106,13 +106,18 @@
                         config = nixConfig;
                       };
 
-                    apple-x86 = import inputs.nixpkgs
+                    apple-x86_64 = import inputs.nixpkgs
                       {
                         system = "x86_64-darwin";
                         config = nixConfig;
                       };
 
-                    firefox-darwin = import inputs.firefox-darwin.overlay;
+                    firefox-darwin = import inputs.nixpkgs
+                      {
+                        config = nixConfig;
+                        overlays = [ inputs.firefox-darwin.overlay ];
+                      };
+
                   })
                 ] ++ (inputs.nixpkgs.lib.lists.optionals
                   (builtins.elem

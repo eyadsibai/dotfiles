@@ -11,7 +11,7 @@ in
   # Browsers
   programs.firefox = {
     enable = true;
-    package = lib.mkDefault pkgs.wrapFirefox pkgs.firefox-unwrapped { forceWayland = false; };
+    package = lib.mkDefault (pkgs.wrapFirefox pkgs.firefox-unwrapped { forceWayland = false; });
     extensions =
       with addons;
       [
