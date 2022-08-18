@@ -168,7 +168,7 @@
       darwinConfiguration."eyad-mac" = inputs.darwin.lib.darwinSystem {
       system = "aarch64-darwin";
 
-      modules = [./hosts/mac/darwin/nixos/configuration.nix
+      modules = [./hosts/mac/darwin/configuration.nix
       inputs.home-manager.darwinModule.home-manager
       {
 home-manager.useGlobalPkgs = true;
