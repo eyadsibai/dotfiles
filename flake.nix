@@ -84,6 +84,8 @@
       # These are usually stuff you would upstream into home-manager
       homeManagerModules = import ./modules/home-manager;
 
+      darwinModules = import ./modules/darwin;
+
       templates = import ./templates;
 
       # Reexport nixpkgs with our overlays applied
@@ -211,8 +213,21 @@
               {
                 home-manager.useGlobalPkgs = true;
                 home-manager.useUserPackages = true;
+                home-manager.backupFileExtension = "backup";
+                home-manager.extraSpecialArgs = { inherit inputs; };
+                home-manager.users.eyad = {
+                  imports =
+                    [
+                      ./hosts/linux/eyad-nixos/home-manager
+
+                      # Import our reusable home-manager modules;
+                    ]
+                    ++ (builtins.attrValues homeManagerModules);
+                };
               }
-            ];
+            ]
+            ++ (builtins.attrValues darwinModules);
+
             specialArgs = { inherit inputs; };
 
           };
