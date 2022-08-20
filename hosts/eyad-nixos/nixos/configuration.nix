@@ -7,7 +7,19 @@ let
   secrets = import ../../../secrets;
 in
 {
-  imports = [ ./hardware-configuration.nix ./networking.nix ./sound.nix ./fonts.nix ./nix.nix ./steam.nix ];
+  imports = [
+    ./hardware-configuration.nix
+    ./networking.nix
+    ./sound.nix
+    ./fonts.nix
+    ./nix.nix
+    ./steam.nix
+    ./../../common/nixos/geoclue2
+    ./../../common/nixos/tlp
+    ./../../common/nixos/samba
+    ./../../common/nixos/minidlna
+    ./../../common/nixos/locate
+  ];
 
   # Thermals and cooling
   services.thermald.enable = true;
@@ -25,7 +37,14 @@ in
     cleanTmpDir = true;
     supportedFilesystems = [ "ntfs" ];
     kernelPackages = pkgs.linuxPackages_latest;
-    kernelParams = [ "acpi_osi=Linux" "acpi_backlight=none" "processor.max_cstate=4" "iommu=soft" "idle=nomwait" "tpm_tis.interrupts=0" ];
+    kernelParams = [
+      "acpi_osi=Linux"
+      "acpi_backlight=none"
+      "processor.max_cstate=4"
+      "iommu=soft"
+      "idle=nomwait"
+      "tpm_tis.interrupts=0"
+    ];
     kernelModules = [
       "fuse"
       "kvm-amd"
@@ -55,13 +74,12 @@ in
   systemd.coredump.enable = true;
 
   services.flatpak.enable = true;
-  xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ]; # add xdg-desktopn-portal-wlr for wayland
-
-  services.tlp = {
+  xdg.portal = {
     enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ]; # add xdg-desktopn-portal-wlr for wayland
+  };
+  services.tlp = {
     settings = {
-      USB_AUTOSUSPEND = 0;
       RUNTIME_PM_BLACKLIST = "05:00.3 04:00.3 04:00.4";
     };
   };
@@ -203,10 +221,11 @@ in
     "fs.inotify.max_user_watches" = 524288;
     # Allow VS Code to watch more files
   };
-  hardware.opengl.enable = true;
-  hardware.opengl.extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau pkgs.amdvlk pkgs.rocm-opencl-icd ];
-  hardware.opengl.driSupport32Bit = true;
-
+  hardware.opengl = {
+    enable = true;
+    extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau pkgs.amdvlk pkgs.rocm-opencl-icd ];
+    driSupport32Bit = true;
+  };
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
