@@ -26,5 +26,7 @@
     ./unclutter
     ./flameshot
     ./direnv
+    ./htop
+    ./udiskie
   ];
 }
