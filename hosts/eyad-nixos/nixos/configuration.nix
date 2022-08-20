@@ -133,7 +133,7 @@ in
       defaultNetwork.dnsname.enable = true;
 
     };
-    # lxd.enable = true; # broken on unstable
+    lxd.enable = true; # broken on unstable
     # virtualbox.host = {
     #   enable = true;
     #   enableExtensionPack = true;
