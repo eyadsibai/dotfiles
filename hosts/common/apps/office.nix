@@ -4,6 +4,6 @@
 }:
 {
   home.packages = with pkgs; [ pdfgrep pdftk libreoffice-fresh ];
-  programs.sioyek = { enable = true; };
+  programs.sioyek = { enable = false; };
   programs.texlive.enable = true;
 }

@@ -4,6 +4,8 @@
 , ...
 }:
 {
+
+  imports = [ ./font.nix ./system.nix ];
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
   users.nix.configureBuildUsers = true;
@@ -12,9 +14,14 @@
     "@admin"
   ];
 
+  package = pkgs.nixFlakes;
+
+  nix.settings = {
+    auto-optimise-store = true;
+    experimental-features = [ "nix-command" "flakes" ];
+  };
+
   nix.extraOptions = ''
-    auto-optimise-store = true
-    experimental-features = nix-command flakes
   '' + lib.optionalString (pkgs.system == "aarch64-darwin") ''
     extra-platforms = x86_64-darwin aarch64-darwin
   '';
@@ -26,6 +33,7 @@
     brews = [ "mas" ];
     casks = [ ];
     taps = [ "homebrew/cask-fonts" "mongodb/brew" ];
+    masApps = { };
   };
   # Create /etc/bashrc that loads the nix-darwin environment.
   programs.zsh = {
@@ -36,17 +44,17 @@
     enableSyntaxHighlighting = true;
   };
   programs.tmux.enable = true;
+
   #  services.mopidy.enable = true;
-  system.keyboard.enableKeyMapping = true;
-  system.keyboard.remapCapsLockToControl = true;
-  # system.keyboard.remapCapsLockToEscape = true;
 
   # Add ability to used TouchID for sudo authentication
   # security.pam.enableSudoTouchIdAuth = true;
   # programs.fish.enable = true;
-  networking.computerName = "eyad-mac";
-  networking.hostName = "eyad-mac";
-  networking.localHostName = "eyad-mac";
+  networking = {
+    computerName = "eyad-mac";
+    hostName = "eyad-mac";
+    localHostName = "eyad-mac";
+  };
   environment.systemPackages = with pkgs; [
 
   ];
@@ -55,23 +63,12 @@
   environment.variables = {
     TERMINFO_DIRS = "${pkgs.kitty.terminfo.outPath}/share/terminfo";
   };
-  # programs.nix-index.enable = true;
+  programs.nix-index.enable = true;
 
-  # Fonts
-  fonts.fontDir.enable = true;
-  fonts.fonts = with pkgs; [
-    recursive
-    dejavu_fonts
-    source-code-pro
-    fira-code
-    jetbrains-mono
-    font-awesome
-    # awesome fonts
-    material-design-icons
-    # fonts with glyphs
-    ubuntu_font_family
-    line-awesome
-    cascadia-code
-    (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
-  ];
+  time.timeZpne = "Asia/Riyadh";
+  services.skhd.enable = true;
+  services.spacebar.enable = true;
+  services.spotifyd.enable = true;
+  services.yabai.enable = true;
+
 }
