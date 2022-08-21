@@ -188,7 +188,54 @@ in
       notion-app-enhanced
       comma
       statix
-      kepler
+
+
+
+      # kepler
+
+      # Terminal
+      btop # Resource Manager
+      pfetch # Minimal fetch
+      ranger # File Manager
+
+      # Video/Audio
+      plex-media-player
+      stremio #Media Streamer
+
+
+      # Apps
+      remmina
+
+      # File MGMT
+      rsync
+      unzip
+      unrar
+
+
+      # General Config
+      usbutils
+
+      # Wayland configuration
+      #autotiling       # Tiling Script
+      #swayidle         # Idle Management Daemon
+      #wev              # Input viewer
+      #wl-clipboard     # Console Clipboard
+
+      # Wayland home-manager
+      #pamixer          # Pulse Audio Mixer
+      #swaylock-fancy   # Screen Locker
+      #waybar           # Bar
+
+
+      handbrake
+
+      #new-lg4ff        # Logitech Drivers
+      #shotcut          # Video editor
+      #shotwell         # Raw Image Manager
+      #light            # Display Brightness
+
+
+
     ];
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
