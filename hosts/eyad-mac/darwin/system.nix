@@ -21,21 +21,15 @@
       SHOWFULLNAME = true;
     };
 
-
-
     trackpad = {
       ActuationStrength = 0;
       Clicking = true;
       Dragging = true;
     };
-
-
-
   };
 
   system.keyboard = {
     enableKeyMapping = true;
     remapCapsLockToControl = true;
   };
-
 }
