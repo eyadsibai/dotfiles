@@ -56,5 +56,14 @@ let
             ln -s ${ inputs.nix-index-database.legacyPackages.${ prev.system }.database } $out/files
           '';
     };
+
+  stable =
+    self: super: {
+      stable = import inputs.stable
+        {
+          system = super.stdenv.system;
+          config = nixConfig;
+        };
+    };
 in
-inputs.nixpkgs.lib.composeManyExtensions [ additions modifications ]
+inputs.nixpkgs.lib.composeManyExtensions [ additions modifications stable ]
