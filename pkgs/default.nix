@@ -10,4 +10,5 @@
   apple-color-emoji = pkgs.callPackage ./apple-color-emoji { };
   rgf = pkgs.callPackage ./rgf { };
   fast-rgf = pkgs.callPackage ./fast-rgf { };
+  kepler = pkgs.callPackage ./kepler { };
 }

@@ -188,6 +188,7 @@ in
       notion-app-enhanced
       comma
       statix
+      kepler
     ];
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
