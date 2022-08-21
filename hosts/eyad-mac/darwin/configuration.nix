@@ -5,7 +5,7 @@
 }:
 {
 
-  imports = [ ./font.nix ./system.nix ];
+  imports = [ ./fonts.nix ./system.nix ];
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
   users.nix.configureBuildUsers = true;
@@ -14,14 +14,16 @@
     "@admin"
   ];
 
-  package = pkgs.nixFlakes;
+  # package = pkgs.nixFlakes;
 
-  nix.settings = {
-    auto-optimise-store = true;
-    experimental-features = [ "nix-command" "flakes" ];
-  };
+  # nix.settings = {
+  #   auto-optimise-store = true;
+  #   experimental-features = [ "nix-command" "flakes" ];
+  # };
 
   nix.extraOptions = ''
+    auto-optimise-store = true
+    experimental-features =  "nix-command" "flakes"
   '' + lib.optionalString (pkgs.system == "aarch64-darwin") ''
     extra-platforms = x86_64-darwin aarch64-darwin
   '';
@@ -65,7 +67,7 @@
   };
   programs.nix-index.enable = true;
 
-  time.timeZpne = "Asia/Riyadh";
+  time.timeZone = "Asia/Riyadh";
   services.skhd.enable = true;
   services.spacebar.enable = true;
   services.spotifyd.enable = true;
