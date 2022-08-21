@@ -6,6 +6,7 @@
   programs.bash = {
     enable = false;
     initExtra = "neofetch";
+    historyIgnore = [ "exit" "tree" ];
   };
 
   programs.zsh = {
@@ -14,6 +15,7 @@
     enableSyntaxHighlighting = true;
     enableCompletion = true;
     autocd = true;
+    historyIgnore = [ "exit" "tree" ];
     plugins = [
       {
         name = "powerlevel10k";
