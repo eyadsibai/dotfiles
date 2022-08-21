@@ -1019,8 +1019,7 @@
         "nur": "nur",
         "poetry2nix": "poetry2nix",
         "spacebar": "spacebar",
-        "stylix": "stylix",
-        "yabai": "yabai"
+        "stylix": "stylix"
       }
     },
     "rotate-text": {
@@ -1169,22 +1168,6 @@
       "original": {
         "owner": "hlissner",
         "repo": "ws-butler",
-        "type": "github"
-      }
-    },
-    "yabai": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1660833262,
-        "narHash": "sha256-SSXm9o2w0YOpr1VsNm0kAuW1hsOzlmzqnpSQGJ2RH8E=",
-        "owner": "koekeishiya",
-        "repo": "yabai",
-        "rev": "e3c3ce20c5d6dcff5875645fff477a88760df8f1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "koekeishiya",
-        "repo": "yabai",
         "type": "github"
       }
     }
