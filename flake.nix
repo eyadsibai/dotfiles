@@ -63,8 +63,9 @@
       ];
       lib = import ./lib { inherit inputs; };
       nixConfig = {
-        allowUnfree = true;
+        # allowUnfree = true;
         permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
+        allowUnfreePredicate = [ "slack" ];
       };
     in
     rec {
