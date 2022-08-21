@@ -105,22 +105,6 @@
         "type": "github"
       }
     },
-    "bleeding-edge": {
-      "locked": {
-        "lastModified": 1661076466,
-        "narHash": "sha256-32fRFcG/m7OsNAA8whfyKK68IUUegVlwi9gmCZTnwhw=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "d3e0a54ebfede3abb6c0e928f9e157cec6df72eb",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "ref": "master",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "coricamu": {
       "inputs": {
         "nixpkgs": [
@@ -1003,7 +987,6 @@
         "base16-schemes": "base16-schemes",
         "base16-vim": "base16-vim",
         "base16-zathura": "base16-zathura",
-        "bleeding-edge": "bleeding-edge",
         "darwin": "darwin",
         "firefox-darwin": "firefox-darwin",
         "flake-utils": "flake-utils",
@@ -1019,6 +1002,7 @@
         "nur": "nur",
         "poetry2nix": "poetry2nix",
         "spacebar": "spacebar",
+        "stable": "stable",
         "stylix": "stylix"
       }
     },
@@ -1071,6 +1055,21 @@
         "owner": "cmacrae",
         "repo": "spacebar",
         "type": "github"
+      }
+    },
+    "stable": {
+      "locked": {
+        "lastModified": 1661009065,
+        "narHash": "sha256-i+Q2ttGp4uOL3j0wEYP3MXLcu/4L/WbChxGQogiNSZo=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "9a91318fffec81ad009b73fd3b640d2541d87909",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-22.05",
+        "type": "indirect"
       }
     },
     "stylix": {

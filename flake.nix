@@ -2,7 +2,7 @@
   description = "My Ultimate Flake";
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    bleeding-edge.url = "github:nixos/nixpkgs/master";
+    stable.url = "nixpkgs/nixos-22.05";
 
     nixos-hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
@@ -75,13 +75,13 @@
       # inherit lib;
       # Your custom packages and modifications
       common-overlays = {
-        default = import ./overlay { inherit inputs lib; };
+        default = import ./overlay/common { inherit inputs lib nixConfig; };
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
         poetry2nix = inputs.poetry2nix.overlay;
-        bleeding-edge =
+        stable =
           self: super: {
-            bleeding-edge = import inputs.bleeding-edge
+            stable = import inputs.stable
               {
                 system = super.stdenv.system;
                 config = nixConfig;
@@ -92,20 +92,10 @@
       nixos-overlays = { };
 
       darwin-overlays = {
+        default = import ./overlay/darwin { inherit inputs lib nixConfig; };
         firefox-darwin = inputs.firefox-darwin.overlay;
         spacebar = inputs.spacebar.overlay;
-        intel-overlay = self: super: (inputs.nixpkgs.lib.optionalAttrs
-          (super.stdenv.system == "aarch64-darwin")
-          {
-            inherit (import inputs.nixpkgs
-              {
-                system = "x86_64-darwin";
-                config = nixConfig;
-              })
-              idris2
-              # nix-index
-              ;
-          });
+
       };
 
       # Reusable nixos modules you might want to export

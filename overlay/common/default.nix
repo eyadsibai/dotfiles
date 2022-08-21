@@ -1,11 +1,13 @@
 # This file defines two overlays and composes them
 { inputs
 , lib
+, nixConfig
 , ...
 }:
 let
   # This one brings our custom packages from the 'pkgs' directory
-  additions = final: _prev: import ../pkgs { pkgs = final; };
+  additions = final: _prev: import ../../pkgs { pkgs = final; };
+
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
@@ -45,23 +47,6 @@ let
             }
           );
 
-      # did not work I had to add it in the the flake file directly
-      apple-silicon =
-        lib.optionalAttrs
-          (prev.stdenv.system == "aarch64-darwin")
-          {
-            # Add access to x86 packages system is running Apple Silicon
-            pkgs-x86 =
-              import
-                inputs.nixpkgs
-                {
-                  system = "x86_64-darwin";
-                  config = {
-                    allowUnfree = true;
-                    permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
-                  };
-                };
-          };
       nix-index-database =
         final.runCommandLocal
           "nix-index-database"
