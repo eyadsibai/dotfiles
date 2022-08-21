@@ -3,8 +3,8 @@
   system.defaults = {
     dock = {
       autohide = true;
-      autohide-delay = 0.24;
-      autohide-time-modifier = 1.0;
+      autohide-delay = "0.24";
+      autohide-time-modifier = "1.0";
       orientation = "bottom";
       show-recents = true;
       tilesize = 32;

@@ -50,6 +50,14 @@
     stylix.url = "github:danth/stylix";
 
     poetry2nix.url = "github:nix-community/poetry2nix";
+
+    spacebar.url = "github:cmacrae/spacebar";
+
+    yabai = {
+      url = "github:koekeishiya/yabai";
+      flake = false;
+    };
+
   };
   outputs =
     inputs:
@@ -63,7 +71,7 @@
       ];
       lib = import ./lib { inherit inputs; };
       nixConfig = {
-        # allowUnfree = true;
+        allowUnfree = true;
         permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
         allowUnfreePredicate = [ "slack" ];
       };
@@ -71,11 +79,18 @@
     rec {
       # inherit lib;
       # Your custom packages and modifications
-      overlays = {
+      common-overlays = {
         default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
         poetry2nix = inputs.poetry2nix.overlay;
+      };
+
+      nixos-overlays = { };
+
+      darwin-overlays = {
+        firefox-darwin = inputs.firefox-darwin.overlay;
+        spacebar = inputs.spacebar.overlay;
       };
 
       # Reusable nixos modules you might want to export
@@ -96,7 +111,7 @@
               inputs.nixpkgs
               {
                 inherit system;
-                overlays = builtins.attrValues overlays ++ [
+                overlays = builtins.attrValues common-overlays ++ [
                   (_final: _prev: {
                     bleeding-edge = import inputs.bleeding-edge
                       {
@@ -112,7 +127,9 @@
                   })
                 ] ++ (inputs.nixpkgs.lib.lists.optionals
                   (builtins.elem
-                    system [ "aarch64-darwin" "x86_64-darwin" ]) [ inputs.firefox-darwin.overlay ]) ++
+                    system [ "aarch64-darwin" "x86_64-darwin" ])
+                  (builtins.attrValues
+                    darwin-overlays)) ++
                   inputs.nixpkgs.lib.lists.singleton (
                     # Sub in x86 version of packages that don't build on Apple Silicon yet
                     final: prev: (inputs.nixpkgs.lib.optionalAttrs (prev.stdenv.system == "aarch64-darwin") {

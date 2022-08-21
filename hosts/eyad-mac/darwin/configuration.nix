@@ -69,8 +69,7 @@
 
   time.timeZone = "Asia/Riyadh";
   services.skhd.enable = true;
-  services.spacebar.enable = true;
+  services.spacebar.enable = false;
   services.spotifyd.enable = true;
-  services.yabai.enable = true;
-
+  services.yabai.enable = false;
 }
