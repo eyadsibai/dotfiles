@@ -15,7 +15,11 @@
     enableSyntaxHighlighting = true;
     enableCompletion = true;
     autocd = true;
-    historyIgnore = [ "exit" "tree" ];
+    history =
+      {
+        ignoreDups = true;
+        ignorePatterns = [ "exit" "tree" "rm *" ];
+      };
     plugins = [
       {
         name = "powerlevel10k";
