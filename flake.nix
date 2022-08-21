@@ -29,6 +29,12 @@
         flake = false;
       };
 
+    nixgl = {
+      #OpenGL
+      url = "github:guibou/nixGL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # THEMING
     nix-colors.url = "github:misterio77/nix-colors";
     base16 = {

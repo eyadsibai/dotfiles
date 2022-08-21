@@ -3,5 +3,8 @@
 }:
 {
   # TODO https://github.com/LukeSmithxyz/voidrice/blob/master/.config/zathura/zathurarc
-  programs.zathura = { enable = true; };
+  programs.zathura = {
+    enable = true;
+    package = pkgs.stable.zathura;
+  };
 }
