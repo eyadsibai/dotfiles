@@ -7,7 +7,7 @@
     ../../common/home-manager/htop
     ../../common/home-manager/git
     ../../common/home-manager/direnv
-    ../../../apps/terminal/shell.nix
+    ../../common/apps/terminal/shell.nix
     ../../common/home-manager/kitty
     # ../../common/home-manager/firefox
   ];
