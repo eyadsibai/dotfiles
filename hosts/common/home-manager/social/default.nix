@@ -5,8 +5,7 @@
   home.packages =
     with pkgs;
     [
-      #      discord
-      bleeding-edge.discord
+      discord
       signal-desktop
       skypeforlinux
       slack

@@ -79,14 +79,6 @@
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
         poetry2nix = inputs.poetry2nix.overlay;
-        stable =
-          self: super: {
-            stable = import inputs.stable
-              {
-                system = super.stdenv.system;
-                config = nixConfig;
-              };
-          };
       };
 
       nixos-overlays = { };
