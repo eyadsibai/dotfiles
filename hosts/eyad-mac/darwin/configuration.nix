@@ -85,7 +85,8 @@
   programs.nix-index.enable = true;
 
   # time.timeZone = "Asia/Riyadh";
-  services.spacebar.enable = false;
+  services.spacebar.enable = true;
+  services.spacebar.package = pkgs.spacebar;
   services.spotifyd.enable = true;
 
 

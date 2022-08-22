@@ -24,8 +24,6 @@
     wget
     jq
     cachix
-    # apple-x86.idris2
-    idris2
     comma
     micro
     vscode
