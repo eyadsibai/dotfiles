@@ -57,7 +57,7 @@
 
     poetry2nix.url = "github:nix-community/poetry2nix";
 
-    spacebar.url = "github:cmacrae/spacebar";
+    spacebar.url = "github:cmacrae/spacebar/master";
 
   };
   outputs =
