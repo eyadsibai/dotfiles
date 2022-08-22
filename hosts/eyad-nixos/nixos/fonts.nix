@@ -25,7 +25,7 @@
         line-awesome
         cascadia-code
         (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
-    apple-color-emoji
+        apple-color-emoji
       ];
   };
 }
