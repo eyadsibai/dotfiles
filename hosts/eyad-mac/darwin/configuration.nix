@@ -127,7 +127,6 @@
   };
   services.spotifyd.enable = true;
 
-
   users.users.eyad = {
     shell = pkgs.zsh;
   };
