@@ -9,11 +9,11 @@
       # Global macOS system settings
       KeyRepeat = 1;
       _HIHideMenuBar = true;
-      InitialKeyRepeat = 10;
+      InitialKeyRepeat = 5;
       NSAutomaticCapitalizationEnabled = false;
       NSAutomaticSpellingCorrectionEnabled = false;
       "com.apple.mouse.tapBehavior" = 1;
-      "com.apple.swipescrolldirection" = false;
+      # "com.apple.swipescrolldirection" = true;
     };
     dock = {
       autohide = true;
