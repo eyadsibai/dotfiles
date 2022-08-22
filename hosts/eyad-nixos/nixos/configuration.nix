@@ -65,6 +65,7 @@ in
   };
   # NOTE: required for the wireless card
   hardware.enableRedistributableFirmware = true;
+  hardware.trackpoint.enable = true;
   hardware.bluetooth = {
     enable = true;
     package = pkgs.bluezFull;
@@ -225,7 +226,12 @@ in
   };
   hardware.opengl = {
     enable = true;
-    extraPackages = [ pkgs.libvdpau-va-gl pkgs.vaapiVdpau pkgs.amdvlk pkgs.rocm-opencl-icd ];
+    extraPackages = [
+      pkgs.libvdpau-va-gl
+      pkgs.vaapiVdpau
+      pkgs.amdvlk
+      pkgs.rocm-opencl-icd
+    ];
     driSupport32Bit = true;
   };
   # This value determines the NixOS release from which the default
