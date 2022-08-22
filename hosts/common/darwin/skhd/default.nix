@@ -5,45 +5,50 @@
     enable = true;
     package = pkgs.skhd;
     skhdConfig = ''
-      # Open Terminal
-      cmd - return : /etc/profiles/per-user/eyad/bin/kitty
-      # Toggle Window
-      lalt - t : yabai -m window --toggle float && yabai -m window --grid 4:4:1:1:2:2
-      lalt - f : yabai -m window --toggle zoom-fullscreen
-      lalt - q : yabai -m window --close
-      # Focus Window
-      lalt - up : yabai -m window --focus north
-      lalt - down : yabai -m window --focus south
-      lalt - left : yabai -m window --focus west
-      lalt - right : yabai -m window --focus east
-      # Swap Window
-      shift + lalt - up : yabai -m window --swap north
-      shift + lalt - down : yabai -m window --swap south
-      shift + lalt - left : yabai -m window --swap west
-      shift + lalt - right : yabai -m window --swap east
-      # Resize Window
-      shift + cmd - left : yabai -m window --resize left:-50:0 && yabai -m window --resize right:-50:0
-      shift + cmd - right : yabai -m window --resize left:50:0 && yabai -m window --resize right:50:0
-      shift + cmd - up : yabai -m window --resize up:-50:0 && yabai -m window --resize down:-50:0
-      shift + cmd - down : yabai -m window --resize up:-50:0 && yabai -m window --resize down:-50:0
-      # Focus Space
-      ctrl - 1 : yabai -m space --focus 1
-      ctrl - 2 : yabai -m space --focus 2
-      ctrl - 3 : yabai -m space --focus 3
-      ctrl - 4 : yabai -m space --focus 4
-      ctrl - 5 : yabai -m space --focus 5
-      #ctrl - left : yabai -m space --focus prev
-      #ctrl - right: yabai -m space --focus next
-      # Send to Space
-      shift + ctrl - 1 : yabai -m window --space 1
-      shift + ctrl - 2 : yabai -m window --space 2
-      shift + ctrl - 3 : yabai -m window --space 3
-      shift + ctrl - 4 : yabai -m window --space 4
-      shift + ctrl - 5 : yabai -m window --space 5
-      shift + ctrl - left : yabai -m window --space prev && yabai -m space --focus prev
-      shift + ctrl - right : yabai -m window --space next && yabai -m space --focus next
-      # Menu
-      #cmd + space : for now its using the default keybinding to open Spotlight Search
-    ''; # Hotkey config
+      # open terminal
+      cmd - return : alacritty
+      # open emacs
+      cmd - e : emacs
+      cmd + lalt -e : emacsclient --eval "(emacs-everywhere)"
+      cmd + shift -e : emacsclient --eval "(emacs-everywhere)"
+      # focus window
+      lalt - h : yabai -m window --focus west
+      lalt - j : yabai -m window --focus south
+      lalt - k : yabai -m window --focus north
+      lalt - l : yabai -m window --focus east
+      # swap managed window
+      shift + lalt - h : yabai -m window --swap west
+      shift + lalt - l : yabai -m window --swap east
+      shift + lalt - j : yabai -m window --swap south
+      shift + lalt - k : yabai -m window --swap north
+      # focus spaces
+      alt - x : yabai -m space --focus recent
+      alt - 1 : yabai -m space --focus 1
+      alt - 2 : yabai -m space --focus 2
+      alt - 3 : yabai -m space --focus 3
+      alt - 4 : yabai -m space --focus 4
+      alt - 5 : yabai -m space --focus 5
+      alt - 6 : yabai -m space --focus 6
+      alt - 7 : yabai -m space --focus 7
+      alt - 8 : yabai -m space --focus 8
+      # focus on next/prev space
+      alt + ctrl - q : yabai -m space --focus prev
+      alt + ctrl - e : yabai -m space --focus next
+      # send window to desktop
+      shift + alt - x : yabai -m window --space recent
+      shift + alt - 1 : yabai -m window --space 1
+      shift + alt - 2 : yabai -m window --space 2
+      shift + alt - 3 : yabai -m window --space 3
+      shift + alt - 4 : yabai -m window --space 4
+      shift + alt - 5 : yabai -m window --space 5
+      shift + alt - 6 : yabai -m window --space 6
+      shift + alt - 7 : yabai -m window --space 7
+      shift + alt - 8 : yabai -m window --space 8
+      # float / unfloat window and center on screen
+      lalt - t : yabai -m window --toggle float;\
+                 yabai -m window --grid 4:4:1:1:2:2
+      # toggle window zoom
+      lalt - d : yabai -m window --toggle zoom-parent
+    '';
   };
 }
