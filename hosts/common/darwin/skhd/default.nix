@@ -1,6 +1,6 @@
 { pkgs, ... }:
 {
-  skhd = {
+  services.skhd = {
     # Hotkey daemon
     enable = false;
     package = pkgs.skhd;
@@ -46,4 +46,4 @@
       #cmd + space : for now its using the default keybinding to open Spotlight Search
     ''; # Hotkey config
   };
-};}
+}
