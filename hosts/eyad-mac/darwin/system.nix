@@ -2,10 +2,18 @@
 
   system.defaults = {
     NSGlobalDomain = {
+      AppleInterfaceStyle = "Dark";
+      ApplePressAndHoldEnabled = false;
+
+      AppleFontSmoothing = 1;
       # Global macOS system settings
       KeyRepeat = 1;
+      _HIHideMenuBar = true;
+      InitialKeyRepeat = 10;
       NSAutomaticCapitalizationEnabled = false;
       NSAutomaticSpellingCorrectionEnabled = false;
+      "com.apple.mouse.tapBehavior" = 1;
+      "com.apple.swipescrolldirection" = false;
     };
     dock = {
       autohide = true;
@@ -15,12 +23,14 @@
       show-recents = true;
       showhidden = true;
       tilesize = 32;
+      mru-spaces = false;
     };
     finder = {
       AppleShowAllExtensions = true;
       AppleShowAllFiles = true;
       ShowStatusBar = true;
-      QuitMenuItem = false; # I believe this probably will need to be true if using spacebar
+      QuitMenuItem = true; # I believe this probably will need to be true if using spacebar
+      FXEnableExtensionChangeWarning = true;
     };
 
     loginwindow = {

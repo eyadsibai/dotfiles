@@ -2,11 +2,11 @@
 {
   services.skhd = {
     # Hotkey daemon
-    enable = false;
+    enable = true;
     package = pkgs.skhd;
     skhdConfig = ''
       # Open Terminal
-      alt - return : /Applications/Alacritty.App/Contents/MacOS/alacritty
+      cmd - return : /etc/profiles/per-user/eyad/bin/kitty
       # Toggle Window
       lalt - t : yabai -m window --toggle float && yabai -m window --grid 4:4:1:1:2:2
       lalt - f : yabai -m window --toggle zoom-fullscreen
