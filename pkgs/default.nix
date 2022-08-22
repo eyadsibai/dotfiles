@@ -11,5 +11,5 @@
   rgf = pkgs.callPackage ./rgf { };
   fast-rgf = pkgs.callPackage ./fast-rgf { };
   kepler = pkgs.callPackage ./kepler { };
-  # yabai = pkgs.callPackage ./yabai { };
+  yabai = pkgs.callPackage ./yabai { };
 }

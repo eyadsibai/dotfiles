@@ -4,6 +4,8 @@
     package = pkgs.yabai;
     config = {
       # Other configuration options
+      enableScriptingAddition = true;
+
       layout = "bsp";
       auto_balance = "off";
       split_ratio = "0.50";
