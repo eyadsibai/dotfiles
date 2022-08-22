@@ -1090,6 +1090,7 @@
       },
       "original": {
         "owner": "cmacrae",
+        "ref": "master",
         "repo": "spacebar",
         "type": "github"
       }
