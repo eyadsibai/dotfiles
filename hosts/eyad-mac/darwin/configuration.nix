@@ -10,7 +10,7 @@
     ./fonts.nix
     ./system.nix
     ../../common/darwin/yabai
-    ../../common/darwin/sxhkd
+    ../../common/darwin/skhd
   ];
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
@@ -82,7 +82,6 @@
 
   };
 
-  environment.shells = [ pkgs.zsh ];
   programs.nix-index.enable = true;
 
   # time.timeZone = "Asia/Riyadh";
