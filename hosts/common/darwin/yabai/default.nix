@@ -1,6 +1,6 @@
 { pkgs, ... }: {
   services.yabai = {
-    enable = false;
+    enable = true;
     package = pkgs.yabai;
     config = {
       # Other configuration options

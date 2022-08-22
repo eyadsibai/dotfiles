@@ -30,6 +30,7 @@
     firefox-bin
     terminal-notifier
     any-nix-shell
+    firefox-bin
   ] ++ lib.optionals stdenv.isDarwin [
     # not needed but nice to demo for future refactoring
     m-cli
