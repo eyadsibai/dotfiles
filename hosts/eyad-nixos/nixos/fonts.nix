@@ -12,10 +12,10 @@
       [
         corefonts
         recursive
-        dejavu_fonts
+        # dejavu_fonts
         source-code-pro
         ubuntu_font_family
-        fira-code
+        # fira-code
         jetbrains-mono
         font-awesome
         # awesome fonts

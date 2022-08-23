@@ -23,8 +23,11 @@
       shell = { program = "${ pkgs.zsh }/bin/zsh"; };
       colors = {
         primary = {
-          background = "0x000000";
-          foreground = "0xEBEBEB";
+          # background = "0x000000";
+          # foreground = "0xEBEBEB";
+
+          foreground = "#${config.colorScheme.colors.base05}";
+          background = "#${config.colorScheme.colors.base00}";
         };
         cursor = {
           text = "0xFF261E";

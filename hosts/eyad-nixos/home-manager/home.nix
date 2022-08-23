@@ -16,6 +16,7 @@ in
     inputs.nix-doom-emacs.hmModule
     inputs.nix-colors.homeManagerModule
   ];
+  colorScheme = inputs.nix-colors.colorSchemes.dracula;
 
 
   home.packages =
@@ -189,8 +190,6 @@ in
       comma
       statix
 
-
-
       # kepler
 
       # Terminal
@@ -211,7 +210,6 @@ in
       unzip
       unrar
 
-
       # General Config
       usbutils
 
@@ -225,7 +223,6 @@ in
       #pamixer          # Pulse Audio Mixer
       #swaylock-fancy   # Screen Locker
       #waybar           # Bar
-
 
       handbrake
 
@@ -249,10 +246,10 @@ in
     enable = true;
     settings = {
       global = {
-        color = "#ffffff";
-        frame_color = "#565d6d";
-        separator_color = "#565d6d";
-        font = "FiraCode Nerd Font";
+        # color = "#ffffff";
+        # frame_color = "#565d6d";
+        # separator_color = "#565d6d";
+        # font = "FiraCode Nerd Font";
       };
       shortcuts = {
         close = "ctrl+space";
@@ -261,18 +258,18 @@ in
         context = "ctrl+shift+period";
       };
       urgency_low = {
-        background = "#2f343f";
-        foreground = "#ffffff";
+        # background = "#2f343f";
+        # foreground = "#ffffff";
         timeout = 10;
       };
       urgency_normal = {
-        background = "#2f343f";
-        foreground = "#ffffff";
+        # background = "#2f343f";
+        # foreground = "#ffffff";
         timeout = 10;
       };
       urgency_critical = {
-        background = "#2f343f";
-        foreground = "#ffffff";
+        # background = "#2f343f";
+        # foreground = "#ffffff";
         timeout = 10;
       };
     };
