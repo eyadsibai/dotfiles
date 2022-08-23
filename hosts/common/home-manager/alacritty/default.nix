@@ -3,6 +3,9 @@
 , pkgs
 , ...
 }:
+let
+  inherit (lib) mkDefault mkIf mkOption types;
+in
 {
   programs.alacritty = {
     enable = true;
@@ -26,8 +29,8 @@
           # background = "0x000000";
           # foreground = "0xEBEBEB";
 
-          foreground = "#${config.colorScheme.colors.base05}";
-          background = "#${config.colorScheme.colors.base00}";
+          foreground = mkDefault "#${config.colorScheme.colors.base05}";
+          background = mkDefault "#${config.colorScheme.colors.base00}";
         };
         cursor = {
           text = "0xFF261E";
