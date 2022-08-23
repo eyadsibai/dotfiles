@@ -199,19 +199,22 @@
                 inputs.nixos-hardware.nixosModules.lenovo-thinkpad
                 inputs.nixpkgs.nixosModules.notDetected
                 inputs.nur.nixosModules.nur
-                # inputs.stylix.nixosModules.stylix (stylix.image must be set)
-                inputs.base16.nixosModule
+                # inputs.stylix.nixosModules.stylix # (stylix.image must be set)
+                # inputs.base16.nixosModule
                 inputs.home-manager.nixosModules.home-manager
                 {
                   home-manager.useGlobalPkgs = true;
                   home-manager.useUserPackages = true;
                   home-manager.backupFileExtension = "backup";
-                  home-manager.extraSpecialArgs = { inherit inputs; };
+                  # set system's scheme to nord by setting `config.scheme`
+                  home-manager.extraSpecialArgs = {
+                    inherit inputs;
+                  };
+
                   home-manager.users.eyad = {
                     imports =
                       [
                         ./hosts/eyad-nixos/home-manager/home.nix
-
 
                         # Import our reusable home-manager modules;
                       ]
