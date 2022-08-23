@@ -88,14 +88,13 @@
       };
 
       nixos-overlays = {
-        # nixgl = inputs.nixgl.overlay;
+        # nixgl = inputs.nixgl.overlay.nixgl;
       };
 
       darwin-overlays = {
         default = import ./overlay/darwin { inherit inputs lib nixConfig; };
         firefox-darwin = inputs.firefox-darwin.overlay;
         spacebar = inputs.spacebar.overlay;
-
       };
 
       # Reusable nixos modules you might want to export
@@ -120,14 +119,17 @@
               {
                 inherit system;
                 overlays = builtins.attrValues common-overlays
-                  ++ (inputs.nixpkgs.lib.lists.optionals
-                  (isDarwin system)
-                  (builtins.attrValues
-                    darwin-overlays))
-                  ++ (inputs.nixpkgs.lib.lists.optionals
-                  (isLinux system)
-                  (builtins.attrValues
-                    nixos-overlays)
+                  ++ (
+                  inputs.nixpkgs.lib.lists.optionals
+                    (isDarwin system)
+                    (builtins.attrValues
+                      darwin-overlays)
+                )
+                  ++ (
+                  inputs.nixpkgs.lib.lists.optionals
+                    (isLinux system)
+                    (builtins.attrValues
+                      nixos-overlays)
                 );
 
                 config = nixConfig;
