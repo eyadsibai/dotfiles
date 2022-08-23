@@ -58,6 +58,9 @@
     poetry2nix.url = "github:nix-community/poetry2nix";
 
     spacebar.url = "github:cmacrae/spacebar/master";
+    nixpkgs-wayland = { url = "github:nix-community/nixpkgs-wayland"; };
+    nixpkgs-wayland.inputs.nixpkgs.follows = "nixpkgs";
+    # nixpkgs-wayland.inputs.master.follows = "master";
 
   };
   outputs =
@@ -89,6 +92,7 @@
 
       nixos-overlays = {
         # nixgl = inputs.nixgl.overlay.nixgl;
+        nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
       };
 
       darwin-overlays = {
@@ -195,7 +199,8 @@
                 inputs.nixos-hardware.nixosModules.lenovo-thinkpad
                 inputs.nixpkgs.nixosModules.notDetected
                 inputs.nur.nixosModules.nur
-                # inputs.base16.nixosModules
+                # inputs.stylix.nixosModules.stylix (stylix.image must be set)
+                inputs.base16.nixosModule
                 inputs.home-manager.nixosModules.home-manager
                 {
                   home-manager.useGlobalPkgs = true;
@@ -206,6 +211,7 @@
                     imports =
                       [
                         ./hosts/eyad-nixos/home-manager/home.nix
+
 
                         # Import our reusable home-manager modules;
                       ]
