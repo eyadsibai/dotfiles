@@ -33,8 +33,8 @@ in
           background = mkDefault "#${config.colorScheme.colors.base00}";
         };
         cursor = {
-          text = "0xFF261E";
-          cursor = "0xFF261E";
+          text = mkDefault "0xFF261E";
+          cursor = mkDefault "0xFF261E";
         };
         normal = {
           black = "0x0D0D0D";
