@@ -87,7 +87,9 @@
         poetry2nix = inputs.poetry2nix.overlay;
       };
 
-      nixos-overlays = { };
+      nixos-overlays = {
+        # nixgl = inputs.nixgl.overlay;
+      };
 
       darwin-overlays = {
         default = import ./overlay/darwin { inherit inputs lib nixConfig; };
@@ -105,6 +107,7 @@
       templates = import ./templates;
 
       isDarwin = system: builtins.elem system [ "aarch64-darwin" "x86_64-darwin" ];
+      isLinux = system: builtins.elem system [ "x86_64-linux" ];
 
       # Reexport nixpkgs with our overlays applied
       # Acessible on our configurations, and through nix build, shell, run, etc.
@@ -120,7 +123,12 @@
                   ++ (inputs.nixpkgs.lib.lists.optionals
                   (isDarwin system)
                   (builtins.attrValues
-                    darwin-overlays));
+                    darwin-overlays))
+                  ++ (inputs.nixpkgs.lib.lists.optionals
+                  (isLinux system)
+                  (builtins.attrValues
+                    nixos-overlays)
+                );
 
                 config = nixConfig;
               }
