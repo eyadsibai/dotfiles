@@ -8,6 +8,7 @@
       General = {
         disabledTrayIcon = true;
         showStartupLaunchMessage = false;
+        uiColor = "#2d0096";
       };
     };
   };
