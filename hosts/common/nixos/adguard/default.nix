@@ -1,0 +1,3 @@
+{ ... }: {
+  services.adguardhome.enable = true;
+}
