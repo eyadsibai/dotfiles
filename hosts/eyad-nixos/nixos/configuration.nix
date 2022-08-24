@@ -5,6 +5,7 @@
 }:
 let
   secrets = import ../../../secrets;
+  common = import ../../../common;
 in
 {
   imports = [
@@ -14,11 +15,16 @@ in
     ./fonts.nix
     ./nix.nix
     ./steam.nix
-    ./../../common/nixos/geoclue2
-    ./../../common/nixos/tlp
-    ./../../common/nixos/samba
-    ./../../common/nixos/minidlna
-    ./../../common/nixos/locate
+    common.nixos.geoclue2
+    common.nixos.tlp
+    common.nixos.samba
+    common.nixos.minidlna
+    common.nixos.locate
+    # ./. + "/"+ common + "/nixos/geoclue2"
+    # "${common}/" + nixos/tlp
+    # "${common}/" + nixos/samba
+    # "${common}/" + nixos/minidlna
+    # "${common}/" + nixos/locate
   ];
 
   # Thermals and cooling
