@@ -144,7 +144,13 @@ in
     libvirtd.enable = false;
   };
   # Enable touchpad support (enabled default in most desktopManager).
-  services.xserver.libinput.enable = true;
+  services.xserver.libinput = {
+    enable = true;
+    touchpad = {
+      naturalScrolling = true;
+      disableWhileTyping = true;
+    };
+  };
   users.mutableUsers = false;
   users.users.eyad = {
     isNormalUser = true;
