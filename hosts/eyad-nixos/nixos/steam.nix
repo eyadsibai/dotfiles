@@ -11,6 +11,8 @@
     # Open ports in the firewall for Source Dedicated Server
   };
 
+  # programs.gamemode.enable = true;
+
   home-manager.users.eyad.home.packages = [
     pkgs.steam-tui
     pkgs.steamPackages.steamcmd
