@@ -75,9 +75,42 @@
       ];
       lib = import ./lib { inherit inputs; };
       nixConfig = {
-        allowUnfree = true;
+        # allowUnfree = true;
         permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
-        allowUnfreePredicate = [ "slack" ];
+        allowUnfreePredicate = pkg: builtins.elem (inputs.nixpkgs.lib.getName pkg)
+          [
+            "slack"
+            "betterttv"
+            "flagfox"
+            "grammarly"
+            "discord"
+            "skypeforlinux"
+            "zoom"
+            "teams"
+            "vk-messenger"
+            "spotify"
+            "spotify-unwrapped"
+            "ngrok"
+            "vscode"
+            "corefonts"
+            "teamviewer"
+            "unrar"
+            "obsidian"
+            "yandex-disk"
+            "notion-app-enhanced-v2.0.18"
+            "dropbox"
+            "mpv-convert-script"
+            "video-cutter"
+            "steamcmd"
+            "steam-original"
+            "steam-runtime"
+            "broadcom-bt-firmware"
+            "b43-firmware"
+            "xow_dongle-firmware"
+            "facetimehd-calibration"
+            "facetimehd-firmware"
+            "steam"
+          ];
       };
     in
     rec {

@@ -43,6 +43,7 @@ in
         ff2mpv
         floccus
         fraidycat
+
         (
           buildFirefoxXpiAddon
             rec {
