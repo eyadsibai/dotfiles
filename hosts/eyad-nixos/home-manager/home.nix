@@ -5,13 +5,14 @@
 }:
 let
   secrets = import ../../../secrets;
+  common = import ../../../common;
 in
 {
   # inherit secrets;
   imports = [
-    ../../common/apps
-    ../../common/apps/wm/i3
-    ../../common/home-manager
+    common.apps
+    common.apps.wm.i3
+    common.home-manager
 
     inputs.nix-doom-emacs.hmModule
     inputs.nix-colors.homeManagerModule

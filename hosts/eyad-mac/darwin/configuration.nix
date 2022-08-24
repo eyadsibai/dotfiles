@@ -4,19 +4,22 @@
 , pkgs
 , ...
 }:
+let
+  common = ../../../common;
+in
 {
 
   imports = [
     ./fonts.nix
     ./system.nix
     ./nix.nix
-    ../../common/darwin/wm
+    ${common}/darwin/wm
 
 
   ];
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
-services.activate-system.enable = true;
+  services.activate-system.enable = true;
   # Create /etc/bashrc that loads the nix-darwin environment.
   programs.zsh = {
     enable = true;
