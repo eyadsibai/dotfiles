@@ -9,6 +9,7 @@
     ../../common/home-manager/direnv
     ../../common/apps/terminal/shell.nix
     ../../common/home-manager/kitty
+    ../../common/home-manager/micro
     # ../../common/home-manager/firefox
   ];
 
@@ -25,15 +26,15 @@
     jq
     cachix
     comma
-    micro
+    # micro
     vscode
-    firefox-bin
     terminal-notifier
     any-nix-shell
-    firefox-bin
-  ] ++ lib.optionals stdenv.isDarwin [
-    # not needed but nice to demo for future refactoring
-    m-cli
-    cocoapods
-  ];
+  ] ++ lib.optionals
+    stdenv.isDarwin
+    [
+      # not needed but nice to demo for future refactoring
+      m-cli
+      cocoapods
+    ];
 }
