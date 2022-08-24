@@ -16,8 +16,7 @@
   ];
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
-  nix.configureBuildUsers = true;
-
+services.activate-system.enable = true;
   # Create /etc/bashrc that loads the nix-darwin environment.
   programs.zsh = {
     enable = true;

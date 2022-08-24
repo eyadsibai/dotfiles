@@ -25,6 +25,7 @@
     '';
   };
 
+  nix.configureBuildUsers = true;
 
   nix.settings.trusted-users = [
     "@admin"
