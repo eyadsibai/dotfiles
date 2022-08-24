@@ -11,4 +11,6 @@
     ./terminal
     ./system.nix
   ];
+
+  wm = import ./wm;
 }
