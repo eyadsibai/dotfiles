@@ -39,6 +39,7 @@
     localHostName = "eyad-mac";
   };
   environment.systemPackages = with pkgs; [
+    firefox-bin
 
   ];
 
