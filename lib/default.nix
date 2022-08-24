@@ -45,5 +45,14 @@ rec {
 
   isDarwin = system: builtins.elem system [ "aarch64-darwin" "x86_64-darwin" ];
   isLinux = system: builtins.elem system [ "x86_64-linux" ];
+    /**
+      * Check if `dir` contains a regular *file* of type `ext`
+      * contains :: String -> Path -> Bool
+      **/
+    contains = ext: dir: (lists.length (regularOf ext dir)) > 0;
+
+    stdenv.targetSystem = {
+    isDarwinArm64 = targetSystem.isDarwin && targetSystem.darwinArch == "arm64";
+  };
 }
 #https://github.com/archseer/snowflake/blob/master/lib/utils.nix can I move mergeEnvs here?

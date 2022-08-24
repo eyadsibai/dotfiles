@@ -8,7 +8,7 @@ case "$(uname -s)" in
   Darwin)
     darwin-rebuild switch --flake ".#$(hostname -s)" "$@"
     rm -rf ./result
-    rm -rf result
+    rm  result
     ;;
   *)
     echo "I don't know how to build on a $(uname -s) system."

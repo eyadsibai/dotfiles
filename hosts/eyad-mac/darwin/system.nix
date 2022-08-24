@@ -9,7 +9,7 @@
       # Global macOS system settings
       KeyRepeat = 1;
       _HIHideMenuBar = true;
-      InitialKeyRepeat = 5;
+      InitialKeyRepeat = 25;
       NSAutomaticCapitalizationEnabled = false;
       NSAutomaticSpellingCorrectionEnabled = false;
       "com.apple.mouse.tapBehavior" = 1;

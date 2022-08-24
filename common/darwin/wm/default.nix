@@ -90,15 +90,15 @@
       shift + lalt - j : yabai -m window --swap south
       shift + lalt - k : yabai -m window --swap north
       # focus spaces
-      alt - x : yabai -m space --focus recent
-      alt - 1 : yabai -m space --focus 1
-      alt - 2 : yabai -m space --focus 2
-      alt - 3 : yabai -m space --focus 3
-      alt - 4 : yabai -m space --focus 4
-      alt - 5 : yabai -m space --focus 5
-      alt - 6 : yabai -m space --focus 6
-      alt - 7 : yabai -m space --focus 7
-      alt - 8 : yabai -m space --focus 8
+      cmd - x : yabai -m space --focus recent
+      cmd - 1 : yabai -m space --focus 1
+      cmd - 2 : yabai -m space --focus 2
+      cmd - 3 : yabai -m space --focus 3
+      cmd - 4 : yabai -m space --focus 4
+      cmd - 5 : yabai -m space --focus 5
+      cmd - 6 : yabai -m space --focus 6
+      cmd - 7 : yabai -m space --focus 7
+      cmd - 8 : yabai -m space --focus 8
       # focus on next/prev space
       alt + ctrl - q : yabai -m space --focus prev
       alt + ctrl - e : yabai -m space --focus next

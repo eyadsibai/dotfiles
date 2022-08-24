@@ -31,6 +31,7 @@
     vscode
     terminal-notifier
     any-nix-shell
+    nixpkgs-fmt
   ] ++ lib.optionals
     stdenv.isDarwin
     [
