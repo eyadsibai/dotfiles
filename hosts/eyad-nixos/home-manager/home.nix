@@ -231,6 +231,13 @@ in
       #shotwell         # Raw Image Manager
       #light            # Display Brightness
 
+      hyperfine
+      dogdns
+      sd
+      kakoune
+      helix
+      k9s
+      yt-dlp
 
 
     ];

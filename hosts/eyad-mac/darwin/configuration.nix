@@ -24,6 +24,7 @@ services.activate-system.enable = true;
     enableCompletion = true;
     enableFzfCompletion = true;
     enableSyntaxHighlighting = true;
+
   };
   programs.tmux.enable = true;
 
