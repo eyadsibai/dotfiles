@@ -74,7 +74,7 @@
     package = pkgs.skhd;
     skhdConfig = ''
       # open terminal
-      cmd - return : alacritty
+      cmd - return : ${pkgs.kitty}/bin/kitty
       # open emacs
       cmd - e : emacs
       cmd + lalt -e : emacsclient --eval "(emacs-everywhere)"
