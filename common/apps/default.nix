@@ -12,5 +12,5 @@
     ./system.nix
   ];
 
-  wm = import ./wm;
+  wm = ./wm;
 }
