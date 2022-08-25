@@ -23,6 +23,8 @@ in
   home.packages =
     with pkgs;
     [
+      haskellPackages.network-manager-tui
+      lxappearance
       cookiecutter
       git-crypt
       ### PERSONAL
