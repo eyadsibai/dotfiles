@@ -4,6 +4,9 @@
 , pkgs
 , ...
 }:
+let
+  homeConfig = config.home-manager.users.eyad;
+in
 {
   networking = {
 
@@ -18,37 +21,41 @@
     useDHCP = false;
     # deprecated
     interfaces = {
-      enp3s0f0.useDHCP = true;
-      wlp1s0.useDHCP = true;
+      enp3s0f0 = { useDHCP = true; wakeOnLan.enable = true; };
+      wlp1s0 = { useDHCP = true; wakeOnLan.enable = true; };
     };
     # wireless.networks."xyz" = {
     #   psk = "11111";
     # };
+    firewall =
+      {
+        enable = true;
+        allowedTCPPortRanges = [
+          (lib.optionals
+            homeConfig.services.kdeconnect.enable
+            {
+              from = 1714;
+              to = 1764;
+            })
+        ];
+        allowedUDPPortRanges = [
+          (lib.optionals
+            homeConfig.services.kdeconnect.enable
+            {
+              from = 1714;
+              to = 1764;
+            })
+        ];
+      };
+
+
+
+
   };
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ] ++ lib.lists.range 1714 1764; # kdeconnect
   # networking.firewall.allowedUDPPorts = [ ] ++ lib.lists.range 1714 1764; # kdeconnect
 
-
-  networking.firewall.enable = true;
-
-  networking.firewall.allowedTCPPortRanges = [
-    (lib.optionals
-      config.home-manager.users.eyad.services.kdeconnect.enable
-      { from = 1714; to = 1764; })
-  ];
-
-  networking.firewall.allowedUDPPortRanges = [
-    (lib.optionals
-      config.home-manager.users.eyad.services.kdeconnect.enable
-      { from = 1714; to = 1764; })
-  ];
-
-
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
   networking.networkmanager.profiles = {
     "home-wifi" = {
       connection = {
