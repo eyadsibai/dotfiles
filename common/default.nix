@@ -1,6 +1,6 @@
 {
-  apps = import ./apps;
+  apps = ./apps;
   darwin = ./darwin;
   home-manager = ./home-manager;
-  nixos = import ./nixos;
+  nixos = ./nixos;
 }
