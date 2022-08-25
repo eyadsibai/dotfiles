@@ -27,7 +27,7 @@ let
                     owner = "eneshecan";
                     repo = "${ oldAttrs.pname }";
                     rev = "v${ version }";
-                    #                     sha256 = prev.lib.fakeSha256;
+                    # sha256 = prev.lib.fakeSha256;
                     # sha256 = "0000000000000000000000000000000000000000000000000000";
                     sha256 = "sha256-fpLjdEgglbc9kMHTGEPq7+UDB2Qh5e54l8mDOls79LA=";
                   };

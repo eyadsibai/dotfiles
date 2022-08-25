@@ -24,6 +24,7 @@
     settings = {
       auto-optimise-store = true;
       experimental-features = [ "nix-command" "flakes" ];
+      warn-dirty = false;
       cores = lib.mkDefault 8;
       max-jobs = lib.mkDefault 8;
       substituters = [
