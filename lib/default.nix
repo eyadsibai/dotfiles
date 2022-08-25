@@ -11,6 +11,8 @@ rec {
   # Applies a function to a attrset's names, while keeping the values
   mapAttrNames = f: mapAttrs' (name: value: { name = f name; inherit value; });
 
+  has = element: any (x: x == element);
+
 
   mkSystem =
     { hostname
