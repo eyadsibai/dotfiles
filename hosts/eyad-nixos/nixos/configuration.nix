@@ -10,9 +10,9 @@ let
 in
 {
   imports = [
-    inputs.hardware.nixosModules.common-cpu-amd
+    inputs.hardware.nixosModules.common-cpu-amd-pstate
     inputs.hardware.nixosModules.common-gpu-amd
-    inputs.hardware.nixosModules.common-pc-ssd
+    inputs.hardware.nixosModules.common-pc-laptop-ssd
     inputs.hardware.nixosModules.lenovo-thinkpad
     ./hardware-configuration.nix
     ./networking.nix
@@ -50,17 +50,19 @@ in
       "iommu=soft"
       "idle=nomwait"
       "tpm_tis.interrupts=0"
+      # "initcall_blacklist=acpi_cpufreq_init"
     ];
     kernelModules = [
       "fuse"
       "kvm-amd"
       "msr"
       # "kvm-intel"
-      "amdgpu"
+      # "amdgpu"
       "acpi_call"
       "usbmon"
       "usbserial"
       "timer_stats"
+      # "amd-pstate"
     ];
   };
   services.avahi = {
@@ -93,7 +95,7 @@ in
   services.auto-cpufreq.enable = true;
   # services.logind.lidSwitch = "ignore"; # Laptop does not go to sleep when lid is closed
   # hardware.ledger.enable = true;
-  hardware.cpu.amd.updateMicrocode = true;
+  # hardware.cpu.amd.updateMicrocode = true;
   hardware.enableAllFirmware = true;
   time.timeZone = "Asia/Riyadh";
   # Select internationalisation properties.
@@ -110,7 +112,7 @@ in
       gdm.enable = false;
       gdm.wayland = false;
     };
-    videoDrivers = [ "amdgpu" ];
+    # videoDrivers = [ "amdgpu" ];
     desktopManager = {
       xterm.enable = false;
       gnome.enable = false;
@@ -207,8 +209,8 @@ in
   };
   services.fwupd.enable = true;
   nixpkgs.config.allowUnfree = true;
-  # List services that you want to enable:
-  services.fstrim.enable = true;
+
+  # services.fstrim.enable = true;
   # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
@@ -242,16 +244,16 @@ in
     "fs.inotify.max_user_watches" = 524288;
     # Allow VS Code to watch more files
   };
-  hardware.opengl = {
-    enable = true;
-    extraPackages = [
-      pkgs.libvdpau-va-gl
-      pkgs.vaapiVdpau
-      pkgs.amdvlk
-      pkgs.rocm-opencl-icd
-    ];
-    driSupport32Bit = true;
-  };
+  # hardware.opengl = {
+  #   enable = true;
+  #   extraPackages = [
+  #     pkgs.libvdpau-va-gl
+  #     pkgs.vaapiVdpau
+  #     pkgs.amdvlk
+  #     pkgs.rocm-opencl-icd
+  #   ];
+  #   driSupport32Bit = true;
+  # };
 
 
   services.localtimed.enable = true;
