@@ -20,11 +20,6 @@ in
     ../../../common/nixos/samba
     ../../../common/nixos/minidlna
     ../../../common/nixos/locate
-    # ./. + "/"+ common + "/nixos/geoclue2"
-    # "${common}/" + nixos/tlp
-    # "${common}/" + nixos/samba
-    # "${common}/" + nixos/minidlna
-    # "${common}/" + nixos/locate
   ];
 
   # Thermals and cooling

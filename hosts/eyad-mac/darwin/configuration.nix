@@ -4,16 +4,13 @@
 , pkgs
 , ...
 }:
-let
-  common = ../../../common;
-in
 {
 
   imports = [
     ./fonts.nix
     ./system.nix
     ./nix.nix
-    ${common}/darwin/wm
+    ../../../common/darwin/wm
 
 
   ];
@@ -27,7 +24,6 @@ in
     enableCompletion = true;
     enableFzfCompletion = true;
     enableSyntaxHighlighting = true;
-
   };
   programs.tmux.enable = true;
 

@@ -1,17 +1,15 @@
 { config, pkgs, lib, ... }:
-let
-  common = "../../../common";
-in
+
 {
   home.stateVersion = "22.05";
 
   imports = [
-    "${common}" + /home-manager/htop
-    "${common}" + /home-manager/git
-    "${common}" + /home-manager/direnv
-    "${common}" + /apps/terminal/shell.nix
-    "${common}" + /home-manager/kitty
-    "${common}" + /home-manager/micro
+    ../../../common/home-manager/htop
+    ../../../common/home-manager/git
+    ../../../common/home-manager/direnv
+    ../../../common/apps/terminal/shell.nix
+    ../../../common/home-manager/kitty
+    ../../../common/home-manager/micro
   ];
 
   # programs.firefox.package = pkgs.firefox-bin;
