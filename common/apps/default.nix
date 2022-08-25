@@ -12,5 +12,5 @@
     ./system.nix
   ];
 
-  wm = ./wm;
+  # wm = ./wm;
 }
