@@ -28,5 +28,12 @@
     ./direnv
     ./htop
     ./udiskie
+    ./development.nix
+    ./email_cal_rss.nix
+    ./media.nix
+    ./office.nix
+    ./services.nix
+    ./system.nix
+    ./terminal
   ];
 }
