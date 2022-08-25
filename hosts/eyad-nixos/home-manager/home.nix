@@ -240,7 +240,8 @@ in
       helix
       k9s
       yt-dlp
-
+      # jetbrains.pycharm-community
+      sherlock
 
     ];
   home.enableNixpkgsReleaseCheck = true;

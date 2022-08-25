@@ -4,15 +4,13 @@ let
   inherit (self) outputs;
 
   inherit (builtins) elemAt match any mapAttrs attrValues attrNames listToAttrs;
-  inherit (nixpkgs.lib) nixosSystem filterAttrs genAttrs mapAttrs';
-  inherit (home-manager.lib) homeManagerConfiguration;
+  inherit (nixpkgs.lib) nixosSystem filterAttrs genAttrs mapAttrs' mapAttrsToList;
 in
 rec {
   # Applies a function to a attrset's names, while keeping the values
   mapAttrNames = f: mapAttrs' (name: value: { name = f name; inherit value; });
 
   has = element: any (x: x == element);
-
 
   mkSystem =
     { hostname
