@@ -48,9 +48,6 @@ in
         ];
       };
 
-
-
-
   };
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ] ++ lib.lists.range 1714 1764; # kdeconnect
