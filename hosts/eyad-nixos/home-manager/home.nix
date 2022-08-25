@@ -10,8 +10,7 @@ in
 {
   # inherit secrets;
   imports = [
-    ../../../common/apps
-    ../../../common/apps/wm/i3
+    ../../../common/home-manager/wm/i3
     ../../../common/home-manager
 
     inputs.nix-doom-emacs.hmModule

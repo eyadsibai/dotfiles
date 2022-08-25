@@ -1,17 +1,22 @@
-{ config
+{ inputs
+, config
 , pkgs
 , lib
 , ...
 }:
 let
   secrets = import ../../../secrets;
-
+  homeConfig = config.home-manager.users.eyad;
 in
 {
   imports = [
+    inputs.hardware.nixosModules.common-cpu-amd
+    inputs.hardware.nixosModules.common-gpu-amd
+    inputs.hardware.nixosModules.common-pc-ssd
+    inputs.hardware.nixosModules.lenovo-thinkpad
     ./hardware-configuration.nix
     ./networking.nix
-    ./sound.nix
+    ./audio.nix
     ./fonts.nix
     ./nix.nix
     ./steam.nix
@@ -156,7 +161,13 @@ in
   users.users.eyad = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" "podman" ];
+    extraGroups = [ "wheel" "networkmanager" ] ++ (lib.optional config.virtualisation.docker.enable "docker")
+      ++ (lib.optional config.virtualisation.podman.enable "podman")
+      ++ (lib.optional config.virtualisation.libvirtd.enable "libvirtd")
+      ++ (lib.optional config.programs.wireshark.enable "wireshark")
+      ++ (lib.optional config.hardware.i2c.enable "i2c")
+      ++ (lib.optional config.services.mysql.enable "mysql");
+
     hashedPassword = secrets.eyad-nixos.passwd.eyad;
 
     openssh.authorizedKeys.keys = [

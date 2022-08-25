@@ -4,7 +4,7 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
     stable.url = "nixpkgs/nixos-22.05";
 
-    nixos-hardware.url = "github:NixOS/nixos-hardware";
+    hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     nix-index-database.url = "github:Mic92/nix-index-database";
 
@@ -229,7 +229,6 @@
             modules =
               [
                 ./hosts/eyad-nixos/nixos/configuration.nix
-                inputs.nixos-hardware.nixosModules.lenovo-thinkpad
                 inputs.nixpkgs.nixosModules.notDetected
                 inputs.nur.nixosModules.nur
                 # inputs.stylix.nixosModules.stylix # (stylix.image must be set)
@@ -249,12 +248,11 @@
                       [
                         ./hosts/eyad-nixos/home-manager/home.nix
 
-                        # Import our reusable home-manager modules;
                       ]
                       ++ (builtins.attrValues homeManagerModules);
                   };
                 }
-                # Import our reusable nixos modules;
+
               ]
               ++ (builtins.attrValues nixosModules);
             specialArgs = { inherit inputs; };
@@ -278,8 +276,6 @@
                   imports =
                     [
                       ./hosts/eyad-mac/home-manager/home.nix
-
-                      # Import our reusable home-manager modules;
 
                     ] ++ (builtins.attrValues homeManagerModules);
                 };
