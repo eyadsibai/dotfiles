@@ -149,7 +149,7 @@ in
     #   enable = true;
     #   enableExtensionPack = true;
     # };
-    libvirtd.enable = false;
+    libvirtd.enable = true;
   };
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput = {
@@ -187,18 +187,6 @@ in
       wine
       docker-client # not needed when virtualization.docker.enable = true;
       podman-compose
-      blas
-      lapack
-      lapack-ilp64
-      amd-libflame
-      lapack-reference
-      blas-ilp64
-      blas-reference
-      gfortran
-      openblasCompat
-      openblas
-      lapack-reference
-      python310Packages.numpy.blas
       # support both 32- and 64-bit applications
       # wine64WowPackages.stable
       # support 32-bit only
