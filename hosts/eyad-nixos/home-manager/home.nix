@@ -242,7 +242,11 @@ in
       yt-dlp
       # jetbrains.pycharm-community
       sherlock
-
+      signal-cli
+      signalbackup-tools
+      signald
+      turses
+      twitch-tui
     ];
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
@@ -305,14 +309,16 @@ in
   };
   # should be in the browsers.nix
   # xdg.mimeApps.enable = true;
-  xdg.userDirs.desktop = "$HOME/desktop";
-  xdg.userDirs.documents = "$HOME/documents";
-  xdg.userDirs.download = "$HOME/downloads";
-  xdg.userDirs.music = "$HOME/music";
-  xdg.userDirs.pictures = "$HOME/pictures";
-  xdg.userDirs.videos = "$HOME/videos";
-  xdg.userDirs.publicShare = "$HOME/public";
-  xdg.userDirs.templates = "$HOME/templates";
+  xdg.userDirs = {
+    desktop = "$HOME/desktop";
+    documents = "$HOME/documents";
+    download = "$HOME/downloads";
+    music = "$HOME/music";
+    pictures = "$HOME/pictures";
+    videos = "$HOME/videos";
+    publicShare = "$HOME/public";
+    templates = "$HOME/templates";
+  };
   # xdg.mimeApps.defaultApplications
   services.kdeconnect.enable = true;
 
