@@ -144,7 +144,7 @@ in
       defaultNetwork.dnsname.enable = true;
 
     };
-    lxd.enable = true; # broken on unstable
+    lxd.enable = true;
     # virtualbox.host = {
     #   enable = true;
     #   enableExtensionPack = true;
@@ -187,21 +187,11 @@ in
       git
       # openvpn
       wine
-      docker-client # not needed when virtualization.docker.enable = true;
       podman-compose
-      # support both 32- and 64-bit applications
-      # wine64WowPackages.stable
-      # support 32-bit only
-      # wine64
-      # support 64-bit only
-      # (wine.override { wineBuild = "wine64"; })
-      # wine-staging (version with experimental features)
-      # wineWowPackages.staging
-      # winetricks and other programs depending on wine need to use the same wine version
-      # (winetricks.override { wine = wineWowPackages.staging; })
       # native wayland support (unstable)
       # wineWowPackages.waylandFull
-    ];
+    ]
+    ++ (lib.optional (!config.virtualisation.docker.enable) docker-client);
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -241,22 +231,11 @@ in
   ];
   # No access time and continuous TRIM for SSD
   fileSystems."/".options = [ "noatime" "discard" ];
-  # Sysctl params
+
   boot.kernel.sysctl = {
     "fs.inotify.max_user_watches" = 524288;
     # Allow VS Code to watch more files
   };
-  # hardware.opengl = {
-  #   enable = true;
-  #   extraPackages = [
-  #     pkgs.libvdpau-va-gl
-  #     pkgs.vaapiVdpau
-  #     pkgs.amdvlk
-  #     pkgs.rocm-opencl-icd
-  #   ];
-  #   driSupport32Bit = true;
-  # };
-
 
   services.localtimed.enable = true;
   # This value determines the NixOS release from which the default
