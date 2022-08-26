@@ -163,12 +163,14 @@ in
   users.users.eyad = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" ] ++ (lib.optional config.virtualisation.docker.enable "docker")
+    extraGroups = [ "wheel" ]
+      ++ (lib.optional config.virtualisation.docker.enable "docker")
       ++ (lib.optional config.virtualisation.podman.enable "podman")
       ++ (lib.optional config.virtualisation.libvirtd.enable "libvirtd")
       ++ (lib.optional config.programs.wireshark.enable "wireshark")
       ++ (lib.optional config.hardware.i2c.enable "i2c")
-      ++ (lib.optional config.services.mysql.enable "mysql");
+      ++ (lib.optional config.services.mysql.enable "mysql")
+      ++ (lib.optional config.networking.networkmanager.enable "networkmanager");
 
     hashedPassword = secrets.eyad-nixos.passwd.eyad;
 
