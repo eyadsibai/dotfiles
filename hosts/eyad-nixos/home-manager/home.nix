@@ -5,7 +5,6 @@
 }:
 let
   secrets = import ../../../secrets;
-  common = ../../../common;
 in
 {
   # inherit secrets;
