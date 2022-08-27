@@ -16,7 +16,7 @@
       url = "github:lnl7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
+    nixos-wsl.url = "github:nix-community/nixos-wsl";
     flake-utils.url = "github:numtide/flake-utils";
     nix-doom-emacs.url = "github:nix-community/nix-doom-emacs";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
@@ -142,8 +142,6 @@
 
       templates = import ./templates;
 
-      isDarwin = system: builtins.elem system [ "aarch64-darwin" "x86_64-darwin" ];
-      isLinux = system: builtins.elem system [ "x86_64-linux" ];
 
       # Reexport nixpkgs with our overlays applied
       # Acessible on our configurations, and through nix build, shell, run, etc.
@@ -158,13 +156,13 @@
                 overlays = builtins.attrValues common-overlays
                   ++ (
                   inputs.nixpkgs.lib.lists.optionals
-                    (isDarwin system)
+                    (lib.isDarwin system)
                     (builtins.attrValues
                       darwin-overlays)
                 )
                   ++ (
                   inputs.nixpkgs.lib.lists.optionals
-                    (isLinux system)
+                    (lib.isLinux system)
                     (builtins.attrValues
                       nixos-overlays)
                 );
@@ -257,6 +255,53 @@
               ++ (builtins.attrValues nixosModules);
             specialArgs = { inherit inputs; };
           };
+
+      nixosConfigurations."desktop-nixos-wsl" =
+        inputs.nixpkgs.nixosSystem
+          {
+            system = "x86_64-linux";
+            pkgs = legacyPackages.x86_64-linux;
+            modules =
+              [
+                ./hosts/desktop-nixos-wsl/nixos/configuration.nix
+                inputs.nur.nixosModule.nur
+                inputs.home-manager.nixosModule.home-manager
+                {
+                  home-manager.useGlobalPkgs = true;
+                  home-manager.useUserPackages = true;
+                  home-manager.backupFileExtension = "backup";
+                  # set system's scheme to nord by setting `config.scheme`
+                  home-manager.extraSpecialArgs = {
+                    inherit inputs;
+                  };
+                  home-manager.users.eyad = {
+                    imports =
+                      [
+                        ./hosts/desktop-nixos-wsl/home-manager/home.nix
+                      ]
+                      ++ (builtins.attrValues homeManagerModules);
+                  };
+
+
+                }
+
+                inputs.nixos-wsl.nixosModules.wsl
+                {
+                  wsl = {
+                    enable = true;
+                    automountPath = "/mnt";
+                    defaultUser = "eyad";
+                    startMenuLaunchers = true;
+                    wslConf.network.hostname = "desktop-nixos-wsl";
+                  };
+                }
+              ]
+              ++ (builtins.attrValues nixosModules);
+
+            specialArgs = { inherit inputs; };
+          };
+
+
       darwinConfigurations."eyad-mac" =
         inputs.darwin.lib.darwinSystem
           {

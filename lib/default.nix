@@ -1,6 +1,6 @@
 { inputs, ... }:
 let
-  inherit (inputs) self home-manager;
+  inherit (inputs) self home-manager nixpkgs;
   inherit (self) outputs;
 
   inherit (builtins) elemAt match any mapAttrs attrValues attrNames listToAttrs;
@@ -25,22 +25,25 @@ rec {
       modules = attrValues (import ../modules/nixos) ++ [ ../hosts/${hostname} ];
     };
 
-  mkHome =
-    { username
-    , hostname ? null
-    , pkgs ? outputs.nixosConfigurations.${hostname}.pkgs
-    , persistence ? false
-    , colorscheme ? null
-    , wallpaper ? null
-    , features ? [ ]
-    }:
-    homeManagerConfiguration {
-      inherit pkgs;
-      extraSpecialArgs = {
-        inherit inputs outputs hostname username persistence
-          colorscheme wallpaper features;
-      };
-      modules = attrValues (import ../modules/home-manager) ++ [ ../home/${username} ];
-    };
+  # mkHome =
+  #   { username
+  #   , hostname ? null
+  #   , pkgs ? outputs.nixosConfigurations.${hostname}.pkgs
+  #   , persistence ? false
+  #   , colorscheme ? null
+  #   , wallpaper ? null
+  #   , features ? [ ]
+  #   }:
+  #   homeManagerConfiguration {
+  #     inherit pkgs;
+  #     extraSpecialArgs = {
+  #       inherit inputs outputs hostname username persistence
+  #         colorscheme wallpaper features;
+  #     };
+  #     modules = attrValues (import ../modules/home-manager) ++ [ ../home/${username} ];
+  #   };
+
+  isDarwin = system: builtins.elem system [ "aarch64-darwin" "x86_64-darwin" ];
+  isLinux = system: builtins.elem system [ "x86_64-linux" ];
 }
 #https://github.com/archseer/snowflake/blob/master/lib/utils.nix can I move mergeEnvs here?
