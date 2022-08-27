@@ -58,8 +58,19 @@
     poetry2nix.url = "github:nix-community/poetry2nix";
 
     spacebar.url = "github:cmacrae/spacebar/master";
-    nixpkgs-wayland = { url = "github:nix-community/nixpkgs-wayland"; };
-    nixpkgs-wayland.inputs.nixpkgs.follows = "nixpkgs";
+    nixpkgs-wayland = {
+      url = "github:nix-community/nixpkgs-wayland";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    hyprland = {
+      url = "github:hyprwm/hyprland";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    hyprwm-contrib = {
+      url = "github:hyprwm/contrib";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # nixpkgs-wayland.inputs.master.follows = "master";
 
   };
@@ -235,13 +246,13 @@
                 # inputs.base16.nixosModule
                 inputs.home-manager.nixosModules.home-manager
                 {
-                  home-manager.useGlobalPkgs = true;
-                  home-manager.useUserPackages = true;
-                  home-manager.backupFileExtension = "backup";
+
                   home-manager.extraSpecialArgs = {
                     inherit inputs; inherit (inputs.self) outputs;
                   };
-
+                  home-manager.useGlobalPkgs = true;
+                  home-manager.useUserPackages = true;
+                  home-manager.backupFileExtension = "backup";
                   home-manager.users.eyad = {
                     imports =
                       [
@@ -272,7 +283,6 @@
                   home-manager.useGlobalPkgs = true;
                   home-manager.useUserPackages = true;
                   home-manager.backupFileExtension = "backup";
-                  # set system's scheme to nord by setting `config.scheme`
                   home-manager.extraSpecialArgs = {
                     inherit inputs;
                   };

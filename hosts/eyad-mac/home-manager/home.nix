@@ -4,6 +4,8 @@
   home.stateVersion = "22.05";
 
   imports = [
+    ../../common/home-manager
+    ../../common/home-manager/darwin
     ../../../common/home-manager/htop
     ../../../common/home-manager/git
     ../../../common/home-manager/direnv
