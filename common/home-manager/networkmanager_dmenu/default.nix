@@ -3,9 +3,10 @@
 , ...
 }:
 let
-  dmenu-command = "${ pkgs.rofi }/bin/rofi - dmenu";
+  dmenu-command = "${ pkgs.rofi }/bin/rofi -dmenu";
   default-terminal = "${ pkgs.alacritty }/bin/alacritty";
-  {
+in
+{
   home.packages = [ pkgs.networkmanager_dmenu ];
   xdg.configFile."networkmanager-dmenu/config.ini".text =
     ''
@@ -19,4 +20,4 @@ let
       terminal = ${default-terminal}
 
     '';
-  }
+}
