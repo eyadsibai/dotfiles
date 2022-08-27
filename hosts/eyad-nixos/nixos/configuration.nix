@@ -14,6 +14,9 @@ in
     inputs.hardware.nixosModules.common-gpu-amd
     inputs.hardware.nixosModules.common-pc-laptop-ssd
     inputs.hardware.nixosModules.lenovo-thinkpad
+    ../../common/system
+    ../../common/system/nixos
+
     ./hardware-configuration.nix
     ./networking.nix
     ./audio.nix
