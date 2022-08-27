@@ -9,8 +9,8 @@
     path = ./flake-toml;
   };
 
- python = {
-   description = "flake for python project";
-   path = ./python;
- };
+  python = {
+    description = "flake for python project";
+    path = ./python;
+  };
 }
