@@ -281,20 +281,10 @@
                       ]
                       ++ (builtins.attrValues homeManagerModules);
                   };
-
-
                 }
 
                 inputs.nixos-wsl.nixosModules.wsl
-                {
-                  wsl = {
-                    enable = true;
-                    automountPath = "/mnt";
-                    defaultUser = "eyad";
-                    startMenuLaunchers = true;
-                    wslConf.network.hostname = "desktop-nixos-wsl";
-                  };
-                }
+
               ]
               ++ (builtins.attrValues nixosModules);
 
