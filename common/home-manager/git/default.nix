@@ -4,7 +4,7 @@
 {
   home.packages = [ pkgs.tig ];
   programs.gh = {
-    enable = true;
+    enable = config.programs.git.enable;
     enableGitCredentialHelper = true;
     settings = {
       git_protocol = "ssh";
@@ -69,6 +69,6 @@
     # };
     lfs = { enable = true; };
   };
-  programs.gitui = { enable = true; };
-  programs.lazygit = { enable = true; };
+  programs.gitui = { enable = config.programs.git.enable; };
+  programs.lazygit = { enable = config.programs.git.enable; };
 }
