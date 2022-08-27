@@ -15,12 +15,12 @@ rec {
   mkSystem =
     { hostname
     , pkgs
-    , persistence ? false
+    , default-user
     }:
     nixosSystem {
       inherit pkgs;
       specialArgs = {
-        inherit inputs outputs hostname persistence;
+        inherit inputs outputs hostname;
       };
       modules = attrValues (import ../modules/nixos) ++ [ ../hosts/${hostname} ];
     };
