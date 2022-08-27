@@ -13,9 +13,9 @@
     nixPath = lib.mapAttrsToList (key: value: "${ key }=${ value.to.path }") config.nix.registry;
 
     gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 7d";
+      automatic = lib.mkDefault true;
+      dates = lib.mkDefault "weekly";
+      options = lib.mkDefault "--delete-older-than 7d";
     };
 
     settings =
