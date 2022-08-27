@@ -257,15 +257,15 @@
           };
 
       nixosConfigurations."desktop-nixos-wsl" =
-        inputs.nixpkgs.nixosSystem
+        inputs.nixpkgs.lib.nixosSystem
           {
             system = "x86_64-linux";
             pkgs = legacyPackages.x86_64-linux;
             modules =
               [
                 ./hosts/desktop-nixos-wsl/nixos/configuration.nix
-                inputs.nur.nixosModule.nur
-                inputs.home-manager.nixosModule.home-manager
+                inputs.nur.nixosModules.nur
+                inputs.home-manager.nixosModules.home-manager
                 {
                   home-manager.useGlobalPkgs = true;
                   home-manager.useUserPackages = true;

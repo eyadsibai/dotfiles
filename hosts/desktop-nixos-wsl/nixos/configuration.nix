@@ -25,7 +25,6 @@ in
     wslConf.network.hostname = "desktop-nixos-wsl";
 
   };
-  networking.hostname = "desktop-nixos-wsl";
 
 
   environment.systemPackages = with pkgs; [ git ];
