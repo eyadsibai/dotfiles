@@ -187,11 +187,11 @@ in
       git
       # openvpn
       wine
-      podman-compose
       # native wayland support (unstable)
       # wineWowPackages.waylandFull
     ]
-    ++ (lib.optional (!config.virtualisation.docker.enable) docker-client);
+    ++ (lib.optional (!config.virtualisation.docker.enable) docker-client)
+    ++ (lib.optional (config.virtualisation.podman.enable) podman-compose);
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
