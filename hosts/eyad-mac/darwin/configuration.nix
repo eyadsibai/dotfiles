@@ -4,9 +4,13 @@
 , pkgs
 , ...
 }:
+
+
 {
 
   imports = [
+    ../../common/system
+    ../../common/system/darwin
     ./fonts.nix
     ./system.nix
     ./nix.nix

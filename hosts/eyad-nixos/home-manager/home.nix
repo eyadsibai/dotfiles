@@ -1,10 +1,13 @@
 { inputs
 , lib
 , pkgs
+, config
+, outputs
 , ...
 }:
 let
   secrets = import ../../../secrets;
+  systemConfig = outputs.nixosConfigurations."eyad-nixos".config;
 in
 {
   # inherit secrets;
@@ -21,7 +24,6 @@ in
   home.packages =
     with pkgs;
     [
-      haskellPackages.network-manager-tui
       lxappearance
       cookiecutter
       git-crypt
@@ -246,7 +248,8 @@ in
       signald
       turses
       twitch-tui
-    ];
+    ]
+    ++ (lib.optionals systemConfig.networking.networkmanager.enable [ haskellPackages.network-manager-tui ]);
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
   home.keyboard.options = [ "grp:win_space_toggle" ];

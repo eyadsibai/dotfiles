@@ -219,10 +219,12 @@
               penetration-full = mergeEnvs [ port-scanners load-testing password ];
             }
           );
+
       nixosConfigurations."eyad-nixos" =
         inputs.nixpkgs.lib.nixosSystem
           {
             system = "x86_64-linux";
+            # hostname = "eyad-nixos";
             pkgs = legacyPackages.x86_64-linux;
             modules =
               [
@@ -236,9 +238,8 @@
                   home-manager.useGlobalPkgs = true;
                   home-manager.useUserPackages = true;
                   home-manager.backupFileExtension = "backup";
-                  # set system's scheme to nord by setting `config.scheme`
                   home-manager.extraSpecialArgs = {
-                    inherit inputs;
+                    inherit inputs; inherit (inputs.self) outputs;
                   };
 
                   home-manager.users.eyad = {
@@ -253,13 +254,14 @@
 
               ]
               ++ (builtins.attrValues nixosModules);
-            specialArgs = { inherit inputs; };
+            specialArgs = { inherit inputs; inherit (inputs.self) outputs; };
           };
 
       nixosConfigurations."desktop-nixos-wsl" =
         inputs.nixpkgs.lib.nixosSystem
           {
             system = "x86_64-linux";
+            # hostname = "desktop-nixos-wsl";
             pkgs = legacyPackages.x86_64-linux;
             modules =
               [
@@ -296,6 +298,7 @@
         inputs.darwin.lib.darwinSystem
           {
             system = "aarch64-darwin";
+            # hostname = "eyad-mac";
             pkgs = legacyPackages.aarch64-darwin;
             modules = [
               # https://gitlab.com/azazel/ender-config/-/blob/master/flake.nix#L50

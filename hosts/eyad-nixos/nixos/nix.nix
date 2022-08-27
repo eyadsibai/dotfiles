@@ -5,7 +5,6 @@
 , ...
 }:
 {
-  imports = [ ../../../common/nix.nix ];
 
   environment.systemPackages = with pkgs; [ cachix ];
   nix = {
