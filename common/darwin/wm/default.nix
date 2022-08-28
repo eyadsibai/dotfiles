@@ -3,7 +3,7 @@
     enable = true;
     package = pkgs.yabai;
     config = {
-      enableScriptingAddition = true;
+#      enableScriptingAddition = true;
 
       # layout
       layout = "bsp";
