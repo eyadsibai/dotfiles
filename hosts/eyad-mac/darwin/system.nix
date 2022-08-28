@@ -4,6 +4,8 @@
     NSGlobalDomain = {
       AppleInterfaceStyle = "Dark";
       ApplePressAndHoldEnabled = false;
+      NSWindowResizeTime = "0.001";
+
 
       AppleFontSmoothing = 1;
       # Global macOS system settings

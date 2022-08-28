@@ -27,8 +27,12 @@
   };
   programs.git = {
     enable = true;
+    userName = "eyadsibai";
+    userEmail = builtins.concatStringsSep "@" [ "eyad.alsibai" "gmail.com" ];
     # diff tool
-    delta = { enable = true; };
+    delta = {
+      enable = true;
+    };
     attributes = [
       "* text=auto"
       "*.sh text eol=lf"
