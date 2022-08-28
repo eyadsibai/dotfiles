@@ -7,8 +7,8 @@ in
 {
   imports = [
     # "${modulesPath}/profiles/minimal.nix"
-    ../../../common/nix.nix
-    # nixos-wsl.nixosModules.wsl
+    ../../common/system
+    
   ];
 
   wsl = {
@@ -18,7 +18,7 @@ in
     startMenuLaunchers = true;
 
     # Enable native Docker support
-    docker-native.enable = true;
+    docker-native.enable = false;
 
     # Enable integration with Docker Desktop (needs to be installed)
     docker-desktop.enable = true;
