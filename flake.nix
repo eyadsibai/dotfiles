@@ -57,7 +57,7 @@
 
     poetry2nix.url = "github:nix-community/poetry2nix";
 
-    spacebar.url = "github:cmacrae/spacebar/master";
+    spacebar.url = "github:cmacrae/spacebar";
     nixpkgs-wayland = {
       url = "github:nix-community/nixpkgs-wayland";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -71,8 +71,12 @@
       url = "github:hyprwm/contrib";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # nixpkgs-wayland.inputs.master.follows = "master";
 
+    # nixpkgs-wayland.inputs.master.follows = "master";
+    yabai-src = {
+      url = "github:koekeishiya/yabai";
+      flake = false;
+    };
   };
   outputs =
     inputs:
