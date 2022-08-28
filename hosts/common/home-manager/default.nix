@@ -6,5 +6,7 @@
 , ...
 }: {
   home.enableNixpkgsReleaseCheck = true;
-
+  home.packages = [
+    pkgs.rnix-lsp
+  ];
 }

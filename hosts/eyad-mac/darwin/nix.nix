@@ -2,12 +2,11 @@
 {
 
   nix = {
-    extra-platforms = lib.lists.optionals (pkgs.system == "aarch64-darwin") [
-      "x86_64-darwin"
-      "aarch64-darwin"
-    ];
+    extraOptions = "" + lib.optionalString (pkgs.system == "aarch64-darwin") ''
+      extra-platforms = x86_64-darwin aarch64-darwin
+    '';
     configureBuildUsers = true;
-    trusted-users = [
+    settings.trusted-users = [
       "@admin"
     ];
   };

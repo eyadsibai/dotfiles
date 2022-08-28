@@ -14,7 +14,7 @@
 
     gc = {
       automatic = lib.mkDefault true;
-      dates = lib.mkDefault "weekly";
+      #interval = lib.mkDefault "7 days";
       options = lib.mkDefault "--delete-older-than 7d";
     };
 
