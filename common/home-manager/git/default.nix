@@ -64,6 +64,9 @@
       "*.swo"
     ];
 
+    # push.useBitmaps = false;
+
+
     # diff tool
     # diff-so-fancy = {
     #   enable = true;
@@ -72,7 +75,9 @@
     # difftastic = {
     #   enable = true;
     # };
-    lfs = { enable = true; };
+    lfs = {
+      enable = true;
+    };
   };
   programs.gitui = { enable = config.programs.git.enable; };
   programs.lazygit = { enable = config.programs.git.enable; };
