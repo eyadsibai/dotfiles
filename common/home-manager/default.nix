@@ -3,7 +3,6 @@
   imports = [
     ./qutebrowser
     ./firefox
-    ./git
     ./nix-index
     ./micro
     ./picom

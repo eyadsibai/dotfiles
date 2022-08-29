@@ -9,7 +9,6 @@ in
 {
   # inherit secrets;
   imports = [
-    ../../../common/home-manager/git
     ../../common/home-manager
     ../../common/home-manager/nixos
   ];

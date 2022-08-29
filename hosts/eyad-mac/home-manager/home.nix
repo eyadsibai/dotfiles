@@ -7,7 +7,6 @@
     ../../common/home-manager
     ../../common/home-manager/darwin
     ../../../common/home-manager/htop
-    ../../../common/home-manager/git
     ../../../common/home-manager/direnv
     ../../../common/home-manager/terminal/shell.nix
     ../../../common/home-manager/kitty
@@ -26,12 +25,10 @@
     wget
     jq
     cachix
-    comma
+
     # micro
     vscode
     terminal-notifier
-    any-nix-shell
-    nixpkgs-fmt
   ] ++ lib.optionals
     stdenv.isDarwin
     [
