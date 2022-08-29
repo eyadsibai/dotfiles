@@ -66,7 +66,6 @@
 
     # push.useBitmaps = false;
 
-
     # diff tool
     # diff-so-fancy = {
     #   enable = true;
