@@ -37,7 +37,6 @@ in
       graphviz
       ack
       ani-cli
-      any-nix-shell
       # fish support for nix shell
       arandr
       # simple GUI for xrandr
@@ -192,7 +191,6 @@ in
       gparted
       python310Packages.mistune_2_0
       notion-app-enhanced
-      comma
       statix
 
       # kepler
