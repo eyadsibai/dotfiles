@@ -28,7 +28,7 @@
   programs.git = {
     enable = true;
     userName = "eyadsibai";
-    userEmail = builtins.concatStringsSep "@" [ "eyad.alsibai" "gmail.com" ];
+    userEmail = builtins.concatStringsSep "@" [ (builtins.concatStringsSep "." [ "eyad" "alsibai" ]) "gmail.com" ];
     # diff tool
     delta = {
       enable = true;
