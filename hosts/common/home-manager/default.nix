@@ -5,7 +5,9 @@
 , outputs
 , ...
 }: {
-  imports = [ ./version_control.nix ];
+  imports = [
+    ./version_control.nix
+  ];
   home.enableNixpkgsReleaseCheck = true;
 
   home.packages = with pkgs; [
