@@ -13,6 +13,8 @@
     any-nix-shell
     nixpkgs-fmt
     comma
+    ncdu # disk space info (a better du)
+
 
   ];
 }

@@ -1,4 +1,4 @@
-{ lib, pkgs, config, modulesPath, ... }:
+{ lib, pkgs, config, modulesPath, hostname, user, ... }:
 
 with lib;
 let
@@ -6,15 +6,14 @@ let
 in
 {
   imports = [
-    # "${modulesPath}/profiles/minimal.nix"
     ../../common/system
-    
+    ../../common/system/nixos
   ];
 
   wsl = {
     enable = true;
     automountPath = "/mnt";
-    defaultUser = "eyad";
+    defaultUser = ${user};
     startMenuLaunchers = true;
 
     # Enable native Docker support
@@ -22,7 +21,7 @@ in
 
     # Enable integration with Docker Desktop (needs to be installed)
     docker-desktop.enable = true;
-    wslConf.network.hostname = "desktop-nixos-wsl";
+    wslConf.network.hostname = ${hostname};
 
   };
 

@@ -106,8 +106,6 @@ in
       # fast lockscreen based on i3lock
       mosh
       # ssh replacesment
-      ncdu
-      # disk space info (a better du)
       ncpamixer
       neofetch
       # command-line system information
