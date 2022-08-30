@@ -20,16 +20,18 @@ rec {
     , user
       # , system
     , is-wsl ? false
+    , is-laptop ? false
     }:
     nixosSystem {
       inherit pkgs;
       specialArgs = {
-        inherit inputs outputs hostname user;
+        inherit inputs outputs hostname user is-laptop;
       };
       modules = attrValues (import ../modules/nixos)
         ++ (optional is-wsl inputs.nixos-wsl.nixosModules.wsl)
         ++ [
         ../hosts/${hostname}
+        ../hosts/common/system/nixos
         inputs.nixpkgs.nixosModules.notDetected
         inputs.nur.nixosModules.nur
         inputs.home-manager.nixosModules.home-manager
@@ -38,10 +40,13 @@ rec {
             useUserPackages = true;
             useGlobalPkgs = true;
             users.${user} = {
-              imports = [ ../hosts/${hostname}/home-manager ]
-                ++ attrValues (import ../modules/home-manager);
+              imports = [
+                ../hosts/${hostname}/home-manager
+                ../hosts/common/home-manager/nixos
+              ]
+              ++ attrValues (import ../modules/home-manager);
             };
-            extraSpecialArgs = { inherit inputs outputs hostname user; };
+            extraSpecialArgs = { inherit inputs outputs hostname user is-laptop; };
             backupFileExtension = "backup";
           };
         }
@@ -68,8 +73,11 @@ rec {
             useUserPackages = true;
             useGlobalPkgs = true;
             users.${user} = {
-              imports = [ ../hosts/${hostname}/home-manager ]
-                ++ attrValues (import ../modules/home-manager);
+              imports = [
+                ../hosts/${hostname}/home-manager
+                ../hosts/common/home-manager/darwin
+              ]
+              ++ attrValues (import ../modules/home-manager);
             };
             extraSpecialArgs = { inherit inputs outputs; };
             backupFileExtension = "backup";

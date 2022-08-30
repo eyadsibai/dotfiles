@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ../../common/system/nixos
   ];
 
   wsl = {

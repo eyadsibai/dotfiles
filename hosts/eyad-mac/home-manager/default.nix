@@ -4,7 +4,6 @@
   home.stateVersion = "22.05";
 
   imports = [
-    ../../common/home-manager/darwin
     ../../../common/home-manager/htop
     ../../../common/home-manager/direnv
     ../../../common/home-manager/terminal/shell.nix
