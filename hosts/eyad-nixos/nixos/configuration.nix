@@ -23,10 +23,7 @@ in
     ./fonts.nix
     ./nix.nix
     ./steam.nix
-    ../../../common/nixos/tlp
     ../../../common/nixos/samba
-    ../../../common/nixos/minidlna
-    ../../../common/nixos/locate
   ];
 
   # Thermals and cooling

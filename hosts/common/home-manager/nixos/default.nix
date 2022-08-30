@@ -1,6 +1,8 @@
 { pkgs
 , config
 , hostname
+, inputs
+, outputs
 , ...
 
 }:
@@ -10,7 +12,7 @@ in
   imports = [ ../. ];
   home.packages =
     with pkgs;
-    (lib.optionals (config.virtualisation.docker.enable or config.virtualisation.podman.enable)
+    (lib.optionals (systemConfig.virtualisation.docker.enable or systemConfig.virtualisation.podman.enable)
       [ lazydocker ])
   ;
 
