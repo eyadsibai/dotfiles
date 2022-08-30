@@ -1,7 +1,6 @@
 # This file defines two overlays and composes them
 { inputs
 , lib
-, nixConfig
 , ...
 }:
 let
@@ -41,7 +40,7 @@ let
       inherit (import inputs.nixpkgs
         {
           system = "x86_64-darwin";
-          config = nixConfig;
+          config = lib.nixConfig;
         })
         idris2
         nix-index
