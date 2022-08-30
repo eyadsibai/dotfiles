@@ -216,6 +216,7 @@
         hostname = "eyad-nixos";
         pkgs = legacyPackages.x86_64-linux;
         user = "eyad";
+        is-laptop = true;
         # system = "x86_64-linux";
       };
 

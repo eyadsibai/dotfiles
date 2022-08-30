@@ -9,7 +9,6 @@
 {
 
   imports = [
-    ../../common/system/darwin
     ./fonts.nix
     ./system.nix
     ./nix.nix
