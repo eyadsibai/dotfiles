@@ -20,7 +20,7 @@ in
 
   # programs.gpg.enable = true;
 
-  news.display = "silent";
+  # news.display = "silent";
   home.stateVersion = "22.05";
 
 }

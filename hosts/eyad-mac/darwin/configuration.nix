@@ -2,6 +2,8 @@
 , config
 , lib
 , pkgs
+, hostname
+, user
 , ...
 }:
 
@@ -35,9 +37,9 @@
   # security.pam.enableSudoTouchIdAuth = true;
   # programs.fish.enable = true;
   networking = {
-    computerName = "eyad-mac";
-    hostName = "eyad-mac";
-    localHostName = "eyad-mac";
+    computerName = ${hostname};
+    hostName = ${hostname};
+    localHostName = ${hostname};
   };
   environment.systemPackages = with pkgs; [
     firefox-bin
@@ -55,7 +57,31 @@
 
   services.spotifyd.enable = true;
 
-  users.users.eyad = {
+  users.users.${user} = {
     shell = pkgs.zsh;
+  };
+
+  homebrew = {
+    enable = true;
+    autoUpdate = false;
+    cleanup = "zap";
+    casks = [
+      "hammerspoon" # desktop automation app
+      "gitup" # git interface focused on visual interaction
+      "macs-fan-control" # macs fan control app
+      "jetbrains-toolbox"
+      "keycastr"
+      "karabiner-elements"
+
+    ];
+    taps = [
+      "homebrew/bundle"
+      "homebrew/cask"
+      "homebrew/cask-fonts"
+      "homebrew/cask-versions"
+      "homebrew/core"
+      "homebrew/services"
+    ];
+    masApps = { };
   };
 }
