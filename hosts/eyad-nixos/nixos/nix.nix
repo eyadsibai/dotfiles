@@ -10,7 +10,7 @@
   environment.systemPackages = with pkgs; [ cachix ];
   nix = {
     settings = {
-      trusted-users = [ "root" ${user} ];
+      trusted-users = [ "root" "@wheel" ];
       sandbox = true;
     };
     daemonIOSchedClass = "idle";

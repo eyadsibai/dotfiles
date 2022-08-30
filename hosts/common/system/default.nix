@@ -1,4 +1,4 @@
-{ inputs, pkgs, lib, config, ... }:
+{ inputs, pkgs, lib, config, is-laptop, ... }:
 let homeConfig = config.home-manager.users.${user};
 in
 {
@@ -62,5 +62,11 @@ in
       );
 
     enableWifi = true;
+  };
+  services.tlp = {
+    enable = is-laptop;
+    settings = {
+      USB_AUTOSUSPEND = 0;
+    };
   };
 }
