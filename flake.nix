@@ -81,58 +81,15 @@
   outputs =
     inputs:
     let
-      forAllSystems = inputs.nixpkgs.lib.genAttrs systems;
-      systems = [
-        # "aarch64-linux"
-        "x86_64-linux"
-        "aarch64-darwin"
-        "x86_64-darwin"
-      ];
       lib = import ./lib { inherit inputs; };
-      nixConfig = {
-        # allowUnfree = true;
-        permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
-        allowUnfreePredicate = pkg: builtins.elem (inputs.nixpkgs.lib.getName pkg)
-          [
-            "slack"
-            "betterttv"
-            "flagfox"
-            "grammarly"
-            "discord"
-            "skypeforlinux"
-            "zoom"
-            "teams"
-            "vk-messenger"
-            "spotify"
-            "spotify-unwrapped"
-            "ngrok"
-            "vscode"
-            "corefonts"
-            "teamviewer"
-            "unrar"
-            "obsidian"
-            "yandex-disk"
-            "notion-app-enhanced-v2.0.18"
-            "dropbox"
-            "mpv-convert-script"
-            "video-cutter"
-            "steamcmd"
-            "steam-original"
-            "steam-runtime"
-            "broadcom-bt-firmware"
-            "b43-firmware"
-            "xow_dongle-firmware"
-            "facetimehd-calibration"
-            "facetimehd-firmware"
-            "steam"
-          ];
-      };
+      inherit (lib) forAllSystems mkNixOSSystem mkDarwinSystem;
+
     in
     rec {
-      # inherit lib;
+      inherit lib;
       # Your custom packages and modifications
       common-overlays = {
-        default = import ./overlay/common { inherit inputs lib nixConfig; };
+        default = import ./overlay/common { inherit inputs lib; };
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
         poetry2nix = inputs.poetry2nix.overlay;
@@ -144,7 +101,7 @@
       };
 
       darwin-overlays = {
-        default = import ./overlay/darwin { inherit inputs lib nixConfig; };
+        default = import ./overlay/darwin { inherit inputs lib; };
         firefox-darwin = inputs.firefox-darwin.overlay;
         spacebar = inputs.spacebar.overlay;
       };
@@ -165,31 +122,29 @@
                 inherit system;
                 overlays = builtins.attrValues common-overlays
                   ++ (
-                  inputs.nixpkgs.lib.lists.optionals
+                  lib.optionals
                     (lib.isDarwin system)
                     (builtins.attrValues
                       darwin-overlays)
                 )
                   ++ (
-                  inputs.nixpkgs.lib.lists.optionals
+                  lib.optionals
                     (lib.isLinux system)
                     (builtins.attrValues
                       nixos-overlays)
                 );
 
-                config = nixConfig;
+                config = lib.nixConfig;
               }
 
           );
-      # Devshell for bootstrapping
-      # Acessible through 'nix develop'
+
       devShells =
         forAllSystems
           (
             system:
             let
               pkgs = legacyPackages.${ system };
-
             in
             rec {
               default = pkgs.callPackage ./shell.nix { };
@@ -212,23 +167,32 @@
             }
           );
 
-      nixosConfigurations."eyad-nixos" = lib.mkNixOsSystem {
-        hostname = "eyad-nixos";
-        pkgs = legacyPackages.x86_64-linux;
-        user = "eyad";
-        is-laptop = true;
-        # system = "x86_64-linux";
-      };
+      nixosConfigurations."eyad-nixos" = mkNixOSSystem
+        {
+          hostname = "eyad-nixos";
+          pkgs = legacyPackages.x86_64-linux;
+          user = "eyad";
+          is-laptop = true;
+          # system = "x86_64-linux";
+        };
 
-      nixosConfigurations."desktopn-nixos-wsl" = lib.mkNixOsSystem {
-        hostname = "desktop-nixos-wsl";
-        pkgs = legacyPackages.x86_64-linux;
-        user = "eyad";
-        is-wsl = true;
-        # system = "x86_64-linux";
-      };
+      nixosConfigurations."desktop-nixos-wsl" = mkNixOSSystem
+        {
+          hostname = "desktop-nixos-wsl";
+          pkgs = legacyPackages.x86_64-linux;
+          user = "eyad";
+          is-wsl = true;
+          # system = "x86_64-linux";
+        };
 
-      darwinConfigurations."eyad-mac" = lib.mkDarwinSystem
+      nixosConfigurations."home-server" = mkNixOSSystem
+        {
+          hostname = "home-server";
+          pkgs = legacyPackages.x86_64-linux;
+          user = "eyad";
+        };
+
+      darwinConfigurations."eyad-mac" = mkDarwinSystem
         {
           hostname = "eyad-mac";
           pkgs = legacyPackages.aarch64-darwin;

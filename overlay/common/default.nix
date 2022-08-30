@@ -1,7 +1,6 @@
 # This file defines two overlays and composes them
 { inputs
 , lib
-, nixConfig
 , ...
 }:
 let
@@ -61,7 +60,7 @@ let
       stable = import inputs.stable
         {
           system = super.stdenv.system;
-          config = nixConfig;
+          config = lib.nixConfig;
         };
     };
 in

@@ -6,15 +6,19 @@ let
   inherit (home-manager.lib) homeManagerConfiguration;
 
   inherit (builtins) elemAt match any mapAttrs attrValues attrNames listToAttrs;
-  inherit (nixpkgs.lib) nixosSystem filterAttrs genAttrs mapAttrs' mapAttrsToList lists regularOf stdenv optional;
+  inherit (nixpkgs.lib) nixosSystem filterAttrs genAttrs mapAttrs' mapAttrsToList regularOf stdenv optional lists;
+  inherit (lists) optionals;
 in
 rec {
+  inherit optionals;
   # Applies a function to a attrset's names, while keeping the values
-  mapAttrNames = f: mapAttrs' (name: value: { name = f name; inherit value; });
+  mapAttrNames = f: mapAttrs' (name: value: {
+    name = f name; inherit value;
+  });
 
   has = element: any (x: x == element);
 
-  mkNixOsSystem =
+  mkNixOSSystem =
     { hostname
     , pkgs
     , user
@@ -169,5 +173,52 @@ rec {
   stdenv.targetSystem = {
     isDarwinArm64 = stdenv.targetSystem.isDarwin && stdenv.targetSystem.darwinArch == "arm64";
   };
+
+  nixConfig = {
+    # allowUnfree = true;
+    permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
+    allowUnfreePredicate = pkg: builtins.elem (inputs.nixpkgs.lib.getName pkg)
+      [
+        "slack"
+        "betterttv"
+        "flagfox"
+        "grammarly"
+        "discord"
+        "skypeforlinux"
+        "zoom"
+        "teams"
+        "vk-messenger"
+        "spotify"
+        "spotify-unwrapped"
+        "ngrok"
+        "vscode"
+        "corefonts"
+        "teamviewer"
+        "unrar"
+        "obsidian"
+        "yandex-disk"
+        "notion-app-enhanced-v2.0.18"
+        "dropbox"
+        "mpv-convert-script"
+        "video-cutter"
+        "steamcmd"
+        "steam-original"
+        "steam-runtime"
+        "broadcom-bt-firmware"
+        "b43-firmware"
+        "xow_dongle-firmware"
+        "facetimehd-calibration"
+        "facetimehd-firmware"
+        "steam"
+      ];
+  };
+
+  forAllSystems = genAttrs systems;
+  systems = [
+    # "aarch64-linux"
+    "x86_64-linux"
+    "aarch64-darwin"
+    # "x86_64-darwin"
+  ];
 }
 #https://github.com/archseer/snowflake/blob/master/lib/utils.nix can I move mergeEnvs here?
