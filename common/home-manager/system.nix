@@ -4,8 +4,6 @@
 , ...
 
 }:
-let systemConfig = outputs.nixosConfigurations.${hostname}.config;
-in
 {
   home.packages =
     with pkgs;
@@ -18,9 +16,6 @@ in
       # kill processes by name
       ranger
       # terminal file explorer
-    ]
-    ++ (lib.optionals (config.virtualisation.docker.enable or config.virtualisation.podman.enable)
-      [ lazydocker ])
-  ;
+    ];
 
 }
