@@ -1,12 +1,7 @@
 { lib, pkgs, config, modulesPath, hostname, user, ... }:
 
-with lib;
-let
-  # nixos-wsl = import ./nixos-wsl;
-in
 {
   imports = [
-    ../../common/system
     ../../common/system/nixos
   ];
 
@@ -17,7 +12,7 @@ in
     startMenuLaunchers = true;
 
     # Enable native Docker support
-    docker-native.enable = false;
+    docker-native.enable = true;
 
     # Enable integration with Docker Desktop (needs to be installed)
     docker-desktop.enable = true;

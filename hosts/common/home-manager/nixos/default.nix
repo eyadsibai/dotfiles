@@ -7,6 +7,7 @@
 let systemConfig = outputs.nixosConfigurations.${hostname}.config;
 in
 {
+  imports = [ ../. ];
   home.packages =
     with pkgs;
     (lib.optionals (config.virtualisation.docker.enable or config.virtualisation.podman.enable)
