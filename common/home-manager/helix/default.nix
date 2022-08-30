@@ -7,6 +7,7 @@
         auto-format = false;
         name = "rust";
       }
+      o99
       { name = "python"; }
       { name = "nix"; auto-format = true; }
     ];
