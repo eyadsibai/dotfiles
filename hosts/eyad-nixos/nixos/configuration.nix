@@ -23,7 +23,6 @@ in
     ./fonts.nix
     ./nix.nix
     ./steam.nix
-    ../../../common/nixos/geoclue2
     ../../../common/nixos/tlp
     ../../../common/nixos/samba
     ../../../common/nixos/minidlna
