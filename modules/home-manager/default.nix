@@ -3,4 +3,7 @@
 {
   # List your module files here
   # my-module = import ./my-module.nix;
+  preferred-apps = import ./preferred-apps.nix;
+  fonts = import ./fonts.nix;
+
 }
