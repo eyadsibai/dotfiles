@@ -3,11 +3,12 @@
 , pkgs
 , config
 , outputs
+, hostname
 , ...
 }:
 let
   secrets = import ../../../secrets;
-  systemConfig = outputs.nixosConfigurations."eyad-nixos".config;
+  systemConfig = outputs.nixosConfigurations.${hostname}.config;
 in
 {
   # inherit secrets;

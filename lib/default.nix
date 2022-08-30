@@ -41,7 +41,7 @@ rec {
               imports = [ ../hosts/${hostname}/home-manager ]
                 ++ attrValues (import ../modules/home-manager);
             };
-            extraSpecialArgs = { inherit inputs outputs; };
+            extraSpecialArgs = { inherit inputs outputs hostname user; };
             backupFileExtension = "backup";
           };
         }
