@@ -6,8 +6,6 @@
 , user
 , ...
 }:
-
-
 {
 
   imports = [
@@ -15,7 +13,6 @@
     ./system.nix
     ./nix.nix
     ../../../common/darwin/wm
-
 
   ];
   # Auto upgrade nix package and the daemon service.
@@ -36,14 +33,9 @@
   # Add ability to used TouchID for sudo authentication
   # security.pam.enableSudoTouchIdAuth = true;
   # programs.fish.enable = true;
-  networking = {
-    computerName = ${hostname};
-    hostName = ${hostname};
-    localHostName = ${hostname};
-  };
+
   environment.systemPackages = with pkgs; [
     firefox-bin
-
   ];
 
   # https://github.com/nix-community/home-manager/issues/423
@@ -62,25 +54,14 @@
   };
 
   homebrew = {
-    enable = true;
-    autoUpdate = false;
-    cleanup = "zap";
     casks = [
-      "hammerspoon" # desktop automation app
-      "gitup" # git interface focused on visual interaction
-      "macs-fan-control" # macs fan control app
-      "jetbrains-toolbox"
-      "keycastr"
-      "karabiner-elements"
+      # "hammerspoon" # desktop automation app
+      # "gitup" # git interface focused on visual interaction
+      # "macs-fan-control" # macs fan control app
+      # "jetbrains-toolbox"
+      # "keycastr"
+      # "karabiner-elements"
 
-    ];
-    taps = [
-      "homebrew/bundle"
-      "homebrew/cask"
-      "homebrew/cask-fonts"
-      "homebrew/cask-versions"
-      "homebrew/core"
-      "homebrew/services"
     ];
     masApps = { };
   };
