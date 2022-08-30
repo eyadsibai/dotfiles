@@ -1,3 +1,0 @@
-{ ... }: {
-  services.minidlna.enable = true;
-}

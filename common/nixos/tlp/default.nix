@@ -1,7 +1,7 @@
-{ ... }:
+{ is-laptop, ... }:
 {
   services.tlp = {
-    enable = true;
+    enable = is-laptop;
     settings = {
       USB_AUTOSUSPEND = 0;
     };
