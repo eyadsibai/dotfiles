@@ -2,11 +2,12 @@
 , config
 , pkgs
 , lib
+, user
 , ...
 }:
 let
   secrets = import ../../../secrets;
-  homeConfig = config.home-manager.users.eyad;
+  homeConfig = config.home-manager.users.${user};
 in
 {
   imports = [
@@ -95,7 +96,7 @@ in
       RUNTIME_PM_BLACKLIST = "05:00.3 04:00.3 04:00.4";
     };
   };
-  services.auto-cpufreq.enable = true;
+  # services.auto-cpufreq.enable = true;
   # services.logind.lidSwitch = "ignore"; # Laptop does not go to sleep when lid is closed
   # hardware.ledger.enable = true;
   # hardware.cpu.amd.updateMicrocode = true;
