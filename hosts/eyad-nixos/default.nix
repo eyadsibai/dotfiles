@@ -1,0 +1,2 @@
+{ ... }:
+{ imports = [ ./nixos/configuration.nix ]; }

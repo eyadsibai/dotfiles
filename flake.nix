@@ -149,11 +149,6 @@
         spacebar = inputs.spacebar.overlay;
       };
 
-      # Reusable nixos modules you might want to export
-      # These are usually stuff you would upstream into nixpkgs
-      nixosModules = import ./modules/nixos;
-      homeManagerModules = import ./modules/home-manager;
-      darwinModules = import ./modules/darwin;
 
       templates = import ./templates;
 
@@ -194,25 +189,7 @@
             system:
             let
               pkgs = legacyPackages.${ system };
-              mergeEnvs =
-                envs:
-                pkgs.mkShell
-                  (
-                    builtins.foldl'
-                      (
-                        a:
-                        v:
-                        {
-                          buildInputs = a.buildInputs ++ v.buildInputs;
-                          nativeBuildInputs = a.nativeBuildInputs ++ v.nativeBuildInputs;
-                          propagatedBuildInputs = a.propagatedBuildInputs ++ v.propagatedBuildInputs;
-                          propagatedNativeBuildInputs = a.propagatedNativeBuildInputs ++ v.propagatedNativeBuildInputs;
-                          shellHook = a.shellHook + "\n" + v.shellHook;
-                        }
-                      )
-                      (pkgs.mkShell { })
-                      envs
-                  );
+
             in
             rec {
               default = pkgs.callPackage ./shell.nix { };
@@ -231,113 +208,31 @@
               load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
               password = import ./shells/penetration/password.nix { inherit pkgs; };
               mysql = import ./shells/mysql.nix { inherit pkgs; };
-              penetration-full = mergeEnvs [ port-scanners load-testing password ];
+              penetration-full = lib.mergeEnvs { inherit pkgs; } [ port-scanners load-testing password ];
             }
           );
 
-      nixosConfigurations."eyad-nixos" =
-        inputs.nixpkgs.lib.nixosSystem
-          {
-            system = "x86_64-linux";
-            # hostname = "eyad-nixos";
-            pkgs = legacyPackages.x86_64-linux;
-            modules =
-              [
-                ./hosts/eyad-nixos/nixos/configuration.nix
-                inputs.nixpkgs.nixosModules.notDetected
-                inputs.nur.nixosModules.nur
-                # inputs.stylix.nixosModules.stylix # (stylix.image must be set)
-                # inputs.base16.nixosModule
-                inputs.home-manager.nixosModules.home-manager
-                {
+      nixosConfigurations."eyad-nixos" = lib.mkNixOsSystem {
+        hostname = "eyad-nixos";
+        pkgs = legacyPackages.x86_64-linux;
+        user = "eyad";
+        # system = "x86_64-linux";
+      };
 
-                  home-manager.extraSpecialArgs = {
-                    inherit inputs; inherit (inputs.self) outputs;
-                  };
-                  home-manager.useGlobalPkgs = true;
-                  home-manager.useUserPackages = true;
-                  home-manager.backupFileExtension = "backup";
-                  home-manager.users.eyad = {
-                    imports =
-                      [
-                        ./hosts/eyad-nixos/home-manager/home.nix
+      nixosConfigurations."desktopn-nixos-wsl" = lib.mkNixOsSystem {
+        hostname = "desktop-nixos-wsl";
+        pkgs = legacyPackages.x86_64-linux;
+        user = "eyad";
+        is-wsl = true;
+        # system = "x86_64-linux";
+      };
 
-                      ]
-                      ++ (builtins.attrValues homeManagerModules);
-                  };
-                }
+      darwinConfigurations."eyad-mac" = lib.mkDarwinSystem
+        {
+          hostname = "eyad-mac";
+          pkgs = legacyPackages.aarch64-darwin;
+          user = "eyad";
+        };
 
-              ]
-              ++ (builtins.attrValues nixosModules);
-            specialArgs = { inherit inputs; inherit (inputs.self) outputs; };
-          };
-
-      nixosConfigurations."desktop-nixos-wsl" =
-        inputs.nixpkgs.lib.nixosSystem
-          {
-            system = "x86_64-linux";
-            # hostname = "desktop-nixos-wsl";
-            pkgs = legacyPackages.x86_64-linux;
-            modules =
-              [
-                ./hosts/desktop-nixos-wsl/nixos/configuration.nix
-                inputs.nur.nixosModules.nur
-                inputs.home-manager.nixosModules.home-manager
-                {
-                  home-manager.useGlobalPkgs = true;
-                  home-manager.useUserPackages = true;
-                  home-manager.backupFileExtension = "backup";
-                  home-manager.extraSpecialArgs = {
-                    inherit inputs;
-                  };
-                  home-manager.users.eyad = {
-                    imports =
-                      [
-                        ./hosts/desktop-nixos-wsl/home-manager/home.nix
-                      ]
-                      ++ (builtins.attrValues homeManagerModules);
-                  };
-                }
-
-                inputs.nixos-wsl.nixosModules.wsl
-
-              ]
-              ++ (builtins.attrValues nixosModules);
-
-            specialArgs = { inherit inputs; };
-          };
-
-
-      darwinConfigurations."eyad-mac" =
-        inputs.darwin.lib.darwinSystem
-          {
-            system = "aarch64-darwin";
-            # hostname = "eyad-mac";
-            pkgs = legacyPackages.aarch64-darwin;
-            modules = [
-              # https://gitlab.com/azazel/ender-config/-/blob/master/flake.nix#L50
-              ./hosts/eyad-mac/darwin/configuration.nix
-
-              inputs.home-manager.darwinModules.home-manager
-              {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                home-manager.backupFileExtension = "backup";
-                home-manager.extraSpecialArgs = { inherit inputs; };
-                home-manager.users.eyad = {
-                  imports =
-                    [
-                      ./hosts/eyad-mac/home-manager/home.nix
-
-                    ] ++ (builtins.attrValues homeManagerModules);
-                };
-              }
-
-            ]
-            ++ (builtins.attrValues darwinModules);
-
-            specialArgs = { inherit inputs; };
-
-          };
     };
 }
