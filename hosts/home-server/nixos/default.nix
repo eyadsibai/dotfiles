@@ -1,4 +1,11 @@
-{ pkgs, ... }:
+{ inputs
+, config
+, pkgs
+, lib
+, user
+, hostname
+, ...
+}:
 {
   services.sonarr = {
     #6767
@@ -35,12 +42,12 @@
     openFirewall = true;
     # dataDir = "/config/services/radarr/data";
   };
-  prowlarr = {
+  services.prowlarr = {
     #9696
     enable = true;
     openFirewall = true;
   };
-  deluge = {
+  services.deluge = {
     #8112
     enable = true;
     web.enable = true;
@@ -49,5 +56,9 @@
     openFirewall = true;
     web.openFirewall = true;
   };
+
+  services.adguardhome.enable = true;
+
+  services.minidlna.enable = true;
 
 }
