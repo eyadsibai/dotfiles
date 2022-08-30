@@ -1,4 +1,4 @@
-{ inputs, pkgs, lib, config, is-laptop, ... }:
+{ inputs, pkgs, lib, config, is-laptop, user, ... }:
 let homeConfig = config.home-manager.users.${user};
 in
 {
