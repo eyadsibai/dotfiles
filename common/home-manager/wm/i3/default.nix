@@ -1,5 +1,6 @@
 { pkgs
 , lib
+, config
 , ...
 }:
 {
@@ -22,11 +23,11 @@
             "XF86AudioRaiseVolume" = "exec ${ pkgs.alsaUtils }/bin/amixer set Master 5%+";
             "XF86MonBrightnessDown" = "exec ${ pkgs.brightnessctl }/bin/brightnessctl set 4%-";
             "XF86MonBrightnessUp" = "exec ${ pkgs.brightnessctl }/bin/brightnessctl set 4%+";
-            "${ modifier }+Return" = "exec ${ pkgs.kitty }/bin/kitty";
-            "${ modifier }+d" = "exec ${ pkgs.rofi }/bin/rofi -modi drun -show drun";
+            "${ modifier }+Return" = "exec ${config.home.preferredApps.terminal.cmd}";
+            "${ modifier }+d" = "exec ${config.home.preferredApps.menu.drun-cmd}";
             "${ modifier }+Shift+d" = "exec ${ pkgs.rofi }/bin/rofi -show window";
             "${ modifier }+n" = "exec ${ pkgs.networkmanager_dmenu }/bin/networkmanager_dmenu";
-            "${ modifier }+p" = "exec ${ pkgs.rofi-rbw }/bin/rofi-rbw";
+            "${ modifier }+p" = "exec ${config.home.preferredApps.menu.password-cmd}";
             "${ modifier }+Shift+x" = "exec systemctl suspend";
             "Print" = "exec ${ pkgs.flameshot }/bin/flameshot gui";
           };
@@ -42,7 +43,7 @@
           notification = false;
         }
         {
-          command = "${ pkgs.feh }/bin/feh --bg-scale ~/background.png";
+          command = "${ pkgs.feh }/bin/feh --bg-scale ${config.wallpaper}";
           always = true;
           notification = false;
         }
