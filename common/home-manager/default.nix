@@ -9,7 +9,6 @@
     ./mpv
     ./newsboat
     ./ngrok
-    ./alacritty
     ./networkmanager_dmenu
     ./kitty
     ./spotify
