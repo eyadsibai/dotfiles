@@ -27,7 +27,9 @@
       nf = "nix flake";
 
       nr = "nixos-rebuild --flake .";
+      dr = "darwin-rebuild --flake .";
       nrs = "nixos-rebuild --flake . switch";
+      sdrs = "sudo darwin-rebuild --flake . switch";
       snr = "sudo nixos-rebuild --flake .";
       snrs = "sudo nixos-rebuild --flake . switch";
       hm = "home-manager --flake .";
@@ -48,7 +50,7 @@
       clear = "printf '\\033[2J\\033[3J\\033[1;1H'";
     };
     functions = {
-      fish_greeting = "";
+      fish_greeting = "pfetch";
       wh = "readlink -f (which $argv)";
     };
     interactiveShellInit =
