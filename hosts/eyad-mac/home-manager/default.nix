@@ -6,7 +6,7 @@
   imports = [
     ../../../common/home-manager/htop
     ../../../common/home-manager/direnv
-    ../../../common/home-manager/terminal/shell.nix
+    ../../../common/home-manager/terminal
     ../../../common/home-manager/kitty
     ../../../common/home-manager/micro
   ];
@@ -25,7 +25,7 @@
     cachix
 
     # micro
-    vscode
+    # vscode
     terminal-notifier
   ] ++ lib.optionals
     stdenv.isDarwin
