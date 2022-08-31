@@ -1,9 +1,9 @@
-{ user, ... }: {
+{ username, ... }: {
   services.samba = {
     enable = true;
     shares = {
       share = {
-        "path" = "/home/${user}";
+        "path" = "/home/${username}";
         "guest ok" = "no";
         "read only" = "no";
       };

@@ -7,6 +7,7 @@
 }: {
   imports = [
     ./version_control.nix
+    ./shellcolor.nix
   ];
   home.enableNixpkgsReleaseCheck = true;
 

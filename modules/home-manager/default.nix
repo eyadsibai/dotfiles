@@ -5,5 +5,6 @@
   # my-module = import ./my-module.nix;
   preferred-apps = import ./preferred-apps.nix;
   fonts = import ./fonts.nix;
+  shellcolor = import ./shellcolor.nix;
 
 }

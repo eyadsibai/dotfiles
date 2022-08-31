@@ -21,15 +21,16 @@ rec {
   mkNixOSSystem =
     { hostname
     , pkgs
-    , user
+    , username ? "eyad"
       # , system
     , is-wsl ? false
     , is-laptop ? false
+    , colorScheme ? null
     }:
     nixosSystem {
       inherit pkgs;
       specialArgs = {
-        inherit inputs outputs hostname user is-laptop;
+        inherit inputs outputs hostname username is-laptop colorScheme;
       };
       modules = attrValues (import ../modules/nixos)
         ++ (optional is-wsl inputs.nixos-wsl.nixosModules.wsl)
@@ -43,14 +44,16 @@ rec {
           home-manager = {
             useUserPackages = true;
             useGlobalPkgs = true;
-            users.${user} = {
+            users.${username} = {
               imports = [
                 ../hosts/${hostname}/home-manager
                 ../hosts/common/home-manager/nixos
+                inputs.nix-doom-emacs.hmModule
+                inputs.nix-colors.homeManagerModule
               ]
               ++ attrValues (import ../modules/home-manager);
             };
-            extraSpecialArgs = { inherit inputs outputs hostname user is-laptop; };
+            extraSpecialArgs = { inherit inputs outputs hostname username is-laptop colorScheme; };
             backupFileExtension = "backup";
           };
         }
@@ -60,12 +63,13 @@ rec {
   mkDarwinSystem =
     { hostname
     , pkgs
-    , user
+    , username
+    , colorScheme ? null
     }:
     darwinSystem {
       inherit pkgs;
       specialArgs = {
-        inherit inputs outputs hostname user;
+        inherit inputs outputs hostname username colorScheme;
       };
       modules = attrValues (import ../modules/darwin)
         ++ [
@@ -76,14 +80,16 @@ rec {
           home-manager = {
             useUserPackages = true;
             useGlobalPkgs = true;
-            users.${user} = {
+            users.${username} = {
               imports = [
                 ../hosts/${hostname}/home-manager
                 ../hosts/common/home-manager/darwin
+                inputs.nix-doom-emacs.hmModule
+                inputs.nix-colors.homeManagerModule
               ]
               ++ attrValues (import ../modules/home-manager);
             };
-            extraSpecialArgs = { inherit inputs outputs; };
+            extraSpecialArgs = { inherit inputs outputs username colorScheme; };
             backupFileExtension = "backup";
           };
         }
@@ -164,11 +170,7 @@ rec {
 
   isDarwin = system: builtins.elem system [ "aarch64-darwin" "x86_64-darwin" ];
   isLinux = system: builtins.elem system [ "x86_64-linux" ];
-  /**
-        * Check if `dir` contains a regular *file* of type `ext`
-        * contains :: String -> Path -> Bool
-        **/
-  contains = ext: dir: (lists.length (regularOf ext dir)) > 0;
+
 
   stdenv.targetSystem = {
     isDarwinArm64 = stdenv.targetSystem.isDarwin && stdenv.targetSystem.darwinArch == "arm64";
@@ -221,4 +223,3 @@ rec {
     # "x86_64-darwin"
   ];
 }
-#https://github.com/archseer/snowflake/blob/master/lib/utils.nix can I move mergeEnvs here?

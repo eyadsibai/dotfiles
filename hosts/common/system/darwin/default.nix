@@ -3,7 +3,7 @@
 , lib
 , pkgs
 , hostname
-, user
+, username
 , ...
 }:
 {

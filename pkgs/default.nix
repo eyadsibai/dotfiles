@@ -12,4 +12,5 @@
   fast-rgf = pkgs.callPackage ./fast-rgf { };
   kepler = pkgs.callPackage ./kepler { };
   sherlock = pkgs.callPackage ./sherlock { };
+  shellcolord = pkgs.callPackage ./shellcolord { };
 }

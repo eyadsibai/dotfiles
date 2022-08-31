@@ -3,7 +3,7 @@
 , lib
 , pkgs
 , hostname
-, user
+, username
 , ...
 }:
 {
@@ -49,8 +49,8 @@
 
   services.spotifyd.enable = true;
 
-  users.users.${user} = {
-    shell = pkgs.zsh;
+  users.users.${username} = {
+    shell = pkgs.fish;
   };
 
   homebrew = {

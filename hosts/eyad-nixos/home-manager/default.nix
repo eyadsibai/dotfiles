@@ -15,11 +15,7 @@ in
   imports = [
     ../../../common/home-manager/wm/i3
     ../../../common/home-manager
-
-    inputs.nix-doom-emacs.hmModule
-    inputs.nix-colors.homeManagerModule
   ];
-  colorScheme = inputs.nix-colors.colorSchemes.dracula;
 
 
   home.packages =

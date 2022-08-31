@@ -1,5 +1,5 @@
-{ inputs, pkgs, lib, config, is-laptop, user, ... }:
-let homeConfig = config.home-manager.users.${user};
+{ inputs, pkgs, lib, config, is-laptop, username, ... }:
+let homeConfig = config.home-manager.users.${username};
 in
 {
   environment.systemPackages = with pkgs; [ cachix ];
