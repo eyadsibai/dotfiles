@@ -15,7 +15,7 @@
 
     # Enable integration with Docker Desktop (needs to be installed)
     docker-desktop.enable = true;
-    wslConf.network.hostname = ${hostname};
+    wslConf.network.hostname = hostname;
 
   };
 
