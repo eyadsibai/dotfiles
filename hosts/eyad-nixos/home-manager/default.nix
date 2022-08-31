@@ -317,6 +317,32 @@ in
   # xdg.mimeApps.defaultApplications
   services.kdeconnect.enable = true;
 
+  home.preferredApps = {
+    menu = {
+      run-cmd = "rofi -show run";
+      drun-cmd = "rofi -show drun";
+      dmenu-cmd = "rofi -dmenu";
+      password-cmd = "rofi-rbw";
+    };
 
 
+    terminal = {
+      cmd = "kitty -1";
+      cmd-spawn = program: "kitty -1 $SHELL -i -c ${program}";
+    };
+
+    mail = {
+      cmd = config.home.preferredApps.terminal.cmd-spawn "neomutt";
+    };
+    browser = {
+      cmd = "qutebrowser";
+    };
+
+    notifier = {
+      cmd = "";
+    };
+    editor = {
+      cmd = "";
+    };
+  };
 }
