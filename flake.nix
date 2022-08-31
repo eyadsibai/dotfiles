@@ -41,19 +41,6 @@
       url = "github:SenchoPens/base16.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    base16-schemes = {
-      url = "github:base16-project/base16-schemes";
-      flake = false;
-    };
-    base16-zathura = {
-      url = "github:haozeke/base16-zathura";
-      flake = false;
-    };
-    base16-vim = {
-      url = "github:base16-project/base16-vim";
-      flake = false;
-    };
-    stylix.url = "github:danth/stylix";
 
     poetry2nix.url = "github:nix-community/poetry2nix";
 
@@ -120,7 +107,7 @@
               inputs.nixpkgs
               {
                 hostPlatform = system;
-		inherit system;
+                inherit system;
                 overlays = builtins.attrValues common-overlays
                   ++ (
                   lib.optionals

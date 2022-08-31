@@ -9,6 +9,8 @@
 let
   secrets = import ../../../secrets;
   systemConfig = outputs.nixosConfigurations.${hostname}.config;
+  inherit (config.colorscheme) colors;
+
 in
 {
   # inherit secrets;
@@ -255,10 +257,10 @@ in
     enable = true;
     settings = {
       global = {
-        # color = "#ffffff";
-        # frame_color = "#565d6d";
-        # separator_color = "#565d6d";
-        # font = "FiraCode Nerd Font";
+        color = "#${colors.base00}";
+        frame_color = "#${colors.base03}";
+        separator_color = "#${colors.base03}";
+        font = "${config.fontProfiles.regular.family} 12";
       };
       shortcuts = {
         close = "ctrl+space";
@@ -267,18 +269,18 @@ in
         context = "ctrl+shift+period";
       };
       urgency_low = {
-        # background = "#2f343f";
-        # foreground = "#ffffff";
+        background = "#${colors.base00}";
+        foreground = "#${colors.base05}";
         timeout = 10;
       };
       urgency_normal = {
-        # background = "#2f343f";
-        # foreground = "#ffffff";
+        background = "#${colors.base00}";
+        foreground = "#${colors.base05}";
         timeout = 10;
       };
       urgency_critical = {
-        # background = "#2f343f";
-        # foreground = "#ffffff";
+        background = "#${colors.base00}";
+        foreground = "#${colors.base05}";
         timeout = 10;
       };
     };
