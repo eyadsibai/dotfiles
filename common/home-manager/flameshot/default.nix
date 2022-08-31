@@ -1,6 +1,9 @@
 { pkgs
+, config
 , ...
 }:
+let inherit (config.colorscheme) colors;
+in
 {
   services.flameshot = {
     enable = true;
@@ -8,7 +11,7 @@
       General = {
         disabledTrayIcon = true;
         showStartupLaunchMessage = false;
-        uiColor = "#2d0096";
+        uiColor = "#${colors.base00}";
         showHelp = false;
       };
     };
