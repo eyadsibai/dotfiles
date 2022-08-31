@@ -172,7 +172,8 @@
           hostname = "eyad-nixos";
           pkgs = legacyPackages.x86_64-linux;
           is-laptop = true;
-          colorScheme = inputs.nix-colors.colorSchemes.tokyo-night-storm;
+          colorscheme = "tokyo-night-storm";
+          wallpaper = "aurora-borealis-water-mountain";
           # system = "x86_64-linux";
         };
 

@@ -13,4 +13,6 @@
   kepler = pkgs.callPackage ./kepler { };
   sherlock = pkgs.callPackage ./sherlock { };
   shellcolord = pkgs.callPackage ./shellcolord { };
+  wallpapers = pkgs.callPackage ./wallpapers { };
+
 }
