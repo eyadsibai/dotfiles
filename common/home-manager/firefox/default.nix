@@ -79,7 +79,7 @@ in
             }
         )
       ];
-    profiles."eyad" = {
+    profiles.eyad = {
       # id = 0;
       # name = "eyad";
       isDefault = true;

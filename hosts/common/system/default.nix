@@ -2,7 +2,7 @@
 let homeConfig = config.home-manager.users.${username};
 in
 {
-  environment.systemPackages = with pkgs; [ cachix ];
+  environment.systemPackages = with pkgs; [ git cachix pre-commit ];
 
   nix = {
     package = pkgs.nixFlakes;

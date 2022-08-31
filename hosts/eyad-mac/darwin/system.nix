@@ -1,4 +1,4 @@
-{ ... }: {
+{ username, ... }: {
 
   system.defaults = {
     NSGlobalDomain = {
@@ -47,7 +47,7 @@
       Dragging = true;
       TrackpadRightClick = true;
     };
-    screencapture.location = "/Users/eyad/Downloads";
+    screencapture.location = "/Users/${username}/Downloads";
     LaunchServices = {
       # Disable the "Are you sure you want to open this application?" dialog
       LSQuarantine = false;
