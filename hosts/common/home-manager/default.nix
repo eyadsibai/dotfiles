@@ -23,8 +23,9 @@
   fontProfiles = {
     enable = true;
     monospace = {
-      family = "FiraCode Nerd Font";
+      family = "FiraCode Nerd Font Mono";
       package = pkgs.nerdfonts.override { fonts = [ "FiraCode" ]; };
+#      package = pkgs.fira-code-symbols;
     };
     regular = {
       family = "Fira Sans";
