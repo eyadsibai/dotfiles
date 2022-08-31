@@ -183,6 +183,8 @@
         {
           hostname = "eyad-mac";
           pkgs = legacyPackages.aarch64-darwin;
+          colorscheme = "tokyo-night-storm";
+
         };
 
     };

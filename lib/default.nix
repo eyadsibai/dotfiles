@@ -64,7 +64,7 @@ rec {
   mkDarwinSystem =
     { hostname
     , pkgs
-    , username
+    , username ? "eyad"
     , colorscheme ? null
     }:
     darwinSystem {
