@@ -6,9 +6,8 @@
     fontDir.enable = true;
     fonts = with pkgs; [
       recursive
-      dejavu_fonts
+      # dejavu_fonts
       source-code-pro
-      fira-code
       jetbrains-mono
       font-awesome
       # awesome fonts
