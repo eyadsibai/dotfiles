@@ -119,7 +119,8 @@
             import
               inputs.nixpkgs
               {
-                inherit system;
+                hostPlatform = system;
+		inherit system;
                 overlays = builtins.attrValues common-overlays
                   ++ (
                   lib.optionals
