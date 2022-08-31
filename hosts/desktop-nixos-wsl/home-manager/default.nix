@@ -15,7 +15,6 @@ in
   home.packages =
     with pkgs;
     [
-
     ];
 
   # programs.gpg.enable = true;
