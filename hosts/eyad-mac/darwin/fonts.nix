@@ -4,16 +4,16 @@
   fonts = {
     fontDir.enable = true;
     fonts = with pkgs; [
-      recursive
+      # recursive
       # dejavu_fonts
-      source-code-pro
-      jetbrains-mono
-      font-awesome
+      # source-code-pro
+      # jetbrains-mono
+      # font-awesome
       # awesome fonts
-      material-design-icons
+      # material-design-icons
       # fonts with glyphs
-      ubuntu_font_family
-      line-awesome
+      # ubuntu_font_family
+      # line-awesome
       cascadia-code
       (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
     ];

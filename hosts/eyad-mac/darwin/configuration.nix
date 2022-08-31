@@ -9,8 +9,6 @@
 {
 
   imports = [
-    ./fonts.nix
-    ./system.nix
     ./nix.nix
     ../../../common/darwin/wm
 
@@ -47,7 +45,7 @@
 
   # time.timeZone = "Asia/Riyadh";
 
-  services.spotifyd.enable = true;
+  # services.spotifyd.enable = true;
 
   users.users.${username} = {
     shell = pkgs.fish;

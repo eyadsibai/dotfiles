@@ -4,7 +4,7 @@
 }:
 {
   programs.bash = {
-    enable = false;
+    enable = true;
     initExtra = "neofetch";
     historyIgnore = [ "exit" "tree" ];
   };

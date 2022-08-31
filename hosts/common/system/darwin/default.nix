@@ -11,6 +11,7 @@
     [
       ../.
       ./homebrew.nix
+      ./system.nix
     ];
 
   networking = {
