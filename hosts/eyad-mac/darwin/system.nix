@@ -4,7 +4,7 @@
     NSGlobalDomain = {
       AppleInterfaceStyle = "Dark";
       ApplePressAndHoldEnabled = false;
-      NSWindowResizeTime = "0.001";
+      NSWindowResizeTime = 0.001;
 
 
       AppleFontSmoothing = 1;
@@ -19,8 +19,8 @@
     };
     dock = {
       autohide = true;
-      autohide-delay = "0.24";
-      autohide-time-modifier = "1.0";
+      autohide-delay = 0.24;
+      autohide-time-modifier = 1.0;
       orientation = "bottom";
       show-recents = true;
       showhidden = true;
