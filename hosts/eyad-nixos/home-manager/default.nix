@@ -59,7 +59,7 @@ in
       # qr-code scanner
       cointop
       colorz
-      corefonts
+      # corefonts
       curlFull.dev
       curseofwar
       ddgr
