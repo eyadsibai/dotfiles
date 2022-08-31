@@ -8,6 +8,7 @@
   imports = [
     ./version_control.nix
     ./shellcolor.nix
+    ./rice.nix
   ];
   home.enableNixpkgsReleaseCheck = true;
 

@@ -25,12 +25,13 @@ rec {
       # , system
     , is-wsl ? false
     , is-laptop ? false
-    , colorScheme ? null
+    , colorscheme ? null
+    , wallpaper ? null
     }:
     nixosSystem {
       inherit pkgs;
       specialArgs = {
-        inherit inputs outputs hostname username is-laptop colorScheme;
+        inherit inputs outputs hostname username is-laptop colorscheme wallpaper;
       };
       modules = attrValues (import ../modules/nixos)
         ++ (optional is-wsl inputs.nixos-wsl.nixosModules.wsl)
@@ -53,7 +54,7 @@ rec {
               ]
               ++ attrValues (import ../modules/home-manager);
             };
-            extraSpecialArgs = { inherit inputs outputs hostname username is-laptop colorScheme; };
+            extraSpecialArgs = { inherit inputs outputs hostname username is-laptop colorscheme wallpaper; };
             backupFileExtension = "backup";
           };
         }
@@ -64,12 +65,12 @@ rec {
     { hostname
     , pkgs
     , username
-    , colorScheme ? null
+    , colorscheme ? null
     }:
     darwinSystem {
       inherit pkgs;
       specialArgs = {
-        inherit inputs outputs hostname username colorScheme;
+        inherit inputs outputs hostname username colorscheme;
       };
       modules = attrValues (import ../modules/darwin)
         ++ [
@@ -89,7 +90,7 @@ rec {
               ]
               ++ attrValues (import ../modules/home-manager);
             };
-            extraSpecialArgs = { inherit inputs outputs username colorScheme; };
+            extraSpecialArgs = { inherit inputs outputs username colorscheme; };
             backupFileExtension = "backup";
           };
         }
