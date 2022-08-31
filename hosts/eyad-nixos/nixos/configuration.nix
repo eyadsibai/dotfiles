@@ -161,7 +161,7 @@ in
   users.mutableUsers = false;
   users.users.${user} = {
     isNormalUser = true;
-    shell = pkgs.zsh;
+    shell = pkgs.fish;
     extraGroups = [ "wheel" ]
       ++ (lib.optional config.virtualisation.docker.enable "docker")
       ++ (lib.optional config.virtualisation.podman.enable "podman")
