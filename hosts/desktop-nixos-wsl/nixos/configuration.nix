@@ -1,4 +1,4 @@
-{ lib, pkgs, config, modulesPath, hostname, user, ... }:
+{ lib, pkgs, config, hostname, username, ... }:
 
 {
   imports = [
@@ -7,7 +7,7 @@
   wsl = {
     enable = true;
     automountPath = "/mnt";
-    defaultUser = ${user};
+    defaultUser = username;
     startMenuLaunchers = true;
 
     # Enable native Docker support

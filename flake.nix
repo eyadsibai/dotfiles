@@ -171,8 +171,8 @@
         {
           hostname = "eyad-nixos";
           pkgs = legacyPackages.x86_64-linux;
-          user = "eyad";
           is-laptop = true;
+          colorScheme = inputs.nix-colors.colorSchemes.tokyo-night-storm;
           # system = "x86_64-linux";
         };
 
@@ -180,7 +180,6 @@
         {
           hostname = "desktop-nixos-wsl";
           pkgs = legacyPackages.x86_64-linux;
-          user = "eyad";
           is-wsl = true;
           # system = "x86_64-linux";
         };
@@ -189,14 +188,12 @@
         {
           hostname = "home-server";
           pkgs = legacyPackages.x86_64-linux;
-          user = "eyad";
         };
 
       darwinConfigurations."eyad-mac" = mkDarwinSystem
         {
           hostname = "eyad-mac";
           pkgs = legacyPackages.aarch64-darwin;
-          user = "eyad";
         };
 
     };

@@ -1,6 +1,7 @@
 { config
 , pkgs
 , lib
+, username
 , ...
 }: {
   programs.steam = {
@@ -13,7 +14,7 @@
 
   # programs.gamemode.enable = true;
 
-  home-manager.users.eyad.home.packages = [
+  home-manager.users.${username}.home.packages = [
     pkgs.steam-tui
     pkgs.steamPackages.steamcmd
     pkgs.steamPackages.steam-runtime
