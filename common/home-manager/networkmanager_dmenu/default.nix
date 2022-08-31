@@ -4,7 +4,7 @@
 }:
 let
   dmenu-command = "${ pkgs.rofi }/bin/rofi -dmenu";
-  default-terminal = "${ pkgs.alacritty }/bin/alacritty";
+  default-terminal = "${ pkgs.kitty }/bin/kitty";
 in
 {
   home.packages = [ pkgs.networkmanager_dmenu ];

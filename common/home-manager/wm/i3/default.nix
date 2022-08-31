@@ -22,7 +22,7 @@
             "XF86AudioRaiseVolume" = "exec ${ pkgs.alsaUtils }/bin/amixer set Master 5%+";
             "XF86MonBrightnessDown" = "exec ${ pkgs.brightnessctl }/bin/brightnessctl set 4%-";
             "XF86MonBrightnessUp" = "exec ${ pkgs.brightnessctl }/bin/brightnessctl set 4%+";
-            "${ modifier }+Return" = "exec ${ pkgs.alacritty }/bin/alacritty";
+            "${ modifier }+Return" = "exec ${ pkgs.kitty }/bin/kitty";
             "${ modifier }+d" = "exec ${ pkgs.rofi }/bin/rofi -modi drun -show drun";
             "${ modifier }+Shift+d" = "exec ${ pkgs.rofi }/bin/rofi -show window";
             "${ modifier }+n" = "exec ${ pkgs.networkmanager_dmenu }/bin/networkmanager_dmenu";

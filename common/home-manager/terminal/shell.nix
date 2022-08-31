@@ -10,7 +10,7 @@
   };
 
   programs.zsh = {
-    enable = true;
+    enable = false;
     enableAutosuggestions = true;
     enableSyntaxHighlighting = true;
     enableCompletion = true;

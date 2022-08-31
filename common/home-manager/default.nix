@@ -34,5 +34,6 @@
     ./services.nix
     ./system.nix
     ./terminal
+    ./discord.nix
   ];
 }
