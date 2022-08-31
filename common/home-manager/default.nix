@@ -34,5 +34,6 @@
     ./system.nix
     ./terminal
     ./discord.nix
+    ./gtk
   ];
 }

@@ -236,7 +236,7 @@ in
     "fs.inotify.max_user_watches" = 524288;
     # Allow VS Code to watch more files
   };
-
+  programs.dconf.enable = true;
   services.localtimed.enable = true;
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
