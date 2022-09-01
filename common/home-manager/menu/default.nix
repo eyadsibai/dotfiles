@@ -161,7 +161,7 @@
         };
         "textbox-prompt-colon" = {
           expand = false;
-          str = "=";
+          # str = "=";
           margin = mkLiteral "0px 0.3000em 0.0000em 0.0000em";
           text-color = mkLiteral "inherit";
         };
