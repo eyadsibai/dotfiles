@@ -11,9 +11,10 @@
       rofi_highlight = True
       wifi_chars = ▂▄▆█
       compact = True
+      rofi_obscure = True
 
       [editor]
       terminal = ${config.home.preferredApps.terminal.cmd}
-
+      gui_if_available = True
     '';
 }

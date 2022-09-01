@@ -36,4 +36,6 @@
   services.playerctld.enable = true;
   programs.ncmpcpp = { enable = true; };
 
+
+
 }
