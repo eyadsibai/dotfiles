@@ -1,0 +1,14 @@
+# Find lots more stations at http://www.iheart.com,
+## radios from tunein ... check network in page and the media type changing
+
+MBC FM,http://mbcwanasatv-live-v4-hls.secure.footprint.net/egress/bhandler/mbc/mbcfm4/chunklist_b49152.m3u8
+Rotana - Saudi,http://curiosity.shoutca.st:6035/listen.pls
+Rotana - Jordan,http://188.247.86.67:8002/2
+Misk FM - Istanbul,http://95.173.184.17:9958/
+Alsham talks - Syria,http://asima.out.airtime.pro:8000/asima_a
+Farah FM Syria, http://radio.farah.fm:8015/
+Alif Alif FM, http://www.alifaliffm.com:8800/AlifAlif.mp3
+Mix FM, http://s2.voscast.com:11376/live
+Anghamy, http://108.179.220.88:9302/stream
+Arabica, http://listen.radionomy.com:80/Arabica
+Falastini, http://176.31.107.8:8289/stream
