@@ -108,7 +108,6 @@ in
       nethogs
       nettools
       nitrogen
-      nixpkgs-fmt
       nload
       nyancat
       # the famous rainbow cat!
