@@ -4,7 +4,18 @@
     enable = true;
     plugins = with pkgs; [ rofi-calc rofi-emoji ];
     terminal = "${config.home.preferredApps.terminal.cmd}";
-
+    extraConfig = {
+      modi = "combi";
+      combi-modi = "run,drun,window,ssh";
+      show-icons = true;
+      display-drun = "";
+      display-ssh = "";
+      display-window = "";
+      display-combi = "";
+      hide-scrollbar = true;
+      fake-transparency = true;
+      run-shell-command = "${(config.home.preferredApps.terminal.cmd-spawn "{cmd}")}";
+    };
     theme =
       let
         inherit (config.lib.formats.rasi) mkLiteral;
