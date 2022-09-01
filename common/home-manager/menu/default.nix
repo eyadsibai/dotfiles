@@ -5,8 +5,8 @@
     plugins = with pkgs; [ rofi-calc rofi-emoji ];
     terminal = "${config.home.preferredApps.terminal.cmd}";
     extraConfig = {
-      modi = "combi";
-      combi-modi = "run,drun,window,ssh";
+      modi = "window,drun,ssh,combi";
+      combi-modi = "run,drun,window,emoji,ssh";
       show-icons = true;
       display-drun = "";
       display-ssh = "";
