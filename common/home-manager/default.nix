@@ -12,7 +12,7 @@
     ./networkmanager_dmenu
     ./kitty
     ./spotify
-    ./rofi
+    ./menu
     ./bitwarden
     ./polybar
     ./social
