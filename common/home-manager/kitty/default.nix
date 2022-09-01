@@ -29,6 +29,7 @@ in
       selection_foreground = "#${colors.base00}";
       url_color = "#${colors.base04}";
       cursor = "#${colors.base05}";
+      enable_audio_bell = false;
       active_border_color = "#${colors.base03}";
       inactive_border_color = "#${colors.base01}";
       active_tab_background = "#${colors.base00}";
