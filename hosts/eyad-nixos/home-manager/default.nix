@@ -290,7 +290,7 @@ in
   # https://github.com/jwiegley/nix-config
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";
-  news.display = "silent";
+  # news.display = "silent";
   home.stateVersion = "22.05";
   home.sessionVariables = rec {
     XDG_CACHE_HOME = "\${HOME}/.cache";
