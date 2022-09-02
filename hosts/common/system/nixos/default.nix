@@ -1,8 +1,13 @@
 { config
 , pkgs
+, lib
+, username
 , is-laptop
 , ...
 }:
+let homeConfig = config.home-manager.users.${username};
+in
+
 {
   imports = [ ../. ];
   services.locate.enable = true;
