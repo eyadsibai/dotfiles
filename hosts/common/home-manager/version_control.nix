@@ -22,7 +22,12 @@
     # https://github.com/k1LoW/gh-grep
     # https://github.com/gennaro-tedesco/gh-s
     # https://github.com/gennaro-tedesco/gh-i
-    extensions = [ pkgs.gh-eco pkgs.gh-dash pkgs.gh-ost pkgs.gh-cal ];
+    extensions = with pkgs; [
+      gh-eco
+      gh-dash
+      gh-ost
+      gh-cal
+    ];
 
   };
   programs.git = {
