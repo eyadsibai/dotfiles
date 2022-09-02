@@ -1,4 +1,5 @@
 { pkgs
+, hostname
 , ...
 }:
 let
@@ -10,6 +11,6 @@ in
   ];
   xdg.configFile."ngrok/ngrok.yml".text = ''
     version: "2"
-    authtoken: ${secrets.eyad-nixos.ngrok.authtoken}
+    authtoken: ${secrets.${hostname}.ngrok.authtoken}
   '';
 }

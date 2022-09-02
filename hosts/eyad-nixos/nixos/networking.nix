@@ -2,16 +2,18 @@
 , lib
 , config
 , pkgs
+, hostname
+, username
 , ...
 }:
 let
-  homeConfig = config.home-manager.users.eyad;
+  homeConfig = config.home-manager.users.${username};
 in
 {
   networking = {
 
     #TODO move to wpa https://nixos.org/manual/nixos/stable/index.html#sec-wireless
-    hostName = "eyad-nixos";
+    hostName = hostname;
     networkmanager = {
       enable = true;
       plugins = [ pkgs.networkmanager-openvpn ];
