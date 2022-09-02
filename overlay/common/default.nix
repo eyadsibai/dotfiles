@@ -52,6 +52,8 @@ let
             mkdir -p $out
             ln -s ${ inputs.nix-index-database.legacyPackages.${ prev.system }.database } $out/files
           '';
+
+      # comma = prev.comma.overrideAttrs { pkgs = final; };
     };
 
   stable =
