@@ -91,7 +91,7 @@ rec {
               ]
               ++ attrValues (import ../modules/home-manager);
             };
-            extraSpecialArgs = { inherit inputs outputs username colorscheme; };
+            extraSpecialArgs = { inherit inputs outputs hostname username colorscheme; };
             backupFileExtension = "backup";
           };
         }
