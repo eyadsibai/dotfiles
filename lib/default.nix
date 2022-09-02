@@ -75,6 +75,7 @@ rec {
       modules = attrValues (import ../modules/darwin)
         ++ [
         ../hosts/${hostname}
+        ../hosts/common/system/darwin
         inputs.nur.nixosModules.nur
         inputs.home-manager.darwinModules.home-manager
         {
