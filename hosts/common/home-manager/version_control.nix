@@ -246,10 +246,10 @@
       pull = {
         ff = "only";
         rebase = true;
-        autostash = true;
+        autoStash = true;
       };
       rebase = {
-        autostash = true;
+        autoStash = true;
       };
       apply = {
         whitespace = "fix";
