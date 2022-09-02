@@ -133,7 +133,6 @@
     enableFishIntegration = config.programs.fish.enable;
   };
   programs.ssh = { enable = true; };
-  # programs.starship = { enable = true; };
   programs.taskwarrior = { enable = true; };
   programs.tmux = { enable = true; };
   programs.topgrade = { enable = true; };
