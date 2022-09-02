@@ -41,7 +41,6 @@ let
                 prev.gst_all_1.gst-plugins-good
               ];
 
-              # propagatedBuildInputs = [ prev.ffmpeg ];
             }
           );
 
