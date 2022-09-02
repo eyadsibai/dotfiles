@@ -30,12 +30,10 @@
       };
 
     nixgl = {
-      #OpenGL
       url = "github:guibou/nixGL";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # THEMING
     nix-colors.url = "github:misterio77/nix-colors";
     base16 = {
       url = "github:SenchoPens/base16.nix";
@@ -59,7 +57,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # nixpkgs-wayland.inputs.master.follows = "master";
     yabai-src = {
       url = "github:koekeishiya/yabai";
       flake = false;
@@ -96,9 +93,6 @@
 
       templates = import ./templates;
 
-
-      # Reexport nixpkgs with our overlays applied
-      # Acessible on our configurations, and through nix build, shell, run, etc.
       legacyPackages =
         forAllSystems
           (
@@ -162,7 +156,6 @@
           is-laptop = true;
           colorscheme = "tokyo-night-storm";
           wallpaper = "aurora-borealis-water-mountain";
-          # system = "x86_64-linux";
         };
 
       nixosConfigurations."desktop-nixos-wsl" = mkNixOSSystem
@@ -170,7 +163,6 @@
           hostname = "desktop-nixos-wsl";
           pkgs = legacyPackages.x86_64-linux;
           is-wsl = true;
-          # system = "x86_64-linux";
         };
 
       nixosConfigurations."home-server" = mkNixOSSystem

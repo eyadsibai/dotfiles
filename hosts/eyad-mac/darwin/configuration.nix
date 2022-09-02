@@ -18,7 +18,7 @@
   services.activate-system.enable = true;
   # Create /etc/bashrc that loads the nix-darwin environment.
   programs.zsh = {
-    enable = true;
+    enable = false;
     enableBashCompletion = true;
     enableCompletion = true;
     enableFzfCompletion = true;
@@ -30,7 +30,7 @@
 
   # Add ability to used TouchID for sudo authentication
   # security.pam.enableSudoTouchIdAuth = true;
-  # programs.fish.enable = true;
+  programs.fish.enable = true;
 
   environment.systemPackages = with pkgs; [
     firefox-bin
