@@ -236,6 +236,7 @@
 
       push = {
         default = "current";
+        useBitmaps = false;
       };
       pull = {
         ff = "only";
@@ -274,7 +275,7 @@
         "git://gist.github.com/" = { insteadOf = "gist:"; };
       };
     };
-    # push.useBitmaps = false;
+
 
     # diff tool
     # diff-so-fancy = {
