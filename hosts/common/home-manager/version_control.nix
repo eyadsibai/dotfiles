@@ -218,7 +218,62 @@
       "*.swo"
     ];
 
-    extraConfig = { color = { ui = "auto"; }; };
+    extraConfig = {
+      color = {
+        ui = "auto";
+      };
+      core = {
+        autocrlf = "input";
+        ignorecase = false;
+        whitespace = "space-before-tab,-indent-with-non-tab,trailing-space,cr-at-eol";
+        pager = "less -x4";
+
+      };
+
+      branch = {
+        autosetuprebase = "always";
+      };
+
+      push = {
+        default = "current";
+      };
+      pull = {
+        ff = "only";
+        # rebase = true;
+        rebase = { autostash = true; };
+        autostash = true;
+      };
+      rebase = {
+        autostash = true;
+      };
+      apply = {
+        whitespace = "fix";
+      };
+      help = {
+        autocorrect = 1;
+      };
+
+      gc = {
+        auto = 0;
+      };
+      credentials = {
+        helper = "cache";
+      };
+      url = {
+        "git@github.com:" = {
+          insteadOf = "gh:";
+          pushInsteadOf = [ "github:" "git://github.com/" ];
+
+        };
+        "git@gist.github.com:" = {
+          insteadOf = "gst:";
+          pushInsteadOf = [ "gist:" "git://gist.github.com/" ];
+
+        };
+        "git://github.com/" = { insteadOf = "github:"; };
+        "git://gist.github.com/" = { insteadOf = "gist:"; };
+      };
+    };
     # push.useBitmaps = false;
 
     # diff tool
