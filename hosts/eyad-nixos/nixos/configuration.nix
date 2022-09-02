@@ -20,7 +20,6 @@ in
     ./hardware-configuration.nix
     ./networking.nix
     ./audio.nix
-    # ./fonts.nix
     ./nix.nix
     ./steam.nix
     ../../../common/nixos/samba
