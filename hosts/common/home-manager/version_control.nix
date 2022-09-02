@@ -116,9 +116,9 @@
         # update current branch and master
         # sync = ''
         #       !git update && \
-        #   		git co master && \
-        #   		git pull && \
-        #   		git co @{-1}
+        #       git co master && \
+        #       git pull && \
+        #       git co @{-1}
         # '';
 
         # `git save`
