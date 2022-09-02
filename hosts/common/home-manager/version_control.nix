@@ -245,8 +245,7 @@
       };
       pull = {
         ff = "only";
-        # rebase = true;
-        rebase = { autostash = true; };
+        rebase = true;
         autostash = true;
       };
       rebase = {
