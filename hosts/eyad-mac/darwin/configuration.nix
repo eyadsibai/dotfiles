@@ -18,7 +18,7 @@
   services.activate-system.enable = true;
   # Create /etc/bashrc that loads the nix-darwin environment.
   programs.zsh = {
-    enable = false;
+    enable = true;
     enableBashCompletion = true;
     enableCompletion = true;
     enableFzfCompletion = true;
