@@ -8,7 +8,6 @@
     taps = lib.mkForce [
       "homebrew/bundle"
       "homebrew/cask-fonts"
-
       "homebrew/core"
       "homebrew/services"
     ];
