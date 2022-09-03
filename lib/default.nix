@@ -40,6 +40,7 @@ rec {
         ../hosts/common/system/nixos
         inputs.nixpkgs.nixosModules.notDetected
         inputs.nur.nixosModules.nur
+
         inputs.home-manager.nixosModules.home-manager
         {
           home-manager = {
@@ -51,6 +52,7 @@ rec {
                 ../hosts/common/home-manager/nixos
                 inputs.nix-doom-emacs.hmModule
                 inputs.nix-colors.homeManagerModule
+                inputs.spicetify-nix.homeManagerModule
               ]
               ++ attrValues (import ../modules/home-manager);
             };

@@ -3,7 +3,7 @@
     enable = true;
     package = pkgs.yabai;
     config = {
-#      enableScriptingAddition = true;
+      #      enableScriptingAddition = true;
 
       # layout
       layout = "bsp";
@@ -35,7 +35,6 @@
     };
     extraConfig = ''
       # rules
-      yabai -m rule --add app='Firefox Nightly' manage=on
       yabai -m rule --add app='System Preferences' manage=off
       yabai -m rule --add app='Activity Monitor' manage=off
     '';
