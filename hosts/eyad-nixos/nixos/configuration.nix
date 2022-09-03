@@ -148,6 +148,11 @@ in
     #   enableExtensionPack = true;
     # };
     libvirtd.enable = true;
+    docker.rootless = {
+      enable = false;
+      setSocketVariable = true;
+    };
+
   };
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput = {
