@@ -3,7 +3,8 @@
 , ...
 }:
 {
-  home.packages = [ pkgs.tig pkgs.legit ];
+  home.packages = with pkgs; [ tig 
+legit git-delete-merge-branches ];
   programs.gh = {
     enable = config.programs.git.enable;
     enableGitCredentialHelper = true;
@@ -285,7 +286,8 @@
       bitbucket = {
         user = "eyadsibai";
       };
-
+      init.defaultBranch = "master";
+      feature.manyFiles = true;
     };
 
 
