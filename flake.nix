@@ -40,9 +40,16 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    poetry2nix.url = "github:nix-community/poetry2nix";
+    poetry2nix = {
+      url = "github:nix-community/poetry2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
-    spacebar.url = "github:cmacrae/spacebar";
+    spacebar =
+      {
+        url = "github:cmacrae/spacebar";
+        inputs.nixpkgs.follows = "nixpkgs";
+      };
     nixpkgs-wayland = {
       url = "github:nix-community/nixpkgs-wayland";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -60,6 +67,10 @@
     yabai-src = {
       url = "github:koekeishiya/yabai";
       flake = false;
+    };
+    spicetify-nix = {
+      url = "github:the-argus/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
   outputs =

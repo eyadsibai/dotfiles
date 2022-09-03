@@ -278,6 +278,14 @@
         "git://github.com/" = { insteadOf = "github:"; };
         "git://gist.github.com/" = { insteadOf = "gist:"; };
       };
+
+      github = {
+        user = "eyadsibai";
+      };
+      bitbucket = {
+        user = "eyadsibai";
+      };
+
     };
 
 
