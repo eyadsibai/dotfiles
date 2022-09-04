@@ -4,7 +4,6 @@
 , ...
 }:
 let
-
   modifications =
     final:
     prev:
@@ -42,10 +41,10 @@ let
           system = "x86_64-darwin";
           config = lib.nixConfig;
         })
-        idris2
+        # idris2
         nix-index
         ;
     });
 
 in
-inputs.nixpkgs.lib.composeManyExtensions [ apple-silicon ]
+inputs.nixpkgs.lib.composeManyExtensions [ modifications apple-silicon ]
