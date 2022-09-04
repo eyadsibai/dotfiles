@@ -9,6 +9,7 @@
     ../../../common/home-manager/terminal
     ../../../common/home-manager/kitty
     ../../../common/home-manager/micro
+    
   ];
 
   # programs.firefox.package = pkgs.firefox-bin;
