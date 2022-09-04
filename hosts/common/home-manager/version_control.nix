@@ -3,8 +3,10 @@
 , ...
 }:
 {
-  home.packages = with pkgs; [ tig 
-legit git-delete-merge-branches ];
+  home.packages = with pkgs; [ tig
+legit
+#git-delete-merge-branches
+];
   programs.gh = {
     enable = config.programs.git.enable;
     enableGitCredentialHelper = true;
