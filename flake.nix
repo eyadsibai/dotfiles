@@ -72,6 +72,11 @@
       url = "github:the-argus/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    polybar-themes = {
+      url = "github:adi1090x/polybar-themes";
+      flake = false;
+    };
   };
   outputs =
     inputs:
