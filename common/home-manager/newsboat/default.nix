@@ -13,7 +13,7 @@
     reloadTime = 60;
     extraConfig =
       ''
-        cache-file "~/.local/share/newsboat/cache.db"
+        cache-file "${config.xdg.dataHome}/newsboat/cache.db"
         prepopulate-query-feeds yes
 
         external-url-viewer "${pkgs.urlscan}/bin/urlscan -dc -r '${pkgs.linkhandler}/bin/linkhandler {}'"
@@ -24,7 +24,7 @@
 
 
         podcast-auto-enqueue yes
-        download-path "~/podcasts/%h/%n"
+        download-path "${config.xdg.configHome}/podcasts/%h/%n"
         player "${pkgs.mpg123}/bin/mpg123"
 
 
