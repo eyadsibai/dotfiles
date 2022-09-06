@@ -1,4 +1,8 @@
-{ inputs, pkgs, ... }: {
+{ inputs
+, pkgs
+, config
+, ...
+}: {
   # TODO https://github.com/LukeSmithxyz/voidrice/blob/master/.config/newsboat/config
   programs.newsboat = {
     enable = true;
@@ -417,7 +421,7 @@
 
   home.packages = [
     (pkgs.writeShellScriptBin "newsboat-yt" ''
-      ${pkgs.newsboat}/bin/newsboat -C ~/.config/newsboat/ytconfig -u ~/.config/newsboat/yturls
+      ${pkgs.newsboat}/bin/newsboat -C ${config.xdg.configHome}/newsboat/ytconfig -u ${config.xdg.configHome}/newsboat/yturls
     '')
     pkgs.linkhandler # maybe not needed here
   ];
