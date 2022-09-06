@@ -1,6 +1,7 @@
 { pkgs
 , config
 , inputs
+, lib
 , ...
 }:
 let
@@ -9,13 +10,7 @@ let
 
 in
 {
-  # home.packages = [
-  #   (pkgs.polybarFull.override
-  #     {
-  #       i3GapsSupport = true;
-  #       alsaSupport = true;
-  #     })
-  # ];
+
   services.polybar = {
     enable = true;
     package =
@@ -29,9 +24,15 @@ in
           githubSupport = true;
         };
 
-    extraConfig = builtins.readFile ./config.ini;
-    # config = { };
-    script = "polybar -q main 2>${config.xdg.configHome}/polybar/logs/main.log & disown";
+    extraConfig = (lib.concatStringsSep "\n" [
+      (builtins.readFile ./bars.ini)
+      (builtins.readFile ./modules.ini)
+      (builtins.readFile ./user_modules.ini)
+
+    ]);
+
+
+    script = "polybar -q main &";
     config = {
       "color" = {
         background = "#${colors.base00}";
@@ -57,6 +58,52 @@ in
         gray = "#9E9E9E";
         indigo = "#6C77BB";
         blue-gray = "#6D8895";
+      };
+      "global/wm" =
+        {
+          margin-bottom = 0;
+          margin-top = 0;
+        };
+      "bar/main" = {
+
+        monitor-strict = false;
+        override-redirect = false;
+        bottom = false;
+        fixed-center = true;
+        width = "100%";
+        height = 34;
+        offset-x = "0%";
+        offset-y = "0%";
+        background = "\${color.background}";
+        foreground = "\${color.foreground}";
+        radius-top = 0;
+        radius-bottom = 0;
+        line-size = 5;
+        line-color = "\${color.background}";
+        border-bottom-size = 0;
+        border-bottom-color = "\${color.primary}";
+        padding = 0;
+        module-margin-left = 0;
+        module-margin-right = 0;
+        font-0 = "Terminus:size=10;3";
+        font-1 = "waffle:size=10;3";
+        modules-left = "sep launcher sep workspaces sep mpd";
+        modules-center = "title";
+        modules-right = "color-switch sep alsa sep battery sep network sep date sep sysmenu sep";
+        separator = "";
+        dim-value = 1;
+        enable-ipc = true;
+      };
+      "settings" = {
+        throttle-output = 5;
+        throttle-output-for = 10;
+        screenchange-reload = false;
+        compositing-background = "source";
+        compositing-foreground = "over";
+        compositing-overline = "over";
+        compositing-underline = "over";
+        compositing-border = "over";
+        pseudo-transparency = false;
       };
     };
   };
@@ -487,11 +534,6 @@ in
   # };
 
 
-  xdg.configFile."polybar/bars.ini".source = ./bars.ini;
-
-  xdg.configFile."polybar/modules.ini".source = ./modules.ini;
-
-  xdg.configFile."polybar/user_modules.ini".source = ./user_modules.ini;
 
 
   # xdg.configFile."polybar/colors.ini".source = ./colors.ini;
@@ -499,7 +541,5 @@ in
   xdg.configFile."polybar/scripts".source = ./scripts;
   xdg.configFile."polybar/scripts".recursive = true;
 
-
-  xdg.configFile."polybar/logs/main.log".text = "";
 
 }
