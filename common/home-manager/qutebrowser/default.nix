@@ -11,6 +11,25 @@ in
     loadAutoconfig = true;
     settings = {
       content.javascript.can_access_clipboard = true;
+      content = {
+        blocking.enable = true;
+        blocking.hosts.lists = [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" ];
+        blocking.method = "both";
+        blocking.adblock.lists = [
+          "https://easylist.to/easylist/easylist.txt"
+          "https://easylist.to/easylist/easyprivacy.txt"
+          "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
+          "https://easylist.to/easylist/fanboy-annoyance.txt"
+          "https://secure.fanboy.co.nz/fanboy-annoyance.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/annoyances.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters-2020.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/unbreak.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/resource-abuse.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/privacy.txt"
+          "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
+          "https://www.i-dont-care-about-cookies.eu/abp/"
+        ];
+      };
       tabs = {
         show = "multiple";
         position = "left";
