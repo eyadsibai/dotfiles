@@ -11,9 +11,6 @@
       {
         fonts = [ "Terminus" ];
       })
-    termsyn
-    tamsyn
-    fantasque-sans-mono
   ];
 
   fontProfiles = {
@@ -29,27 +26,6 @@
       family = "Fira Sans";
       package = pkgs.fira;
     };
-    # weather-icons = {
-    #   family = "Weather Icons";
-    #   package = pkgs.weather-icons;
-    # };
-    # waffle-siji-icons {
-    #   family = "waffle";
-    #   package = pkgs.waffle-siji;
-    # };
-    # icomoon-feather-icons = {
-    #   family = "feather";
-    #   package = pkgs.
-    # };
-    # material-icons = {
-    #   family = "";
-    #   package = pkgs.material-icons;
-    # };
-
-    # material-design-icons = {
-    #   family = "";
-    #   package = pkgs.material-design-icons;
-    # };
   };
 
 }
