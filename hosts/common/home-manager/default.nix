@@ -9,6 +9,7 @@
     ./version_control.nix
     ./shellcolor.nix
     ./rice.nix
+    ./fonts.nix
   ];
   home.enableNixpkgsReleaseCheck = true;
 
@@ -19,19 +20,6 @@
     comma
     ncdu # disk space info (a better du)
   ];
-
-  fontProfiles = {
-    enable = true;
-    monospace = {
-      family = "FiraCode Nerd Font Mono";
-      package = pkgs.nerdfonts.override { fonts = [ "FiraCode" ]; };
-      #      package = pkgs.fira-code-symbols;
-    };
-    regular = {
-      family = "Fira Sans";
-      package = pkgs.fira;
-    };
-  };
 
   programs.exa = {
     # better 'ls'

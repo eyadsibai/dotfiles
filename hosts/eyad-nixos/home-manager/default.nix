@@ -11,6 +11,7 @@ let
   systemConfig = outputs.nixosConfigurations.${hostname}.config;
   inherit (config.colorscheme) colors;
 
+
 in
 {
   # inherit secrets;
@@ -18,6 +19,7 @@ in
     ../../../common/home-manager/wm/i3
     ../../../common/home-manager
   ];
+
 
 
   home.packages =

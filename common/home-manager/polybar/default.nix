@@ -159,11 +159,6 @@ in
   #     };
   #   "module/battery" =
   #     {
-  #       type = "internal/battery";
-  #       full-at = 101;
-  #       # to disable it
-  #       battery = "BAT0";
-  #       adapter = "AC0";
   #       poll-interval = 2;
   #       label-full = " 100%";
   #       format-full-padding = 1;
@@ -203,17 +198,7 @@ in
   #       format-padding = 1;
   #       label = "CPU %percentage%%";
   #     };
-  #   "module/date" =
-  #     {
-  #       type = "internal/date";
-  #       interval = "1.0";
-  #       time = "%H:%M:%S";
-  #       time-alt = "%Y-%m-%d%";
-  #       format = "<label>";
-  #       format-padding = 4;
-  #       format-foreground = "${colors.base05}";
-  #       label = "%time%";
-  #     };
+
   #   "module/i3" =
   #     {
   #       type = "internal/i3";
