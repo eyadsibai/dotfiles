@@ -59,7 +59,8 @@ in
       nix_shell = {
         format = "[$symbol(-> $name \\(develop\\))]($style)";
         impure_msg = "";
-        symbol = " ";
+        # symbol = " ";
+        symbol = " ";
         style = "bold red";
       };
       custom = {

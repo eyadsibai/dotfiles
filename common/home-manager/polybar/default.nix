@@ -68,8 +68,8 @@ in
           type = "custom/script";
           exec = "${ pkgs.coreutils }/bin/uname -r | ${ pkgs.coreutils }/bin/cut -d- -f1";
           interval = 999999999;
-          format = " <label>";
-          format-font = 1;
+          format = "%{T3}%{T-} <label>";
+          format-font = 3;
           format-foreground = "\${colors.background}";
           format-background = "\${color.secondary}";
           format-padding = 1;
