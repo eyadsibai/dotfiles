@@ -27,20 +27,6 @@
       };
     };
 
-  # [dmenu]
-  # dmenu_command =
-  # rofi_highlight = True
-  # wifi_chars = ▂▄▆█
-  # compact = True
-  # list_saved = False
-
-  # [dmenu_passphrase]
-  # obscure = True
-
-  # [editor]
-  # terminal = ${config.home.preferredApps.terminal.cmd}
-  # gui_if_available = True
-  # '';
 
   xdg.configFile."networkmanager-dmenu/networkmenu.rasi".source = ./networkmenu.rasi;
   xdg.configFile."networkmanager-dmenu/colors.rasi".source = ./colors.rasi;
