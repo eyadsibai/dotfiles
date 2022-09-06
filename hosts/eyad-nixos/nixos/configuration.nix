@@ -22,6 +22,7 @@ in
     ./audio.nix
     ./nix.nix
     ./steam.nix
+    # ./fonts.nix
     ../../../common/nixos/samba
   ];
 
@@ -95,7 +96,7 @@ in
   # hardware.ledger.enable = true;
   # hardware.cpu.amd.updateMicrocode = true;
   hardware.enableAllFirmware = true;
-  time.timeZone = "Asia/Riyadh";
+  # time.timeZone = "Asia/Riyadh";
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
   console = {

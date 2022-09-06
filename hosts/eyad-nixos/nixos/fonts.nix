@@ -16,9 +16,8 @@
       # line-awesome
       ## Fonts?
 
-
-      cascadia-code
-      (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
+      # cascadia-code
+      # (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })
     ];
   };
 }

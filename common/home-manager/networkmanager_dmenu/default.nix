@@ -16,17 +16,20 @@ in
         dmenu_command = "${config.home.preferredApps.menu.dmenu-cmd} -theme ${config.xdg.configHome}/networkmanager-dmenu/networkmenu.rasi";
         rofi_highlight = false;
         wifi_chars = "▂▄▆█";
+        pinentry = "${pkgs.pinentry-rofi}/bin/pinentry-rofi";
         compact = true;
         list_saved = false;
       };
-      dmenu_passphrase = {
-        obscure = true;
-        rofi_obscure = true;
-      };
-      editor = {
-        terminal = "${config.home.preferredApps.terminal.cmd}";
-        gui_if_available = true;
-      };
+      dmenu_passphrase =
+        {
+          obscure = true;
+          rofi_obscure = true;
+        };
+      editor =
+        {
+          terminal = "${config.home.preferredApps.terminal.cmd}";
+          gui_if_available = true;
+        };
     };
 
 
