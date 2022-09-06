@@ -14,5 +14,6 @@
   sherlock = pkgs.callPackage ./sherlock { };
   shellcolord = pkgs.callPackage ./shellcolord { };
   wallpapers = pkgs.callPackage ./wallpapers { };
+  icomoon-feather-ttf = pkgs.callPackage ./icomoon-feather-ttf { };
 
 }

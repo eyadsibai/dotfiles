@@ -11,7 +11,7 @@ let
 in
 {
 
-  home.packages = [ ];
+  home.packages = [ pkgs.terminus_font ];
 
   services.polybar = {
     enable = true;
@@ -62,8 +62,24 @@ in
         indigo = "#6C77BB";
         blue-gray = "#6D8895";
       };
+
+      "module/distro-icon" =
+        {
+          type = "custom/script";
+          exec = "${ pkgs.coreutils }/bin/uname -r | ${ pkgs.coreutils }/bin/cut -d- -f1";
+          interval = 999999999;
+          format = " <label>";
+          format-font = 1;
+          format-foreground = "\${colors.background}";
+          format-background = "\${color.secondary}";
+          format-padding = 1;
+          label = "%output%";
+          # label-font = 1;
+        };
     };
   };
+
+
   # config = {
   #   "global/wm" = {
   #     margin-bottom = 0;
@@ -126,18 +142,7 @@ in
   #       pseudo-transparency = "false";
   #     };
   #   #--------------------MODULES--------------------"
-  #   "module/distro-icon" =
-  #     {
-  #       type = "custom/script";
-  #       exec = "${ pkgs.coreutils }/bin/uname -r | ${ pkgs.coreutils }/bin/cut -d- -f1";
-  #       interval = 999999999;
-  #       format = " <label>";
-  #       format-foreground = "${colors.base00}";
-  #       format-background = "secondary";
-  #       format-padding = 1;
-  #       label = "%output%";
-  #       label-font = 2;
-  #     };
+
   #   "module/audio" =
   #     {
   #       type = "internal/alsa";
