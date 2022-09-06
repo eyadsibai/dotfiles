@@ -3,6 +3,8 @@
 , lib
 , ...
 }:
+let inherit (config.colorscheme) colors;
+in
 {
   home.packages = [
     pkgs.networkmanager_dmenu
@@ -29,6 +31,16 @@
 
 
   xdg.configFile."networkmanager-dmenu/networkmenu.rasi".source = ./networkmenu.rasi;
-  xdg.configFile."networkmanager-dmenu/colors.rasi".source = ./colors.rasi;
+  xdg.configFile."networkmanager-dmenu/colors.rasi".text = ''
+      * {
+      al:   #00000000;
+      bg:   #${colors.base00};
+      bga:  #${colors.base03};
+      fga:  #${colors.base0D};
+      fg:   #${colors.base05};
+      ac:   #${colors.base02};
+      se:   #6D889540;
+    }
+  '';
 
 }
