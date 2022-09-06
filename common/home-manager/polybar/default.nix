@@ -23,10 +23,42 @@ in
         {
           i3GapsSupport = true;
           alsaSupport = true;
+          iwSupport = true;
+          pulseSupport = true;
+          mpdSupport = true;
+          githubSupport = true;
         };
-    config = { };
-    script = "polybar -q main -c ${config.xdg.configHome}/polybar/blocks/config.ini &";
 
+    extraConfig = builtins.readFile ./config.ini;
+    # config = { };
+    script = "polybar -q main 2>${config.xdg.configHome}/polybar/logs/main.log & disown";
+    config = {
+      "color" = {
+        background = "#${colors.base00}";
+        background-alt = "#${colors.base03}";
+        foreground = "#${colors.base05}";
+        foreground-alt = "#${colors.base0D}";
+        primary = "#${colors.base02}";
+
+        white = "#FFFFFF";
+        black = "#000000";
+        red = "#EC7875";
+        pink = "#EC6798";
+        purple = "#BE78D1";
+        blue = "#75A4CD";
+        cyan = "#00C7DF";
+        teal = "#00B19F";
+        green = "#61C766";
+        lime = "#B9C244";
+        yellow = "#EBD369";
+        amber = "#EDB83F";
+        orange = "#E57C46";
+        brown = "#AC8476";
+        gray = "#9E9E9E";
+        indigo = "#6C77BB";
+        blue-gray = "#6D8895";
+      };
+    };
   };
   # script = "polybar -q -r top & polybar -q -r bottom &";
   # config = {
@@ -455,40 +487,19 @@ in
   # };
 
 
-  xdg.configFile."polybar/blocks/bars.ini".text = (builtins.replaceStrings
-    [ "~/.config" ] [ "${config.xdg.configHome}" ]
-    (builtins.readFile "${inputs.polybar-themes}/bitmap/blocks/bars.ini"));
-  xdg.configFile."polybar/blocks/modules.ini".text = (builtins.replaceStrings
-    [ "~/.config" ] [ "${config.xdg.configHome}" ]
-    (builtins.readFile "${inputs.polybar-themes}/bitmap/blocks/modules.ini"));
-  xdg.configFile."polybar/blocks/user_modules.ini".text = (builtins.replaceStrings
-    [ "~/.config" ] [ "${config.xdg.configHome}" ]
-    (builtins.readFile "${inputs.polybar-themes}/bitmap/blocks/user_modules.ini"));
+  xdg.configFile."polybar/bars.ini".source = ./bars.ini;
+
+  xdg.configFile."polybar/modules.ini".source = ./modules.ini;
+
+  xdg.configFile."polybar/user_modules.ini".source = ./user_modules.ini;
 
 
+  # xdg.configFile."polybar/colors.ini".source = ./colors.ini;
 
-  xdg.configFile."polybar/blocks/colors.ini".text =
-    (builtins.replaceStrings
-      [ "background-alt = #C4C7C5" ] [ "background-alt = #${colors.base03}" ]
-      (builtins.replaceStrings
-        [ "foreground-alt = #C4C7C5" ] [ "foreground-alt = #${colors.base0D}" ]
-        (builtins.replaceStrings
-          [ "primary = #B4BC67" ] [ "primary = #${colors.base02}" ]
-          (builtins.replaceStrings
-            [ "foreground = #1C1E20" ] [ "foreground = #${colors.base05}" ]
-            (builtins.replaceStrings
-              [ "background = #2f343f" ] [ "background = #${colors.base00}" ]
-              (builtins.readFile "${inputs.polybar-themes}/bitmap/blocks/colors.ini"
-              )
-            )
-          )
-        )
-      )
-    );
+  xdg.configFile."polybar/scripts".source = ./scripts;
+  xdg.configFile."polybar/scripts".recursive = true;
 
-  xdg.configFile."polybar/blocks/scripts".source = "${inputs.polybar-themes}/bitmap/blocks/scripts";
-  xdg.configFile."polybar/blocks/scripts".recursive = true;
 
-  xdg.configFile."polybar/blocks/config.ini".source = "${inputs.polybar-themes}/bitmap/blocks/config.ini";
+  xdg.configFile."polybar/logs/main.log".text = "";
 
 }
