@@ -1,4 +1,0 @@
-browser mpv
-auto-reload yes
-
-cache-file "~/.local/share/newsboat/ytcache.db"
