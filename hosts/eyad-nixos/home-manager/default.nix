@@ -18,6 +18,7 @@ in
   imports = [
     ../../../common/home-manager/wm/i3
     ../../../common/home-manager
+    ../../optional/home-manager/kaggle
   ];
 
 
