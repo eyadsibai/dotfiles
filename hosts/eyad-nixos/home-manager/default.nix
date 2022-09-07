@@ -290,7 +290,7 @@ in
         font = "${config.fontProfiles.regular.family} 12";
         sticky_history = "yes";
         history_length = 20;
-        dmenu = "${config.preferredApps.menu.dmenu-cmd}";
+        dmenu = "${config.home.preferredApps.menu.dmenu-cmd}";
         browser = "/usr/bin/brave -new-tab"; # TODO
         always_run_script = true;
         title = "Dunst";
