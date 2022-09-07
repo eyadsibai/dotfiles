@@ -2,9 +2,7 @@
 
   imports = [
     ./nix-index
-    ./micro
     ./picom
-    ./mpv
     ./newsboat
     ./ngrok
     ./networkmanager_dmenu
@@ -18,9 +16,7 @@
     ./sxhkd
     ./zathura
     ./xcape
-    ./feh
     ./unclutter
-    ./flameshot
     ./direnv
     ./htop
     ./udiskie

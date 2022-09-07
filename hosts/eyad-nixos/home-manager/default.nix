@@ -25,6 +25,7 @@ in
     ../../optional/home-manager/qutebrowser
     ../../optional/home-manager/mpv
     ../../optional/home-manager/neovim
+    ../../optional/home-manager/htop
   ];
 
 
