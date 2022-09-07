@@ -1,8 +1,6 @@
 { pkgs, secrets, ... }: {
 
   imports = [
-    ./qutebrowser
-    ./firefox
     ./nix-index
     ./micro
     ./picom

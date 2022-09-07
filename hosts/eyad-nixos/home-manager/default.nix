@@ -19,6 +19,12 @@ in
     ../../../common/home-manager/wm/i3
     ../../../common/home-manager
     ../../optional/home-manager/kaggle
+    ../../optional/home-manager/firefox
+    ../../optional/home-manager/micro
+    ../../optional/home-manager/flameshot
+    ../../optional/home-manager/qutebrowser
+    ../../optional/home-manager/mpv
+    ../../optional/home-manager/neovim
   ];
 
 
