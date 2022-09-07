@@ -3,10 +3,11 @@
 , ...
 }:
 let
-  secrets = import ../../../secrets;
+  secrets = import ../../../../secrets;
 in
 {
-  xdg.configFile.".kaggle/kaggle.json" =
+  home.packages = [ pkgs.kaggle ];
+  xdg.configFile.".kaggle/kaggle.json".text =
     lib.generators.toJSON { } {
       username = "eyadsibai";
       key = "${secrets.kaggle.key}";
