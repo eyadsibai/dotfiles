@@ -26,6 +26,35 @@ in
     ../../optional/home-manager/mpv
     ../../optional/home-manager/neovim
     ../../optional/home-manager/htop
+    ../../optional/home-manager/nix-index
+    ../../optional/home-manager/picom
+    ../../optional/home-manager/newsboat
+    ../../optional/home-manager/ngrok
+    ../../optional/home-manager/networkmanager_dmenu
+    ../../optional/home-manager/kitty
+    ../../optional/home-manager/spotify
+    ../../optional/home-manager/menu
+    ../../optional/home-manager/bitwarden
+    ../../optional/home-manager/polybar
+    ../../optional/home-manager/social
+    ../../optional/home-manager/accounts
+    ../../optional/home-manager/sxhkd
+    ../../optional/home-manager/zathura
+    ../../optional/home-manager/xcape
+    ../../optional/home-manager/unclutter
+    ../../optional/home-manager/direnv
+    ../../optional/home-manager/htop
+    ../../optional/home-manager/udiskie
+    ../../optional/home-manager/terminal
+    ../../optional/home-manager/discord
+    ../../optional/home-manager/gtk
+    ./development.nix
+    ./email_cal_rss.nix
+    ./media.nix
+    ./office.nix
+    ./services.nix
+    ./system.nix
+
   ];
 
 
