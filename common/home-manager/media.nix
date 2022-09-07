@@ -8,7 +8,6 @@
       cava
       cli-visualizer
       cmus
-      pyradio
       vlc
       # media player
       mps-youtube
@@ -35,8 +34,5 @@
   services.mpdris2.enable = true;
   services.playerctld.enable = true;
   programs.ncmpcpp = { enable = true; };
-
-  xdg.configFile."pyradio/config".source = ./pyradio_config;
-  xdg.configFile."pyradio/stations.csv".source = ./stations.csv;
 
 }
