@@ -5,7 +5,6 @@
 }:
 {
   flakify = pkgs.callPackage ./flakify { };
-  whatismyip = pkgs.callPackage ./whatismyip { };
   linkhandler = pkgs.callPackage ./linkhandler { };
   apple-color-emoji = pkgs.callPackage ./apple-color-emoji { };
   rgf = pkgs.callPackage ./rgf { };

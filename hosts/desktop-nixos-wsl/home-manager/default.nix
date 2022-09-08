@@ -3,11 +3,7 @@
 , pkgs
 , ...
 }:
-let
-  secrets = import ../../../secrets;
-in
 {
-  # inherit secrets;
   imports = [
   ];
 

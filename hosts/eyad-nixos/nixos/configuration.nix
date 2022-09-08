@@ -7,7 +7,6 @@
 , ...
 }:
 let
-  secrets = import ../../../secrets;
   homeConfig = config.home-manager.users.${username};
 in
 {
@@ -176,7 +175,7 @@ in
       ++ (lib.optional config.services.mysql.enable "mysql")
       ++ (lib.optional config.networking.networkmanager.enable "networkmanager");
 
-    hashedPassword = secrets.${hostname}.passwd.${username};
+    hashedPassword = "${config.secrets.${hostname}.passwd.${username}}";
 
     openssh.authorizedKeys.keys = [
       "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDeo6sUBHLNcMFePaungk359lteQLCaKyufYm7og8sYCuh50mWPcyTXqvMWURHLiGRMwrBg4re9JvMkYgCiSWowA5YOwhQdA460NWgBP7ctqHqE33v5/2/aNB/QngjcgrSUCsJfQTxNq6eqznkwdRc1b9JyyKL30TyGS8w8Cao+h+/pagI01SWpmUczIOmbS6R42gfAGcWd41/ZiHWGy3lNC22a/E9H4NFPu/G+n6BmHYTX8Z1Of3Etmk3e2gRybLpt/kt9sT/SawmVC4Y3YqUHRYc7Hua8RnpT35bYEAjVZcHqg2N4z9aYz1L8DA2qZJeLTbQlWfTERV46XaazUfASwnVEmUnV62UdEYvKWCpOFkn752dT/IE43BjrjscH5Vvk3ptIXrs/HjvaO9h6ghNccp3wz337eiqcY3sy89e6S56zNmNETDO5tNdrjSM031u9LJ/7leb540/xlBhcijwXlwgwEi1diOy8gNnV1kSY3MByyDgrN6QF2HUckaOOrhU= eyada@desktop"
