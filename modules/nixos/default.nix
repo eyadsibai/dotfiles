@@ -4,4 +4,6 @@
   # List your module files here
   # my-module = import ./my-module.nix;
   networkmanager-profiles = import ./networkmanager-profiles.nix;
+  secrets = import ./secrets.nix;
+
 }

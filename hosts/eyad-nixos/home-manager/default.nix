@@ -7,14 +7,11 @@
 , ...
 }:
 let
-  secrets = import ../../../secrets;
   systemConfig = outputs.nixosConfigurations.${hostname}.config;
   inherit (config.colorscheme) colors;
 
-
 in
 {
-  # inherit secrets;
   imports = [
     ../../common/optional/home-manager/wm/i3
     ../../common/optional/home-manager/kaggle
@@ -66,7 +63,6 @@ in
       git-crypt
       ### PERSONAL
       flakify
-      whatismyip
       #  gitAndTools.grv
       #  mopidy-spotify
       graphviz

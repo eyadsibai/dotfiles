@@ -1,5 +1,5 @@
 { pkgs
-, secrets
+, config
 , ...
 }:
 {
@@ -14,7 +14,7 @@
 
   accounts.email.accounts = {
     "work" = {
-      address = secrets.email.work.address;
+      address = "${config.secrets.email.work.address}";
       primary = true; # needs to be rmeoved later
       # himalaya = {
 
@@ -23,7 +23,7 @@
       # };
 
       imap = {
-        host = secrets.email.work.host;
+        host = "${config.secrets.email.work.host}";
         tls.enable = true;
       };
     };
