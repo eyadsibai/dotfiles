@@ -1,6 +1,7 @@
 { lib
 , config
 , pkgs
+, hostname
 , ...
 }:
 let
@@ -42,7 +43,7 @@ in
         facebook-container
         ff2mpv
         floccus
-        fraidycat
+        # fraidycat
 
         (
           buildFirefoxXpiAddon
@@ -90,15 +91,13 @@ in
         "browser.disableResetPrompt" = true;
         "browser.shell.checkDefaultBrowser" = false;
         "browser.shell.defaultBrowserCheckCount" = 1;
-        "browser.startup.homepage" = "https://start.duckduckgo.com";
+        # "browser.startup.homepage" = "https://start.duckduckgo.com";
         "browser.topsites.blockedSponsors" = ''["amazon"]'';
         "browser.newtabpage.activity-stream.enabled" = false;
         "browser.newtabpage.activity-stream.feeds.section.topstories" = false;
-        "browser.newtabpage.activity-stream.telemetry" = false;
-        "browser.ping-centre.telemetry" = false;
+
         "browser.safebrowsing.malware.enabled" = true;
         "browser.safebrowsing.phishing.enabled" = true;
-        "browser.send_pings" = false;
         "device.sensors.enabled" = false;
         "dom.battery.enabled" = false;
         "dom.webaudio.enabled" = false;
@@ -107,13 +106,27 @@ in
         "browser.uiCustomization.state" =
           ''
             {"placements":{"widget-overflow-fixed-list":["ublock0_raymondhill_net-browser-action"],"nav-bar":["back-button","forward-button","stop-reload-button","home-button","urlbar-container","downloads-button","library-button"],"toolbar-menubar":["menubar-items"],"TabsToolbar":["tabbrowser-tabs","new-tab-button","alltabs-button"],"PersonalToolbar":["import-button","personal-bookmarks"]},"seen":["save-to-pocket-button","developer-button","ublock0_raymondhill_net-browser-action"],"dirtyAreaCache":["nav-bar","PersonalToolbar","toolbar-menubar","TabsToolbar","widget-overflow-fixed-list"],"currentVersion":17,"newElementCount":3}'';
+        "browser.uidensity" = 1;
+        "browser.bookmarks.showMobileBookmarks" = true;
+        "browser.ctrlTab.recentlyUsedOrder" = false;
+        "browser.proton.enabled" = true;
+        "browser.newtabpage.enabled" = true;
+        "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar" =
+          false;
+        "browser.search.hiddenOneOffs" = "Google,Yahoo,Bing,Amazon.com,Twitter";
+        "browser.search.region" = "US";
+        "browser.search.suggest.enabled" = true;
+        "browser.send_pings" = false;
+        "browser.startup.homepage" = "https://lobste.rs";
         "dom.security.https_only_mode" = true;
         "identity.fxaccounts.enabled" = false;
-        "privacy.trackingprotection.enabled" = true;
-        "signon.rememberSignons" = false;
         "security.ssl.errorReporting.automatic" = false;
-        "services.sync.engine.addons" = false;
         "services.sync.addons.ignoreUserEnabledChanges" = true;
+
+        # Telemetry
+        "browser.newtabpage.activity-stream.feeds.telemetry" = false;
+        "browser.newtabpage.activity-stream.telemetry" = false;
+        "browser.ping-centre.telemetry" = false;
         "toolkit.telemetry.archive.enabled" = false;
         "toolkit.telemetry.bhrPing.enabled" = false;
         "toolkit.telemetry.enabled" = false;
@@ -125,10 +138,57 @@ in
         "toolkit.telemetry.shutdownPingSender.enabled" = false;
         "toolkit.telemetry.unified" = false;
         "toolkit.telemetry.updatePing.enabled" = false;
+
+        ## privacy
+        "privacy.donottrackheader.enabled" = true;
+        "privacy.donottrackheader.value" = 1;
+        "privacy.trackingprotection.enabled" = true;
+        "privacy.trackingprotection.socialtracking.enabled" = true;
+        "privacy.trackingprotection.socialtracking.annotate.enabled" = true;
+        "network.dns.disablePrefetch" = true;
+
+        "browser.urlbar.placeholderName" = "…";
+        "browser.urlbar.showSearchSuggestionsFirst" = false;
+        "browser.urlbar.suggest.calculator" = true;
+        "browser.urlbar.suggest.history" = true;
+
+        "devtools.theme" = config.colorscheme.kind;
+
+        # FIXME: use global font defaults
+        "font.default.x-western" = "sans-serif";
+        "font.name.monospace.x-western" = "PragmataPro";
+        "font.name.sans-serif.x-western" = "IBM Plex Sans";
+        "font.name.serif.x-western" = "IBM Plex Serif";
+        "font.size.monospace.x-western" = 18;
+
+
+        "identity.fxaccounts.account.device.name" = hostname;
+
+        # CSS blur filter in v88+
+        "layout.css.backdrop-filter.enabled" = true;
+
+
+        "security.enterprise_roots.enabled" = true;
+        "services.sync.declinedEngines" = "addons,prefs,creditcards,addresses,tabs,passwords";
+        "services.sync.engine.addons" = false;
+        "services.sync.engine.passwords" = false;
+        "services.sync.engine.prefs" = false;
+        "services.sync.engineStatusChanged.addons" = true;
+        "services.sync.engineStatusChanged.prefs" = true;
+        "signon.rememberSignons" = false;
+
+        # https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-context-properties
+        "svg.context-properties.content.enabled" = true;
+
+        # Enable custom stylesheets.
+        "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
+
+
+
         "gfx.webrender.compositor.force-enabled" = true;
         "browser.cache.disk.enable" = false;
         "browser.cache.memory.enable" = true;
-        "extensions.pocket.enabled" = false;
+        "extensions.pocket.enabled" = true;
         "media.ffmpeg.vaapi.enabled" = true;
         "media.ffvpx.enabled" = true;
         "media.navigator.mediadatadecoder_vpx_enabled" = true;
