@@ -50,6 +50,7 @@ in
     ../../common/optional/home-manager/office.nix
     ../../common/optional/home-manager/services.nix
     ../../common/optional/home-manager/system.nix
+    ../../common/optional/home-manager/khard
 
   ];
 

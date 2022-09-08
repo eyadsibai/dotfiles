@@ -199,6 +199,10 @@ in
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
+
+  environment.enableAllTerminfo = true;
+
+
   programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
@@ -233,6 +237,22 @@ in
         '';
     }
   ];
+
+  security.pam.loginLimits = [
+    {
+      domain = "@wheel";
+      item = "nofile";
+      type = "soft";
+      value = "524288";
+    }
+    {
+      domain = "@wheel";
+      item = "nofile";
+      type = "hard";
+      value = "1048576";
+    }
+  ];
+
   # No access time and continuous TRIM for SSD
   fileSystems."/".options = [ "noatime" "discard" ];
 
