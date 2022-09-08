@@ -88,24 +88,16 @@
     rec {
       inherit lib;
       # Your custom packages and modifications
-      common-overlays = {
-        default = import ./overlay/common { inherit inputs lib; };
+      overlays = {
+        default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
         poetry2nix = inputs.poetry2nix.overlay;
-      };
-
-      nixos-overlays = {
-        # nixgl = inputs.nixgl.overlay.nixgl;
-        nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
-      };
-
-      darwin-overlays = {
-        default = import ./overlay/darwin { inherit inputs lib; };
-        firefox-darwin = inputs.firefox-darwin.overlay;
         spacebar = inputs.spacebar.overlay;
-      };
+        nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
+        nixgl = inputs.nixgl.overlay;
 
+      };
 
       templates = import ./templates;
 
@@ -118,23 +110,9 @@
               {
                 hostPlatform = system;
                 inherit system;
-                overlays = builtins.attrValues common-overlays
-                  ++ (
-                  lib.optionals
-                    (lib.isDarwin system)
-                    (builtins.attrValues
-                      darwin-overlays)
-                )
-                  ++ (
-                  lib.optionals
-                    (lib.isLinux system)
-                    (builtins.attrValues
-                      nixos-overlays)
-                );
-
+                overlays = builtins.attrValues overlays;
                 config = lib.nixConfig;
               }
-
           );
 
       devShells =

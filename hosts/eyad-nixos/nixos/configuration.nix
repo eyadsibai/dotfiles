@@ -23,7 +23,7 @@ in
     ./nix.nix
     ./steam.nix
     # ./fonts.nix
-    ../../../common/nixos/samba
+    ../../common/optional/nixos/samba
   ];
 
   # Thermals and cooling

@@ -3,7 +3,7 @@
 , ...
 }:
 let
-  secrets = import ../../../../secrets;
+  secrets = import ../../../../../secrets;
 in
 {
   home.packages = [ pkgs.kaggle ];
