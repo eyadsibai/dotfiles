@@ -1,10 +1,12 @@
 { pkgs
 , hostname
 , lib
+  # , modulesPath
 , ...
 }:
 let
-  secrets = import ../../../secrets;
+  secrets = import ../../../../../secrets;
+  # secrets = import modulesPath + "/secrets";
 in
 {
   home.packages = [
