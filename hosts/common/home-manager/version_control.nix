@@ -303,7 +303,7 @@
     #   enable = true;
     # };
     lfs = {
-      enable = false;
+      enable = true;
     };
   };
   programs.gitui = { enable = config.programs.git.enable; };
