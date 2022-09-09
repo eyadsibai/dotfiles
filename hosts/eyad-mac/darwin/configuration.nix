@@ -43,24 +43,15 @@
 
   programs.nix-index.enable = true;
 
-  # time.timeZone = "Asia/Riyadh";
+  time.timeZone = "Asia/Riyadh";
 
   # services.spotifyd.enable = true;
-
+  #
   users.users.${username} = {
-    shell = pkgs.fish;
+    #   name = "${username}";
+    home = "/Users/${username}";
+    #   shell = pkgs.fish;
+
   };
 
-  homebrew = {
-    casks = [
-      # "hammerspoon" # desktop automation app
-      # "gitup" # git interface focused on visual interaction
-      # "macs-fan-control" # macs fan control app
-      # "jetbrains-toolbox"
-      # "keycastr"
-      # "karabiner-elements"
-
-    ];
-    masApps = { };
-  };
 }
