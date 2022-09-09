@@ -19,12 +19,12 @@
   # Create /etc/bashrc that loads the nix-darwin environment.
   programs.zsh = {
     enable = true;
-    enableBashCompletion = true;
-    enableCompletion = true;
-    enableFzfCompletion = true;
-    enableSyntaxHighlighting = true;
+    # enableBashCompletion = true;
+    # enableCompletion = true;
+    # enableFzfCompletion = true;
+    # enableSyntaxHighlighting = true;
   };
-  programs.tmux.enable = true;
+  programs.tmux.enable = false;
 
   #  services.mopidy.enable = true;
 
@@ -43,14 +43,14 @@
 
   programs.nix-index.enable = true;
 
-  time.timeZone = "Asia/Riyadh";
+  # time.timeZone = "Asia/Riyadh";
 
   # services.spotifyd.enable = true;
   #
   users.users.${username} = {
     #   name = "${username}";
     home = "/Users/${username}";
-    #   shell = pkgs.fish;
+    shell = pkgs.fish;
 
   };
 
