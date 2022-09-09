@@ -4,12 +4,12 @@
   home.stateVersion = "22.05";
 
   imports = [
-    ../../../common/home-manager/htop
-    ../../../common/home-manager/direnv
-    ../../../common/home-manager/terminal
-    ../../../common/home-manager/kitty
-    ../../../common/home-manager/micro
-    
+    ../../common/optional/home-manager/htop
+    ../../common/optional/home-manager/direnv
+    ../../common/optional/home-manager/terminal
+    ../../common/optional/home-manager/kitty
+    ../../common/optional/home-manager/micro
+
   ];
 
   # programs.firefox.package = pkgs.firefox-bin;

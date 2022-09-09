@@ -6,11 +6,11 @@ let
   inherit (home-manager.lib) homeManagerConfiguration;
 
   inherit (builtins) elemAt match any mapAttrs attrValues attrNames listToAttrs;
-  inherit (nixpkgs.lib) nixosSystem filterAttrs genAttrs mapAttrs' mapAttrsToList regularOf stdenv optional lists;
-  inherit (lists) optionals;
+  inherit (nixpkgs.lib) nixosSystem filterAttrs genAttrs mapAttrs' mapAttrsToList regularOf stdenv  lists;
+  inherit (lists) optional optionals;
 in
 rec {
-  inherit optionals;
+  inherit optional optionals;
   # Applies a function to a attrset's names, while keeping the values
   mapAttrNames = f: mapAttrs' (name: value: {
     name = f name; inherit value;

@@ -87,18 +87,25 @@ let
           config = lib.nixConfig;
         };
 
-      apple-silicon-86x = (lib.optional
-        (super.stdenv.system == "aarch64-darwin")
+      apple-silicon-86x =
+      #(self.lib.optional
+      #  (super.stdenv.system == "aarch64-darwin")
 
-        import
-        inputs.nixpkgs
+        import inputs.nixpkgs
         {
           system = "x86_64-darwin";
           config = lib.nixConfig;
-          overlays = inputs.firefox-darwin.overlay;
+          # overlays = [inputs.firefox-darwin.overlay];
 
-        }
-      );
+        };
+
+        firefox-darwin = import inputs.nixpkgs
+         {
+          system = super.stdenv.system;
+          config = lib.nixConfig;
+          overlays = [inputs.firefox-darwin.overlay];
+        } ;
+#      );
     };
 
   # apple-silicon = self: super: (lib.optionalAttrs

@@ -2,8 +2,9 @@
 {
   homebrew = {
     enable = lib.mkForce true;
-    autoUpdate = lib.mkForce false;
-    cleanup = lib.mkForce "zap";
+    onActivation.autoUpdate = lib.mkForce false;
+    onActivation.cleanup = lib.mkForce "zap";
+    onActivation.upgrade = true;
 
     taps = lib.mkForce [
       "homebrew/bundle"
