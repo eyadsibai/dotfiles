@@ -1,5 +1,6 @@
 { pkgs
 , lib
+, config
 , ...
 }:
 {
@@ -21,9 +22,7 @@
       n = "nix";
       nd = "nix develop -c $SHELL";
       ns = "nix shell";
-      nsn = "nix shell nixpkgs#";
       nb = "nix build";
-      nbn = "nix build nixpkgs#";
       nf = "nix flake";
 
       nr = "nixos-rebuild --flake .";
@@ -50,21 +49,21 @@
       clear = "printf '\\033[2J\\033[3J\\033[1;1H'";
     };
     functions = {
-      fish_greeting = "pfetch";
+      fish_greeting = "${pkgs.pfetch}/bin/pfetch";
       wh = "readlink -f (which $argv)";
     };
     interactiveShellInit =
       # Open command buffer in vim when alt+e is pressed
       ''
         bind \ee edit_command_buffer
-      '' +
-      # kitty integration
-      ''
-        set --global KITTY_INSTALLATION_DIR "${pkgs.kitty}/lib/kitty"
-        set --global KITTY_SHELL_INTEGRATION enabled
-        source "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish"
-        set --prepend fish_complete_path "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_completions.d"
-      '' +
+      '' + (lib.optionalString (config.programs.kitty.enable)
+        # kitty integration
+        ''
+          set --global KITTY_INSTALLATION_DIR "${pkgs.kitty}/lib/kitty"
+          set --global KITTY_SHELL_INTEGRATION enabled
+          source "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish"
+          set --prepend fish_complete_path "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_completions.d"
+        '') +
       # Use vim bindings and cursors
       ''
         fish_vi_key_bindings

@@ -4,7 +4,8 @@ in {
   programs.shellcolor = {
     enable = true;
     enableFishSshFunction = config.programs.fish.enable;
-    enableBashSshFunction = config.programs.fish.enable;
+    enableBashSshFunction = config.programs.bash.enable;
+
     settings = {
       base00 = "${colors.base00}";
       base01 = "${colors.base01}";
