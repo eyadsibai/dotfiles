@@ -59,6 +59,8 @@ in
   home.packages =
     with pkgs;
     [
+      #      whatsie
+
       lxappearance
       cookiecutter
       git-crypt

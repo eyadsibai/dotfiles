@@ -14,5 +14,5 @@
   shellcolord = pkgs.callPackage ./shellcolord { };
   wallpapers = pkgs.callPackage ./wallpapers { };
   icomoon-feather-ttf = pkgs.callPackage ./icomoon-feather-ttf { };
-
+  whatsie = pkgs.libsForQt514.callPackage ./whatsie { };
 }
