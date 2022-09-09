@@ -7,7 +7,7 @@
     ../../common/optional/home-manager/htop
     ../../common/optional/home-manager/direnv
     ../../common/optional/home-manager/terminal
-    # ../../common/optional/home-manager/kitty
+    ../../common/optional/home-manager/kitty
     ../../common/optional/home-manager/micro
 
   ];
