@@ -26,4 +26,6 @@
     enable = true;
     enableAliases = true;
   };
+  programs.home-manager.enable = true;
+
 }

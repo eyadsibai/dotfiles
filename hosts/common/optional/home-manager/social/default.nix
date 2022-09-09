@@ -24,7 +24,6 @@
       kotatogram-desktop
       gurk-rs
       vk-messenger
-      nheko
       # matrix messaging client
       jitsi-meet-electron
       # open source video calls and chat
@@ -33,4 +32,6 @@
       # weechat
     ];
   # programs.hexchat = { enable = true; };
+  programs.nheko.enable = true;
+
 }

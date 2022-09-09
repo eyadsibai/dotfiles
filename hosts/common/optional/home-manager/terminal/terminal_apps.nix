@@ -35,8 +35,9 @@
       wp-cli
       http-prompt
     ];
+  programs.btop.enable = true;
 
-
+  services.pueue.enable = true;
   programs.broot = {
     enable = true;
     enableBashIntegration = config.programs.bash.enable;

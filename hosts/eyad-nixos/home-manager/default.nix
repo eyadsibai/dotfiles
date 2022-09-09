@@ -227,7 +227,6 @@ in
       # kepler
 
       # Terminal
-      btop # Resource Manager
       pfetch # Minimal fetch
       ranger # File Manager
 
@@ -271,8 +270,7 @@ in
       kakoune
       helix
       k9s
-      yt-dlp
-      # jetbrains.pycharm-community
+      \      # jetbrains.pycharm-community
       sherlock
       signal-cli
       signalbackup-tools
@@ -281,6 +279,9 @@ in
       twitch-tui
     ]
     ++ (lib.optionals systemConfig.networking.networkmanager.enable [ haskellPackages.network-manager-tui ]);
+
+  programs.yt-dlp.enable = true;
+  programs.gallery-dl.enable = true;
   home.enableNixpkgsReleaseCheck = true;
   home.keyboard.layout = "us,ar";
   home.keyboard.options = [ "grp:win_space_toggle" ];
