@@ -1,1 +1,5 @@
-{ lib, config, pkgs, ... }: { services.unclutter.enable = true; }
+{ lib
+, config
+, pkgs
+, ...
+}: { services.unclutter.enable = true; }

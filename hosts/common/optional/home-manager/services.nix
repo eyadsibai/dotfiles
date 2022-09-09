@@ -2,9 +2,7 @@
 , config
 , pkgs
 , ...
-}:
-{
-
+}: {
   # services.caffeine.enable = true;
   services.clipmenu.enable = false;
   services.dropbox.enable = true;

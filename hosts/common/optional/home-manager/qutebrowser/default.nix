@@ -3,7 +3,8 @@
 , lib
 , ...
 }:
-let inherit (config.colorscheme) colors kind;
+let
+  inherit (config.colorscheme) colors kind;
 in
 {
   programs.qutebrowser = {
@@ -179,8 +180,8 @@ in
     keyBindings = {
       normal = {
         # Open videos in mpv
-        "<Alt-o>" = "hint links spawn --verbose --detach ${ pkgs.mpv }/bin/mpv {hint-url}";
-        "<Alt-Shift-o>" = "spawn --verbose --detach ${ pkgs.mpv }/bin/mpv {url}";
+        "<Alt-o>" = "hint links spawn --verbose --detach ${pkgs.mpv}/bin/mpv {hint-url}";
+        "<Alt-Shift-o>" = "spawn --verbose --detach ${pkgs.mpv}/bin/mpv {url}";
       };
     };
     searchEngines = {
@@ -226,8 +227,7 @@ in
     pkgs.fetchurl
       {
         name = "qute-youtube-sponsorblock.js";
-        url =
-          "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_sponsorblock.js";
+        url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_sponsorblock.js";
         sha256 = "sha256-e3QgDPa3AOpPyzwvVjPQyEsSUC9goisjBUDMxLwg8ZE=";
       };
   # Remove ads on YouTube more reliably than with the default adblock
@@ -235,8 +235,7 @@ in
     pkgs.fetchurl
       {
         name = "qute-youtube-adblock.js";
-        url =
-          "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_adblock.js";
+        url = "https://raw.githubusercontent.com/afreakk/greasemonkeyscripts/1d1be041a65c251692ee082eda64d2637edf6444/youtube_adblock.js";
         sha256 = "sha256-EuGTJ9Am5C6g3MeTsjBQqyNFBiGAIWh+f6cUtEHu3iI=";
       };
   # Dark mode for pages that do not natively support it

@@ -1,5 +1,4 @@
-{ pkgs ? import <nixpkgs> { }
-}:
+{ pkgs ? import <nixpkgs> { } }:
 let
   RStudio-with-my-packages =
     pkgs.rstudioWrapper.override

@@ -1,5 +1,7 @@
-{ lib, config, ... }:
-
+{ lib
+, config
+, ...
+}:
 let
   mkFontOption = kind: {
     family = lib.mkOption {
@@ -26,7 +28,6 @@ in
     # material-design-icons = mkFontOption "material-design-icons";
     # material-icons = mkFontOption "material-icons";
   };
-
 
   config = lib.mkIf cfg.enable {
     fonts.fontconfig.enable = true;

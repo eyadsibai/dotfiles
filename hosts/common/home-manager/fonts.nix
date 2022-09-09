@@ -5,7 +5,6 @@
 , outputs
 , ...
 }: {
-
   home.packages = with pkgs; [
     (nerdfonts.override
       {
@@ -19,7 +18,6 @@
       family = "FiraCode Nerd Font Mono";
       package = pkgs.nerdfonts.override {
         fonts = [ "FiraCode" ];
-
       };
     };
     regular = {
@@ -27,5 +25,4 @@
       package = pkgs.fira;
     };
   };
-
 }

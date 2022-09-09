@@ -4,20 +4,19 @@
 , gcc
 , gnumake
 , pkg-config
+,
 }:
-
 stdenv.mkDerivation rec {
   pname = "rgf";
   version = "3.12.0";
 
-  src =
-    "${fetchFromGitHub
-      {
-        owner = "RGF-team";
-        repo = pname;
-        rev = "${version}";
-        sha256 = "sha256-QZdGXQtGubLHs3n1cuysbFotCiFh+T41BhvxIUTSDJY=";
-      }}/RGF";
+  src = "${fetchFromGitHub
+    {
+      owner = "RGF-team";
+      repo = pname;
+      rev = "${version}";
+      sha256 = "sha256-QZdGXQtGubLHs3n1cuysbFotCiFh+T41BhvxIUTSDJY=";
+    }}/RGF";
 
   doCheck = true;
   # dontUnpack = true;

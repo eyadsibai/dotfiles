@@ -5,8 +5,7 @@
 , username
 , hostname
 , ...
-}:
-{
+}: {
   services.sonarr = {
     #6767
 
@@ -24,7 +23,6 @@
     user = "bazarr";
     group = "bazarr";
     openFirewall = true;
-
   };
   services.lidarr = {
     enable = true;
@@ -60,5 +58,4 @@
   services.adguardhome.enable = true;
 
   services.minidlna.enable = true;
-
 }

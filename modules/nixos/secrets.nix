@@ -1,5 +1,6 @@
 { lib, ... }:
-let inherit (lib) types mkOption;
+let
+  inherit (lib) types mkOption;
   secrets = import ../../secrets;
 in
 {
@@ -8,5 +9,4 @@ in
     default = { };
   };
   config.secrets = secrets;
-
 }

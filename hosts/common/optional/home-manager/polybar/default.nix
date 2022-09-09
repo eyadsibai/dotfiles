@@ -5,12 +5,9 @@
 , ...
 }:
 let
-
   inherit (config.colorscheme) colors;
-
 in
 {
-
   home.packages = [ pkgs.terminus_font ];
 
   services.polybar = {
@@ -26,14 +23,12 @@ in
           githubSupport = true;
         };
 
-    extraConfig = (lib.concatStringsSep "\n" [
+    extraConfig = lib.concatStringsSep "\n" [
       (builtins.readFile ./bars.ini)
       (builtins.readFile ./modules.ini)
       (builtins.readFile ./user_modules.ini)
       (builtins.readFile ./config.ini)
-
-    ]);
-
+    ];
 
     script = "polybar -q main &";
     config = {
@@ -63,21 +58,19 @@ in
         blue-gray = "#6D8895";
       };
 
-      "module/distro-icon" =
-        {
-          type = "custom/script";
-          exec = "${ pkgs.coreutils }/bin/uname -r | ${ pkgs.coreutils }/bin/cut -d- -f1";
-          interval = 999999999;
-          format = "%{T3}%{T-} <label>";
-          format-foreground = "\${colors.background}";
-          format-background = "\${color.secondary}";
-          format-padding = 1;
-          label = "%output%";
-          # label-font = 1;
-        };
+      "module/distro-icon" = {
+        type = "custom/script";
+        exec = "${pkgs.coreutils}/bin/uname -r | ${pkgs.coreutils}/bin/cut -d- -f1";
+        interval = 999999999;
+        format = "%{T3}%{T-} <label>";
+        format-foreground = "\${colors.background}";
+        format-background = "\${color.secondary}";
+        format-padding = 1;
+        label = "%output%";
+        # label-font = 1;
+      };
     };
   };
-
 
   # config = {
   #   "global/wm" = {
@@ -478,13 +471,8 @@ in
   #     };
   # };
 
-
-
-
   # xdg.configFile."polybar/colors.ini".source = ./colors.ini;
 
   xdg.configFile."polybar/scripts".source = ./scripts;
   xdg.configFile."polybar/scripts".recursive = true;
-
-
 }

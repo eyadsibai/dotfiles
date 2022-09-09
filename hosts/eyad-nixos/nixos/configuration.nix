@@ -140,7 +140,6 @@ in
       dockerCompat = true;
       dockerSocket.enable = true;
       defaultNetwork.dnsname.enable = true;
-
     };
     lxd.enable = true;
     # virtualbox.host = {
@@ -152,7 +151,6 @@ in
       enable = false;
       setSocketVariable = true;
     };
-
   };
   # Enable touchpad support (enabled default in most desktopManager).
   services.xserver.libinput = {
@@ -166,7 +164,8 @@ in
   users.users.${username} = {
     isNormalUser = true;
     shell = pkgs.fish;
-    extraGroups = [ "wheel" ]
+    extraGroups =
+      [ "wheel" ]
       ++ (lib.optional config.virtualisation.docker.enable "docker")
       ++ (lib.optional config.virtualisation.podman.enable "podman")
       ++ (lib.optional config.virtualisation.libvirtd.enable "libvirtd")
@@ -182,8 +181,7 @@ in
       # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
     ];
   };
-  environment.systemPackages =
-    with pkgs;
+  environment.systemPackages = with pkgs;
     [
       arion # support docker-compose ... etc
       vim
@@ -201,7 +199,6 @@ in
   # programs.mtr.enable = true;
 
   environment.enableAllTerminfo = true;
-
 
   programs.gnupg.agent = {
     enable = true;
@@ -221,7 +218,6 @@ in
   };
   security.apparmor.enable = false;
 
-
   security.sudo.extraConfig = ''
     Defaults lecture = never
     Defaults  insults
@@ -230,11 +226,10 @@ in
   services.xserver.desktopManager.session = [
     {
       name = "HomeManager";
-      start =
-        ''
-          ${ pkgs.runtimeShell } $HOME/.hm-xsession &
-          waitPID=$!
-        '';
+      start = ''
+        ${pkgs.runtimeShell} $HOME/.hm-xsession &
+        waitPID=$!
+      '';
     }
   ];
 

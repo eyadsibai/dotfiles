@@ -23,11 +23,10 @@
     mach-nix.url = "github:DavHau/mach-nix";
     firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
     eww.url = "github:elkowar/eww";
-    mpv-iptv =
-      {
-        url = "github:junners/mpv-iptv";
-        flake = false;
-      };
+    mpv-iptv = {
+      url = "github:junners/mpv-iptv";
+      flake = false;
+    };
 
     nixgl = {
       url = "github:guibou/nixGL";
@@ -45,11 +44,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    spacebar =
-      {
-        url = "github:cmacrae/spacebar";
-        inputs.nixpkgs.follows = "nixpkgs";
-      };
+    spacebar = {
+      url = "github:cmacrae/spacebar";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixpkgs-wayland = {
       url = "github:nix-community/nixpkgs-wayland";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -78,12 +76,10 @@
       flake = false;
     };
   };
-  outputs =
-    inputs:
+  outputs = inputs:
     let
       lib = import ./lib { inherit inputs; };
       inherit (lib) forAllSystems mkNixOSSystem mkDarwinSystem;
-
     in
     rec {
       inherit lib;
@@ -96,7 +92,6 @@
         spacebar = inputs.spacebar.overlay;
         nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
         nixgl = inputs.nixgl.overlay;
-
       };
 
       templates = import ./templates;
@@ -120,7 +115,7 @@
           (
             system:
             let
-              pkgs = legacyPackages.${ system };
+              pkgs = legacyPackages.${system};
             in
             rec {
               default = pkgs.callPackage ./shell.nix { };
@@ -143,35 +138,37 @@
             }
           );
 
-      nixosConfigurations."eyad-nixos" = mkNixOSSystem
-        {
-          hostname = "eyad-nixos";
-          pkgs = legacyPackages.x86_64-linux;
-          is-laptop = true;
-          colorscheme = "tokyo-night-storm";
-          wallpaper = "aurora-borealis-water-mountain";
-        };
+      nixosConfigurations."eyad-nixos" =
+        mkNixOSSystem
+          {
+            hostname = "eyad-nixos";
+            pkgs = legacyPackages.x86_64-linux;
+            is-laptop = true;
+            colorscheme = "tokyo-night-storm";
+            wallpaper = "aurora-borealis-water-mountain";
+          };
 
-      nixosConfigurations."desktop-nixos-wsl" = mkNixOSSystem
-        {
-          hostname = "desktop-nixos-wsl";
-          pkgs = legacyPackages.x86_64-linux;
-          is-wsl = true;
-        };
+      nixosConfigurations."desktop-nixos-wsl" =
+        mkNixOSSystem
+          {
+            hostname = "desktop-nixos-wsl";
+            pkgs = legacyPackages.x86_64-linux;
+            is-wsl = true;
+          };
 
-      nixosConfigurations."home-server" = mkNixOSSystem
-        {
-          hostname = "home-server";
-          pkgs = legacyPackages.x86_64-linux;
-        };
+      nixosConfigurations."home-server" =
+        mkNixOSSystem
+          {
+            hostname = "home-server";
+            pkgs = legacyPackages.x86_64-linux;
+          };
 
-      darwinConfigurations."eyad-mac" = mkDarwinSystem
-        {
-          hostname = "eyad-mac";
-          pkgs = legacyPackages.aarch64-darwin;
-          colorscheme = "tokyo-night-storm";
-
-        };
-
+      darwinConfigurations."eyad-mac" =
+        mkDarwinSystem
+          {
+            hostname = "eyad-mac";
+            pkgs = legacyPackages.aarch64-darwin;
+            colorscheme = "tokyo-night-storm";
+          };
     };
 }

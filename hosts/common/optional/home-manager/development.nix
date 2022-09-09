@@ -1,33 +1,27 @@
-{ pkgs
-, ...
-}:
-{
-  home.packages =
-    with pkgs;
-    [
-      jetbrains.idea-community
-      nano
-      nanorc
-      s3cmd
-      # awscli2 # TODO crash on install
-      # secure tunneling to localhost
-      insomnia
-      # rest client with graphql support
-      beekeeper-studio
-      vscode
-      # earthly
-      t-rec
-      reviewdog
-      # pgcli # modern postgres client # TODO crash on install
-      mycli
-      iredis
-      usql
-      vieb
+{ pkgs, ... }: {
+  home.packages = with pkgs; [
+    jetbrains.idea-community
+    nano
+    nanorc
+    s3cmd
+    # awscli2 # TODO crash on install
+    # secure tunneling to localhost
+    insomnia
+    # rest client with graphql support
+    beekeeper-studio
+    vscode
+    # earthly
+    t-rec
+    reviewdog
+    # pgcli # modern postgres client # TODO crash on install
+    mycli
+    iredis
+    usql
+    vieb
 
-      ## GIS
-      qgis
-    ];
-
+    ## GIS
+    qgis
+  ];
 
   # programs.go = { enable = true; };
   # programs.java = { enable = true; };
@@ -48,5 +42,4 @@
     # ];
     # userSettings = { "update.channel" = "none"; };
   };
-
 }

@@ -3,8 +3,7 @@ with import
 {
   config.allowUnfree = true;
   # firefox-bin is unfree
-};
-let
+}; let
   datahub =
     runCommand
       "datahub"
@@ -18,7 +17,7 @@ let
             };
       }
       ''
-        ${ gzip }/bin/gunzip -c $src > data-linux
+        ${gzip}/bin/gunzip -c $src > data-linux
         mkdir -p $out/bin
         cp data-linux $out/bin/
         chmod +x $out/bin/data-linux

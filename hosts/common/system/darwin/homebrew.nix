@@ -1,5 +1,7 @@
-{ lib, pkgs, ... }:
-{
+{ lib
+, pkgs
+, ...
+}: {
   homebrew = {
     enable = lib.mkForce true;
     onActivation.autoUpdate = lib.mkForce false;

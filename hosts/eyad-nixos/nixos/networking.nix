@@ -11,7 +11,6 @@ let
 in
 {
   networking = {
-
     #TODO move to wpa https://nixos.org/manual/nixos/stable/index.html#sec-wireless
     hostName = hostname;
     networkmanager = {
@@ -23,33 +22,37 @@ in
     useDHCP = false;
     # deprecated
     interfaces = {
-      enp3s0f0 = { useDHCP = true; wakeOnLan.enable = true; };
-      wlp1s0 = { useDHCP = true; wakeOnLan.enable = true; };
+      enp3s0f0 = {
+        useDHCP = true;
+        wakeOnLan.enable = true;
+      };
+      wlp1s0 = {
+        useDHCP = true;
+        wakeOnLan.enable = true;
+      };
     };
     # wireless.networks."xyz" = {
     #   psk = "11111";
     # };
-    firewall =
-      {
-        enable = true;
-        allowedTCPPortRanges = [
-          (lib.optionals
-            homeConfig.services.kdeconnect.enable
-            {
-              from = 1714;
-              to = 1764;
-            })
-        ];
-        allowedUDPPortRanges = [
-          (lib.optionals
-            homeConfig.services.kdeconnect.enable
-            {
-              from = 1714;
-              to = 1764;
-            })
-        ];
-      };
-
+    firewall = {
+      enable = true;
+      allowedTCPPortRanges = [
+        (lib.optionals
+          homeConfig.services.kdeconnect.enable
+          {
+            from = 1714;
+            to = 1764;
+          })
+      ];
+      allowedUDPPortRanges = [
+        (lib.optionals
+          homeConfig.services.kdeconnect.enable
+          {
+            from = 1714;
+            to = 1764;
+          })
+      ];
+    };
   };
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ] ++ lib.lists.range 1714 1764; # kdeconnect

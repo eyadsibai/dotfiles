@@ -2,8 +2,7 @@
 , lib
 , config
 , ...
-}:
-{
+}: {
   programs.bash = {
     enable = true;
     initExtra = "neofetch";
@@ -56,14 +55,16 @@
       # Open command buffer in vim when alt+e is pressed
       ''
         bind \ee edit_command_buffer
-      '' + (lib.optionalString (config.programs.kitty.enable)
+      ''
+      + (lib.optionalString (config.programs.kitty.enable)
         # kitty integration
         ''
           set --global KITTY_INSTALLATION_DIR "${pkgs.kitty}/lib/kitty"
           set --global KITTY_SHELL_INTEGRATION enabled
           source "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish"
           set --prepend fish_complete_path "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_completions.d"
-        '') +
+        '')
+      +
       # Use vim bindings and cursors
       ''
         fish_vi_key_bindings
@@ -71,7 +72,8 @@
         set fish_cursor_insert      line       blink
         set fish_cursor_replace_one underscore blink
         set fish_cursor_visual      block
-      '' +
+      ''
+      +
       # Use terminal colors
       ''
         set -U fish_color_autosuggestion      brblack

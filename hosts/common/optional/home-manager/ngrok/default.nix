@@ -2,10 +2,9 @@
 , hostname
 , lib
 , config
-  # , modulesPath
-, ...
-}:
-{
+, # , modulesPath
+  ...
+}: {
   home.packages = [
     pkgs.ngrok
   ];
@@ -13,5 +12,4 @@
     version = "2";
     authtoken = "${config.secrets.${hostname}.ngrok.authtoken}";
   };
-
 }

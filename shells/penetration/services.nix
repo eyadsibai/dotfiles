@@ -1,7 +1,5 @@
 # Tools for testing various services (SSH, SNMP, etc.)
-{ pkgs ? import <nixpkgs> { }
-, ...
-}:
+{ pkgs ? import <nixpkgs> { }, ... }:
 with pkgs;
 mkShell
 {

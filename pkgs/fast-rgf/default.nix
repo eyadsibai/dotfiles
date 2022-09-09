@@ -5,20 +5,19 @@
 , gnumake
 , cmake
 , pkg-config
+,
 }:
-
 stdenv.mkDerivation rec {
   pname = "fast-rgf";
   version = "3.12.0";
 
-  src =
-    "${fetchFromGitHub
-      {
-        owner = "RGF-team";
-        repo = "rgf";
-        rev = "${version}";
-        sha256 = "sha256-QZdGXQtGubLHs3n1cuysbFotCiFh+T41BhvxIUTSDJY=";
-      }}/FastRGF";
+  src = "${fetchFromGitHub
+    {
+      owner = "RGF-team";
+      repo = "rgf";
+      rev = "${version}";
+      sha256 = "sha256-QZdGXQtGubLHs3n1cuysbFotCiFh+T41BhvxIUTSDJY=";
+    }}/FastRGF";
 
   doCheck = true;
   # dontUnpack = true;

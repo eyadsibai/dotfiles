@@ -1,4 +1,8 @@
-{ writeShellApplication, nix-direnv }: writeShellApplication {
+{ writeShellApplication
+, nix-direnv
+,
+}:
+writeShellApplication {
   name = "flakify";
 
   runtimeInputs = [ nix-direnv ];

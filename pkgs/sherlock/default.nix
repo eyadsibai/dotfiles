@@ -1,17 +1,22 @@
-{ lib, stdenv, fetchFromGitHub, python3, makeWrapper }:
-
+{ lib
+, stdenv
+, fetchFromGitHub
+, python3
+, makeWrapper
+,
+}:
 let
-  pythonEnv = python3.withPackages (pkg: with pkg; [
-    certifi
-    colorama
-    pandas
-    pysocks
-    requests
-    requests-futures
-    stem
-    torrequest
-  ]);
-
+  pythonEnv = python3.withPackages (pkg:
+    with pkg; [
+      certifi
+      colorama
+      pandas
+      pysocks
+      requests
+      requests-futures
+      stem
+      torrequest
+    ]);
 in
 stdenv.mkDerivation {
   pname = "sherlock";

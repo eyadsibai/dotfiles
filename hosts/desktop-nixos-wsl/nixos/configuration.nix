@@ -1,6 +1,10 @@
-{ lib, pkgs, config, hostname, username, ... }:
-
-{
+{ lib
+, pkgs
+, config
+, hostname
+, username
+, ...
+}: {
   imports = [
   ];
 
@@ -14,7 +18,6 @@
 
     docker-desktop.enable = true;
     wslConf.network.hostname = hostname;
-
   };
 
   nixpkgs.hostPlatform = "x86_64-linux";

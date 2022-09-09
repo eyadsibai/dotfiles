@@ -1,9 +1,6 @@
 # When you add custom packages, list them here
 # These are similar to nixpkgs packages
-{ pkgs
-, ...
-}:
-{
+{ pkgs, ... }: {
   flakify = pkgs.callPackage ./flakify { };
   linkhandler = pkgs.callPackage ./linkhandler { };
   apple-color-emoji = pkgs.callPackage ./apple-color-emoji { };

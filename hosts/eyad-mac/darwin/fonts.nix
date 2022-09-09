@@ -1,6 +1,4 @@
-{ pkgs, ... }:
-{
-
+{ pkgs, ... }: {
   fonts = {
     fontDir.enable = true;
     fonts = with pkgs; [
@@ -15,7 +13,6 @@
       # ubuntu_font_family
       # line-awesome
       ## Fonts?
-
 
       cascadia-code
       (nerdfonts.override { fonts = [ "FiraCode" "JetBrainsMono" ]; })

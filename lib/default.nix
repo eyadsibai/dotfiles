@@ -12,9 +12,11 @@ in
 rec {
   inherit optional optionals;
   # Applies a function to a attrset's names, while keeping the values
-  mapAttrNames = f: mapAttrs' (name: value: {
-    name = f name; inherit value;
-  });
+  mapAttrNames = f:
+    mapAttrs' (name: value: {
+      name = f name;
+      inherit value;
+    });
 
   has = element: any (x: x == element);
 
@@ -22,45 +24,48 @@ rec {
     { hostname
     , pkgs
     , username ? "eyad"
-      # , system
-    , is-wsl ? false
+    , # , system
+      is-wsl ? false
     , is-laptop ? false
     , colorscheme ? null
     , wallpaper ? null
+    ,
     }:
     nixosSystem {
       inherit pkgs;
       specialArgs = {
         inherit inputs outputs hostname username is-laptop colorscheme wallpaper;
       };
-      modules = attrValues (import ../modules/nixos)
+      modules =
+        attrValues (import ../modules/nixos)
         ++ (optional is-wsl inputs.nixos-wsl.nixosModules.wsl)
         ++ [
-        ../hosts/${hostname}
-        ../hosts/common/system/nixos
-        inputs.nixpkgs.nixosModules.notDetected
-        inputs.nur.nixosModules.nur
+          ../hosts/${hostname}
+          ../hosts/common/system/nixos
+          inputs.nixpkgs.nixosModules.notDetected
+          inputs.nur.nixosModules.nur
 
-        inputs.home-manager.nixosModules.home-manager
-        {
-          home-manager = {
-            useUserPackages = true;
-            useGlobalPkgs = true;
-            users.${username} = {
-              imports = [
-                ../hosts/${hostname}/home-manager
-                ../hosts/common/home-manager/nixos
-                inputs.nix-doom-emacs.hmModule
-                inputs.nix-colors.homeManagerModule
-                inputs.spicetify-nix.homeManagerModule
-              ]
-              ++ attrValues (import ../modules/home-manager);
+          inputs.home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useUserPackages = true;
+              useGlobalPkgs = true;
+              users.${username} = {
+                imports =
+                  [
+                    ../hosts/${hostname}/home-manager
+                    ../hosts/common/home-manager/nixos
+                    inputs.nix-doom-emacs.hmModule
+                    inputs.nix-colors.homeManagerModule
+                    inputs.spicetify-nix.homeManagerModule
+                  ]
+                  ++ attrValues (import ../modules/home-manager);
+              };
+              extraSpecialArgs = { inherit inputs outputs hostname username is-laptop colorscheme wallpaper; };
+              backupFileExtension = "backup";
             };
-            extraSpecialArgs = { inherit inputs outputs hostname username is-laptop colorscheme wallpaper; };
-            backupFileExtension = "backup";
-          };
-        }
-      ];
+          }
+        ];
     };
 
   mkDarwinSystem =
@@ -68,36 +73,39 @@ rec {
     , pkgs
     , username ? "eyad"
     , colorscheme ? null
+    ,
     }:
     darwinSystem {
       inherit pkgs;
       specialArgs = {
         inherit inputs outputs hostname username colorscheme;
       };
-      modules = attrValues (import ../modules/darwin)
+      modules =
+        attrValues (import ../modules/darwin)
         ++ [
-        ../hosts/${hostname}
-        ../hosts/common/system/darwin
-        inputs.home-manager.darwinModules.home-manager
-        {
-          home-manager = {
-            useUserPackages = true;
-            useGlobalPkgs = true;
-            users.${username} = {
-              imports = [
-                ../hosts/common/home-manager/darwin
+          ../hosts/${hostname}
+          ../hosts/common/system/darwin
+          inputs.home-manager.darwinModules.home-manager
+          {
+            home-manager = {
+              useUserPackages = true;
+              useGlobalPkgs = true;
+              users.${username} = {
+                imports =
+                  [
+                    ../hosts/common/home-manager/darwin
 
-                ../hosts/${hostname}/home-manager
-                inputs.nix-doom-emacs.hmModule
-                inputs.nix-colors.homeManagerModule
-              ]
-              ++ attrValues (import ../modules/home-manager);
+                    ../hosts/${hostname}/home-manager
+                    inputs.nix-doom-emacs.hmModule
+                    inputs.nix-colors.homeManagerModule
+                  ]
+                  ++ attrValues (import ../modules/home-manager);
+              };
+              extraSpecialArgs = { inherit inputs outputs hostname username colorscheme; };
+              backupFileExtension = "backup";
             };
-            extraSpecialArgs = { inherit inputs outputs hostname username colorscheme; };
-            backupFileExtension = "backup";
-          };
-        }
-      ];
+          }
+        ];
     };
 
   # mkHomeManagerConfig =
@@ -134,15 +142,12 @@ rec {
   #     }
   #   ];
 
-  mergeEnvs = { pkgs }:
-    envs:
+  mergeEnvs = { pkgs }: envs:
     pkgs.mkShell
       (
         builtins.foldl'
           (
-            a:
-            v:
-            {
+            a: v: {
               buildInputs = a.buildInputs ++ v.buildInputs;
               nativeBuildInputs = a.nativeBuildInputs ++ v.nativeBuildInputs;
               propagatedBuildInputs = a.propagatedBuildInputs ++ v.propagatedBuildInputs;
@@ -175,7 +180,6 @@ rec {
   isDarwin = system: builtins.elem system [ "aarch64-darwin" "x86_64-darwin" ];
   isLinux = system: builtins.elem system [ "x86_64-linux" ];
 
-
   stdenv.targetSystem = {
     isDarwinArm64 = stdenv.targetSystem.isDarwin && stdenv.targetSystem.darwinArch == "arm64";
   };
@@ -183,40 +187,41 @@ rec {
   nixConfig = {
     # allowUnfree = true;
     permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
-    allowUnfreePredicate = pkg: builtins.elem (inputs.nixpkgs.lib.getName pkg)
-      [
-        "slack"
-        "betterttv"
-        "flagfox"
-        "grammarly"
-        "discord"
-        "skypeforlinux"
-        "zoom"
-        "teams"
-        "vk-messenger"
-        "spotify"
-        "spotify-unwrapped"
-        "ngrok"
-        "vscode"
-        "corefonts"
-        "teamviewer"
-        "unrar"
-        "obsidian"
-        "yandex-disk"
-        "notion-app-enhanced-v2.0.18"
-        "dropbox"
-        "mpv-convert-script"
-        "video-cutter"
-        "steamcmd"
-        "steam-original"
-        "steam-runtime"
-        "broadcom-bt-firmware"
-        "b43-firmware"
-        "xow_dongle-firmware"
-        "facetimehd-calibration"
-        "facetimehd-firmware"
-        "steam"
-      ];
+    allowUnfreePredicate = pkg:
+      builtins.elem (inputs.nixpkgs.lib.getName pkg)
+        [
+          "slack"
+          "betterttv"
+          "flagfox"
+          "grammarly"
+          "discord"
+          "skypeforlinux"
+          "zoom"
+          "teams"
+          "vk-messenger"
+          "spotify"
+          "spotify-unwrapped"
+          "ngrok"
+          "vscode"
+          "corefonts"
+          "teamviewer"
+          "unrar"
+          "obsidian"
+          "yandex-disk"
+          "notion-app-enhanced-v2.0.18"
+          "dropbox"
+          "mpv-convert-script"
+          "video-cutter"
+          "steamcmd"
+          "steam-original"
+          "steam-runtime"
+          "broadcom-bt-firmware"
+          "b43-firmware"
+          "xow_dongle-firmware"
+          "facetimehd-calibration"
+          "facetimehd-firmware"
+          "steam"
+        ];
   };
 
   forAllSystems = genAttrs systems;

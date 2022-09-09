@@ -1,7 +1,4 @@
-{ pkgs
-, ...
-}:
-{
+{ pkgs, ... }: {
   programs.feh = {
     enable = true;
     keybindings = {
@@ -34,8 +31,6 @@
 
       scroll_down_page = "S-Down";
       toggle_fullscreen = "f";
-
-
     };
   };
 }

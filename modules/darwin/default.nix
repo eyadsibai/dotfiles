@@ -4,5 +4,4 @@
   # List your module files here
   # my-module = import ./my-module.nix;
   enable-sudo = import ./pam.nix;
-
 }

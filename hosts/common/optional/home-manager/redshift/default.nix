@@ -2,8 +2,7 @@
 , config
 , pkgs
 , ...
-}:
-{
+}: {
   services.redshift = {
     enable = false;
     provider = "geoclue2";

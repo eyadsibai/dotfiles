@@ -1,4 +1,10 @@
-{ writeShellApplication, curl, sxiv, mpv }: writeShellApplication {
+{ writeShellApplication
+, curl
+, sxiv
+, mpv
+,
+}:
+writeShellApplication {
   name = "linkhandler";
 
   runtimeInputs = [ curl sxiv mpv ];
