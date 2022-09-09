@@ -89,10 +89,8 @@ in
         format = "on [$symbol$profile(\\($region\\))]($style)";
       };
 
-
       # Toggles \/
       shlvl.disabled = false;
-
 
       # Icon changes only \/
       aws.symbol = "  ";

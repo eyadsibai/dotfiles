@@ -1,11 +1,9 @@
-{ pkgs ? import <nixpkgs> { }
-}:
+{ pkgs ? import <nixpkgs> { } }:
 # TODO https://nixos.wiki/wiki/Workgroup:DataScience
 with pkgs;
 mkShell
 {
-  buildInputs =
-    with python310Packages;
+  buildInputs = with python310Packages;
     [
       pip
       pip-tools

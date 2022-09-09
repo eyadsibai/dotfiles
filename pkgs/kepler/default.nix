@@ -5,16 +5,14 @@
 yarn2nix.mkYarnPackage
 {
   name = "kepler";
-  preInstall =
-    ''
-      yarn build:umd
-    '';
-  postInstall =
-    ''
-      cp $out/node_modules/kepler.gl/umd/keplergl.min.js $out/
-      rm -rf $out/node_modules
-      rm -rf $out/bin
-    '';
+  preInstall = ''
+    yarn build:umd
+  '';
+  postInstall = ''
+    cp $out/node_modules/kepler.gl/umd/keplergl.min.js $out/
+    rm -rf $out/node_modules
+    rm -rf $out/bin
+  '';
   src =
     fetchgit
       {

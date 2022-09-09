@@ -12,13 +12,11 @@ let
   pythonShell =
     mach-nix-wrapper.mkPython
       {
-        requirements =
-          ''
-             # pandas
-            #  black
-          '';
+        requirements = ''
+           # pandas
+          #  black
+        '';
       };
-
 
   myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
     projectDir = ./.;
@@ -29,8 +27,7 @@ in
 pkgs.mkShell
 {
   buildInputs = [
-    (pkgs.${ python }.withPackages (ps: with ps;
-    [ pip pyflakes isort ]))
+    (pkgs.${python}.withPackages (ps: with ps; [ pip pyflakes isort ]))
     #  pkgs.nodePackages.pyright
     #  pkgs.nodePackages.prettier
     #  pkgs.docker

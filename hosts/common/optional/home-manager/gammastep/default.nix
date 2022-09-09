@@ -2,9 +2,7 @@
 , config
 , pkgs
 , ...
-}:
-{
-
+}: {
   services.gammastep = {
     enable = false;
     provider = "geoclue2";

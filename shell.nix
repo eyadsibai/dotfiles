@@ -5,7 +5,7 @@
     nixpkgs =
       fetchTarball
         {
-          url = "https://github.com/nixos/nixpkgs/archive/${ lock.rev }.tar.gz";
+          url = "https://github.com/nixos/nixpkgs/archive/${lock.rev}.tar.gz";
           sha256 = lock.narHash;
         };
     system = builtins.currentSystem;

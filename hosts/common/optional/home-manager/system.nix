@@ -2,17 +2,12 @@
 , config
 , hostname
 , ...
-
-}:
-{
-  home.packages =
-    with pkgs;
-    [
-      dive
-      glances
-      killall
-      xorg.xkill
-      ranger
-    ];
-
+}: {
+  home.packages = with pkgs; [
+    dive
+    glances
+    killall
+    xorg.xkill
+    ranger
+  ];
 }

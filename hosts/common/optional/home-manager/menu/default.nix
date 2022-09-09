@@ -1,5 +1,7 @@
-{ pkgs, config, ... }:
-{
+{ pkgs
+, config
+, ...
+}: {
   programs.rofi = {
     enable = true;
     plugins = with pkgs; [ rofi-calc rofi-emoji ];
@@ -23,7 +25,6 @@
       in
       {
         "*" = {
-
           red = mkLiteral "#${colors.base08}";
           blue = mkLiteral "#${colors.base0D}";
           lightfg = mkLiteral "#${colors.base06}";
@@ -165,11 +166,8 @@
           margin = mkLiteral "0px 0.3000em 0.0000em 0.0000em";
           text-color = mkLiteral "inherit";
         };
-
-
       };
   };
 
   home.packages = [ pkgs.rofi-rbw ];
-
 }

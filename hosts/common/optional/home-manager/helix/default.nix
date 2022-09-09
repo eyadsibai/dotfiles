@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-{
+{ pkgs, ... }: {
   programs.helix = {
     enable = true;
     languages = [
@@ -9,7 +8,10 @@
       }
       o99
       { name = "python"; }
-      { name = "nix"; auto-format = true; }
+      {
+        name = "nix";
+        auto-format = true;
+      }
     ];
   };
 }

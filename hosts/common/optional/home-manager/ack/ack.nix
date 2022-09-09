@@ -1,1 +1,4 @@
-{ config, pkgs, ... }: { home.file.".ackrc".source = /.ackrc; }
+{ config
+, pkgs
+, ...
+}: { home.file.".ackrc".source = /.ackrc; }

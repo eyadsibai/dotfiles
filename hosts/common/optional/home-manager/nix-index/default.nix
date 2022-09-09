@@ -1,5 +1,7 @@
-{ config, pkgs, ... }:
-{
+{ config
+, pkgs
+, ...
+}: {
   programs.nix-index = {
     enable = true;
     enableBashIntegration = config.programs.bash.enable;

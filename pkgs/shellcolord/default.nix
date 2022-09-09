@@ -1,7 +1,9 @@
-{ lib, stdenv, fetchFromSourcehut }:
-
+{ lib
+, stdenv
+, fetchFromSourcehut
+,
+}:
 with lib;
-
 stdenv.mkDerivation rec {
   name = "shellcolord";
   version = "0.1";

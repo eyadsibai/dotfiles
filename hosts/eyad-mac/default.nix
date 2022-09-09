@@ -1,2 +1,1 @@
-{ ... }:
-{ imports = [ ./darwin/configuration.nix ]; }
+{ ... }: { imports = [ ./darwin/configuration.nix ]; }

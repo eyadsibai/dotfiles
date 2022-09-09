@@ -1,5 +1,7 @@
-{ config, pkgs, ... }:
-
+{ config
+, pkgs
+, ...
+}:
 let
   inherit (config.colorscheme) colors;
   kitty-xterm = pkgs.writeShellScriptBin "xterm" ''
@@ -13,7 +15,6 @@ in
       TERMINAL = "kitty";
     };
   };
-
 
   programs.kitty = {
     enable = true;

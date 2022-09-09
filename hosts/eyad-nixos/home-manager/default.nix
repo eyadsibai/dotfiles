@@ -9,7 +9,6 @@
 let
   systemConfig = outputs.nixosConfigurations.${hostname}.config;
   inherit (config.colorscheme) colors;
-
 in
 {
   imports = [
@@ -51,13 +50,9 @@ in
     ../../common/optional/home-manager/services.nix
     ../../common/optional/home-manager/system.nix
     ../../common/optional/home-manager/khard
-
   ];
 
-
-
-  home.packages =
-    with pkgs;
+  home.packages = with pkgs;
     [
       #      whatsie
 
@@ -234,7 +229,6 @@ in
       plex-media-player
       stremio #Media Streamer
 
-
       # Apps
       remmina
 
@@ -270,7 +264,7 @@ in
       kakoune
       helix
       k9s
-      \      # jetbrains.pycharm-community
+      # jetbrains.pycharm-community
       sherlock
       signal-cli
       signalbackup-tools
@@ -376,7 +370,7 @@ in
     # PATH = [
     #   "\${XDG_BIN_HOME}"
     # ];
-    BROWSER = "${ pkgs.firefox }/bin/firefox";
+    BROWSER = "${pkgs.firefox}/bin/firefox";
     MOZ_USE_XINPUT2 = "1"; # for firefox touchpad support
   };
   # should be in the browsers.nix
@@ -401,7 +395,6 @@ in
       dmenu-cmd = "rofi -dmenu";
       password-cmd = "rofi-rbw";
     };
-
 
     terminal = {
       cmd = "kitty -1";

@@ -31,7 +31,6 @@
       mouse_drop_action = "swap";
       mouse_follows_focus = "true";
       focus_follows_mouse = "autoraise";
-
     };
     extraConfig = ''
       # rules
@@ -129,6 +128,5 @@
       clock_icon = "";
       dnd_icon = "";
     };
-
   };
 }

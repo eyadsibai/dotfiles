@@ -1,6 +1,11 @@
-{ pkgs, config, ... }:
-let inherit (config.colorscheme) colors;
-in {
+{ pkgs
+, config
+, ...
+}:
+let
+  inherit (config.colorscheme) colors;
+in
+{
   home.packages = [
     pkgs.spotify-tui
     # pkgs.spotify
@@ -39,5 +44,4 @@ in {
       "hidePodcasts.js"
     ];
   };
-
 }

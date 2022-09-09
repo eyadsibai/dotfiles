@@ -1,7 +1,13 @@
-{ config, persistence, pkgs, lib, ... }:
-
-let inherit (config.colorscheme) colors;
-in {
+{ config
+, persistence
+, pkgs
+, lib
+, ...
+}:
+let
+  inherit (config.colorscheme) colors;
+in
+{
   home.packages = with pkgs; [ discord discocss ];
 
   # home.persistence = lib.mkIf persistence {

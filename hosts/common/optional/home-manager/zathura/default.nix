@@ -3,13 +3,11 @@
 , config
 , ...
 }:
-
-
-
 # TODO https://github.com/LukeSmithxyz/voidrice/blob/master/.config/zathura/zathurarc
-
-let inherit (config.colorscheme) colors;
-in {
+let
+  inherit (config.colorscheme) colors;
+in
+{
   programs.zathura = {
     enable = true;
     options = {
@@ -50,7 +48,6 @@ in {
       statusbar-h-padding = 0;
       statusbar-v-padding = 0;
       page-padding = 1;
-
     };
     mappings = {
       f = "toggle_fullscreen";
@@ -69,8 +66,6 @@ in {
       J = "zoom out";
       i = "recolor";
       p = "print";
-
     };
   };
-
 }

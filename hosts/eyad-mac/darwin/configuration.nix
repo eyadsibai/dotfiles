@@ -5,13 +5,10 @@
 , hostname
 , username
 , ...
-}:
-{
-
+}: {
   imports = [
     ./nix.nix
     ../../common/optional/darwin/wm
-
   ];
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
@@ -54,7 +51,5 @@
     #   name = "${username}";
     home = "/Users/${username}";
     shell = pkgs.fish;
-
   };
-
 }

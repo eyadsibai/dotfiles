@@ -1,4 +1,9 @@
-{ lib, stdenv, fetchurl, wallpaper }:
+{ lib
+, stdenv
+, fetchurl
+, wallpaper
+,
+}:
 stdenv.mkDerivation rec {
   name = "wallpaper-${wallpaper.name}.${wallpaper.ext}";
   src = fetchurl {

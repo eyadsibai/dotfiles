@@ -1,4 +1,9 @@
-{ writeShellApplication, curl, jq }: writeShellApplication {
+{ writeShellApplication
+, curl
+, jq
+,
+}:
+writeShellApplication {
   name = "whatismyip";
 
   runtimeInputs = [ curl jq ];
