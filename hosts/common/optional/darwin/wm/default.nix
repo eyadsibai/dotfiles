@@ -12,13 +12,13 @@
       window_placement = "second_child";
       # Gaps
       window_gap = 10;
-      top_padding = 18;
-      bottom_padding = 46;
-      left_padding = 18;
-      right_padding = 18;
+      top_padding = 10;
+      bottom_padding = 38;
+      left_padding = 10;
+      right_padding = 10;
       # shadows and borders
       window_shadow = "on";
-      window_border = "on";
+      window_border = "off";
       window_border_width = 3;
       window_opacity = "on";
       window_opacity_duration = "0.1";
