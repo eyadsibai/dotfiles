@@ -6,7 +6,7 @@ let
   inherit (home-manager.lib) homeManagerConfiguration;
 
   inherit (builtins) elemAt match any mapAttrs attrValues attrNames listToAttrs;
-  inherit (nixpkgs.lib) nixosSystem filterAttrs genAttrs mapAttrs' mapAttrsToList regularOf stdenv  lists;
+  inherit (nixpkgs.lib) nixosSystem filterAttrs genAttrs mapAttrs' mapAttrsToList regularOf stdenv lists;
   inherit (lists) optional optionals;
 in
 rec {
@@ -85,8 +85,9 @@ rec {
             useGlobalPkgs = true;
             users.${username} = {
               imports = [
-                ../hosts/${hostname}/home-manager
                 ../hosts/common/home-manager/darwin
+
+                ../hosts/${hostname}/home-manager
                 inputs.nix-doom-emacs.hmModule
                 inputs.nix-colors.homeManagerModule
               ]
