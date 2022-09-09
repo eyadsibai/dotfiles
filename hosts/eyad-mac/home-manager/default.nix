@@ -23,7 +23,7 @@
     wget
     jq
     cachix
-
+    iterm2
     # micro
     # vscode
     terminal-notifier
