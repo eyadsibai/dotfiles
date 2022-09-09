@@ -10,7 +10,7 @@
 
   imports = [
     ./nix.nix
-    ../../../common/darwin/wm
+    ../../common/optional/darwin/wm
 
   ];
   # Auto upgrade nix package and the daemon service.
@@ -33,7 +33,7 @@
   programs.fish.enable = true;
 
   environment.systemPackages = with pkgs; [
-    firefox-bin
+    firefox-darwin.firefox-bin
   ];
 
   # https://github.com/nix-community/home-manager/issues/423
