@@ -1,3 +1,6 @@
 .direnv
 result
 .vscode
+
+templates/*/flake.lock
+templates/*/poetry.lock
