@@ -10,8 +10,9 @@ let
     name = "iterm2-shell-integration";
     owner = "gnachman";
     repo = "iTerm2-shell-integration";
-    rev = "891c1aa5fd8ecfebd953d85c6994f3ee8f0d8f3c";
-    sha256 = "sha256-d5RrXxmvNJLGrutu1p2t9Gd6qwFn0uUlOKby5C7oVmc=";
+    rev = "67e9313f992f824f5102491fcb587611ba948035";
+    sha256 = "sha256-L7e3yNlrzk/sImu8wHl3Sc5TQg/kVQlY2/VBBUUuYww=";
+    # sha256 = lib.fakeSha256;
   };
   utilities = builtins.attrNames (builtins.readDir "${shell_integration}/utilities");
   aliases = lib.concatMapStringsSep ";" (x: "alias ${x}='${shell_integration}/utilities/${x}'") utilities;
