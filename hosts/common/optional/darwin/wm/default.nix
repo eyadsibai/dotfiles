@@ -21,16 +21,18 @@
       window_border = "off";
       window_border_width = 3;
       window_opacity = "on";
-      window_opacity_duration = "0.1";
-      active_window_opacity = "1.0";
-      normal_window_opacity = "1.0";
+      window_opacity_duration = 0.1;
+      active_window_opacity = 1.0;
+      normal_window_opacity = 0.9;
+      window_topmost = "on";
       # mouse
       mouse_modifier = "cmd";
       mouse_action1 = "move";
       mouse_action2 = "resize";
       mouse_drop_action = "swap";
-      mouse_follows_focus = "true";
+      mouse_follows_focus = "on";
       focus_follows_mouse = "autoraise";
+      external_bar = "all:38:0";
     };
     extraConfig = ''
       # rules
