@@ -36,4 +36,8 @@
         m-cli
         cocoapods
       ];
+
+
+  programs.iterm2.enable = true;
+
 }

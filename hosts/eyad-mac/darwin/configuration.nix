@@ -53,6 +53,4 @@
     shell = pkgs.fish;
   };
 
-
-  darwin.apps.iterm2.enable = true;
 }

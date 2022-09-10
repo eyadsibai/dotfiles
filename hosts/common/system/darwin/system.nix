@@ -1,4 +1,4 @@
-{ username, ... }: {
+{ config, username, ... }: {
   system.defaults = {
     NSGlobalDomain = {
       AppleInterfaceStyle = "Dark";
@@ -21,7 +21,7 @@
       # Whether to automatically hide and show the Dock. Default is false.
       autohide = true;
       # Sets the speed of the autohide delay. Default is "0.24".
-      autohide-delay = "0.0";
+      autohide-delay = 0.0;
       # Sets the speed of animation when hiding/showing the Dock. Default is "1.0".
       autohide-time-modifier = 1.0;
       # Position of dock. Default is "bottom"; alternatives are "left" and "right".
@@ -80,7 +80,7 @@
     # "Others" section in Dock (the one after the bar, where the Bin sits).
     others = [
       ({ path = "/Applications"; })
-      ({ path = "${config.user.home}/Downloads"; sort = "dateadded"; view = "fan"; })
+      ({ path = "${config.users.users.${username}.home}/Downloads"; sort = "dateadded"; view = "fan"; })
     ];
   };
 }
