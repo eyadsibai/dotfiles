@@ -27,6 +27,12 @@ nltk = "^3.7"
 prefect = "^2.3.2"
 featuretools = "^1.14.0"
 dbt-core = "^1.2.1"
+catboost = "^1.0.6"
+statsmodels = "^0.13.2"
+mlxtend = "^0.20.0"
+scikit-plot = "^0.3.7"
+category-encoders = "^2.5.0"
+shap = "^0.41.0"
 
 [tool.poetry.dev-dependencies]
 Pygments = ">=2.10.0"
