@@ -119,23 +119,10 @@
             in
             rec {
               default = pkgs.callPackage ./shell.nix { };
-              cc = pkgs.callPackage ./shells/cc.nix { };
-              go = pkgs.callPackage ./shells/go.nix { };
-              java = import ./shells/java.nix { inherit pkgs; };
-              # demonstrate two ways
-              node = import ./shells/node.nix { inherit pkgs; };
-              python = import ./shells/python.nix { inherit pkgs inputs; };
-              rust = import ./shells/rust.nix { inherit pkgs; };
-              ml_old = import ./shells/ml_no_cuda.nix { inherit pkgs; };
-              sys-stats = import ./shells/sys-stats.nix { inherit pkgs; };
-              db = import ./shells/db_dev.nix { inherit pkgs; };
-              r = import ./shells/r.nix { inherit pkgs; };
               port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
               load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
               password = import ./shells/penetration/password.nix { inherit pkgs; };
-              mysql = import ./shells/mysql.nix { inherit pkgs; };
               penetration-full = lib.mergeEnvs { inherit pkgs; } [ port-scanners load-testing password ];
-              ml = import ./shells/ml { inherit pkgs; };
             }
           );
 

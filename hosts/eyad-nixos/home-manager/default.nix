@@ -271,6 +271,39 @@ in
       signald
       turses
       twitch-tui
+      # block IO monitoring
+      iotop
+      # per process io rates
+      sysstat
+      # iostat: per device io rates
+      nfs-utils
+      # nfsiostat
+      ioping
+      # disk latencies
+      ncdu
+      # du but as terminal UI
+      # network IO monitoring
+      iftop
+      # per peer network rates
+      # general purpose
+      htop
+      bottom
+      # better htop
+      # network state
+      ethtool
+      bpytop
+      bottom
+      # alternative to htop & ytop (btm)
+      gotop
+      gtop
+      procs
+
+
+      pgcli
+      # modern postgres client
+      mycli
+      iredis
+      usql
     ]
     ++ (lib.optionals systemConfig.networking.networkmanager.enable [ haskellPackages.network-manager-tui ]);
 
