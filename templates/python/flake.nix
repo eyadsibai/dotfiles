@@ -1,24 +1,27 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     utils.url = "github:numtide/flake-utils";
+    dotfiles.url = "github:eyadsibai/dotfiles";
   };
 
   outputs =
     { self
-    , nixpkgs
     , utils
+    , dotfiles
     ,
     }:
     let
       out = system:
         let
-          pkgs = nixpkgs.legacyPackages."${system}";
+          pkgs = dotfiles.legacyPackages.${system};
+
         in
         {
           devShell = pkgs.mkShell {
             buildInputs = with pkgs; [
               python3Packages.poetry
+              rgf
+              fast-rgf
             ];
           };
 
