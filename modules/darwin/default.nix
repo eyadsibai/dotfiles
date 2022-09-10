@@ -4,4 +4,6 @@
   # List your module files here
   # my-module = import ./my-module.nix;
   enable-sudo = import ./pam.nix;
+  iterm2 = import ./iterm2.nix;
+  dock-apps = import ./dock-apps.nix;
 }
