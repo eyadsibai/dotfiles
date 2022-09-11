@@ -27,5 +27,5 @@
     # weechat
   ];
   # programs.hexchat = { enable = true; };
-  programs.nheko.enable = true;
+  # programs.nheko.enable = true;
 }

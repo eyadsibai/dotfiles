@@ -184,6 +184,7 @@ in
   environment.systemPackages = with pkgs;
     [
       arion # support docker-compose ... etc
+      docker-compose
       vim
       wget
       git
