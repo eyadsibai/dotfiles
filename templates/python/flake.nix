@@ -22,13 +22,19 @@
               python3Packages.poetry
               rgf
               fast-rgf
+              vowpal-wabbit
+              dvc
+              opencv
+              tesseract5
+              # tensorflow-lite
+
             ];
           };
 
           defaultPackage = with pkgs.poetry2nix;
             mkPoetryApplication {
               projectDir = ./.;
-              preferWheels = true;
+              preferWheels = false;
             };
 
           defaultApp = utils.lib.mkApp {
