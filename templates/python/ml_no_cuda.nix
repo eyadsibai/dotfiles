@@ -21,8 +21,7 @@ mkShell
       opencv3
       jax
       jaxlib
-      rgf
-      fast-rgf
+
     ];
   shellHook = "";
 }
