@@ -3,17 +3,6 @@
 , ...
 }: {
 
-  xdg.configFile."networkmanager-dmenu/colors.rasi".text = ''
-      * {
-      al:   #${colors.base00};
-      bg:   #${colors.base00};
-      bga:  #${colors.base01};
-      fga:  #${colors.base0E};
-      fg:   #${colors.base0B};
-      ac:   #${colors.base03};
-      se:   #${colors.base01};
-    }
-  '';
   programs.rofi = {
     enable = true;
     plugins = with pkgs; [ rofi-calc rofi-emoji ];
