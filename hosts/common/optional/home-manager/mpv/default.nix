@@ -46,7 +46,7 @@
       "-" = "add video-zoom -0.25";
       "+" = "add video-zoom 0.25";
     };
-    scripts = with pkgs; [ mpvScripts.mpris mpvScripts.convert mpvScripts.cutter mpvScripts.autoload mpvScripts.thumbnail ];
+    scripts = with pkgs; [ mpvScripts.mpris mpvScripts.convert mpvScripts.cutter mpvScripts.autoload ];
   };
   xdg.configFile."mpv/scripts/iptv.lua".source = "${inputs.mpv-iptv}/iptv.lua";
 }
@@ -75,4 +75,3 @@
 # For tv://
 #h cycle tv-channel -1                  # previous channel
 #k cycle tv-channel +1                  # next channel
-
