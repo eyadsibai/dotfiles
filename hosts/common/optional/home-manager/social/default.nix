@@ -4,10 +4,10 @@
     signal-desktop
     skypeforlinux
     slack
-    slack-term
+    # slack-term
     zoom-us
-    element-desktop
-    tdesktop
+    # element-desktop
+    # tdesktop
     teams
     whatsapp-for-linux
     gitter
@@ -17,10 +17,10 @@
     caprine-bin
     wire-desktop
     kotatogram-desktop
-    gurk-rs
-    vk-messenger
+    # gurk-rs
+    # vk-messenger
     # matrix messaging client
-    jitsi-meet-electron
+    # jitsi-meet-electron
     # open source video calls and chat
     tuir
     tiptop
