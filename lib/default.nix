@@ -29,7 +29,7 @@ rec {
     , is-laptop ? false
     , colorscheme ? null
     , wallpaper ? null
-    ,
+    , host-pkgs ? null
     }:
     nixosSystem {
       inherit pkgs;
@@ -39,6 +39,7 @@ rec {
       modules =
         attrValues (import ../modules/nixos)
         ++ (optional is-wsl inputs.nixos-wsl.nixosModules.wsl)
+        ++ (optional (! isNull host-pkgs) { virtualisation.host.pkgs = host-pkgs; })
         ++ [
           ../hosts/${hostname}
           ../hosts/common/system/nixos
@@ -226,7 +227,7 @@ rec {
 
   forAllSystems = genAttrs systems;
   systems = [
-    # "aarch64-linux"
+    "aarch64-linux"
     "x86_64-linux"
     "aarch64-darwin"
     # "x86_64-darwin"
