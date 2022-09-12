@@ -144,6 +144,16 @@
             is-wsl = true;
           };
 
+      nixosConfigurations."vm-aarch64-linux" =
+        mkNixOSSystem {
+          hostname = "vm-aarch64-linux";
+          username = "test";
+          # system = "aarch64-linux";
+          pkgs = legacyPackages.aarch64-linux;
+          host-pkgs = legacyPackages.aarch64-darwin;
+
+        };
+
       nixosConfigurations."home-server" =
         mkNixOSSystem
           {
@@ -158,5 +168,10 @@
             pkgs = legacyPackages.aarch64-darwin;
             colorscheme = "tokyo-night-storm";
           };
+
+      packages.aarch64-darwin.vm-aarch64-linux = nixosConfigurations.vm-aarch64-linux.config.system.build.vm;
+
     };
+
+
 }
