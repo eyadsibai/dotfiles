@@ -143,6 +143,7 @@
             is-wsl = true;
           };
 
+      # https://github.com/NixOS/nixpkgs/issues/108984
       nixosConfigurations."vm-aarch64-linux" =
         mkNixOSSystem {
           hostname = "vm-aarch64-linux";
@@ -151,7 +152,7 @@
           host-pkgs = legacyPackages.aarch64-darwin;
 
         };
-
+      # https://github.com/NixOS/nixpkgs/issues/108984
       nixosConfigurations."vm-x86_64-linux" =
         mkNixOSSystem {
           hostname = "vm-x86_64-linux";
