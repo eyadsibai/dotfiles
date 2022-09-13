@@ -3,11 +3,11 @@
 , pkgs
 , ...
 }: {
-  imports = [
-  ];
+  # imports = [
+  # ];
 
-  home.packages = with pkgs; [
-  ];
+  # home.packages = with pkgs; [
+  # ];
 
   # programs.gpg.enable = true;
 
