@@ -147,10 +147,18 @@
       nixosConfigurations."vm-aarch64-linux" =
         mkNixOSSystem {
           hostname = "vm-aarch64-linux";
-          username = "test";
           # system = "aarch64-linux";
           pkgs = legacyPackages.aarch64-linux;
           host-pkgs = legacyPackages.aarch64-darwin;
+
+        };
+
+      nixosConfigurations."vm-x86_64-linux" =
+        mkNixOSSystem {
+          hostname = "vm-x86_64-linux";
+          # system = "x86_64-linux";
+          pkgs = legacyPackages.x86_64-linux;
+          host-pkgs = legacyPackages.x86_64-darwin;
 
         };
 
@@ -170,6 +178,7 @@
           };
 
       packages.aarch64-darwin.vm-aarch64-linux = nixosConfigurations.vm-aarch64-linux.config.system.build.vm;
+      packages.x86_64-darwin.x86_64-linux = nixosConfigurations.vm-x86_64-linux.config.system.build.vm;
 
     };
 
