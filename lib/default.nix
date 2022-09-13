@@ -56,7 +56,7 @@ rec {
                   [
                     ../hosts/${hostname}/home-manager
                     ../hosts/common/home-manager/nixos
-                    inputs.nix-doom-emacs.hmModule
+                    # inputs.nix-doom-emacs.hmModule
                     inputs.nix-colors.homeManagerModule
                     inputs.spicetify-nix.homeManagerModule
                   ]

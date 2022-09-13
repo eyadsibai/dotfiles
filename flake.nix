@@ -103,7 +103,6 @@
             import
               inputs.nixpkgs
               {
-                hostPlatform = system;
                 inherit system;
                 overlays = builtins.attrValues overlays;
                 config = lib.nixConfig;
