@@ -126,22 +126,20 @@
           );
 
       nixosConfigurations."eyad-nixos" =
-        mkNixOSSystem
-          {
-            hostname = "eyad-nixos";
-            pkgs = legacyPackages.x86_64-linux;
-            is-laptop = true;
-            colorscheme = "tokyo-night-storm";
-            wallpaper = "aurora-borealis-water-mountain";
-          };
+        mkNixOSSystem {
+          hostname = "eyad-nixos";
+          pkgs = legacyPackages.x86_64-linux;
+          is-laptop = true;
+          colorscheme = "tokyo-night-storm";
+          wallpaper = "aurora-borealis-water-mountain";
+        };
 
       nixosConfigurations."desktop-nixos-wsl" =
-        mkNixOSSystem
-          {
-            hostname = "desktop-nixos-wsl";
-            pkgs = legacyPackages.x86_64-linux;
-            is-wsl = true;
-          };
+        mkNixOSSystem {
+          hostname = "desktop-nixos-wsl";
+          pkgs = legacyPackages.x86_64-linux;
+          is-wsl = true;
+        };
 
       # https://github.com/NixOS/nixpkgs/issues/108984
       nixosConfigurations."vm-aarch64-linux-on-mac-silicon" =
@@ -150,7 +148,6 @@
           # system = "aarch64-linux";
           pkgs = legacyPackages.aarch64-linux;
           host-pkgs = legacyPackages.aarch64-darwin;
-
         };
       # https://github.com/NixOS/nixpkgs/issues/108984
       nixosConfigurations."vm-x86_64-linux-on-mac-intel" =
@@ -159,26 +156,22 @@
           # system = "x86_64-linux";
           pkgs = legacyPackages.x86_64-linux;
           host-pkgs = legacyPackages.x86_64-darwin;
-
         };
 
       nixosConfigurations."home-server" =
-        mkNixOSSystem
-          {
-            hostname = "home-server";
-            pkgs = legacyPackages.x86_64-linux;
-          };
+        mkNixOSSystem {
+          hostname = "home-server";
+          pkgs = legacyPackages.x86_64-linux;
+        };
 
       darwinConfigurations."eyad-mac" =
-        mkDarwinSystem
-          {
-            hostname = "eyad-mac";
-            pkgs = legacyPackages.aarch64-darwin;
-            colorscheme = "tokyo-night-storm";
-          };
+        mkDarwinSystem {
+          hostname = "eyad-mac";
+          pkgs = legacyPackages.aarch64-darwin;
+          colorscheme = "tokyo-night-storm";
+        };
 
       packages.aarch64-darwin.vm-aarch64-linux = nixosConfigurations.vm-aarch64-linux-on-mac-silicon.config.system.build.vm;
       packages.x86_64-darwin.x86_64-linux = nixosConfigurations.vm-x86_64-linux-on-mac-intel.config.system.build.vm;
-
     };
 }
