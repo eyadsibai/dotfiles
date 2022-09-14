@@ -144,18 +144,18 @@
           };
 
       # https://github.com/NixOS/nixpkgs/issues/108984
-      nixosConfigurations."vm-aarch64-linux" =
+      nixosConfigurations."vm-aarch64-linux-on-mac-silicon" =
         mkNixOSSystem {
-          hostname = "vm-aarch64-linux";
+          hostname = "vm-aarch64-linux-on-mac-silicon";
           # system = "aarch64-linux";
           pkgs = legacyPackages.aarch64-linux;
           host-pkgs = legacyPackages.aarch64-darwin;
 
         };
       # https://github.com/NixOS/nixpkgs/issues/108984
-      nixosConfigurations."vm-x86_64-linux" =
+      nixosConfigurations."vm-x86_64-linux-on-mac-intel" =
         mkNixOSSystem {
-          hostname = "vm-x86_64-linux";
+          hostname = "vm-x86_64-linux-on-mac-intel";
           # system = "x86_64-linux";
           pkgs = legacyPackages.x86_64-linux;
           host-pkgs = legacyPackages.x86_64-darwin;
@@ -177,10 +177,8 @@
             colorscheme = "tokyo-night-storm";
           };
 
-      packages.aarch64-darwin.vm-aarch64-linux = nixosConfigurations.vm-aarch64-linux.config.system.build.vm;
-      packages.x86_64-darwin.x86_64-linux = nixosConfigurations.vm-x86_64-linux.config.system.build.vm;
+      packages.aarch64-darwin.vm-aarch64-linux = nixosConfigurations.vm-aarch64-linux-on-mac-silicon.config.system.build.vm;
+      packages.x86_64-darwin.x86_64-linux = nixosConfigurations.vm-x86_64-linux-on-mac-intel.config.system.build.vm;
 
     };
-
-
 }

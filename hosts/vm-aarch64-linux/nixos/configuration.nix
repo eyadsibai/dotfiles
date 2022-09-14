@@ -1,4 +1,4 @@
-{ config, pkgs, lib, modulesPath, ... }:
+{ config, pkgs, lib, modulesPath, username, ... }:
 
 {
   imports = [
@@ -11,18 +11,16 @@
   networking.useDHCP = false;
   networking.interfaces.eth0.useDHCP = true;
 
-  # Create user "test"
-  services.getty.autologinUser = "test";
-  users.users.test.isNormalUser = true;
+  # Create user
+  services.getty.autologinUser = "${username}";
+  users.users.${username} = { isNormalUser = true; extraGroups = [ "wheel" ]; };
 
-  # Enable paswordless ‘sudo’ for the "test" user
-  users.users.test.extraGroups = [ "wheel" ];
+  # Enable paswordless ‘sudo’ for the "username" user
   security.sudo.wheelNeedsPassword = false;
 
   # Make it output to the terminal instead of separate window
-  virtualisation.graphics = false;
+  virtualisation = { graphics = false; useNixStoreImage = true; writableStore = true; };
 
-  virtualisation.useNixStoreImage = true;
-  virtualisation.writableStore = true;
+
   nixpkgs.hostPlatform = "aarch64-linux";
 }
