@@ -24,10 +24,5 @@ in
     enableWifi = true;
   };
 
-  services.tlp = {
-    enable = is-laptop;
-    settings = {
-      USB_AUTOSUSPEND = 0;
-    };
-  };
+
 }
