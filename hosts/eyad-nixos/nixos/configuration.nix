@@ -82,7 +82,9 @@ in
 
   services.flatpak.enable = true;
   xdg.portal = {
+
     enable = true;
+    # TODO add for i3
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ]; # add xdg-desktopn-portal-wlr for wayland
   };
   services.tlp = {
