@@ -39,6 +39,23 @@ let
           }
         );
 
+    # caprine-bin =
+    #   prev.caprine-bin.overrideAttrs
+    #     (
+    #       oldAttrs: rec {
+    #         version = "2.56.1";
+    #         passthru.x86_64-appimage = oldAttrs.passthru.x86_64-appimage.overrideAttrs
+    #           (
+    #             oldAttrs_appimage: rec {
+    #               version = "2.56.1";
+    #               # pname = "${oldAttrs_appimage.pname}";
+    #               sha256 = prev.lib.fakeSha256;
+
+    #             }
+    #           );
+    #       }
+    #     );
+
     nix-index-database =
       final.runCommandLocal
         "nix-index-database"
@@ -82,9 +99,14 @@ let
           config = lib.nixConfig;
         };
 
+    bleeding-edge =
+      import inputs.bleeding-edge
+        {
+          system = super.stdenv.system;
+          config = lib.nixConfig;
+        };
+
     apple-silicon-86x =
-      #(self.lib.optional
-      #  (super.stdenv.system == "aarch64-darwin")
       import inputs.nixpkgs
         {
           system = "x86_64-darwin";
@@ -101,6 +123,7 @@ let
         };
     #      );
   };
+  # if you want to overrid certain packages
   # apple-silicon = self: super: (lib.optionalAttrs
   #   (super.stdenv.system == "aarch64-darwin")
   #   {

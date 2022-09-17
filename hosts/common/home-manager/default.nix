@@ -18,6 +18,7 @@
     any-nix-shell
     nixpkgs-fmt
     comma
+    # inputs.comma.packages.${system}.default
     ncdu # disk space info (a better du)
   ];
 

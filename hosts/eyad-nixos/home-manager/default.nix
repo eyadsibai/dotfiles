@@ -287,7 +287,6 @@ in
       # per peer network rates
       # general purpose
       htop
-      bottom
       # better htop
       # network state
       ethtool

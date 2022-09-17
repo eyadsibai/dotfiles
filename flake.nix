@@ -1,15 +1,20 @@
 {
   description = "My Ultimate Flake";
   inputs = {
+    unstable.url = "nixpkgs/nixos-unstable";
+    bleeding-edge.url = "nixpkgs/master";
+    # nixpkgs.url = "nixpkgs/nixos-22.11";
     nixpkgs.url = "nixpkgs/nixos-unstable";
-    stable.url = "nixpkgs/nixos-22.05";
+
 
     hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     nix-index-database.url = "github:Mic92/nix-index-database";
 
     home-manager = {
+      # url = "github:nix-community/home-manager/release-22.11";
       url = "github:nix-community/home-manager";
+
       inputs.nixpkgs.follows = "nixpkgs";
     };
     darwin = {
@@ -75,11 +80,22 @@
       url = "github:adi1090x/polybar-themes";
       flake = false;
     };
+    comma = {
+      url = "github:nix-community/comma";
+      # inputs = {
+      # nixpkgs.follows = "nixpkgs";
+      # utils.follows = "flake-utils";
+      # };
+    };
+
+    flake-utils-plus = {
+      url = "github:gytis-ivaskevicius/flake-utils-plus";
+    };
   };
   outputs = inputs:
     let
       lib = import ./lib { inherit inputs; };
-      inherit (lib) forAllSystems mkNixOSSystem mkDarwinSystem;
+      inherit (lib) forAllSystems mkNixOSSystem mkDarwinSystem mergeEnvs;
     in
     rec {
       inherit lib;
@@ -92,6 +108,8 @@
         spacebar = inputs.spacebar.overlay;
         nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
         nixgl = inputs.nixgl.overlay;
+        # comma = (inputs.flake-utils-plus.lib.genPkgOverlay inputs.comma "comma");
+        # comma = inputs.comma.overlays.default;
       };
 
       templates = import ./templates;
@@ -121,7 +139,7 @@
               port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
               load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
               password = import ./shells/penetration/password.nix { inherit pkgs; };
-              penetration-full = lib.mergeEnvs { inherit pkgs; } [ port-scanners load-testing password ];
+              penetration-full = mergeEnvs { inherit pkgs; } [ port-scanners load-testing password ];
             }
           );
 
