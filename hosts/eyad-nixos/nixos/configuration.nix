@@ -88,7 +88,9 @@ in
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ]; # add xdg-desktopn-portal-wlr for wayland
   };
   services.tlp = {
+    enable = !config.services.xserver.desktopManager.gnome.enable;
     settings = {
+      USB_AUTOSUSPEND = 0;
       RUNTIME_PM_BLACKLIST = "05:00.3 04:00.3 04:00.4";
     };
   };

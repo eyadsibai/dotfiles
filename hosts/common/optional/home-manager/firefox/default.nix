@@ -17,30 +17,30 @@ in
       ublock-origin
       vimium
       bitwarden
-      buster-captcha-solver
+      # buster-captcha-solver
       netflix-1080p
-      betterttv
+      # betterttv
       h264ify
-      umatrix
+      # umatrix
       a11ycss
-      add-custom-search-engine
-      adnauseam
-      anonaddy
-      behave
-      auto-tab-discard
-      behind-the-overlay-revival
-      better-tweetdeck
-      betterttv
-      bukubrow
+      # add-custom-search-engine
+      # adnauseam
+      # anonaddy
+      # behave
+      # auto-tab-discard
+      # behind-the-overlay-revival
+      # better-tweetdeck
+      # betterttv
+      # bukubrow
       bypass-paywalls-clean
-      clearurls
-      flagfox
+      # clearurls
+      # flagfox
       grammarly
-      search-by-image
+      # search-by-image
       unpaywall
-      facebook-container
-      ff2mpv
-      floccus
+      # facebook-container
+      # ff2mpv
+      # floccus
       # fraidycat
 
       (
@@ -69,10 +69,10 @@ in
         buildFirefoxXpiAddon
           rec {
             pname = "leechblock-ng";
-            version = "1.0.5";
+            version = "1.5.1";
             addonId = "leechblockng@proginosko.com";
             url = "https://addons.mozilla.org/firefox/downloads/file/3542788/leechblock_ng-${version}-an+fx.xpi?src=";
-            sha256 = "14ahx7x4y2ry0182cb2bfd620glfa9yqsz50k0qrz9cb7yyb9hkp";
+            sha256 = "sha256-d8K0vD+LpZ8xmKB8jX1Sjj4gTHNLLCZQAD4LT/rpUJE=";
             meta = { };
           }
       )

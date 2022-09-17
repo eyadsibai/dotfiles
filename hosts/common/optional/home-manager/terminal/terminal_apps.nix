@@ -5,7 +5,7 @@
 # assert config.programs.bash.enable;
 {
   home.packages = with pkgs; [
-    swaglyrics
+    # swaglyrics
     streamlink
     clog-cli
     doing
