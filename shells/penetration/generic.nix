@@ -1,6 +1,9 @@
 # Generic tools (terminals, packers, clients, etc.)
-{ pkgs ? import <nixpkgs> { }, ... }: {
-  environment.systemPackages = with pkgs; [
+{ pkgs ? import <nixpkgs> { }, ... }:
+with pkgs;
+mkShell
+{
+  buildInputs = [
     chrony
     clamav
     curl
@@ -54,4 +57,5 @@
     unrar
     unzip
   ];
+  shellHook = "";
 }

@@ -3,7 +3,6 @@ airgeddon
   wifite2
   bmon
   netdiscover
-  nmap
   nmon
   snscrape
   # ### Exploitation ###
@@ -17,7 +16,6 @@ airgeddon
 # hping
 # masscan
 # netcat
-# nmap
 # ntopng
 # sn0int
 # sslsplit
@@ -423,4 +421,3 @@ airgeddon
 # # xsser = todo
 # yara
 # # yersinia = todo
-

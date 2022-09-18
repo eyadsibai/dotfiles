@@ -2,6 +2,12 @@
 with pkgs;
 mkShell
 {
-  buildInputs = [ cardpeek libfreefare mfcuk mfoc python3Packages.emv ];
+  buildInputs = [
+    cardpeek
+    libfreefare
+    mfcuk
+    mfoc
+    python3Packages.emv
+  ];
   shellHook = "";
 }

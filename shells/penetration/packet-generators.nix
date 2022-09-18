@@ -3,6 +3,14 @@
 with pkgs;
 mkShell
 {
-  buildInputs = [ boofuzz gping fping hping ostinato pktgen python3Packages.scapy ];
+  buildInputs = [
+    boofuzz
+    gping
+    fping
+    hping
+    ostinato
+    pktgen
+    python3Packages.scapy
+  ];
   shellHook = "";
 }
