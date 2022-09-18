@@ -3,6 +3,12 @@
 with pkgs;
 mkShell
 {
-  buildInputs = [ bluez bluewalker bleak redfang ubertooth ];
+  buildInputs = [
+    bluez
+    bluewalker
+    bleak
+    redfang
+    ubertooth
+  ];
   shellHook = "";
 }

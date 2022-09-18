@@ -1,6 +1,8 @@
 # Code analysing tools, incl. search for secrets and alike in code
-{ pkgs ? import <nixpkgs> { }, ... }: {
-  environment.systemPackages = with pkgs; [
+{ pkgs ? import <nixpkgs> { }, ... }: with pkgs;
+mkShell
+{
+  buildInputs = [
     cargo-audit
     credential-detector
     detect-secrets
@@ -21,4 +23,5 @@
     trufflehog
     whispers
   ];
+  shellHook = "";
 }

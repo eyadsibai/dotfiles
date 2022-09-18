@@ -2,6 +2,11 @@
 with pkgs;
 mkShell
 {
-  buildInputs = [ sipp sipsak sipvicious sngrep ];
+  buildInputs = [
+    sipp
+    sipsak
+    sipvicious
+    sngrep
+  ];
   shellHook = "";
 }
