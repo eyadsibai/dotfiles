@@ -12,9 +12,12 @@
   wallpapers = pkgs.callPackage ./wallpapers { };
   icomoon-feather-ttf = pkgs.callPackage ./icomoon-feather-ttf { };
   whatsie = pkgs.libsForQt514.callPackage ./whatsie { };
-  latest-caprine = pkgs.callPackage (nixpkgs + "/pkgs/development/web/nodejs/nodejs.nix")
+  latest-caprine = pkgs.callPackage (inputs.nixpkgs + "/pkgs/applications/networking/instant-messengers/caprine-bin/build-from-appimage.nix")
     {
-      python = pkgs.python39;
+
+      pname = "caprine";
+      version = "2.56.1";
+      sha256 = "sha256-NhHToaacje4TtZkW3TxtyGzH/uKGCWgGdtvI9oSTJF4=";
     };
 
 }
