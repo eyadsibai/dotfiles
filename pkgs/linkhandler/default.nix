@@ -10,7 +10,7 @@ writeShellApplication {
   runtimeInputs = [ curl sxiv mpv ];
 
   text = ''
-      #!/bin/sh
+    #!/bin/sh
 
     # Feed script a url or file location.
     # If an image, it will view in sxiv,

@@ -6,7 +6,6 @@
     # nixpkgs.url = "nixpkgs/nixos-22.11";
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
-
     hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     nix-index-database.url = "github:Mic92/nix-index-database";
@@ -28,6 +27,7 @@
     mach-nix.url = "github:DavHau/mach-nix";
     firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
     eww.url = "github:elkowar/eww";
+
     mpv-iptv = {
       url = "github:junners/mpv-iptv";
       flake = false;
@@ -80,6 +80,11 @@
       url = "github:adi1090x/polybar-themes";
       flake = false;
     };
+
+    flake-utils-plus = {
+      url = "github:gytis-ivaskevicius/flake-utils-plus";
+    };
+
     # comma = {
     # url = "github:nix-community/comma";
     # inputs = {
@@ -88,9 +93,6 @@
     # };
     # };
 
-    flake-utils-plus = {
-      url = "github:gytis-ivaskevicius/flake-utils-plus";
-    };
   };
   outputs = inputs:
     let

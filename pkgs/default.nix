@@ -1,6 +1,6 @@
 # When you add custom packages, list them here
 # These are similar to nixpkgs packages
-{ pkgs, ... }: {
+{ inputs, pkgs, ... }: {
   flakify = pkgs.callPackage ./flakify { };
   linkhandler = pkgs.callPackage ./linkhandler { };
   apple-color-emoji = pkgs.callPackage ./apple-color-emoji { };
@@ -12,4 +12,9 @@
   wallpapers = pkgs.callPackage ./wallpapers { };
   icomoon-feather-ttf = pkgs.callPackage ./icomoon-feather-ttf { };
   whatsie = pkgs.libsForQt514.callPackage ./whatsie { };
+  latest-caprine = pkgs.callPackage (nixpkgs + "/pkgs/development/web/nodejs/nodejs.nix")
+    {
+      python = pkgs.python39;
+    };
+
 }
