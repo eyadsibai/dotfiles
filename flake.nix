@@ -80,13 +80,13 @@
       url = "github:adi1090x/polybar-themes";
       flake = false;
     };
-    comma = {
-      url = "github:nix-community/comma";
-      # inputs = {
-      # nixpkgs.follows = "nixpkgs";
-      # utils.follows = "flake-utils";
-      # };
-    };
+    # comma = {
+    # url = "github:nix-community/comma";
+    # inputs = {
+    # nixpkgs.follows = "nixpkgs";
+    # utils.follows = "flake-utils";
+    # };
+    # };
 
     flake-utils-plus = {
       url = "github:gytis-ivaskevicius/flake-utils-plus";
@@ -95,7 +95,7 @@
   outputs = inputs:
     let
       lib = import ./lib { inherit inputs; };
-      inherit (lib) forAllSystems mkNixOSSystem mkDarwinSystem mergeEnvs;
+      inherit (lib) forAllSystems mkNixOSSystem mkDarwinSystem mergeEnvs nixConfig;
     in
     rec {
       inherit lib;
@@ -116,14 +116,13 @@
 
       legacyPackages =
         forAllSystems
-          (
-            system:
+          (system:
             import
               inputs.nixpkgs
               {
                 inherit system;
                 overlays = builtins.attrValues overlays;
-                config = lib.nixConfig;
+                config = nixConfig;
               }
           );
 
