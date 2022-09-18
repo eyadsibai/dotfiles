@@ -5,7 +5,7 @@
 }:
 let
   # This one brings our custom packages from the 'pkgs' directory
-  additions = final: _prev: import ../pkgs { pkgs = final; };
+  additions = final: _prev: import ../pkgs { pkgs = final; inherit inputs; };
 
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
@@ -23,7 +23,6 @@ let
                   repo = "${oldAttrs.pname}";
                   rev = "v${version}";
                   # sha256 = prev.lib.fakeSha256;
-                  # sha256 = "0000000000000000000000000000000000000000000000000000";
                   sha256 = "sha256-fpLjdEgglbc9kMHTGEPq7+UDB2Qh5e54l8mDOls79LA=";
                 };
             buildInputs = [
@@ -38,23 +37,6 @@ let
             ];
           }
         );
-
-    # caprine-bin =
-    #   prev.caprine-bin.overrideAttrs
-    #     (
-    #       oldAttrs: rec {
-    #         version = "2.56.1";
-    #         passthru.x86_64-appimage = oldAttrs.passthru.x86_64-appimage.overrideAttrs
-    #           (
-    #             oldAttrs_appimage: rec {
-    #               version = "2.56.1";
-    #               # pname = "${oldAttrs_appimage.pname}";
-    #               sha256 = prev.lib.fakeSha256;
-
-    #             }
-    #           );
-    #       }
-    #     );
 
     nix-index-database =
       final.runCommandLocal
