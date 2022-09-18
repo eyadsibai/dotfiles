@@ -17,6 +17,8 @@
         version = "16.0.0";
         sha256 = "sha256-R8uQER6MPcQtxThGR4lBU1Tw2TNYf8if/3H5vYFqqgI=";
       };
+
+      # either a package already exist or a custom version using BuildNodejs
       nodejs-current = pkgs.nodejs-16_x;
     in
     {
