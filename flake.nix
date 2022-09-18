@@ -135,10 +135,68 @@
             in
             rec {
               default = pkgs.callPackage ./shell.nix { };
-              port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
+              bluetooth = import ./shells/penetration/bluetooth.nix { inherit pkgs; };
+              code = import ./shells/penetration/code.nix { inherit pkgs; };
+              container = import ./shells/penetration/container.nix { inherit pkgs; };
+              dns = import ./shells/penetration/dns.nix { inherit pkgs; };
+              forensics = import ./shells/penetration/forensics.nix { inherit pkgs; };
+              fuzzers = import ./shells/penetration/fuzzers.nix { inherit pkgs; };
+              generic = import ./shells/penetration/generic.nix { inherit pkgs; };
+              hardware = import ./shells/penetration/hardware.nix { inherit pkgs; };
+              host = import ./shells/penetration/host.nix { inherit pkgs; };
+              information-gathering = import ./shells/penetration/information-gathering.nix { inherit pkgs; };
+              kubernetes = import ./shells/penetration/kubernetes.nix { inherit pkgs; };
+              ldap = import ./shells/penetration/ldap.nix { inherit pkgs; };
               load-testing = import ./shells/penetration/load-testing.nix { inherit pkgs; };
+              malware = import ./shells/penetration/malware.nix { inherit pkgs; };
+              misc = import ./shells/penetration/misc.nix { inherit pkgs; };
+              mobile = import ./shells/penetration/mobile.nix { inherit pkgs; };
+              network = import ./shells/penetration/network.nix { inherit pkgs; };
+              packet-generators = import ./shells/penetration/packet-generators.nix { inherit pkgs; };
               password = import ./shells/penetration/password.nix { inherit pkgs; };
-              penetration-full = mergeEnvs { inherit pkgs; } [ port-scanners load-testing password ];
+              port-scanners = import ./shells/penetration/port-scanners.nix { inherit pkgs; };
+              proxies = import ./shells/penetration/proxies.nix { inherit pkgs; };
+              services = import ./shells/penetration/services.nix { inherit pkgs; };
+              smartcards = import ./shells/penetration/smartcards.nix { inherit pkgs; };
+              terminals = import ./shells/penetration/terminals.nix { inherit pkgs; };
+              traffic = import ./shells/penetration/traffic.nix { inherit pkgs; };
+              tunneling = import ./shells/penetration/tunneling.nix { inherit pkgs; };
+              voip = import ./shells/penetration/voip.nix { inherit pkgs; };
+              web = import ./shells/penetration/web.nix { inherit pkgs; };
+              windows = import ./shells/penetration/windows.nix { inherit pkgs; };
+              wireless = import ./shells/penetration/wireless.nix { inherit pkgs; };
+              penetration-full = mergeEnvs { inherit pkgs; } [
+                bluetooth
+                code
+                container
+                dns
+                forensics
+                fuzzers
+                generic
+                hardware
+                host
+                information-gathering
+                kubernetes
+                ldap
+                load-testing
+                malware
+                misc
+                mobile
+                network
+                packet-generators
+                password
+                port-scanners
+                proxies
+                services
+                smartcards
+                terminals
+                traffic
+                tunneling
+                voip
+                web
+                windows
+                wireless
+              ];
             }
           );
 
