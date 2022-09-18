@@ -1,5 +1,5 @@
 {
-  description = "A basic flake with a shell";
+  description = "A basic flake for nodejs project";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
@@ -7,7 +7,6 @@
     { self
     , nixpkgs
     , flake-utils
-    ,
     }:
     flake-utils.lib.eachDefaultSystem (system:
     let
@@ -18,7 +17,6 @@
         version = "16.0.0";
         sha256 = "sha256-R8uQER6MPcQtxThGR4lBU1Tw2TNYf8if/3H5vYFqqgI=";
       };
-
       nodejs-current = pkgs.nodejs-16_x;
     in
     {

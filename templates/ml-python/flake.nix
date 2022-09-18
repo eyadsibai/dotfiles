@@ -2,26 +2,29 @@
   inputs = {
     utils.url = "github:numtide/flake-utils";
     dotfiles.url = "github:eyadsibai/dotfiles";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+
   };
 
   outputs =
     { self
     , utils
     , dotfiles
-    ,
+    , nixpkgs
     }:
     let
       out = system:
         let
-          pkgs = dotfiles.legacyPackages.${system};
+          pkgs = nixpkgs.legacyPackages.${system};
+          custom_pkgs = dotfiles.legacyPackages.${system};
 
         in
         {
           devShell = pkgs.mkShell {
             buildInputs = with pkgs; [
               python3Packages.poetry
-              rgf
-              fast-rgf
+              custom_pkgs.rgf
+              custom_pkgs.fast-rgf
               vowpal-wabbit
               dvc
               opencv
