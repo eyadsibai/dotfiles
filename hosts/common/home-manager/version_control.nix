@@ -236,6 +236,7 @@
       push = {
         default = "current";
         useBitmaps = false;
+	autoSetupRemote = true;
       };
       pull = {
         ff = "only";
