@@ -196,6 +196,7 @@ in
       wine
       # native wayland support (unstable)
       # wineWowPackages.waylandFull
+      dig
     ]
     ++ (lib.optional (!config.virtualisation.docker.enable) docker-client)
     ++ (lib.optional (config.virtualisation.podman.enable) podman-compose);
