@@ -62,6 +62,11 @@ in
       enable = true;
       networks = config.secrets.networks;
       userControlled.enable = true;
+      # Configuration for wpa_gui
+      extraConfig = ''
+        ctrl_interface=/run/wpa_supplicant
+        ctrl_interface_group=wheel
+      '';
     };
 
     # };
