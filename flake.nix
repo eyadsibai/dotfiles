@@ -85,13 +85,6 @@
       url = "github:gytis-ivaskevicius/flake-utils-plus";
     };
 
-    # comma = {
-    # url = "github:nix-community/comma";
-    # inputs = {
-    # nixpkgs.follows = "nixpkgs";
-    # utils.follows = "flake-utils";
-    # };
-    # };
 
   };
   outputs = inputs:
