@@ -92,8 +92,12 @@ in
     settings = {
       USB_AUTOSUSPEND = 0;
       RUNTIME_PM_BLACKLIST = "05:00.3 04:00.3 04:00.4";
+      CPU_SCALING_GOVERNOR_ON_AC = "performance";
+      CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
     };
   };
+
+  services.upower.enable = true;
   # services.auto-cpufreq.enable = true;
   # services.logind.lidSwitch = "ignore"; # Laptop does not go to sleep when lid is closed
   # hardware.ledger.enable = true;

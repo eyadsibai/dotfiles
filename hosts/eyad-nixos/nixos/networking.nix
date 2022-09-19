@@ -69,10 +69,6 @@ in
       '';
     };
 
-    # };
-
-    # Enables wireless support via wpa_supplicant.
-
     interfaces = {
       enp3s0f0 = {
         useDHCP = true;
