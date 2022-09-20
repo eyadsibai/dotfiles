@@ -20,7 +20,10 @@
     vieb
 
     ## GIS
-    qgis
+    # qgis
+
+    spyder
+
   ];
 
   # programs.go = { enable = true; };

@@ -3,6 +3,6 @@
 {
   # List your module files here
   # my-module = import ./my-module.nix;
-  enable-sudo = import ./pam.nix;
+  # enable-sudo = import ./pam.nix;
   dock-apps = import ./dock-apps.nix;
 }

@@ -1023,6 +1023,22 @@
         "type": "indirect"
       }
     },
+    "nixpkgs_8": {
+      "locked": {
+        "lastModified": 1663578619,
+        "narHash": "sha256-kNgJXZIr4pi2NbDUfjj4APa+LlCmRUM4Ly2Xf70PVaw=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "a13d59408da1108fc6c9ffe4750ab7a33c581d24",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nose": {
       "flake": false,
       "locked": {
@@ -1207,6 +1223,7 @@
     "root": {
       "inputs": {
         "dotfiles": "dotfiles",
+        "nixpkgs": "nixpkgs_8",
         "utils": "utils_2"
       }
     },
