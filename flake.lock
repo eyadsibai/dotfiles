@@ -1228,6 +1228,7 @@
         "polybar-themes": "polybar-themes",
         "spacebar": "spacebar",
         "spicetify-nix": "spicetify-nix",
+        "stable": "stable",
         "unstable": "unstable",
         "yabai-src": "yabai-src"
       }
@@ -1325,6 +1326,21 @@
         "owner": "the-argus",
         "repo": "spicetify-nix",
         "type": "github"
+      }
+    },
+    "stable": {
+      "locked": {
+        "lastModified": 1663587673,
+        "narHash": "sha256-4C4R/PV8+HjkgVd1Db8AuvHwhQp5vllVqOQEl6YDh3o=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "20dc478985d6545df53f0153f4af125eb014083d",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-22.05",
+        "type": "indirect"
       }
     },
     "ts-fold": {
