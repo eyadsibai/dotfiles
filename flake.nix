@@ -3,7 +3,7 @@
   inputs = {
     unstable.url = "nixpkgs/nixos-unstable";
     bleeding-edge.url = "nixpkgs/master";
-    # nixpkgs.url = "nixpkgs/nixos-22.11";
+    stable.url = "nixpkgs/nixos-22.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
     hardware.url = "github:NixOS/nixos-hardware";
@@ -107,6 +107,10 @@
       };
 
       templates = import ./templates;
+
+      nixosModules = import ./modules/nixos;
+      darwinModules = import ./modules/darwin;
+      homeManagerModules = import ./modules/home-manager;
 
       legacyPackages =
         forAllSystems
