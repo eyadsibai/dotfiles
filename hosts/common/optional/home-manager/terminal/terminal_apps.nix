@@ -9,7 +9,7 @@
     streamlink
     clog-cli
     doing
-    buku
+    # buku
     papis
     timetrap
     timewarrior
