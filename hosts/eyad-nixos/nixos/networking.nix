@@ -47,10 +47,10 @@ let
 in
 {
 
-  environment.packages = [
+  environment.systemPackages = [
     pkgs.wpa_supplicant_gui
-
   ];
+
   networking = {
     #TODO move to wpa https://nixos.org/manual/nixos/stable/index.html#sec-wireless
     hostName = hostname;
@@ -66,6 +66,7 @@ in
       extraConfig = ''
         ctrl_interface=/run/wpa_supplicant
         ctrl_interface_group=wheel
+        # eapol_version=2
       '';
     };
 
