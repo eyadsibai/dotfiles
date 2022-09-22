@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+# Text styles
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+# Set sink then exit
+setSink () {
+    result=$(pacmd set-default-sink "$1")
+    if [[ $result == "" ]]; then
+        echo "Output set to: ${bold}$1${normal}"
+        exit 0
+    else
+        echo $result
+        exit 1
+    fi
+}
+
+# Get list of card profiles
+readarray -t lines < <(pacmd list-cards | grep -v "available: no" | grep "output:" | cut -f1,2 -d":" | awk '{$1=$1};1' | grep "output:")
+
+# Profile select menu
+echo "${bold}Please select a profile:${normal}"
+select choice in "${lines[@]}"; do
+  [[ -n $choice ]] || { echo "${bold}Invalid profile. Please try again.${normal}" >&2; continue; }
+  break
+done
+
+# Set selected profile as active
+pactl set-card-profile 0 "$choice"
+
+# Get list of sinks
+readarray -t lines < <(pacmd list-sinks | grep "name: <" | cut -f2 -d"<" | cut -f1 -d">")
+
+# Automatically select sink if there is only one option
+if [[ ${#lines[@]} == 1 ]]; then
+    setSink "${lines[0]}"
+fi
+
+# Sink select menu
+echo "${bold}Please select an output:${normal}"
+select choice in "${lines[@]}"; do
+  [[ -n $choice ]] || { echo "${bold}Invalid output. Please try again.${normal}" >&2; continue; }
+  break
+done
+
+# Set selected sink as active
+setSink "$choice"

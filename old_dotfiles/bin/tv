@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+mpv --script-opts=iptv=1 ~/.config/mpv/tv_channels_eyadsibai_plus.m3u

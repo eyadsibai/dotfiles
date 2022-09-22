@@ -1,0 +1,10 @@
+#!/bin/sh
+
+country=${1:-Sweden}
+
+{ { [ -f ~/.cache/corona ] && [ ! -s ~/.cache/corona ];} || [ "$(date -r ~/.cache/corona '+%Y-%m-%d-%k' 2>/dev/null)" != "$(date '+%Y-%m-%d-%k')" ]; } &&
+    curl -s "https://corona-stats.online?source=2" > ~/.cache/corona
+
+grep "$country" ~/.cache/corona |
+    sed "s/\s*//g; s/║//g; s/│/;/g; s/\x1b\[[0-9;]*m//g " |
+    awk -F ';' '{print "😷 " $3 " (" $4") 💀 " $5 " ("$6") "}'

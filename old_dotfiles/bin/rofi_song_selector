@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+menu=$(mpc playlist -f '%position%\t %artist%\t%title%\t%date% %album%' | column -t -s $'\t' -o $'\t' | rofi -dmenu -p '> ')
+val=$?
+
+id="$(echo "${menu}" | awk -F '\t' '{ print $1 }')"
+
+if [[ $val -eq 1 ]]; then
+    exit
+else
+    mpc play "${id}"
+fi

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+procdiscord=$(pgrep -f -E "discord" | grep -E -vc "grep| vi | ed | emacs")
+proccaprine=$(pgrep -f -E "caprine" | grep -E -vc "grep| vi | ed | emacs")
+procyakyak=$(pgrep -f -E "yakyak" | grep -E -vc "grep| vi | ed | emacs")
+procsignal=$(pgrep -f -E "signal-desktop" | grep -E -vc "grep| vi | ed | emacs")
+procandroidmsgs=$(pgrep -f -E "android-messages-desktop" | grep -E -vc "grep| vi | ed | emacs")
+procwhatsapp=$(pgrep -f -E "whatsapp-nativefier-dark" | grep -E -vc "grep| vi | ed | emacs")
+proctelegram=$(pgrep -f -E "telegram-desktop" | grep -E -vc "grep| vi | ed | emacs")
+procslack=$(pgrep -f -E "slack" | grep -E -vc "grep| vi | ed | emacs")
+
+
+
+
+[ "${procdiscord}" -eq 0 ] && notify-send "discord has  started" && discord >/dev/null 2>&1 &
+[ "${proccaprine}" -eq 0 ] && notify-send "fb-messenger has been started" && caprine >/dev/null 2>&1 &
+[ "${procyakyak}" -eq 0 ] && notify-send "hangout has been started" && yakyak >/dev/null 2>&1 &
+[ "${procsignal}" -eq 0 ] && notify-send "signal has been started" && signal-desktop >/dev/null 2>&1 &
+[ "${procandroidmsgs}" -eq 0 ] && notify-send "phone msgs has been started" && android-messages-desktop >/dev/null 2>&1 &
+[ "${procwhatsapp}" -eq 0 ] && notify-send "whatsapp has been started" && whatsapp-nativefier-dark >/dev/null 2>&1 &
+[ "${proctelegram}" -eq 0 ] && notify-send "telegram has been started" && telegram-desktop >/dev/null 2>&1 &
+[ "${procslack}" -eq 0 ] && notify-send "slack has been started" && slack >/dev/null 2>&1 &

@@ -20,6 +20,8 @@ rec {
 
   has = element: any (x: x == element);
 
+  toGuest = builtins.replaceStrings [ "darwin" ] [ "linux" ];
+
   mkNixOSSystem =
     { hostname
     , pkgs

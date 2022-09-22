@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# script that prevents the screensaver from activating during
+# a full-screen application
+#
+# supported applications:
+# - firefox
+# - mpv
+#
+# start with ./noscr &
+#
+# dependencies:
+# - xorg-xprop
+# - xorg-xset
+# - xorg-xrandr
+# - awk
+# - grep (get rid of)
+# - sed (get rid of)
+# - wc (get rid of)
+
+sleep_time(){
+	# get the set sleep time from xset
+	xset q | awk '/timeout:/ {print $2}'
+}
+
+num_displays(){
+	# gets number of displays connected
+	xrandr | grep -swc connected
+}
+
+check_fullscreen(){
+	# checks if a fullscreen app is running on any connected displays
+	for ((i=0; i<$(num_displays); i++)); do
+		# get active window id
+		active_id=$(DISPLAY=:${i} xprop -root _NET_CLIENT_LIST_STACKING | sed 's/.*\, //')
+		if [[ -n "$active_id" ]]; then
+			# check if that window is fullscreen
+			is_fullscreen=$(DISPLAY=:${i} xprop -id "$active_id" | grep -c _NET_WM_STATE_FULLSCREEN)
+			if [ "$is_fullscreen" -ge 1 ]; then
+				# check if the window is one of the whitelisted apps
+				if app_running; then
+					# reset the screensaver
+					xset s reset
+				fi
+			fi
+		fi
+	done
+}
+
+run_check(){
+	# checks if the active window is the given app running
+	active_title=$(xprop -id "$active_id" | grep "WM_CLASS(STRING)")
+	if [[ "${active_title,,}" = *$1* ]]; then
+		if [ "$(pidof -s "$1")" ]; then
+			return 0
+		fi
+	fi
+
+	return 1
+}
+
+app_running(){
+	# verifies active fullscreen app
+
+	# check firefox (html5)
+	if run_check firefox; then
+		return 0
+	fi
+
+	# check mpv
+	if run_check mpv; then
+		return 0
+	fi
+
+	return 1
+}
+
+while true
+do
+	check_fullscreen
+	sleep $(($(sleep_time)-1))
+done
+
+exit 1
