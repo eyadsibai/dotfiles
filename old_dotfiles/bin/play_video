@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+notify-send -t 3000 --icon=video-television "Playing Video" "$(xclip -o)";
+umpv "$(xclip -o)"
