@@ -68,12 +68,11 @@
     remapCapsLockToControl = true;
   };
 
-
   targets.darwin.dock = {
     # Apps to be added to Dock.
     apps = [
       "Visual Studio Code"
-      "iTerm2"
+      # "iTerm2"
       "Slack"
     ];
 
@@ -82,8 +81,6 @@
       ({ path = "/Applications"; })
       ({ path = "${config.users.users.${username}.home}/Downloads"; sort = "dateadded"; view = "fan"; })
     ];
-
-
   };
   # Add ability to used TouchID for sudo authentication
   security.pam.enableSudoTouchIdAuth = true;
