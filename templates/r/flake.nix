@@ -22,6 +22,59 @@
               knitr
               lubridate
               Robyn
+              data_table
+              simstudy
+              Matrix
+              RSQLite
+              Rcpp
+              SOAR
+              biganalytics
+              bigmemory
+              bigtabulate
+              caret
+              digest
+              doMC
+              dplyr
+              e1071
+              ff
+              foreach
+              gbm
+              ggmap
+              ggplot2
+              glmnet
+              leaflet
+              lpSolve
+              mapview
+              mlr3
+              nnet
+              lidR
+              ncdf4
+              jsonlite
+              geonames
+              igraph
+              rnaturalearth
+              RNetCDF
+              classInt
+              randomForest
+              randtoolbox
+              raster
+              rbenchmark
+              rgdal
+              rgl
+              SimMultiCorrData
+              simstudy
+              sf
+              sp
+              spdep
+              sqldf
+              stringi
+              tau
+              tidyverse
+              tm
+              xgboost
+              xts
+              zoo
+              digest
             ];
           };
 
@@ -34,9 +87,12 @@
 
         buildInputs = with pkgs; [
           RStudio-with-my-packages
+          pkgs.rPackages.R
         ];
         shellHook = ''
         '';
+        MANPATH = "${R.outPath}/share/man";
+
       };
     });
 }

@@ -38,5 +38,4 @@
     description = "flake for rust project";
     path = ./rust;
   };
-  # https://github.com/vlulla/dev-shells
 }
