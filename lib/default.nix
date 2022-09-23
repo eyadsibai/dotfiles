@@ -266,11 +266,12 @@ rec {
         ];
   };
 
-  forAllSystems = genAttrs systems;
-  systems = [
+  forAllSystems = genAttrs [
     "aarch64-linux"
     "x86_64-linux"
     "aarch64-darwin"
     "x86_64-darwin"
+    "i686-linux"
   ];
+
 }
