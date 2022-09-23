@@ -1,5 +1,5 @@
 {
-  description = "A basic flake for java project";
+  description = "A basic flake for go project";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
@@ -20,16 +20,15 @@
         ];
 
         buildInputs = with pkgs; [
-          maven
-          jdk11
-          clojure
-          leiningen
-          clj-kondo
-          jdtls
+          go
+          gopls
+          protoc-gen-go
+          protoc-gen-go-grpc
         ];
         shellHook = ''
-          export JAVA_HOME=${pkgs.jdk11}
-          PATH="${pkgs.jdk11}/bin:$PATH"
+          export GO111MODULE=on
+          export GOPATH=$XDG_DATA_HOME/go
+          export PATH=$GOPATH/bin:$PATH
         '';
       };
     });

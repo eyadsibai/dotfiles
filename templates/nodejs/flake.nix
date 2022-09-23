@@ -35,10 +35,10 @@
         ];
         shellHook = ''
           # alias rw = "yarn redwood"
-           export NPM_CONFIG_TMP="$XDG_RUNTIME_DIR/npm"
-           export NPM_CONFIG_CACHE="$XDG_CACHE_HOME/npm"
-           export NPM_CACHE_PREFIX="$XDG_CACHE_HOME/npm"
-           export PATH="$(yarn global bin):$PATH"
+          export NPM_CONFIG_TMP="$XDG_RUNTIME_DIR/npm"
+          export NPM_CONFIG_CACHE="$XDG_CACHE_HOME/npm"
+          export NPM_CACHE_PREFIX="$XDG_CACHE_HOME/npm"
+          export PATH="$(yarn global bin):$PATH"
           export PRISMA_MIGRATION_ENGINE_BINARY="${pkgs.prisma-engines}/bin/migration-engine"
           export PRISMA_QUERY_ENGINE_BINARY="${pkgs.prisma-engines}/bin/query-engine"
           export PRISMA_QUERY_ENGINE_LIBRARY="${pkgs.prisma-engines}/lib/libquery_engine.node"

@@ -1,5 +1,5 @@
 {
-  description = "A basic flake for java project";
+  description = "A basic flake for erlang project";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
@@ -20,16 +20,12 @@
         ];
 
         buildInputs = with pkgs; [
-          maven
-          jdk11
-          clojure
-          leiningen
-          clj-kondo
-          jdtls
+          erlangR23
+
         ];
+        MANPATH = "${erlangR23.outPath}/lib/erlang/man";
+
         shellHook = ''
-          export JAVA_HOME=${pkgs.jdk11}
-          PATH="${pkgs.jdk11}/bin:$PATH"
         '';
       };
     });
