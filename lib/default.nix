@@ -21,27 +21,64 @@ rec {
   has = element: any (x: x == element);
 
   toGuest = builtins.replaceStrings [ "darwin" ] [ "linux" ];
+  mkVMNixOSSystem =
+    { hostname
+    , legacyPkgs
+    , username ? "eyad"
+    , guest-system
+    , host-system
+    }:
+    nixosSystem {
+      system = guest-system;
+      pkgs = legacyPkgs.${guest-system};
+      specialArgs = {
+        inherit inputs outputs hostname username;
+      };
+      modules =
+        attrValues (import ../modules/nixos)
+        ++ [
+          ../hosts/${hostname}
+          # ../hosts/common/system/nixos
+          # inputs.nur.nixosModules.nur
+          { virtualisation.host.pkgs = legacyPkgs.${host-system}; }
+          inputs.home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useUserPackages = true;
+              useGlobalPkgs = true;
+              users.${username} = {
+                imports =
+                  [
+                    ../hosts/${hostname}/home-manager
+                    # ../hosts/common/home-manager/nixos
+                  ]
+                  ++ attrValues (import ../modules/home-manager);
+              };
+              extraSpecialArgs = { inherit inputs outputs hostname username; };
+              backupFileExtension = "backup";
+            };
+          }
+        ];
+    };
 
   mkNixOSSystem =
     { hostname
-    , pkgs
+    , legacyPkgs
     , username ? "eyad"
-    , # , system
-      is-wsl ? false
-    , is-laptop ? false
+    , system
+    , is-wsl ? false
     , colorscheme ? null
     , wallpaper ? null
-    , host-pkgs ? null
     }:
     nixosSystem {
-      inherit pkgs;
+      inherit system;
+      pkgs = legacyPkgs.${system};
       specialArgs = {
-        inherit inputs outputs hostname username is-laptop colorscheme wallpaper;
+        inherit inputs outputs hostname username colorscheme wallpaper;
       };
       modules =
         attrValues (import ../modules/nixos)
         ++ (optional is-wsl inputs.nixos-wsl.nixosModules.wsl)
-        ++ (optional (! isNull host-pkgs) { virtualisation.host.pkgs = host-pkgs; })
         ++ [
           ../hosts/${hostname}
           ../hosts/common/system/nixos
@@ -64,7 +101,7 @@ rec {
                   ]
                   ++ attrValues (import ../modules/home-manager);
               };
-              extraSpecialArgs = { inherit inputs outputs hostname username is-laptop colorscheme wallpaper; };
+              extraSpecialArgs = { inherit inputs outputs hostname username colorscheme wallpaper; };
               backupFileExtension = "backup";
             };
           }
@@ -73,13 +110,15 @@ rec {
 
   mkDarwinSystem =
     { hostname
-    , pkgs
+    , legacyPkgs
     , username ? "eyad"
     , colorscheme ? null
-    ,
+    , system
+
     }:
     darwinSystem {
-      inherit pkgs;
+      pkgs = legacyPkgs.${system};
+      inherit system;
       specialArgs = {
         inherit inputs outputs hostname username colorscheme;
       };
