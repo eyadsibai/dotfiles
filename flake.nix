@@ -136,13 +136,12 @@
             import ./dev-shells { inherit pkgs lib; }
           );
 
-
       darwinConfigurations = {
         "eyad-mac" =
           mkDarwinSystem {
             hostname = "eyad-mac";
             system = "aarch64-darwin";
-            legacyPkgs = legacyPackages;
+            inherit legacyPackages;
             colorscheme = "tokyo-night-storm";
           };
       };
@@ -152,14 +151,13 @@
           mkNixOSSystem {
             hostname = "home-server";
             system = "x86_64-linux";
-            legacyPkgs = legacyPackages;
+            inherit legacyPackages;
           };
         "desktop-nixos-wsl" =
           mkNixOSSystem {
             hostname = "desktop-nixos-wsl";
             system = "x86_64-linux";
-            legacyPkgs = legacyPackages;
-
+            inherit legacyPackages;
             is-wsl = true;
           };
 
@@ -167,7 +165,7 @@
           mkNixOSSystem {
             hostname = "eyad-nixos";
             system = "x86_64-linux";
-            legacyPkgs = legacyPackages;
+            inherit legacyPackages;
             is-laptop = true;
             colorscheme = "tokyo-night-storm";
             wallpaper = "aurora-borealis-water-mountain";
@@ -177,10 +175,8 @@
           hostname = "vm-linux-aarch64-darwin";
           guest-system = "aarch64-linux";
           host-system = "aarch64-darwin";
-          legacyPkgs = legacyPackages;
+          inherit legacyPackages;
         };
-
       };
-
     };
 }

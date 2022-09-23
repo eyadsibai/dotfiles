@@ -23,14 +23,14 @@ rec {
   toGuest = builtins.replaceStrings [ "darwin" ] [ "linux" ];
   mkVMNixOSSystem =
     { hostname
-    , legacyPkgs
+    , legacyPackages
     , username ? "eyad"
     , guest-system
     , host-system
     }:
     nixosSystem {
       system = guest-system;
-      pkgs = legacyPkgs.${guest-system};
+      pkgs = legacyPackages.${guest-system};
       specialArgs = {
         inherit inputs outputs hostname username;
       };
@@ -63,7 +63,7 @@ rec {
 
   mkNixOSSystem =
     { hostname
-    , legacyPkgs
+    , legacyPackages
     , username ? "eyad"
     , system
     , is-wsl ? false
@@ -72,7 +72,7 @@ rec {
     }:
     nixosSystem {
       inherit system;
-      pkgs = legacyPkgs.${system};
+      pkgs = legacyPackages.${system};
       specialArgs = {
         inherit inputs outputs hostname username colorscheme wallpaper;
       };
@@ -110,14 +110,14 @@ rec {
 
   mkDarwinSystem =
     { hostname
-    , legacyPkgs
+    , legacyPackages
     , username ? "eyad"
     , colorscheme ? null
     , system
 
     }:
     darwinSystem {
-      pkgs = legacyPkgs.${system};
+      pkgs = legacyPackages.${system};
       inherit system;
       specialArgs = {
         inherit inputs outputs hostname username colorscheme;
