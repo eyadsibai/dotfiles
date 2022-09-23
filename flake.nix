@@ -83,13 +83,13 @@
     flake-utils-plus = {
       url = "github:gytis-ivaskevicius/flake-utils-plus";
     };
-
+    macos-builder.url = "github:Gabriella439/macos-builder";
 
   };
   outputs = inputs:
     let
       lib = import ./lib { inherit inputs; };
-      inherit (lib) forAllSystems mkNixOSSystem mkDarwinSystem mergeEnvs nixConfig toGuest;
+      inherit (lib) forAllSystems mkNixOSSystem mkVMNixOSSystem mkDarwinSystem mergeEnvs nixConfig toGuest;
       overlays = {
         default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlay;
@@ -204,7 +204,8 @@
         "eyad-mac" =
           mkDarwinSystem {
             hostname = "eyad-mac";
-            pkgs = legacyPackages.aarch64-darwin;
+            system = "aarch64-darwin";
+            legacyPkgs = legacyPackages;
             colorscheme = "tokyo-night-storm";
           };
       };
@@ -213,70 +214,36 @@
         "home-server" =
           mkNixOSSystem {
             hostname = "home-server";
-            pkgs = legacyPackages.x86_64-linux;
+            system = "x86_64-linux";
+            legacyPkgs = legacyPackages;
           };
         "desktop-nixos-wsl" =
           mkNixOSSystem {
             hostname = "desktop-nixos-wsl";
-            pkgs = legacyPackages.x86_64-linux;
+            system = "x86_64-linux";
+            legacyPkgs = legacyPackages;
+
             is-wsl = true;
           };
 
         "eyad-nixos" =
           mkNixOSSystem {
             hostname = "eyad-nixos";
-            pkgs = legacyPackages.x86_64-linux;
+            system = "x86_64-linux";
+            legacyPkgs = legacyPackages;
             is-laptop = true;
             colorscheme = "tokyo-night-storm";
             wallpaper = "aurora-borealis-water-mountain";
           };
 
-        "vm-linux-aarch64-darwin" = mkNixOSSystem {
-          # system = toGuest "aarch64-darwin";
+        "vm-linux-aarch64-darwin" = mkVMNixOSSystem {
           hostname = "vm-linux-aarch64-darwin";
-          pkgs = legacyPackages."aarch64-darwin";
-          host-pkgs = legacyPackages.${toGuest "aarch64-darwin"};
-        };
-        "vm-linux-aarch64-darwin-builder" = mkNixOSSystem {
-          # system = toGuest "aarch64-darwin";
-          hostname = "vm-linux-aarch64-darwin-builder";
-          pkgs = legacyPackages."aarch64-darwin";
-          host-pkgs = legacyPackages.${toGuest "aarch64-darwin"};
+          guest-system = "aarch64-linux";
+          host-system = "aarch64-darwin";
+          legacyPkgs = legacyPackages;
         };
 
       };
-
-      packages = {
-        aarch64-darwin.vm-linux-aarch64-darwin = nixosConfigurations.vm-linux-aarch64-darwin.config.system.build.vm;
-        aarch64-darwin.vm-linux-aarch64-darwin-builder = nixosConfigurations.vm-linux-aarch64-darwin-builder.config.system.build.vm;
-
-        aarch64-darwin.app =
-          let
-            pkgs = legacyPackages.aarch64-darwin;
-
-            privateKey = "/etc/nix/nixbld_ed25519";
-
-          in
-          pkgs.writeShellScript "create-builder.sh" ''
-            (set -x; sudo install -g nixbld -m 400 ${./keys/nixbld_ed25519} ${privateKey})
-
-            ${packages.vm-linux-aarch64-darwin-builder}/bin/run-nixos-vm
-          '';
-      };
-      defaultPackage.aarch64-darwin = packages.aarch64-darwin."vm-linux-aarch64-darwin";
-
-
-      defaultApp.aarch64-darwin = apps.aarch64-darwin.default;
-
-      apps.aarch64-darwin.default = {
-        type = "app";
-
-        program = "${packages.aarch64-darwin.app}";
-      };
-
-
-
 
     };
-
 }
