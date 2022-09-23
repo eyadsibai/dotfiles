@@ -103,17 +103,15 @@
         # comma = inputs.comma.overlays.default;
       };
 
-      legacyPackages =
-        forAllSystems
-          (system:
-            import
-              inputs.nixpkgs
-              {
-                inherit system;
-                overlays = builtins.attrValues overlays;
-                config = nixConfig;
-              }
-          );
+      legacyPackages = forAllSystems (system:
+        import
+          inputs.nixpkgs
+          {
+            inherit system;
+            overlays = builtins.attrValues overlays;
+            config = nixConfig;
+          }
+      );
     in
     rec {
       inherit lib;
@@ -126,15 +124,12 @@
       darwinModules = import ./modules/darwin;
       homeManagerModules = import ./modules/home-manager;
 
-      devShells =
-        forAllSystems
-          (
-            system:
-            let
-              pkgs = legacyPackages.${system};
-            in
-            import ./dev-shells { inherit pkgs lib; }
-          );
+      devShells = forAllSystems (system:
+        let
+          pkgs = legacyPackages.${system};
+        in
+        import ./dev-shells { inherit pkgs lib; }
+      );
 
       darwinConfigurations = {
         "eyad-mac" =
