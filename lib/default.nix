@@ -39,7 +39,7 @@ rec {
         ++ [
           ../hosts/${hostname}
           # ../hosts/common/system/nixos
-          # inputs.nur.nixosModules.nur
+          inputs.nur.nixosModules.nur
           { virtualisation.host.pkgs = legacyPackages.${host-system}; }
           inputs.home-manager.nixosModules.home-manager
           {
