@@ -75,7 +75,8 @@ in
       audacious
       # simple music player
       autojump
-      aws
+      # awscli
+      awscli2
       bitwarden
       bitwarden-cli
       # command-line client for the password manager
@@ -240,6 +241,7 @@ in
       # General Config
       usbutils
 
+      geogebra6
       # Wayland configuration
       #autotiling       # Tiling Script
       #swayidle         # Idle Management Daemon

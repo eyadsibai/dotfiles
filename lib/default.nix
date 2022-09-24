@@ -228,7 +228,7 @@ rec {
 
   nixConfig = {
     # allowUnfree = true;
-    permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" ];
+    permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" "electron-14.2.9" ];
     allowUnfreePredicate = pkg:
       builtins.elem (inputs.nixpkgs.lib.getName pkg)
         [
@@ -263,6 +263,7 @@ rec {
           "facetimehd-calibration"
           "facetimehd-firmware"
           "steam"
+          "geogebra"
         ];
   };
 
