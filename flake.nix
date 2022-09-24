@@ -161,7 +161,7 @@
             hostname = "eyad-nixos";
             system = "x86_64-linux";
             inherit legacyPackages;
-            is-laptop = true;
+            #        is-laptop = true;
             colorscheme = "tokyo-night-storm";
             wallpaper = "aurora-borealis-water-mountain";
           };
