@@ -1,5 +1,5 @@
 {
-  description = "A basic flake for erlang project";
+  description = "A basic flake for go project";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
@@ -21,9 +21,14 @@
 
         buildInputs = with pkgs; [
           go
+          gopls
+          protoc-gen-go
+          protoc-gen-go-grpc
         ];
-
         shellHook = ''
+          export GO111MODULE=on
+          export GOPATH=$XDG_DATA_HOME/go
+          export PATH=$GOPATH/bin:$PATH
         '';
       };
     });
