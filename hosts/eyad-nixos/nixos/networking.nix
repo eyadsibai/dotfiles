@@ -60,6 +60,7 @@ in
     # };
     wireless = {
       enable = true;
+      # iwd.enable = true;
       networks = config.secrets.networks;
       userControlled.enable = true;
       # Configuration for wpa_gui

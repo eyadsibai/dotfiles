@@ -37,7 +37,7 @@
           defaultPackage = with pkgs.poetry2nix;
             mkPoetryApplication {
               projectDir = ./.;
-              preferWheels = false;
+              preferWheels = true;
             };
 
           defaultApp = utils.lib.mkApp {
