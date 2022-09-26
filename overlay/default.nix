@@ -15,7 +15,7 @@ let
       prev.whatsapp-for-linux.overrideAttrs
         (
           oldAttrs: rec {
-            version = "1.4.6";
+            version = "1.4.7";
             src =
               prev.fetchFromGitHub
                 {
@@ -23,7 +23,7 @@ let
                   repo = "${oldAttrs.pname}";
                   rev = "v${version}";
                   # sha256 = prev.lib.fakeSha256;
-                  sha256 = "sha256-fpLjdEgglbc9kMHTGEPq7+UDB2Qh5e54l8mDOls79LA=";
+                  sha256 = "sha256-LJ2c0+t+b4QnvCnsldutRA2N5EET+EpGNVoTqOGTQkY=";
                 };
             buildInputs = [
               prev.glib-networking
