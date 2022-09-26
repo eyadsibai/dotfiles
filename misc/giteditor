@@ -15,21 +15,21 @@ if [[ "$(uname -r)" = *Microsoft* ]]; then
 		arg=$(sed -e 's/^\/mnt\///' -e 's/^\///' -e 's/\//\\/g' -e 's/^./\0:/' <<< "$arg")
 	else
 		# we can't use a graphical editor, path is not accessible to the outside
-		nano $arg $@
+		nano "$arg" $@
 		exit $?
 	fi
 fi
 
 if which subl.exe >/dev/null 2>&1; then
 	# native windows
-	subl.exe -nw $arg $@
+	subl.exe -nw "$arg" $@
 	exit $?
 elif which subl3 >/dev/null 2>&1; then
 	# native linux
-	subl3 -nw $arg $@
+	subl3 -nw "$arg" $@
 	exit $?
 fi
 
 # fallback editor
-nano $arg $@
+nano "$arg" $@
 exit $?

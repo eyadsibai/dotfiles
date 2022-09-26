@@ -11,7 +11,7 @@ setSink () {
         echo "Output set to: ${bold}$1${normal}"
         exit 0
     else
-        echo $result
+        echo "$result"
         exit 1
     fi
 }

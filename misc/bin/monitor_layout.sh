@@ -19,13 +19,13 @@ function gen_xrandr_only()
 
     for entry in $(seq 0 $((${NUM_MONITORS}-1)))
     do
-        if [ $selected != $entry ]
+        if [ "$selected" != "$entry" ]
         then
             cmd="$cmd --output ${MONITORS[$entry]} --off"
         fi
     done
 
-    echo $cmd
+    echo "$cmd"
 }
 
 
@@ -50,7 +50,7 @@ for entry_a in $(seq 0 $((${NUM_MONITORS}-1)))
 do
     for entry_b in $(seq 0 $((${NUM_MONITORS}-1)))
     do
-        if [ $entry_a != $entry_b ]
+        if [ "$entry_a" != "$entry_b" ]
         then
             TILES[$index]="Dual Screen ${MONITORS[$entry_a]} -> ${MONITORS[$entry_b]}"
             COMMANDS[$index]="xrandr --output ${MONITORS[$entry_a]} --auto \
@@ -69,7 +69,7 @@ for entry_a in $(seq 0 $((${NUM_MONITORS}-1)))
 do
     for entry_b in $(seq 0 $((${NUM_MONITORS}-1)))
     do
-        if [ $entry_a != $entry_b ]
+        if [ "$entry_a" != "$entry_b" ]
         then
             TILES[$index]="Clone Screen ${MONITORS[$entry_a]} -> ${MONITORS[$entry_b]}"
             COMMANDS[$index]="xrandr --output ${MONITORS[$entry_a]} --auto \
@@ -88,7 +88,7 @@ function gen_entries()
 {
     for a in $(seq 0 $(( ${#TILES[@]} -1 )))
     do
-        echo $a ${TILES[a]}
+        echo "$a" "${TILES[a]}"
     done
 }
 
