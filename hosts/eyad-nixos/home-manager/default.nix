@@ -449,4 +449,46 @@ in
       cmd = "";
     };
   };
+
+  home.file.".condarc".text = ''
+    channels:
+      - defaults
+      - conda-forge
+
+    always_yes: true
+
+    track_features;
+      - nomkl
+
+    auto_activate_base: false
+  '';
+
+  xdg.configFile."wget/wgetrc".text = ''
+    hsts-file=~/.cache/wget-hsts
+  '';
+
+  xdg.configFile."pudb/pudb.cfg".text = ''
+    [pudb]
+      breakpoints_weight = 1
+      current_stack_frame = top
+      custom_shell =
+      custom_stringifier =
+      custom_theme =
+      display = auto
+      line_numbers = True
+      prompt_on_quit = True
+      seen_welcome = e034
+      shell = ipython
+      sidebar_width = 0.5
+      stack_weight = 1
+      stringifier = type
+      theme = midnight
+      variables_weight = 1
+      wrap_variables = True
+  '';
+
+  # xdg.configFile."discocss/custom.css".text = ''
+
+
+
 }
