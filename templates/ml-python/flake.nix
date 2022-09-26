@@ -19,10 +19,10 @@
           custom_pkgs = dotfiles.legacyPackages.${system};
 
         in
-        {
+        rec {
           devShell = pkgs.mkShell {
             buildInputs = with pkgs; [
-              python3Packages.poetry
+              poetry
               custom_pkgs.rgf
               custom_pkgs.fast-rgf
               vowpal-wabbit
@@ -30,8 +30,11 @@
               opencv
               tesseract5
               # tensorflow-lite
-
-            ];
+              pre-commit
+              #            defaultPackage
+            ]
+              #             ++ [ defaultEnv]
+            ;
           };
 
           defaultPackage = with pkgs.poetry2nix;
@@ -39,6 +42,11 @@
               projectDir = ./.;
               preferWheels = true;
             };
+
+          defaultEnv = pkgs.poetry2nix.mkPoetryEnv {
+            projectDir = ./.;
+            preferWheels = true;
+          };
 
           defaultApp = utils.lib.mkApp {
             drv = self.defaultPackage."${system}";
