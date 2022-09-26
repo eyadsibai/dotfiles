@@ -32,14 +32,14 @@ if [ $DELETE = "1" ]; then
 	echo -e "\033[31mNote: \`$BRANCHNAME\` will be deleted!\033[0m"
 fi
 
-if [ $SAVEGAME_COMMITS != "0" ]; then
+if [ "$SAVEGAME_COMMITS" != "0" ]; then
 	echo -e "\033[31mWarning! You have '$SQUASH' commits in \`$BRANCHNAME\`\033[0m"
 	git ir
 	SAVEGAME_COMMITS=$(git --no-pager blog --pretty=oneline | grep "$SQUASH" | wc -l)
 fi
 
 # Lint Checking
-FILES=$(git diff origin/${1-master}.. --pretty=format:"" --name-only | sed '/^$/d')
+FILES=$(git diff origin/"${1-master}".. --pretty=format:"" --name-only | sed '/^$/d')
 
 for file in $FILES
 do
@@ -48,7 +48,7 @@ do
 	EXT=${FILENAME##*.}
 
 	if [[ $EXT == "php" ]]; then
-		OUTPUT=$(php -l $file)
+		OUTPUT=$(php -l "$file")
 
 		# If we find any errors on branch, reject merge
 		if [ "${OUTPUT:0:25}" != "No syntax errors detected" ]; then
