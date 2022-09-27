@@ -11,9 +11,14 @@ in
     enable = true;
     loadAutoconfig = true;
     settings = {
+      downloads = {
+        location.remember = true;
+        position = "bottom";
+      };
+      new_instance_open_target = "window";
       content.javascript.can_access_clipboard = true;
       content = {
-        blocking.enable = true;
+        search.incremental = false;
         blocking.hosts.lists = [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" ];
         blocking.method = "both";
         blocking.adblock.lists = [
@@ -30,14 +35,29 @@ in
           "https://github.com/uBlockOrigin/uAssets/raw/master/filters/filters.txt"
           "https://www.i-dont-care-about-cookies.eu/abp/"
         ];
+        pdfjs = true;
+        plugins = true;
+        print_element_backgrounds = false;
+        windowed_fullscreen = true;
+
+      };
+      confirm_quit = [ "multiple-tabs" ];
+      auto_save = {
+        interval = 10000;
+        session = true;
+
       };
       tabs = {
         show = "multiple";
         position = "left";
+        background = true;
       };
       fonts = {
         default_family = config.fontProfiles.regular.family;
         default_size = "12pt";
+        tabs = "8pt ${config.fontProfiles.monospace.family}";
+        statusbar = "8pt ${config.fontProfiles.monospace.family}";
+        web.family.fantasy = config.fontProfiles.regular.family;
       };
       colors = {
         webpage = {
@@ -176,12 +196,22 @@ in
     aliases = {
       paywall = "open https://12ft.io/proxy?q={url}";
       google-cache = "open https://www.google.com/search?q=cache:{url}";
+      google = "open https://google.com/";
     };
     keyBindings = {
       normal = {
         # Open videos in mpv
         "<Alt-o>" = "hint links spawn --verbose --detach ${pkgs.mpv}/bin/mpv {hint-url}";
         "<Alt-Shift-o>" = "spawn --verbose --detach ${pkgs.mpv}/bin/mpv {url}";
+        "m" = "spawn umpv {url}";
+        "M" = "hint links spawn umpv {hint-url}";
+        ";M" = "hint --rapid links spawn umpv {hint-url}";
+        ",p" = "config-cycle -p content.plugins ;; reload";
+        ",rtv" = "spawn termite -e \"rtv {url}\" ";
+        ",c" = "spawn -d firefox {url}";
+        # css from https://github.com/alphapapa/solarized-everything-css.git
+        ",n" =
+          "config-cycle content.user_stylesheets ~/.config/qutebrowser/css/solarized-dark-all-sites.css ~/.config/qutebrowser/css/gruvbox-all-sites.css ~/.config/qutebrowser/css/darculized-all-sites.css \"\" ";
       };
     };
     searchEngines = {
@@ -192,6 +222,8 @@ in
       yt = "https://www.youtube.com/results?search_query={}";
       protondb = "https://www.protondb.com/search?q={}";
       repology = "https://repology.org/projects/?search={}";
+      duckduckgo = "https://duckduckgo.com/?q={}";
+      "w" = "https://en.wikipedia.org/?search={}";
     };
     quickmarks = {
       github = "https://github.com";
