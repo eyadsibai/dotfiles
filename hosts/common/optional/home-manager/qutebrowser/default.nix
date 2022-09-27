@@ -18,7 +18,6 @@ in
       new_instance_open_target = "window";
       content.javascript.can_access_clipboard = true;
       search.incremental = false;
-      search.ignore_case = true;
       content = {
         blocking.hosts.lists = [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" ];
         blocking.method = "both";
@@ -39,7 +38,7 @@ in
         pdfjs = true;
         plugins = true;
         print_element_backgrounds = false;
-        windowed_fullscreen = true;
+        fullscreen.window = true;
 
       };
       confirm_quit = [ "multiple-tabs" ];
