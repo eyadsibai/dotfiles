@@ -130,7 +130,14 @@
     enableZshIntegration = config.programs.zsh.enable;
     enableFishIntegration = config.programs.fish.enable;
   };
-  programs.ssh = { enable = true; };
+  programs.ssh = {
+    enable = true;
+    compression = true;
+    forwardAgent = false;
+    serverAliveCountMax = 10;
+    serverAliveInterval = 60;
+    matchBlocks = config.secrets.ssh_config;
+  };
   programs.taskwarrior = { enable = true; };
   programs.tmux = { enable = true; };
   programs.topgrade = { enable = true; };
