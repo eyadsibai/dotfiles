@@ -36,11 +36,11 @@
 
   services.pueue.enable = pkgs.hostPlatform.isLinux;
   programs.broot = {
-    enable = true;
+    enable = false;
     enableBashIntegration = config.programs.bash.enable;
     enableZshIntegration = config.programs.zsh.enable;
     enableFishIntegration = config.programs.fish.enable;
-    verbs = [
+    settings.verbs = [
       {
         invocation = "p";
         execution = ":parent";

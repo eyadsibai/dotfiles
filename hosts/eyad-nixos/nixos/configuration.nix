@@ -26,6 +26,7 @@ in
 
   # Thermals and cooling
   services.thermald.enable = true;
+  programs.kdeconnect.enable = true;
   boot = {
     loader.systemd-boot = {
       enable = true;
@@ -73,7 +74,6 @@ in
   hardware.trackpoint.enable = true;
   hardware.bluetooth = {
     enable = true;
-    package = pkgs.bluezFull;
     powerOnBoot = true;
   };
   services.blueman.enable = true;
