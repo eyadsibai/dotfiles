@@ -1,8 +1,17 @@
 { config
 , pkgs
+, lib
 , ...
 }:
-# assert config.programs.bash.enable;
+let
+  generateLocalForwards = port: {
+    bind.port = port;
+    host = {
+      address = "localhost";
+      port = port;
+    };
+  };
+in
 {
   home.packages = with pkgs; [
     # swaglyrics
@@ -136,7 +145,25 @@
     forwardAgent = false;
     serverAliveCountMax = 10;
     serverAliveInterval = 60;
-    matchBlocks = config.secrets.ssh_config;
+    matchBlocks = {
+      "eyad_pc" = {
+        hostname = config.secrets.ssh_config."eyad_pc".hostname;
+        user = config.secrets.ssh_config."eyad_pc".user;
+        port = config.secrets.ssh_config."eyad_pc".port;
+        localForwards = [
+          (generateLocalForwards 8989)
+          (generateLocalForwards 7878)
+          (generateLocalForwards 8002)
+          (generateLocalForwards 9117)
+          (generateLocalForwards 8003)
+          (generateLocalForwards 8004)
+          (generateLocalForwards 8181)
+          (generateLocalForwards 9091)
+          (generateLocalForwards 8443)
+          (generateLocalForwards 32400)
+        ];
+      };
+    };
   };
   programs.taskwarrior = { enable = true; };
   programs.tmux = { enable = true; };
