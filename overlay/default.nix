@@ -40,7 +40,7 @@ let
 
     yabai =
       let
-        version = "4.0.0-dev";
+        version = "5.0.0-dev";
         buildSymlinks = prev.runCommand "build-symlinks" { } ''
           mkdir -p $out/bin
           ln -s /usr/bin/xcrun /usr/bin/xcodebuild /usr/bin/tiffutil /usr/bin/qlmanage $out/bin
