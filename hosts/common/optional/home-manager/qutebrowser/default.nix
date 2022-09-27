@@ -17,8 +17,9 @@ in
       };
       new_instance_open_target = "window";
       content.javascript.can_access_clipboard = true;
+      search.incremental = false;
+      search.ignore_case = true;
       content = {
-        search.incremental = false;
         blocking.hosts.lists = [ "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" ];
         blocking.method = "both";
         blocking.adblock.lists = [
@@ -55,7 +56,8 @@ in
       fonts = {
         default_family = config.fontProfiles.regular.family;
         default_size = "12pt";
-        tabs = "8pt ${config.fontProfiles.monospace.family}";
+        tabs.selected = "8pt ${config.fontProfiles.monospace.family}";
+        tabs.unselected = "8pt ${config.fontProfiles.monospace.family}";
         statusbar = "8pt ${config.fontProfiles.monospace.family}";
         web.family.fantasy = config.fontProfiles.regular.family;
       };
