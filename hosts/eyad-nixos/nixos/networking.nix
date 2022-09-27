@@ -109,22 +109,22 @@ in
     };
     firewall = {
       enable = true;
-      allowedTCPPortRanges = [
-        (lib.optionals
-          homeConfig.services.kdeconnect.enable
-          {
-            from = 1714;
-            to = 1764;
-          })
-      ];
-      allowedUDPPortRanges = [
-        (lib.optionals
-          homeConfig.services.kdeconnect.enable
-          {
-            from = 1714;
-            to = 1764;
-          })
-      ];
+      # allowedTCPPortRanges = [
+      #   (lib.optionals
+      #     homeConfig.services.kdeconnect.enable
+      #     {
+      #       from = 1714;
+      #       to = 1764;
+      #     })
+      # ];
+      # allowedUDPPortRanges = [
+      #   (lib.optionals
+      #     homeConfig.services.kdeconnect.enable
+      #     {
+      #       from = 1714;
+      #       to = 1764;
+      #     })
+      # ];
     };
     # }
 

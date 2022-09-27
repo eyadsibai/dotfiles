@@ -264,6 +264,7 @@ rec {
           "facetimehd-firmware"
           "steam"
           "geogebra"
+          "mathematica"
         ];
   };
 

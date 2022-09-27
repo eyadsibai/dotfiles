@@ -305,6 +305,7 @@ in
       mycli
       iredis
       usql
+      mathematica
     ]
     ++ (lib.optionals systemConfig.networking.networkmanager.enable [ haskellPackages.network-manager-tui ]);
 
@@ -389,6 +390,9 @@ in
     };
   };
 
+  services.safeeyes.enable = true;
+  programs.tmate.enable = true;
+
   # TODO https://github.com/LukeSmithxyz/voidrice/
   # https://github.com/mitchellh/nixos-config
   # https://github.com/jwiegley/nix-config
@@ -420,7 +424,10 @@ in
     templates = "$HOME/templates";
   };
   # xdg.mimeApps.defaultApplications
-  services.kdeconnect.enable = true;
+  # services.kdeconnect = {
+  #   enable = true;
+  #   # package = pkgs.plasma5Packages.kdeconnect-kde;
+  # };
 
   home.preferredApps = {
     menu = {
