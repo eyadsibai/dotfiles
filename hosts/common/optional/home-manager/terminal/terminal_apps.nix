@@ -4,13 +4,11 @@
 , ...
 }:
 let
-  generateLocalForwards = port: {
+  generateLocalForwards = map (port: {
     bind.port = port;
-    host = {
-      address = "localhost";
-      port = port;
-    };
-  };
+    host.address = "localhost";
+    host.port = port;
+  });
 in
 {
   home.packages = with pkgs; [
@@ -145,23 +143,37 @@ in
     forwardAgent = false;
     serverAliveCountMax = 10;
     serverAliveInterval = 60;
+    extraConfig = ''
+      PubkeyAuthentication = yes
+      GSSAPIAuthentication = no
+      UseRoaming = no
+    '';
     matchBlocks = {
       "eyad_pc" = {
         hostname = config.secrets.ssh_config."eyad_pc".hostname;
         user = config.secrets.ssh_config."eyad_pc".user;
         port = config.secrets.ssh_config."eyad_pc".port;
-        localForwards = [
-          (generateLocalForwards 8989)
-          (generateLocalForwards 7878)
-          (generateLocalForwards 8002)
-          (generateLocalForwards 9117)
-          (generateLocalForwards 8003)
-          (generateLocalForwards 8004)
-          (generateLocalForwards 8181)
-          (generateLocalForwards 9091)
-          (generateLocalForwards 8443)
-          (generateLocalForwards 32400)
-        ];
+        localForwards = (
+          generateLocalForwards
+            [
+              8989
+              7878
+              8002
+              9117
+              8003
+              8004
+              8181
+              9091
+              8443
+              32400
+            ]
+        );
+      };
+      "github" = {
+        hostname = "github.com";
+        user = "git";
+        identityFile = "~/.ssh/id_rsa";
+        identitiesOnly = true;
       };
     };
   };
