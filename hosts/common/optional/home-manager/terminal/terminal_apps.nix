@@ -104,7 +104,21 @@ in
   #   enableFishIntegration = true;
   # };
   programs.less = { enable = true; };
-  programs.lf = { enable = true; };
+  programs.lf = {
+    enable = true;
+    previewer.source = pkgs.writeShellScript "pv.sh" ''
+      #!/bin/sh
+
+      case "$1" in
+          *.tar*) tar tf "$1";;
+          *.zip) unzip -l "$1";;
+          *.rar) unrar l "$1";;
+          *.7z) ${pkgs.p7zip}/bin/7z l "$1";;
+          *.pdf) ${pkgs.poppler_utils}/bin/pdftotext "$1" -;;
+          *) highlight -O ansi "$1" || cat "$1";;
+      esac
+    '';
+  };
   programs.lsd = { enable = true; };
   programs.man = { enable = true; };
   programs.mcfly = {

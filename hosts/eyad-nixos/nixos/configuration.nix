@@ -231,6 +231,7 @@ in
     Defaults lecture = never
     Defaults  insults
   '';
+  security.polkit.enable = true;
 
   services.xserver.desktopManager.session = [
     {
