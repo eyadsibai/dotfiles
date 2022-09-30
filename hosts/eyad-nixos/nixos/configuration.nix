@@ -97,6 +97,7 @@ in
   };
 
   services.upower.enable = true;
+  # services.postgresql.enable = true;
   # services.auto-cpufreq.enable = true;
   # services.logind.lidSwitch = "ignore"; # Laptop does not go to sleep when lid is closed
   # hardware.ledger.enable = true;

@@ -49,7 +49,7 @@ stdenv.mkDerivation {
     description = "Hunt down social media accounts by username across social networks";
     homepage = "https://github.com/sherlock-project/sherlock";
     platforms = platforms.unix;
-    licenses = licenses.mit;
+    # licenses = licenses.mit;
     mainProgram = "sherlock";
   };
 }
