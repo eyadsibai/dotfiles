@@ -48,18 +48,18 @@ in
 {
 
   environment.systemPackages = [
-    pkgs.wpa_supplicant_gui
+    # pkgs.wpa_supplicant_gui
   ];
 
   networking = {
     #TODO move to wpa https://nixos.org/manual/nixos/stable/index.html#sec-wireless
     hostName = hostname;
-    # networkmanager = {
-    #   enable = true;
-    #   plugins = [ pkgs.networkmanager-openvpn ];
-    # };
-    wireless = {
+    networkmanager = {
       enable = true;
+      plugins = [ pkgs.networkmanager-openvpn ];
+    };
+    wireless = {
+      # enable = true;
       # iwd.enable = true;
       networks = config.secrets.networks;
       userControlled.enable = true;
@@ -80,33 +80,33 @@ in
         useDHCP = true;
         wakeOnLan.enable = true;
       };
-
-      # if I am at work
-      # wlp4s0f3u3 = {
-      #   useDHCP = true;
-      #   ipv4.routes = [
-      #     {
-      #       address = "192.168.11.37";
-      #       prefixLength = 16;
-      #       via = "192.168.89.1";
-      #       options.scope = "global";
-      #     }
-      #     {
-      #       address = "192.168.3.116";
-      #       prefixLength = 16;
-      #       via = "192.168.89.1";
-      #       options.scope = "global";
-      #     }
-      #     {
-      #       address = "192.168.2.17";
-      #       prefixLength = 16;
-      #       via = "192.168.89.1";
-      #       options.scope = "global";
-      #     }
-      #   ];
-      # };
-
     };
+    # if I am at work
+    # wlp4s0f3u3 = {
+    #   useDHCP = true;
+    #   ipv4.routes = [
+    #     {
+    #       address = "192.168.11.37";
+    #       prefixLength = 16;
+    #       via = "192.168.89.1";
+    #       options.scope = "global";
+    #     }
+    #     {
+    #       address = "192.168.3.116";
+    #       prefixLength = 16;
+    #       via = "192.168.89.1";
+    #       options.scope = "global";
+    #     }
+    #     {
+    #       address = "192.168.2.17";
+    #       prefixLength = 16;
+    #       via = "192.168.89.1";
+    #       options.scope = "global";
+    #     }
+    #   ];
+    # };
+
+
     firewall = {
       enable = true;
       # allowedTCPPortRanges = [
@@ -126,15 +126,24 @@ in
       #     })
       # ];
     };
-    # }
 
-    # networking.networkmanager.profiles = {
-    #   "emad-uncle" = defaultNetworkProfile
-    #     {
-    #       ssid = "Emad_5G";
-    #       psk = ${config.secrets.networks."Emad_5G"};
-    #       uuid = "820d32fe-c2a5-4eeb-8959-61be846ac223";
-    #     };
-    # };
+
+    networkmanager.profiles = {
+      "emad-uncle" = defaultNetworkProfile
+        rec {
+          ssid = "Emad_5G";
+          psk = "${config.secrets.networks.${ssid}.psk}";
+          uuid = "820d32fe-c2a5-4eeb-8959-61be846ac223";
+        };
+
+      "proud-hotel-sixth-floor" = defaultNetworkProfile
+        rec {
+          ssid = "Proud Sixth Floor";
+          psk = "${config.secrets.networks.${ssid}.psk}";
+          uuid = "5d56d3e3-7249-4068-ad0e-c96a0e030cd6";
+
+        };
+
+    };
   };
 }
