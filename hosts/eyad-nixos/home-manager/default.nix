@@ -63,7 +63,7 @@ in
       flakify
       #  gitAndTools.grv
       #  mopidy-spotify
-      graphviz
+      `      graphviz
       ack
       ani-cli
       # fish support for nix shell
@@ -82,7 +82,7 @@ in
       # command-line client for the password manager
       bridge-utils
       brightnessctl
-      calibre
+      # calibre
       # e-book reader
       catimg
       chafa
