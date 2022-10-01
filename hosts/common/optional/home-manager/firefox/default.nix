@@ -185,7 +185,7 @@ in
         "media.ffvpx.enabled" = true;
         "media.navigator.mediadatadecoder_vpx_enabled" = true;
         "media.rdd-vpx.enabled" = false;
-        "layers.acceleration.force-enabled" = true;
+        "layers.acceleration.force-enabled" = false;
       };
     };
   };

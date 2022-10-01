@@ -129,18 +129,18 @@ in
 
 
     networkmanager.profiles = {
-      "emad-uncle" = defaultNetworkProfile
+      "Emad_5G" = defaultNetworkProfile
         rec {
           ssid = "Emad_5G";
           psk = "${config.secrets.networks.${ssid}.psk}";
           uuid = "820d32fe-c2a5-4eeb-8959-61be846ac223";
         };
 
-      "proud-hotel-sixth-floor" = defaultNetworkProfile
+      "Proud Sixth Floor" = defaultNetworkProfile
         rec {
           ssid = "Proud Sixth Floor";
           psk = "${config.secrets.networks.${ssid}.psk}";
-          uuid = "5d56d3e3-7249-4068-ad0e-c96a0e030cd6";
+          uuid = "9ba1639d-8f6b-423e-9885-a57806a1c02e";
 
         };
 
