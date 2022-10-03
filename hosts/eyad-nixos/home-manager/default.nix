@@ -63,8 +63,8 @@ in
       flakify
       #  gitAndTools.grv
       #  mopidy-spotify
-      `      graphviz
-      ack
+      graphviz
+      #ack
       ani-cli
       # fish support for nix shell
       arandr
@@ -174,7 +174,6 @@ in
       tcpdump
       teamviewer
       teleport
-      tmate
       termdown
       termshark
       thefuck
@@ -241,7 +240,7 @@ in
       # General Config
       usbutils
 
-      geogebra6
+      # geogebra6
       # Wayland configuration
       #autotiling       # Tiling Script
       #swayidle         # Idle Management Daemon
@@ -305,7 +304,7 @@ in
       mycli
       iredis
       usql
-      mathematica
+      # mathematica
     ]
     ++ (lib.optionals systemConfig.networking.networkmanager.enable [ haskellPackages.network-manager-tui ]);
 
@@ -392,6 +391,13 @@ in
 
   services.safeeyes.enable = true;
   programs.tmate.enable = true;
+  programs.pls.enable = true;
+  xdg.configFile."yandex-disk/config.cfg".text = ''
+    auth="/home/eyad/.config/yandex-disk/passwd"
+    dir="/home/eyad/Yandex.Disk"
+    proxy="no"
+    exclude-dirs="ebooks"
+  '';
 
   # TODO https://github.com/LukeSmithxyz/voidrice/
   # https://github.com/mitchellh/nixos-config

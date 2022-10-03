@@ -46,10 +46,14 @@
       kssh = "kitty +kitten ssh";
       # Clear screen and scrollback
       clear = "printf '\\033[2J\\033[3J\\033[1;1H'";
+
+      show_wifi_passwords = "sudo bash -c \"cat /etc/NetworkManager/system-connections/* | grep -e id= -e psk= -e wep | grep -v uuid= | grep -v ssid=\"";
     };
     functions = {
       fish_greeting = "${pkgs.pfetch}/bin/pfetch";
       wh = "readlink -f (which $argv)";
+      fix_bin_csv = "iconv -f utf-16 -t utf-8 $1 > $2";
+      gi = "wget http://www.gitignore.io/api/$argv >> .gitignore";
     };
     interactiveShellInit =
       # Open command buffer in vim when alt+e is pressed
