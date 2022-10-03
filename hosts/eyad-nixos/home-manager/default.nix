@@ -396,7 +396,7 @@ in
     auth="/home/eyad/.config/yandex-disk/passwd"
     dir="/home/eyad/Yandex.Disk"
     proxy="no"
-    exclude-dirs="ebooks"
+    exclude-dirs="ebooks,movies,videos,visual_computing/ics-502/assignments/assignment1/.direnv"
   '';
 
   # TODO https://github.com/LukeSmithxyz/voidrice/
