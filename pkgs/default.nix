@@ -22,4 +22,8 @@
   rgf = pkgs.callPackage ./rgf { };
   fast-rgf = pkgs.callPackage ./fast-rgf { };
   libfm = pkgs.callPackage ./libfm { };
+  # TODO add libFFM
+  # https://www.csie.ntu.edu.tw/~cjlin/libffm/
+  # TODO add FTRL implementations
+  # TODO
 }

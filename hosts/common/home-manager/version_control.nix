@@ -8,7 +8,7 @@
   ];
 
   programs.gh = {
-    enable = config.programs.git.enable;
+    enable = true;
     enableGitCredentialHelper = true;
     settings = {
       git_protocol = "ssh";
@@ -236,7 +236,7 @@
       push = {
         default = "current";
         useBitmaps = false;
-	autoSetupRemote = true;
+        autoSetupRemote = true;
       };
       pull = {
         ff = "only";
@@ -294,6 +294,6 @@
       enable = true;
     };
   };
-  programs.gitui = { enable = config.programs.git.enable; };
-  programs.lazygit = { enable = config.programs.git.enable; };
+  programs.gitui = { enable = true; };
+  programs.lazygit = { enable = true; };
 }

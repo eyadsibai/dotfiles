@@ -473,6 +473,5 @@ in
 
   # xdg.configFile."polybar/colors.ini".source = ./colors.ini;
 
-  xdg.configFile."polybar/scripts".source = ./scripts;
-  xdg.configFile."polybar/scripts".recursive = true;
+  xdg.configFile."polybar/scripts" = lib.mkIf config.services.polybar.enable { source = ./scripts; recursive = true; };
 }

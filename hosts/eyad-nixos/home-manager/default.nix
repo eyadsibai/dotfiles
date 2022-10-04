@@ -392,12 +392,14 @@ in
   services.safeeyes.enable = true;
   programs.tmate.enable = true;
   programs.pls.enable = true;
-  xdg.configFile."yandex-disk/config.cfg".text = ''
-    auth="/home/eyad/.config/yandex-disk/passwd"
-    dir="/home/eyad/Yandex.Disk"
-    proxy="no"
-    exclude-dirs="ebooks,movies,videos,visual_computing/ics-502/assignments/assignment1/.direnv"
-  '';
+  xdg.configFile."yandex-disk/config.cfg" = lib.mkIf (builtins.elem pkgs.yandex-disk config.home.packages) {
+    text = ''
+      auth="/home/eyad/.config/yandex-disk/passwd"
+      dir="/home/eyad/Yandex.Disk"
+      proxy="no"
+      exclude-dirs="photos,ebooks,movies,videos,visual_computing/ics-502/assignments/assignment1/.direnv"
+    '';
+  };
 
   # TODO https://github.com/LukeSmithxyz/voidrice/
   # https://github.com/mitchellh/nixos-config
