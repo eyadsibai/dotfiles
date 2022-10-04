@@ -46,9 +46,16 @@
       "-" = "add video-zoom -0.25";
       "+" = "add video-zoom 0.25";
     };
-    scripts = with pkgs; [ mpvScripts.mpris mpvScripts.convert mpvScripts.cutter mpvScripts.autoload ];
+    scripts = with pkgs; [
+      mpvScripts.mpris
+      mpvScripts.convert
+      mpvScripts.cutter
+      mpvScripts.autoload
+    ];
   };
   xdg.configFile."mpv/scripts/iptv.lua".source = "${inputs.mpv-iptv}/iptv.lua";
+  #TODO https://github.com/davidde/mpv-autosub/blob/master/autosub.lua
+
 }
 # "Ctrl+e" = "run youtube-dl \"${path}" -o %USERPROFILE%\Desktop\%(title)s.%(ext)s; show_text "Downloading \${filename}\""; # Download currently playing video to desktop using youtube-dl
 #Ctrl+c run "cmd.exe" "/d" "/c" "echo ${path}|clip"; show_text "Link copied to clipboard"

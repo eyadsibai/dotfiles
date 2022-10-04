@@ -4,8 +4,7 @@
   flakify = pkgs.callPackage ./flakify { };
   linkhandler = pkgs.callPackage ./linkhandler { };
   apple-color-emoji = pkgs.callPackage ./apple-color-emoji { };
-  rgf = pkgs.callPackage ./rgf { };
-  fast-rgf = pkgs.callPackage ./fast-rgf { };
+
   kepler = pkgs.callPackage ./kepler { };
   sherlock = pkgs.callPackage ./sherlock { };
   shellcolord = pkgs.callPackage ./shellcolord { };
@@ -19,5 +18,8 @@
       version = "2.56.1";
       sha256 = "sha256-NhHToaacje4TtZkW3TxtyGzH/uKGCWgGdtvI9oSTJF4=";
     };
-
+  ## ML Libraries
+  rgf = pkgs.callPackage ./rgf { };
+  fast-rgf = pkgs.callPackage ./fast-rgf { };
+  libfm = pkgs.callPackage ./libfm { };
 }
