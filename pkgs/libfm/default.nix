@@ -15,8 +15,8 @@ stdenv.mkDerivation rec {
       owner = "srendle";
       repo = pname;
       rev = "${version}";
-      sha256 = lib.fakeSha256;
-      # sha256 = "sha256-QZdGXQtGubLHs3n1cuysbFotCiFh+T41BhvxIUTSDJY=";
+      # sha256 = lib.fakeSha256;
+      sha256 = "sha256-tqkEuu/WRPSVTDrRGfK5k5980IzSk4xxLeDj9SO1W4E=";
     }}";
 
   doCheck = true;
