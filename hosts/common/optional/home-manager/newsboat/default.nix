@@ -1,6 +1,7 @@
 { inputs
 , pkgs
 , config
+, lib
 , ...
 }: {
   # TODO https://github.com/LukeSmithxyz/voidrice/blob/master/.config/newsboat/config
@@ -425,7 +426,9 @@
     pkgs.linkhandler # maybe not needed here
   ];
 
-  xdg.configFile."newsboat/scripts/download_arxiv".source = ./download_arxiv;
-  xdg.configFile."newsboat/ytconfig".source = ./ytconfig;
-  xdg.configFile."newsboat/yturls".source = ./yturls;
+  xdg.configFile."newsboat/scripts/download_arxiv" = lib.mkIf config.programs.newsboat.enable {
+    source = ./download_arxiv;
+  };
+  xdg.configFile."newsboat/ytconfig" = lib.mkIf config.programs.newsboat.enable { source = ./ytconfig; };
+  xdg.configFile."newsboat/yturls" = lib.mkIf config.programs.newsboat.enable { source = ./yturls; };
 }

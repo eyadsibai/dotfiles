@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{ pkgs, config, lib, ... }: {
   programs.micro = {
     enable = true;
     settings = {
@@ -65,5 +65,7 @@
     };
   };
 
-  xdg.configFile."micro/bindings.json".source = ./bindings.json;
+  xdg.configFile."micro/bindings.json" = lib.mkIf config.programs.micro.enable {
+    source = ./bindings.json;
+  };
 }

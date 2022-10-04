@@ -45,6 +45,7 @@
           poetry
           custom_pkgs.rgf
           custom_pkgs.fast-rgf
+          custom_pkgs.libfm
           vowpal-wabbit
           dvc
           opencv
