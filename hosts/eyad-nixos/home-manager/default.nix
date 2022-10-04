@@ -397,7 +397,7 @@ in
       auth="/home/eyad/.config/yandex-disk/passwd"
       dir="/home/eyad/Yandex.Disk"
       proxy="no"
-      exclude-dirs="photos,ebooks,movies,videos,visual_computing/ics-502/assignments/assignment1/.direnv"
+      exclude-dirs="from_dropbox,audio_books,games,photos,ebooks,movies,videos,visual_computing/ics-502/assignments/assignment1/.direnv"
     '';
   };
 

@@ -3,8 +3,6 @@
     flake-utils.url = "github:numtide/flake-utils";
     dotfiles.url = "github:eyadsibai/dotfiles";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    mach-nix.url = "github:DavHau/mach-nix";
-
   };
 
   outputs =
@@ -12,7 +10,6 @@
     , flake-utils
     , dotfiles
     , nixpkgs
-    , mach-nix
     }:
     flake-utils.lib.eachDefaultSystem (system:
     let
@@ -20,17 +17,6 @@
 
       pkgs = nixpkgs.legacyPackages.${system};
       custom_pkgs = dotfiles.legacyPackages.${system};
-      mach-nix-wrapper = import mach-nix { inherit pkgs python; };
-      #  requirements = builtins.readFile ./requirements.txt;
-      #  pythonShell = mach-nix-wrapper.mkPython { inherit requirements; };
-      pythonShell-mach-nix =
-        mach-nix-wrapper.mkPython
-          {
-            requirements = ''
-               # pandas
-              #  black
-            '';
-          };
 
       myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
         projectDir = ./.;
@@ -47,13 +33,12 @@
           custom_pkgs.fast-rgf
           custom_pkgs.libfm
           vowpal-wabbit
-          dvc
+          #          dvc
           opencv
           tesseract5
           # tensorflow-lite
           pre-commit
-          # pythonShell-mach-nix
-          #            defaultPackage
+          defaultPackage
         ]
         ++ [ myPoetryEnv ]
         ;
@@ -66,8 +51,8 @@
         };
 
 
-      # defaultApp = flake-utils.lib.mkApp {
-      #   drv = self.defaultPackage."${system}";
-      # };
+      defaultApp = flake-utils.lib.mkApp {
+        drv = self.defaultPackage."${system}";
+      };
     });
 }
