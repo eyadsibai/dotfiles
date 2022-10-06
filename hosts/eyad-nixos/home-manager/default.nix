@@ -130,7 +130,6 @@ in
       mc
       mediainfo
       mpc_cli
-      mpd-small
       multilockscreen
       # fast lockscreen based on i3lock
       mosh
