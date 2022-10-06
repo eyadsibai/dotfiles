@@ -26,7 +26,10 @@
     in
     rec {
       devShell = pkgs.mkShell {
-        nativeBuildInputs = [ pkgs.bashInteractive ];
+        nativeBuildInputs = [
+          pkgs.bashInteractive
+          pkgs.llvmPackages_9.llvm
+        ];
         buildInputs = with pkgs; [
           python310Packages.poetry
           custom_pkgs.rgf
