@@ -2,6 +2,8 @@
 
 rec {
   default = pkgs.callPackage ../shell.nix { };
+  python = import ./python { inherit pkgs; };
+  cc = import ./cc { inherit pkgs; };
   bluetooth = import ./penetration/bluetooth.nix { inherit pkgs; };
   code = import ./penetration/code.nix { inherit pkgs; };
   container = import ./penetration/container.nix { inherit pkgs; };

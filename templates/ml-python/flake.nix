@@ -28,7 +28,7 @@
       devShell = pkgs.mkShell {
         nativeBuildInputs = [ pkgs.bashInteractive ];
         buildInputs = with pkgs; [
-          poetry
+          custom_pkgs.stable.poetry
           custom_pkgs.rgf
           custom_pkgs.fast-rgf
           custom_pkgs.libfm
@@ -38,7 +38,7 @@
           tesseract5
           # tensorflow-lite
           pre-commit
-          defaultPackage
+          #   defaultPackage
         ]
         ++ [ myPoetryEnv ]
         ;
