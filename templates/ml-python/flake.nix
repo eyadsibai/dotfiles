@@ -18,29 +18,29 @@
       pkgs = nixpkgs.legacyPackages.${system};
       custom_pkgs = dotfiles.legacyPackages.${system};
 
-      myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
-        projectDir = ./.;
-        python = pkgs."${python}";
-        preferWheels = true;
-      };
+      # myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
+      # projectDir = ./.;
+      # python = pkgs."${python}";
+      # preferWheels = true;
+      # };
     in
     rec {
       devShell = pkgs.mkShell {
         nativeBuildInputs = [ pkgs.bashInteractive ];
         buildInputs = with pkgs; [
-          custom_pkgs.stable.poetry
+          python310Packages.poetry
           custom_pkgs.rgf
           custom_pkgs.fast-rgf
           custom_pkgs.libfm
           vowpal-wabbit
-          #          dvc
+          #                    dvc
           opencv
           tesseract5
           # tensorflow-lite
           pre-commit
-          #   defaultPackage
+          # defaultPackage
         ]
-        ++ [ myPoetryEnv ]
+          # ++ [ myPoetryEnv ]
         ;
       };
 
