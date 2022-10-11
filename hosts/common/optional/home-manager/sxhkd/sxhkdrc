@@ -1,0 +1,142 @@
+# Simple X Hotekey daemon to map independent keys to the window manager
+
+super + Return
+	$TERMINAL
+
+# launch categorized menu
+super + z
+	morc_menu
+
+super + d
+	rofi -modi run,drun,ssh,window,emoji -show run
+
+super + w
+	rofi -show window
+
+super + i
+	rofi -show emoji -modi emoji
+
+super + c
+	rofi -show calc -modi calc -no-show-match -no-sort
+
+super + o
+    xrandr --auto & ~/.config/polybar/launch.sh & nitrogen --restore
+
+super + n
+	networkmanager_dmenu
+
+super + m
+	$TERMINALL -e ncmpcpp
+
+super + space
+	(setxkbmap -query | grep -q "layout:\s\+eu") && setxkbmap ar || setxkbmap eu
+
+super + Escape
+	notify-send "reloaded sxhkd config" & pkill -USR1 -x sxhkd
+
+super + p
+	bwmenu
+
+super + s
+    rofi-randr
+
+super + ctrl + m
+	pavucontrol
+
+super + ctrl + b
+	$TERMINAL -e 'bmenu'
+
+super + b
+    rofi-bluetooth
+
+XF86AudioMute
+	pulseaudio-ctl mute
+
+XF86Audio{Raise,Lower}Volume
+	pulseaudio-ctl {up,down} 1
+
+XF86Audio{Play,Stop,Prev,Next}
+	playerctl {play-pause, stop, previous, next}
+
+super + {less,greater}
+    playerctl {previous,next}
+
+super + shift + p
+    playerctl {play-pause}
+
+super + shift + m
+    pulseaudio-ctl mute
+
+XF86MonBrightness{Up,Down}
+    brightnessctl s +5%{+,-}; notify-send "brightness changed" # " $(brightnessctl -m i | cut -d"," -f4)"
+
+
+###### i3WM ######################
+# kill focused window
+super + shift + q
+	i3-msg kill
+
+# change focus / (shift) move focused window
+super + {_, shift + } {h,j,k,l}
+	i3-msg {focus, move} {left,down,up,right}
+
+# toggle sticky
+super + shift + s
+	i3-msg sticky toggle
+
+super + ctrl+ @x
+	xkill
+
+# toggle fullscreen mode for the focused container
+super + f
+	i3-msg fullscreen toggle
+
+# split orientation
+super + {g,v,q}
+	i3-msg split {h,v, toggle}
+
+# change focus between tiling / floating windows
+super + t
+	i3-msg focus mode_toggle
+
+# toggle tiling / floating
+super + shift + space
+	i3-msg floating toggle
+
+# focus the parent container
+super + a
+	i3-smg focus parent
+
+# change container layout (stacked, tabbed, toggle split)
+super + {s,t,e}
+	i3-msg layout {stacking, tabbed, toggle split}
+
+# exit i3 (logs you out of your X session)
+super + shift + e
+	i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'
+
+# switch to workspace / (ctrl+) Move focused container to workspace
+super + {_, ctrl + }{1-8}
+	i3-msg {_, move container to} workspace {1-8}
+
+# Move to workspace with focused container
+super + shift + {1-8}
+	i3_move_and_switch_to_workspace {1-8}
+
+super + x ; {b,i,y}
+    {$BROWSER,idea,play_video}
+
+#navigate workspaces next / previous
+super + ctrl + {h,l}
+	i3-msg workspace {next,prev}
+
+# bindsym $mod+b workspace back_and_forth
+
+
+# reload config / restart i3
+super + shift + {c,r}
+    i3-msg {reload, restart}
+
+# lock screen
+super + 9
+    blurlock

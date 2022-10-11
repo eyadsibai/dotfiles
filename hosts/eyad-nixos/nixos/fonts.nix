@@ -1,6 +1,12 @@
 { pkgs, ... }: {
   fonts = {
     fontDir.enable = true;
+    # fontconfig.defaultFonts = {
+    #   emoji = [ ];
+    #   monospace = [ ];
+    #   sanSerif = [ ];
+    #   serif = [];
+    # };
     fonts = with pkgs; [
       # recursive
       # dejavu_fonts

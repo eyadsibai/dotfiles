@@ -3,6 +3,8 @@
 , ...
 }: {
 
+
+  # TODO INSTALL https://gitlab.com/dwt1/dmscripts
   programs.rofi = {
     enable = true;
     plugins = with pkgs; [ rofi-calc rofi-emoji ];

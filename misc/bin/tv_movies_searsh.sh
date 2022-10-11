@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 ######################################################################
 #Copyright (C) 2019  Kris Occhipinti
@@ -21,7 +21,7 @@
 site="https://ww2.watch-series.co"
 
 echo -n "Search: "
-read -r q
+read q
 
 output="$(wget -qO- "$site/search.html?keyword=$q")"
 
@@ -34,7 +34,7 @@ select="$(echo "$output"|grep 'href="/series/'|cut -d\" -f6|sort -u|fzf)"
   output="$(wget -qO- "${url}")"
 
 #check if it is a movie or show
-season="$(basename "$url")/season"
+season="$(basename $url)/season"
 echo "$output"|grep "$season" > /dev/null
 
 o="$?"

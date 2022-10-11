@@ -8,6 +8,8 @@
   imports = [
   ];
 
+  home-manager.users.${username} = ../home-manager;
+
   wsl = {
     enable = true;
     automountPath = "/mnt";

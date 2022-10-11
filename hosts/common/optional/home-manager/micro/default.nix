@@ -9,7 +9,7 @@
       "backup" = true;
       "basename" = false;
       "colorcolumn" = 0;
-      "colorscheme" = "simple";
+      "colorscheme" = "simple"; # "gruvbox"
       "comment" = true;
       "cursorline" = true;
       "diff" = true;
@@ -21,10 +21,10 @@
       "filetype" = "unknown";
       "ftoptions" = true;
       "hidehelp" = false;
-      "ignorecase" = true;
+      "ignorecase" = false;
       "indentchar" = " ";
       "infobar" = true;
-      "keepautoindent" = false;
+      "keepautoindent" = true;
       "keymenu" = false;
       "linter" = true;
       "literate" = true;
@@ -47,7 +47,7 @@
       "scrollmargin" = 3;
       "scrollspeed" = 2;
       "smartpaste" = true;
-      "softwrap" = false;
+      "softwrap" = true;
       "splitbottom" = true;
       "splitright" = true;
       "status" = true;
@@ -60,7 +60,7 @@
       "tabsize" = 4;
       "tabstospaces" = true;
       "termtitle" = false;
-      "trifdiff" = false;
+      "trimdiff" = false;
       "useprimary" = true;
     };
   };

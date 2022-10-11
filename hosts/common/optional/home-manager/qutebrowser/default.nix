@@ -9,6 +9,8 @@ in
 {
   programs.qutebrowser = {
     enable = true;
+    # package = pkgs.stable.qutebrowser;
+
     loadAutoconfig = true;
     settings = {
       downloads = {

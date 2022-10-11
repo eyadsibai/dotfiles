@@ -1,13 +1,13 @@
-#!/usr/bin/env bash
+#! /usr/bin/env bash
 
-procdiscord=$(pgrep -f -E "discord" | grep -E -vc "grep| vi | ed | emacs")
-proccaprine=$(pgrep -f -E "caprine" | grep -E -vc "grep| vi | ed | emacs")
-procyakyak=$(pgrep -f -E "yakyak" | grep -E -vc "grep| vi | ed | emacs")
-procsignal=$(pgrep -f -E "signal-desktop" | grep -E -vc "grep| vi | ed | emacs")
-procandroidmsgs=$(pgrep -f -E "android-messages-desktop" | grep -E -vc "grep| vi | ed | emacs")
-procwhatsapp=$(pgrep -f -E "whatsapp-nativefier-dark" | grep -E -vc "grep| vi | ed | emacs")
-proctelegram=$(pgrep -f -E "telegram-desktop" | grep -E -vc "grep| vi | ed | emacs")
-procslack=$(pgrep -f -E "slack" | grep -E -vc "grep| vi | ed | emacs")
+procdiscord=$(pgrep  "discord" | grep -E -vc "grep| vi | ed | emacs")
+proccaprine=$(pgrep "caprine" | grep -E -vc "grep| vi | ed | emacs")
+procyakyak=$( pgrep  "yakyak" | grep -E -vc "grep| vi | ed | emacs")
+procsignal=$(pgrep  "signal-desktop" | grep -E -vc "grep| vi | ed | emacs")
+procandroidmsgs=$( pgrep "android-messages-desktop" | grep -E -vc "grep| vi | ed | emacs")
+procwhatsapp=$(pgrep "whatsapp-nativefier-dark" | grep -E -vc "grep| vi | ed | emacs")
+proctelegram=$( pgrep  "telegram-desktop" | grep -E -vc "grep| vi | ed | emacs")
+procslack=$( pgrep  "slack" | grep -E -vc "grep| vi | ed | emacs")
 
 
 

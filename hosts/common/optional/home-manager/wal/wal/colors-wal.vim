@@ -1,0 +1,23 @@
+" Special
+let wallpaper  = "/home/eyad/.config/wall.png"
+let background = "#120d15"
+let foreground = "#d1ccd0"
+let cursor     = "#d1ccd0"
+
+" Colors
+let color0  = "#120d15"
+let color1  = "#965E34"
+let color2  = "#9B6768"
+let color3  = "#B48970"
+let color4  = "#6F6E94"
+let color5  = "#986D8C"
+let color6  = "#A4919D"
+let color7  = "#d1ccd0"
+let color8  = "#928e91"
+let color9  = "#965E34"
+let color10 = "#9B6768"
+let color11 = "#B48970"
+let color12 = "#6F6E94"
+let color13 = "#986D8C"
+let color14 = "#A4919D"
+let color15 = "#d1ccd0"

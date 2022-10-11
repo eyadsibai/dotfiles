@@ -1,0 +1,114 @@
+URL list from Thursday, Apr. 18 2019 13:42 PM
+To copy this list, type [Ctrl] A, then type [Ctrl] C. 
+
+kdsf-2019/20190410_kdsf_feature_engineeringworkshopnotes.org at master · yolan-royan/kdsf-2019
+https://github.com/yolan-royan/kdsf-2019/blob/master/20190410_kdsf_feature_engineeringworkshopnotes.org
+
+LightGBM/advanced_example.py at master · Microsoft/LightGBM
+https://github.com/Microsoft/LightGBM/blob/master/examples/python-guide/advanced_example.py
+
+facebook/prophet: Tool for producing high quality forecasts for time series data that has multiple seasonality with linear or non-linear growth.
+https://github.com/facebook/prophet
+
+shapelets/khiva-python: Python binding for Khiva library.
+https://github.com/shapelets/khiva-python
+
+cesium-ml/cesium: Machine Learning Time-Series Platform
+https://github.com/cesium-ml/cesium
+
+dmbee/seglearn: Python module for machine learning time series:
+https://github.com/dmbee/seglearn
+
+bukosabino/ta: Technical Analysis Library using Pandas (Python)
+https://github.com/bukosabino/ta
+
+rtavenar/tslearn: A machine learning toolkit dedicated to time-series data
+https://github.com/rtavenar/tslearn
+
+RobRomijnders/LSTM_tsc: An LSTM for time-series classification
+https://github.com/RobRomijnders/LSTM_tsc
+
+jaungiers/LSTM-Neural-Network-for-Time-Series-Prediction: LSTM built using Keras Python package to predict time series steps and sequences. Includes sin wave and stock market data
+https://github.com/jaungiers/LSTM-Neural-Network-for-Time-Series-Prediction
+
+semla/time_series_feature_engineering.py at 68997d737d5019c84bf8ec3d08d7ed0b3c468e93 · eyadsibai/semla
+https://github.com/eyadsibai/semla/blob/68997d737d5019c84bf8ec3d08d7ed0b3c468e93/notebooks/time_series_feature_engineering.py
+
+Tab-Snap - Chrome Web Store
+https://chrome.google.com/webstore/detail/tab-snap/ajjloplcjllkammemhenacfjcccockde/related
+
+
+URL list from Thursday, Apr. 18 2019 13:43 PM
+To copy this list, type [Ctrl] A, then type [Ctrl] C. 
+
+EDA_Springleaf_screencast
+file:///home/eyad/Downloads/EDA_Springleaf_screencast.html
+
+adamzolotarev/kaggle
+https://github.com/adamzolotarev/kaggle
+
+andersbogsnes/ml_tooling: Utility library for Machine Learning
+https://github.com/andersbogsnes/ml_tooling
+
+azure-docs/how-to-tune-hyperparameters.md at master · MicrosoftDocs/azure-docs
+https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/machine-learning/service/how-to-tune-hyperparameters.md
+
+azureml-tutorial/Salary.ipynb at master · janakiramm/azureml-tutorial
+https://github.com/janakiramm/azureml-tutorial/blob/master/Azure/Salary.ipynb
+
+caioaao/wolpert: A stacked generalization framework. Built on top of scikit learn
+https://github.com/caioaao/wolpert
+
+DATA_PREPARATION/EDA.ipynb at master · IooHooI/DATA_PREPARATION
+https://github.com/IooHooI/DATA_PREPARATION/blob/master/notebooks/EDA.ipynb
+
+drPytho/nmcli_rofi: A rip of nmcli_dmenu but using rofi. Removed som things I do not like.
+https://github.com/drPytho/nmcli_rofi
+
+flennerhag/mlens: ML-Ensemble – high performance ensemble learning
+https://github.com/flennerhag/mlens
+
+jeffheaton/jh-kaggle-util: Jeff Heaton's Kaggle Utilities
+https://github.com/jeffheaton/jh-kaggle-util
+
+Kaggle_Earthquake_challenge/Earthquake_Challenge.ipynb at master · llSourcell/Kaggle_Earthquake_challenge
+https://github.com/llSourcell/Kaggle_Earthquake_challenge/blob/master/Earthquake_Challenge.ipynb
+
+Kaggle/docker-python: Kaggle Python docker image
+https://github.com/Kaggle/docker-python
+
+lytforgood/MachineLearningTrick: Machine Learning Trick : GBDT_Feature Blending Stacking CascadeForest
+https://github.com/lytforgood/MachineLearningTrick
+
+py_ml_utils/dataframe.py at master · gatapia/py_ml_utils
+https://github.com/gatapia/py_ml_utils/blob/master/pml/dataframe.py
+
+pycon-2017-eda-tutorial/3-Aquastat-Univariate.ipynb at master · cmawer/pycon-2017-eda-tutorial
+https://github.com/cmawer/pycon-2017-eda-tutorial/blob/master/notebooks/2-Aquastat-EDA/3-Aquastat-Univariate.ipynb
+
+pyncd/pyncd.py at master · alephmelo/pyncd
+https://github.com/alephmelo/pyncd/blob/master/pyncd.py
+
+rapidsai/cuml: cuML - RAPIDS Machine Learning Library
+https://github.com/rapidsai/cuml
+
+rossmann_TSA_forecasts/Rossmann_Sales.ipynb at master · elena-petrova/rossmann_TSA_forecasts
+https://github.com/elena-petrova/rossmann_TSA_forecasts/blob/master/Rossmann_Sales.ipynb
+
+template-collection/Attack-blending.ipynb at master · chentinghao/template-collection
+https://github.com/chentinghao/template-collection/blob/master/malware-detection/Attack-blending.ipynb
+
+tianchi-diabetes-top12/top12-baseline.ipynb at master · luoda888/tianchi-diabetes-top12
+https://github.com/luoda888/tianchi-diabetes-top12/blob/master/top12-baseline.ipynb
+
+10_mistakes.ipynb · master · Pavel Pleskov / Kaggle Days SF · GitLab
+https://gitlab.com/ppleskov/kaggle-days-sf/blob/master/10_mistakes.ipynb
+
+Kaggle TalkingData Competition: Analysis of Winning Submissions | Machine Learning Explained
+http://mlexplained.com/2018/05/18/kaggle-talkingdata-competition-analysis-of-winning-submissions/
+
+machine learning - How to perform feature engineering on unknown features? - Data Science Stack Exchange
+https://datascience.stackexchange.com/questions/10640/how-to-perform-feature-engineering-on-unknown-features/10645#10645
+
+atomichighfive/LANL-Earthquake-Prediction
+https://github.com/atomichighfive/LANL-Earthquake-Prediction

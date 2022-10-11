@@ -52,10 +52,7 @@ mkShell
     # Terminal multiplexer
     tmux
     # Archive tools
-    cabextract
-    p7zip
-    unrar
-    unzip
+
   ];
   shellHook = "";
 }

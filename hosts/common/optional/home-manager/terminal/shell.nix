@@ -12,7 +12,7 @@
   programs.fish = {
     enable = true;
     shellAbbrs = {
-      ls = "exa";
+      # ls = "exa";
       cat = "bat";
       top = "btm";
 
@@ -48,12 +48,69 @@
       clear = "printf '\\033[2J\\033[3J\\033[1;1H'";
 
       show_wifi_passwords = "sudo bash -c \"cat /etc/NetworkManager/system-connections/* | grep -e id= -e psk= -e wep | grep -v uuid= | grep -v ssid=\"";
+
+      xclip = "xclip -selection -c";
+      conda_export = "conda env export --no-builds | grep -v \"^prefix: \" > environment.yml";
+
+      # ls = "ls --color=auto -a";
+      # ll = "ls -alF";
+      # la = "ls -A";
+      l = "ls -CF";
+
+      free = "free -m";
+
+      df = "df -h";
+      cp = "cp -i";
+
+      # Add an "alert" alias for long running commands.  Use like so:
+      #   sleep 10; alert
+      # switch $status to $? for other shells
+      alert = "notify-send --urgency=low -i \"$([ `$status = 0` ] && echo terminal || echo error)\" \"$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')\"";
     };
     functions = {
       fish_greeting = "${pkgs.pfetch}/bin/pfetch";
       wh = "readlink -f (which $argv)";
       fix_bin_csv = "iconv -f utf-16 -t utf-8 $1 > $2";
       gi = "wget http://www.gitignore.io/api/$argv >> .gitignore";
+      mkcp = "mkdir -p `dirname $argv[2]` && cp $argv[1] $argv[2]";
+      gitignore = "curl -sL https://www.gitignore.io/api/$argv";
+      x = {
+        body = ''
+          if [ -f $argv[1] ]
+            switch $argv[1]
+              case "*.tar.bz2"
+                tar xjf $argv[1]
+              case "*.tar.gz"
+                tar xzf $argv[1]
+              case "*.bz2"
+                bunzip2 $argv[1]
+              case "*.rar"
+                unrar x $argv[1]
+              case "*.gz"
+                gunzip $argv[1]
+              case "*.tar"
+                tar xf $argv[1]
+              case "*.tbz2"
+                tar xjf $argv[1]
+              case "*.tgz"
+                tar xzf $argv[1]
+              case "*.zip"
+                unzip $argv[1]
+              case "*.Z"
+                uncompress $argv[1]
+              case "*.7z"
+                7z x $argv[1]
+              case *
+                echo "'$argv[1]' cannot be extracted via x"
+            end
+          else
+            echo "'$argv[1]' is not a valid file"
+          #  fi
+          end
+
+        '';
+
+      };
     };
     interactiveShellInit =
       # Open command buffer in vim when alt+e is pressed

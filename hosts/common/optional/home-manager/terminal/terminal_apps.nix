@@ -19,11 +19,11 @@ in
     # buku
     papis
     timetrap
+    # t conflict with time
     timewarrior
     eureka-ideas
     taskell
     nb
-    ledger
     ticker
     sent
     bandwhich
@@ -40,7 +40,7 @@ in
     http-prompt
   ];
   programs.btop.enable = true;
-
+  programs.ledger.enable = true;
   services.pueue.enable = pkgs.hostPlatform.isLinux;
   programs.broot = {
     enable = false;
@@ -161,6 +161,7 @@ in
       PubkeyAuthentication = yes
       GSSAPIAuthentication = no
       UseRoaming = no
+      VisualHostKey = yes
     '';
     matchBlocks = {
       "eyad_pc" = {
@@ -170,18 +171,38 @@ in
         localForwards = (
           generateLocalForwards
             [
-              8989
-              7878
-              8002
-              9117
-              8003
-              8004
-              8181
-              9091
-              8443
-              32400
+              8989 # sonarr
+              7878 # radarr
+              8002 # heimdall
+              32400 # plex
+              9117 # jackett
+              8003 # logarr
+              8004 #  ddd
+              6789 # nzbget
+              8181 # tautulli
+              9091 # transmission
+              8443 # code server
+              6767 # bazarr
+              8787 # readarr
+              1234 # youtubedl
+              8013 # librespeed
+              8012 # freshrss
+              8123 # home assistant
+              8001 # grocy
+              5076 # nzbhydra
+              8686 # lidarr
+              24713
+              8083 # calibreweb
+              7227 # pyload
+              8443 # code server
+              8337 # beets
             ]
-        );
+        ) ++ [{
+          # router
+          bind.port = 4321;
+          host.address = "192.168.1.1";
+          host.port = 80;
+        }];
       };
       "github" = {
         hostname = "github.com";

@@ -8,6 +8,14 @@
 }:
 let
   homeConfig = config.home-manager.users.${username};
+
+
+  # nixos-conf-editor = (import (pkgs.fetchFromGitHub {
+  #   owner = "vlinkz";
+  #   repo = "nixos-conf-editor";
+  #   rev = "0.0.6";
+  #   sha256 = "sha256-wJMUY4OCntFfR1BkTsia5tdNmaF5MBB3/n208Q/MPGA=";
+  # })) { };
 in
 {
   imports = [
@@ -23,6 +31,7 @@ in
     # ./fonts.nix
     ../../common/optional/nixos/samba
   ];
+  home-manager.users.${username} = ../home-manager;
 
   # Thermals and cooling
   services.thermald.enable = true;
@@ -96,13 +105,27 @@ in
     };
   };
 
-  services.upower.enable = true;
+  services.upower = {
+    enable = true;
+    timeLow = 1200;
+    timeCritical = 300;
+    timeAction = 120;
+    percentageLow = 10;
+    percentageCritical = 3;
+    percentageAction = 2;
+    ignoreLid = false;
+    noPollBatteries = false;
+    criticalPowerAction = "HybridSleep";
+    usePercentageForPolicy = true;
+    enableWattsUpPro = false;
+  };
+
   # services.postgresql.enable = true;
   # services.auto-cpufreq.enable = true;
   # services.logind.lidSwitch = "ignore"; # Laptop does not go to sleep when lid is closed
   # hardware.ledger.enable = true;
   # hardware.cpu.amd.updateMicrocode = true;
-  hardware.enableAllFirmware = true;
+  # hardware.enableAllFirmware = true;
   # time.timeZone = "Asia/Riyadh";
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
@@ -117,6 +140,11 @@ in
       lightdm.enable = true;
       gdm.enable = false;
       gdm.wayland = false;
+      sessionCommands = ''
+        ${pkgs.xlibs.xset}/bin/xset r rate 660 25
+      '';
+      #   ${pkgs.xlibs.setxkbmap}/bin/setxkbmap -layout us -option ctrl:nocaps
+      # ${pkgs.xlibs.xset}/bin/xset r rate 200 40
     };
     # videoDrivers = [ "amdgpu" ];
     desktopManager = {
@@ -124,7 +152,8 @@ in
       gnome.enable = false;
     };
     layout = "us,ar";
-    xkbOptions = "grp:win_space_toggle,eurosign:e";
+    # use numpad as mouse # make CapsLock behave like Ctrl:
+    xkbOptions = "grp:win_space_toggle,eurosign:e,keypad:pointerkeys,ctrl:nocaps";
   };
   services.usbmuxd.enable = true;
   services.gnome.gnome-keyring.enable = true;
@@ -204,6 +233,7 @@ in
       # native wayland support (unstable)
       # wineWowPackages.waylandFull
       dig
+      # nixos-conf-editor
     ]
     ++ (lib.optional (!config.virtualisation.docker.enable) docker-client)
     ++ (lib.optional (config.virtualisation.podman.enable) podman-compose);
@@ -271,6 +301,11 @@ in
   };
   programs.dconf.enable = true;
   services.localtimed.enable = true;
+
+  programs.bash-my-aws.enable = true;
+  programs.thefuck.enable = true;
+  programs.traceroute.enable = true;
+
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
