@@ -1,0 +1,24 @@
+wallpaper: "/home/eyad/.config/wall.png"
+
+special:
+    background: "#120d15"
+    foreground: "#d1ccd0"
+    cursor: "#d1ccd0"
+
+colors:
+    color0: "#120d15"
+    color1: "#965E34"
+    color2: "#9B6768"
+    color3: "#B48970"
+    color4: "#6F6E94"
+    color5: "#986D8C"
+    color6: "#A4919D"
+    color7: "#d1ccd0"
+    color8: "#928e91"
+    color9: "#965E34"
+    color10: "#9B6768"
+    color11: "#B48970"
+    color12: "#6F6E94"
+    color13: "#986D8C"
+    color14: "#A4919D"
+    color15: "#d1ccd0"

@@ -7,6 +7,13 @@
 
   system.stateVersion = "22.05";
 
+  home-manager.users.${username} = {
+
+    home.stateVersion = "22.05";
+
+  };
+
+
   # # Configure networking
   networking.useDHCP = false;
   networking.interfaces.eth0.useDHCP = true;

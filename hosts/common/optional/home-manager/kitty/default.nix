@@ -38,6 +38,13 @@ in
       inactive_tab_background = "#${colors.base01}";
       inactive_tab_foreground = "#${colors.base04}";
       tab_bar_background = "#${colors.base01}";
+      disable_ligatures = false;
+      url_style = "curly";
+      detect_urls = true;
+      copy_on_select = true;
+      focus_follows_mouse = true;
+      sync_to_monitor = true;
+
       color0 = "#${colors.base00}";
       color1 = "#${colors.base08}";
       color2 = "#${colors.base0B}";

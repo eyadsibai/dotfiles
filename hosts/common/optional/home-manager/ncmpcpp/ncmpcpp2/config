@@ -1,0 +1,10 @@
+ncmpcpp_directory = ~/.config/ncmpcpp
+lyrics_directory = ~/.lyrics
+
+
+[global]
+colors_enabled = yes
+;main_window_color = "default"
+;empty_tag_color = default
+
+playlist_show_remaining_time = yes

@@ -1,6 +1,6 @@
 { pkgs, ... }: {
   home.packages = with pkgs; [
-    discord
+    # discord using discocss instead
     signal-desktop
     skypeforlinux
     slack
@@ -9,11 +9,12 @@
     # element-desktop
     # tdesktop
     teams
-    whatsapp-for-linux
+    # whatsapp-for-linux install whatsie through flatpak instead
+    distrobox
     gitter
     cawbird
     haxor-news
-    rainbowstream
+    # rainbowstream
     # caprine-bin
     latest-caprine
     wire-desktop

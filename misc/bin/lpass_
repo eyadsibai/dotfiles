@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+set -o pipefail
+
+export LPASS_ASKPASS=/home/eyad/bin/rofi-pinentry
+lpass login
+
+# not finished this should have lpass and takes all arguments but just add this export at the beginning of the command!

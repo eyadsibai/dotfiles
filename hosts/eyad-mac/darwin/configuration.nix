@@ -10,6 +10,8 @@
     ./nix.nix
     ../../common/optional/darwin/wm
   ];
+  home-manager.users.${username} = ../home-manager;
+
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
   services.activate-system.enable = true;

@@ -1,0 +1,2 @@
+#!/bin/sh
+DISPLAY=:0 rofi -dmenu -password -p "Passphrase" -lines 0 -width 20

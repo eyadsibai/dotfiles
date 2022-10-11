@@ -1,0 +1,2 @@
+#!/bin/bash
+du -a $HOME/Downloads | cut -f2 | egrep '*.(mkv|mp4|avi)' | rofi -dmenu | xargs -d '\n' mpv

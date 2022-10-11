@@ -1,0 +1,130 @@
+#!/bin/bash
+
+
+mainMenu () {
+    menu=("1. Teiler"
+          "2. xrandr"
+          "3. Clipboard"
+          "4. Pulse Mixer"
+          "5. Web Search"
+          "9. Language"
+          "---"
+          "8. Help"
+          "0: Exit")
+
+    prompt() {
+        printf "%s\n" "$@" | dmenu_t -p "Simple Starter:"
+    }
+
+    case "$(prompt "${menu[@]}")" in
+        1.*) teiler ;;
+        2.*) xrandrPrompt ;;
+        3.*) clipPrompt ;;
+        4.*) pulsePrompt ;;
+        5.*) webSearch ;;
+        9.*) langPrompt ;;
+        0:*) exit ;;
+          *) exit
+    esac
+}
+
+
+
+
+
+xrandrPrompt () {
+    menu=("1. mobile"
+          "2. home"
+          "3. office"
+          "4. bgu249"
+          "5. arandr"
+          "0: << back to  menu")
+
+    prompt() {
+        printf "%s\n" "$@" | dmenu_t -p "xrandr Menu:"
+    }
+
+    case "$(prompt "${menu[@]}")" in
+        1.*) /home/zeltak/.screenlayout/mobile.sh   ;;
+        2.*) /home/zeltak/.screenlayout/home.sh ;;
+        3.*) /home/zeltak/.screenlayout/office.sh ;;
+        4.*) /home/zeltak/.screenlayout/bgu249.sh ;;
+        5.*) arandr ;;
+        0.*) dplayPrompt ;;
+          *) dplayPrompt
+    esac
+}
+
+
+clipPrompt () {
+    menu=("1. History"
+          "2. Sync"
+          "3. URL"
+          "---"
+          "0: << back to Simple Starter")
+
+    prompt() {
+        printf "%s\n" "$@" | dmenu_t -p "Clipboard:"
+    }
+
+    case "$(prompt "${menu[@]}")" in
+        1.*) xcmenuctrl ;;
+        2.*) xcmenuctrl -s ;;
+        3.*) xcmenuctrl -u ;;
+        0:*) mainMenu ;;
+          *) mainMenu
+    esac
+}
+
+
+pulsePrompt () {
+    menu=("Volume"
+          "Sink"
+          "---"
+          "0: << back to Simple Starter")
+
+    prompt() {
+        printf "%s\n" "$@" | dmenu_t -p "Pulseaudio:"
+    }
+
+    case "$(prompt "${menu[@]}")" in
+        1.*) pulse_menu -vol ;;
+        2.*) pulse_menu -sink ;;
+        0:*) mainMenu ;;
+          *) mainMenu
+    esac
+}
+
+
+langPrompt () {
+    menu=("1.English"
+          "2.Hebrew"
+          "---"
+          "0: << back to Simple Starter")
+
+    prompt() {
+        printf "%s\n" "$@" | dmenu_t -p "settings:"
+    }
+
+    case "$(prompt "${menu[@]}")" in
+        1.*) /home/zeltak/bin/ls_english.sh         ;;
+        2.*) /home/zeltak/bin/ls_hebrew.sh           ;;
+          *) mainMenu
+    esac
+}
+
+
+
+backend=rofi
+if [[ "$backend" == "rofi" ]]
+then function dmenu_t () {
+rofi -dmenu "$@"
+}
+elif [[ "$backend" == "dmenu" ]]
+then function dmenu_t () {
+dmenu -l 15 "$@"
+}
+fi 
+
+
+mainMenu

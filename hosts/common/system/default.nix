@@ -17,6 +17,11 @@ in
     nixpkgs-fmt
   ];
 
+  environment.homeBinInPath = true;
+  environment.localBinInPath = true;
+
+  environment.variables = { EDITOR = "micro"; };
+
   nix = {
     package = pkgs.nixUnstable;
     # This will add each flake input as a registry
@@ -58,6 +63,9 @@ in
       auto-optimise-store = true;
       experimental-features = [ "nix-command" "flakes" ];
       warn-dirty = false;
+      keep-derivations = true;
+      keep-outputs = true;
+      tarball-ttl = 0;
     };
   };
 }

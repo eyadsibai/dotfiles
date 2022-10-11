@@ -93,7 +93,7 @@ rec {
               users.${username} = {
                 imports =
                   [
-                    ../hosts/${hostname}/home-manager
+                    # ../hosts/${hostname}/home-manager
                     ../hosts/common/home-manager/nixos
                     # inputs.nix-doom-emacs.hmModule
                     inputs.nix-colors.homeManagerModule
@@ -137,7 +137,7 @@ rec {
                   [
                     ../hosts/common/home-manager/darwin
 
-                    ../hosts/${hostname}/home-manager
+                    # ../hosts/${hostname}/home-manager
                     inputs.nix-doom-emacs.hmModule
                     inputs.nix-colors.homeManagerModule
                   ]
@@ -257,11 +257,12 @@ rec {
           "steamcmd"
           "steam-original"
           "steam-runtime"
+          "steam-run"
           "broadcom-bt-firmware"
           "b43-firmware"
           "xow_dongle-firmware"
-          "facetimehd-calibration"
-          "facetimehd-firmware"
+          # "facetimehd-calibration"
+          # "facetimehd-firmware"
           "steam"
           "geogebra"
           "mathematica"

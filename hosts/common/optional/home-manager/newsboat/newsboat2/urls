@@ -1,0 +1,44 @@
+# query feeds
+"query:Unread Articles:unread = \"yes\""
+
+
+
+http://www.youtube.com/feeds/videos.xml?channel_id=UCVYamHliCI9rw1tHR1xbkfw "tech"
+http://www.youtube.com/feeds/videos.xml?channel_id=UCUzD4QQhwOi_8oe5VXIu7PA "news"
+
+
+
+https://www.reddit.com/r/unixporn.rss reddit "~r/unixporn"
+https://www.reddit.com/r/linux.rss reddit "~r/linux"
+https://news.ycombinator.com/rss linux "~hacker-news"
+
+
+
+https://fivethirtyeight.com/contributors/nate-silver/feed/ news "~silverboi"
+https://fivethirtyeight.com/science/feed/ news "~sci-538"
+https://fivethirtyeight.com/politics/feed/ news "~ptx-538"
+
+
+
+https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7JiwpnA yt "~Computerphile"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCoxcjq-8xIDTYp3uz647V5A yt "~Numberphile"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCt7fwAhXDy3oNFTAzF2o8Pw yt "~theneedledrop"
+https://www.youtube.com/feeds/videos.xml?channel_id=UC4eYXhJI4-7wSWc8UNRwD4A yt "~NPR music"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCJkMlOu7faDgqh4PfzbpLdg yt "~Nerdwriter"
+https://www.youtube.com/feeds/videos.xml?channel_id=UC2eYFnH61tmytImy1mTYvhA yt "~Luke Smith"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q yt "~Kurzgesagt"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCErSSa3CaP_GJxmFpdjG9Jw yt "~Lessons from the Screenplay"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCS85PXHRkizrbGHBCe4tV3g yt "~Karsten Runquist"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCyp1gCHZJU_fGWFf2rtMkCg yt "~Numberphile2"
+https://www.youtube.com/feeds/videos.xml?channel_id=UC3XTzVzaHQEd30rQbuvCtTQ yt "~JonOliver"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCGiJeCKTVKIxtaYZOidh19g yt "~Dunk Tank"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCsvn_Po0SmunchJYOWpOxMg yt "~dunkey"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCVYamHliCI9rw1tHR1xbkfw yt "~dave2d"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ yt "~Marques Brownlee"
+
+
+
+https://elifesciences.org/rss/ahead.xml preprints "~eLife-arxiv"
+https://elifesciences.org/rss/recent.xml preprints "~eLife-recent"
+https://science.sciencemag.org/rss/express.xml preprints "~science-arxiv"
+https://science.sciencemag.org/rss/ec.xml preprints "~science-articles"

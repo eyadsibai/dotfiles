@@ -6,6 +6,10 @@
 , hostname
 , ...
 }: {
+
+  services.airsonic.enable = true;
+  # services.apache-kafka.enable = true;
+  # https://nixos.org/manual/nixos/stable/options.html#opt-services.aria2.enable
   services.sonarr = {
     #6767
 

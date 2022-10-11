@@ -14,7 +14,7 @@ in
   services.spotifyd.enable = true;
 
   programs.spicetify = {
-    enable = true;
+    enable = false;
     # specify that we want to use our custom colorscheme
     colorScheme = "custom";
     theme = "catppuccin-mocha";

@@ -1,0 +1,21 @@
+set $wallpaper /home/eyad/.config/wall.png
+
+set $background #120d15
+set $foreground #d1ccd0
+
+set $color0 #120d15
+set $color1 #965E34
+set $color2 #9B6768
+set $color3 #B48970
+set $color4 #6F6E94
+set $color5 #986D8C
+set $color6 #A4919D
+set $color7 #d1ccd0
+set $color8 #928e91
+set $color9 #965E34
+set $color10 #9B6768
+set $color11 #B48970
+set $color12 #6F6E94
+set $color13 #986D8C
+set $color14 #A4919D
+set $color15 #d1ccd0

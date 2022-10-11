@@ -25,10 +25,13 @@
       # };
     in
     rec {
+
+      # should I replace it with pkgs.buildFHSUserEnv
       devShell = pkgs.mkShell {
         nativeBuildInputs = [
           pkgs.bashInteractive
           pkgs.llvmPackages_9.llvm
+          pkgs.libclang
         ];
         buildInputs = with pkgs; [
           python310Packages.poetry
@@ -45,6 +48,10 @@
         ]
           # ++ [ myPoetryEnv ]
         ;
+
+        shellHook = ''
+          LIBCLANG_PATH="${pkgs.libclang}/lib";
+        '';
       };
 
       defaultPackage = with pkgs.poetry2nix;

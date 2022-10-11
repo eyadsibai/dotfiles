@@ -9,6 +9,7 @@
     youtube-dl
     ytcc
     darktable
+    castget
   ];
   services.mopidy = {
     enable = false;
@@ -55,5 +56,4 @@
   services.mpd.enable = true;
   services.mpdris2.enable = true;
   services.playerctld.enable = true;
-  programs.ncmpcpp = { enable = true; };
 }

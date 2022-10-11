@@ -1,0 +1,42 @@
+map <C-i> recolor
+map w adjust_window width
+set selection-clipboard clipboard
+
+map n navigate next
+map b navigate previous
+map <Space> toggle_statusbar
+
+
+set statusbar-h-padding 0
+set statusbar-v-padding 0
+set page-padding 1
+map u scroll half-up
+map d scroll half-down
+map D toggle_page_mode
+map r reload
+map R rotate
+map K zoom in
+map J zoom out
+map i recolor
+map p print
+
+set default-bg                     "#120d15"
+set default-fg                     "#d1ccd0"
+set statusbar-bg                   "#120d15"
+set statusbar-fg                   "#d1ccd0"
+set inputbar-bg                    "#120d15"
+set inputbar-fg                    "#d1ccd0"
+set notification-bg                "#120d15"
+set notification-fg                "#d1ccd0"
+set notification-error-bg          "#120d15"
+set notification-error-fg          "#d1ccd0"
+set notification-warning-bg        "#120d15"
+set notification-warning-fg        "#d1ccd0"
+set highlight-color                "#B48970"
+set highlight-active-color         "#6F6E94"
+set completion-bg                  "#B48970"
+set completion-fg                  "#6F6E94"
+set completion-highlight-bg        "#B48970"
+set completion-highlight-fg        "#6F6E94"
+set recolor-lightcolor             "#120d15"
+set recolor-darkcolor              "#d1ccd0"

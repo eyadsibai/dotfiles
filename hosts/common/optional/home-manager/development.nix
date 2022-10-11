@@ -22,7 +22,7 @@
     ## GIS
     # qgis
 
-    stable.spyder
+    # stable.spyder
 
   ];
 

@@ -1,4 +1,4 @@
-#!/bin/sh
+m#!/bin/sh
 
 country=${1:-Sweden}
 

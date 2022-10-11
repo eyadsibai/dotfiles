@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set -o errexit  # Exit on error
+set -o nounset  # Trigger error when expanding unset variables
+
+function fetchRemote
+{
+    local path=$1
+    if [ ! -d "${path}" ] ; then
+        # Not a folder
+        return 0
+    fi
+    if [ ! -e "${path}/.git" ] ; then
+        # Not a git folder
+        return 0
+    fi
+    cd "${path}"
+    if [[ `git remote show|wc --lines` -eq 0 ]] ; then
+        # No remote defined
+        return 0
+    fi
+    git prune-all
+    git cleanup-local
+    git fetch
+    git co master
+    git pull --rebase origin master
+    git co -
+}
+
+origdir=`pwd`
+
+for folderItem in $HOME/workspace/iZettle/*;
+do
+    fetchRemote $folderItem || true
+done
+
+for folderItem in $HOME/workspace/*;
+do
+    fetchRemote $folderItem || true
+done
+
+cd ${origdir}

@@ -5,7 +5,7 @@
 , ...
 }: {
   programs.steam = {
-    enable = true;
+    enable = false;
     remotePlay.openFirewall = true;
     # Open ports in the firewall for Steam Remote Play
     dedicatedServer.openFirewall = true;
@@ -14,7 +14,7 @@
 
   # programs.gamemode.enable = true;
 
-  home-manager.users.${username}.home.packages = [
+  home-manager.users.${username}.home.packages = lib.mkIf config.programs.steam.enable [
     pkgs.steam-tui
     pkgs.steamPackages.steamcmd
     pkgs.steamPackages.steam-runtime

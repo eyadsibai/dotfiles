@@ -1,0 +1,32 @@
+ncmpcpp_directory = ~/.config/ncmpcpp
+lyrics_directory = ~/.lyrics
+
+
+
+[statusbar]
+progressbar_look = "━━━"
+progressbar_color = "black"
+statusbar_visibility = "yes"
+progressbar_elapsed_color = "cyan"
+statusbar_color = "3"
+song_status_format = "{%t - %a}"
+#display_bitrate = yes
+
+[global]
+main_window_color = "default"
+centered_cursor = "yes"
+enable_window_title = "yes"
+external_editor = "vim"
+mpd_crossfade_time = "5"
+
+
+
+# Visualizer
+
+visualizer_data_source = localhost:5555
+visualizer_in_stereo = "no"
+visualizer_type = "spectrum"
+visualizer_look = "▋▋"
+
+
+execute_on_song_change = ~/.config/ncmpcpp/music_notify.sh 1>/dev/null

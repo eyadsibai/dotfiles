@@ -52,7 +52,7 @@ in
     mappings = {
       f = "toggle_fullscreen";
       "[fullscreen] f" = "toggle_fullscreen";
-      "<C -i>" = "recolor";
+      # "<C-i>" = "recolor";
       w = "adjust_window width";
       n = "navigate next";
       b = "navigate previous";
