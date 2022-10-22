@@ -141,10 +141,10 @@ in
       gdm.enable = false;
       gdm.wayland = false;
       sessionCommands = ''
-        ${pkgs.xlibs.xset}/bin/xset r rate 660 25
+        ${pkgs.xorg.xset}/bin/xset r rate 660 25
       '';
-      #   ${pkgs.xlibs.setxkbmap}/bin/setxkbmap -layout us -option ctrl:nocaps
-      # ${pkgs.xlibs.xset}/bin/xset r rate 200 40
+      #   ${pkgs.xorg.setxkbmap}/bin/setxkbmap -layout us -option ctrl:nocaps
+      # ${pkgs.xorg.xset}/bin/xset r rate 200 40
     };
     # videoDrivers = [ "amdgpu" ];
     desktopManager = {
