@@ -18,6 +18,14 @@
       pkgs = nixpkgs.legacyPackages.${system};
       custom_pkgs = dotfiles.legacyPackages.${system};
 
+      libPaths = pkgs.lib.makeLibraryPath [
+        pkgs.libstdcxx5
+        pkgs.openblasCompat
+        pkgs.lapack-reference
+        pkgs.zlib
+        pkgs.stdenv.cc.cc.lib
+      ];
+
       # myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
       # projectDir = ./.;
       # python = pkgs."${python}";
@@ -50,7 +58,9 @@
         ;
 
         shellHook = ''
-          LIBCLANG_PATH="${pkgs.libclang}/lib";
+          export LIBCLANG_PATH="${pkgs.libclang}/lib";
+          export LD_LIBRARY_PATH="${libPaths}:${pkgs.stdenv.cc.cc.lib}/lib64:$LD_LIBRARY_PATH}"
+
         '';
       };
 
