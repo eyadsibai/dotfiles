@@ -87,11 +87,11 @@
 
         buildInputs = with pkgs; [
           RStudio-with-my-packages
-          pkgs.rPackages.R
+          pkgs.R
         ];
         shellHook = ''
         '';
-        MANPATH = "${R.outPath}/share/man";
+        MANPATH = "${pkgs.R.outPath}/share/man";
 
       };
     });

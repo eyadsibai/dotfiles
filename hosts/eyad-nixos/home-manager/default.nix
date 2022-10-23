@@ -231,7 +231,7 @@ in
       # File MGMT
       rsync
       unzip
-      # unrar
+      unrar
       cabextract
       p7zip
 
