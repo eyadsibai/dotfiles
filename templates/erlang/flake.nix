@@ -23,7 +23,7 @@
           erlangR23
 
         ];
-        MANPATH = "${erlangR23.outPath}/lib/erlang/man";
+        MANPATH = "${pkgs.erlangR23.outPath}/lib/erlang/man";
 
         shellHook = ''
         '';

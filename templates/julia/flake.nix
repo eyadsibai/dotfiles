@@ -1,5 +1,5 @@
 {
-  description = "A basic flake for erlang project";
+  description = "A basic flake for julia project";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
@@ -9,10 +9,13 @@
     , flake-utils
     }:
     flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs = nixpkgs.legacyPackages.${system};
 
+    let
+      pkgs = import nixpkgs {
+        config.allowBroken = true;        inherit system;
+      };
     in
+
     {
       devShell = pkgs.mkShell {
         nativeBuildInputs = [
@@ -20,7 +23,7 @@
         ];
 
         buildInputs = with pkgs; [
-          julia
+          julia-bin
         ];
 
         shellHook = ''

@@ -25,7 +25,7 @@
           clojure
           leiningen
           clj-kondo
-          jdtls
+          #jdtls
         ];
         shellHook = ''
           export JAVA_HOME=${pkgs.jdk11}

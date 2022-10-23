@@ -1,4 +1,3 @@
-# Fuzzing tools
 { pkgs ? import <nixpkgs> { }, ... }:
 let
   python = "python310";
@@ -7,12 +6,12 @@ with pkgs;
 mkShell
 {
   nativeBuildInputs = [ pkgs.bashInteractive ];
-  buildInputs = with pkgs.${python}; [
-    jupyter
-    pandas
-    matplotlib
-    scikit-learn
-    watermark
+  buildInputs = [
+    pkgs."${python}Packages".jupyter
+    pkgs."${python}Packages".pandas
+    pkgs."${python}Packages".matplotlib
+    pkgs."${python}Packages".scikit-learn
+    pkgs."${python}Packages".watermark
   ];
   shellHook = "";
 }
