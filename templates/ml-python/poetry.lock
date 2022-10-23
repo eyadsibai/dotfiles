@@ -810,6 +810,35 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "etils"
+version = "0.8.0"
+description = "Collection of common python utils"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+importlib_resources = {version = "*", optional = true, markers = "extra == \"epath\""}
+typing_extensions = {version = "*", optional = true, markers = "extra == \"epath\""}
+zipp = {version = "*", optional = true, markers = "extra == \"epath\""}
+
+[package.extras]
+all = ["etils[array-types]", "etils[ecolab]", "etils[edc]", "etils[enp]", "etils[epath]", "etils[epy]", "etils[etqdm]", "etils[etree-dm]", "etils[etree-jax]", "etils[etree-tf]", "etils[etree]"]
+array-types = ["etils[enp]"]
+dev = ["chex", "pylint (>=2.6.0)", "pytest", "pytest-subtests", "pytest-xdist", "yapf"]
+ecolab = ["etils[enp]", "etils[epy]", "jupyter", "mediapy", "numpy"]
+edc = ["etils[epy]"]
+enp = ["etils[epy]", "numpy"]
+epath = ["etils[epy]", "importlib_resources", "typing_extensions", "zipp"]
+epy = ["typing_extensions"]
+etqdm = ["absl-py", "etils[epy]", "tqdm"]
+etree = ["etils[array_types]", "etils[enp]", "etils[epy]", "etils[etqdm]"]
+etree-dm = ["dm-tree", "etils[etree]"]
+etree-jax = ["etils[etree]", "jax[cpu]"]
+etree-tf = ["etils[etree]", "tf-nightly"]
+lazy-imports = ["etils[ecolab]"]
+
+[[package]]
 name = "etuples"
 version = "0.3.8"
 description = "Python S-expression emulation using tuple-like objects."
@@ -1347,6 +1376,28 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "imagededup"
+version = "0.3.0"
+description = "Package for image deduplication"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+matplotlib = "*"
+Pillow = ">=9.0"
+PyWavelets = "*"
+scikit-learn = "*"
+torch = "*"
+torchvision = "*"
+tqdm = "*"
+
+[package.extras]
+dev = ["bumpversion", "twine"]
+docs = ["mkdocs", "mkdocs-material"]
+tests = ["codecov", "pytest", "pytest-cov", "pytest-mock"]
+
+[[package]]
 name = "importlib-metadata"
 version = "5.0.0"
 description = "Read metadata from Python packages"
@@ -1361,6 +1412,21 @@ zipp = ">=0.5"
 docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)"]
 perf = ["ipython"]
 testing = ["flake8 (<5)", "flufl.flake8", "importlib-resources (>=1.3)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)", "pytest-perf (>=0.9.2)"]
+
+[[package]]
+name = "importlib-resources"
+version = "5.10.0"
+description = "Read resources from Python packages"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+zipp = {version = ">=3.1.0", markers = "python_version < \"3.10\""}
+
+[package.extras]
+docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)"]
+testing = ["flake8 (<5)", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)"]
 
 [[package]]
 name = "iniconfig"
@@ -1477,6 +1543,46 @@ description = "Safely pass data to untrusted environments and back."
 category = "main"
 optional = false
 python-versions = ">=3.7"
+
+[[package]]
+name = "jax"
+version = "0.3.23"
+description = "Differentiate, compile, and transform Numpy code."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+absl-py = "*"
+etils = {version = "*", extras = ["epath"]}
+jaxlib = {version = "0.3.22", optional = true, markers = "extra == \"cpu\""}
+numpy = ">=1.20"
+opt_einsum = "*"
+scipy = ">=1.5"
+typing_extensions = "*"
+
+[package.extras]
+australis = ["protobuf (>=3.13,<4)"]
+ci = ["jaxlib (==0.3.22)"]
+cpu = ["jaxlib (==0.3.22)"]
+cuda = ["jaxlib (==0.3.22+cuda11.cudnn82)"]
+cuda11_cudnn805 = ["jaxlib (==0.3.22+cuda11.cudnn805)"]
+cuda11_cudnn82 = ["jaxlib (==0.3.22+cuda11.cudnn82)"]
+minimum-jaxlib = ["jaxlib (==0.3.15)"]
+tpu = ["jaxlib (==0.3.22)", "libtpu-nightly (==0.1.dev20221011)", "requests"]
+
+[[package]]
+name = "jaxlib"
+version = "0.3.22"
+description = "XLA library for JAX"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+absl-py = "*"
+numpy = ">=1.20"
+scipy = ">=1.5"
 
 [[package]]
 name = "jedi"
@@ -3038,6 +3144,17 @@ python-versions = ">=3.7"
 tokenize-rt = ">=3.2.0"
 
 [[package]]
+name = "PyWavelets"
+version = "1.4.1"
+description = "PyWavelets, wavelet transform module"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+numpy = ">=1.17.3"
+
+[[package]]
 name = "pywin32"
 version = "304"
 description = "Python for Window Extensions"
@@ -4370,7 +4487,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "aa12ec00655d855b51271268587efa2b030555c7a0132af7172c204890bbe3c7"
+content-hash = "6742952e94d1d2f0d2e6eb4c406fdf1d86713fc93d1100a0db1495d560cbfd0d"
 
 [metadata.files]
 absl-py = [
@@ -5023,6 +5140,10 @@ entrypoints = [
     {file = "entrypoints-0.4-py3-none-any.whl", hash = "sha256:f174b5ff827504fd3cd97cc3f8649f3693f51538c7e4bdf3ef002c8429d42f9f"},
     {file = "entrypoints-0.4.tar.gz", hash = "sha256:b706eddaa9218a19ebcd67b56818f05bb27589b1ca9e8d797b74affad4ccacd4"},
 ]
+etils = [
+    {file = "etils-0.8.0-py3-none-any.whl", hash = "sha256:b6299d2a835206b063498e443bd8036edb974058899169677dd6ddb92430bb84"},
+    {file = "etils-0.8.0.tar.gz", hash = "sha256:d1d5af7bd9c784a273c4e1eccfaa8feaca5e0481a08717b5313fa231da22a903"},
+]
 etuples = [
     {file = "etuples-0.3.8.tar.gz", hash = "sha256:babb99e09428e7985d2baf5537f38ca1e47b596e1fadbef7db12388cab0a92de"},
 ]
@@ -5359,9 +5480,28 @@ idna = [
     {file = "idna-3.4-py3-none-any.whl", hash = "sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2"},
     {file = "idna-3.4.tar.gz", hash = "sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4"},
 ]
+imagededup = [
+    {file = "imagededup-0.3.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:bd3454c00d56dea1491f0b7709fd7863e4983ec6b0ad841dc55c926d02b797e8"},
+    {file = "imagededup-0.3.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:97fdc698b018ed1011cddc4dd9cd07d1c9614f8022e1dcf97901440e8792008e"},
+    {file = "imagededup-0.3.0-cp310-cp310-win32.whl", hash = "sha256:3424e55c85b4511ecb687e1f9d39578ebf758963dc3483eb02c71a87fcb42c2f"},
+    {file = "imagededup-0.3.0-cp310-cp310-win_amd64.whl", hash = "sha256:560ca77c87faa5c456e2fc6f97426a8d108ce1d1fe364df55d9c35255646c284"},
+    {file = "imagededup-0.3.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:26f05e15bcce0764fad9498908b62ff11f8666d129d68675cfd5bdf183024ce4"},
+    {file = "imagededup-0.3.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fbad323ecc5c81d46dd33584dd4e7270ba9dfe1b89e9babd1f0c77d4250b8555"},
+    {file = "imagededup-0.3.0-cp38-cp38-win32.whl", hash = "sha256:813da73b6669875fdaf50ff10aaff6f8a3920cec72eb424d5dd8e2f82ac04cd7"},
+    {file = "imagededup-0.3.0-cp38-cp38-win_amd64.whl", hash = "sha256:524ce7737e5254790930041ab29f3041006029e1e914135cf2766062b4218a42"},
+    {file = "imagededup-0.3.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:7df1994b07c339388ceb0b1c26cfd62079e34eccb24723f00909540d88f466e6"},
+    {file = "imagededup-0.3.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:354eca416d7021557b155e05aa84511854b3467e78a2246f0afb8eb45205f45c"},
+    {file = "imagededup-0.3.0-cp39-cp39-win32.whl", hash = "sha256:8386c7e8aeb1ab6602b0c211d28479e979625bc29dcfc639d7459c8eaaf7c9b9"},
+    {file = "imagededup-0.3.0-cp39-cp39-win_amd64.whl", hash = "sha256:e8cb266725df18fcb73964987e072c1a8725d2c18e451ee8b63c3f7485c0cb22"},
+    {file = "imagededup-0.3.0.tar.gz", hash = "sha256:ecab873e75d56d637d40209dd3037d604f4d4335080892221adda804619af219"},
+]
 importlib-metadata = [
     {file = "importlib_metadata-5.0.0-py3-none-any.whl", hash = "sha256:ddb0e35065e8938f867ed4928d0ae5bf2a53b7773871bfe6bcc7e4fcdc7dea43"},
     {file = "importlib_metadata-5.0.0.tar.gz", hash = "sha256:da31db32b304314d044d3c12c79bd59e307889b287ad12ff387b3500835fc2ab"},
+]
+importlib-resources = [
+    {file = "importlib_resources-5.10.0-py3-none-any.whl", hash = "sha256:ee17ec648f85480d523596ce49eae8ead87d5631ae1551f913c0100b5edd3437"},
+    {file = "importlib_resources-5.10.0.tar.gz", hash = "sha256:c01b1b94210d9849f286b86bb51bcea7cd56dde0600d8db721d7b81330711668"},
 ]
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
@@ -5390,6 +5530,22 @@ isort = [
 itsdangerous = [
     {file = "itsdangerous-2.1.2-py3-none-any.whl", hash = "sha256:2c2349112351b88699d8d4b6b075022c0808887cb7ad10069318a8b0bc88db44"},
     {file = "itsdangerous-2.1.2.tar.gz", hash = "sha256:5dbbc68b317e5e42f327f9021763545dc3fc3bfe22e6deb96aaf1fc38874156a"},
+]
+jax = [
+    {file = "jax-0.3.23.tar.gz", hash = "sha256:bff436e15552a82c0ebdef32737043b799e1e10124423c57a6ae6118c3a7b6cd"},
+]
+jaxlib = [
+    {file = "jaxlib-0.3.22-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:6cea1023e4fe62c4d4340f9c0eeeb0c184dcabd7f2cb30a92bdaab742acd5680"},
+    {file = "jaxlib-0.3.22-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:ec8af9e5984191c72a7e86b9e9654117c4301400b6c2ce0a1470e47d5c3ace6d"},
+    {file = "jaxlib-0.3.22-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:c36c28d2393ed4174490dc1f4994506de6dd23801cf0a827d0c07470831c594e"},
+    {file = "jaxlib-0.3.22-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:651522950a8492bacc28e3c5bfc1be213891b3bf2f5488e22513f976cec323ee"},
+    {file = "jaxlib-0.3.22-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:05bacb0f0e379db65b5bc2ae3829adbfa47fb560ee737533f578943feff51529"},
+    {file = "jaxlib-0.3.22-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:5f28d826118da92c6d9ae0765be5969a5419168bda623763ef9145019f2e6d96"},
+    {file = "jaxlib-0.3.22-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:7caf7661f757c6c4abc7ec6b6b44b5d59314a91c610279f31f93dc4545c1dc04"},
+    {file = "jaxlib-0.3.22-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:415a82b095b54246a716f45204c9bd6bf26163ade0ae07733f866b2ecf0ff5ba"},
+    {file = "jaxlib-0.3.22-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:34737fd98fadbe9e0422a8ab302e2981aff23e1700d2a1f148d1271697c23f2b"},
+    {file = "jaxlib-0.3.22-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:a93c9cd0f20daba2bf630f041476552dc21a6ecd529a3482355a74dd7ba33f86"},
+    {file = "jaxlib-0.3.22-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:eecad425ae6a1889ef92bba2b92af1070fcc7fbd2d4c8c7976b8393476ff1629"},
 ]
 jedi = [
     {file = "jedi-0.18.1-py2.py3-none-any.whl", hash = "sha256:637c9635fcf47945ceb91cd7f320234a7be540ded6f3e99a50cb6febdfd1ba8d"},
@@ -6621,6 +6777,33 @@ pytzdata = [
 pyupgrade = [
     {file = "pyupgrade-3.1.0-py2.py3-none-any.whl", hash = "sha256:77c6101a710be3e24804891e43388cedbee617258e93b09c8c5e58de08617758"},
     {file = "pyupgrade-3.1.0.tar.gz", hash = "sha256:7a8d393d85e15e0e2753e90b7b2e173b9d29dfd71e61f93d93e985b242627ed3"},
+]
+PyWavelets = [
+    {file = "PyWavelets-1.4.1-cp310-cp310-macosx_10_13_x86_64.whl", hash = "sha256:d854411eb5ee9cb4bc5d0e66e3634aeb8f594210f6a1bed96dbed57ec70f181c"},
+    {file = "PyWavelets-1.4.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:231b0e0b1cdc1112f4af3c24eea7bf181c418d37922a67670e9bf6cfa2d544d4"},
+    {file = "PyWavelets-1.4.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:754fa5085768227c4f4a26c1e0c78bc509a266d9ebd0eb69a278be7e3ece943c"},
+    {file = "PyWavelets-1.4.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:da7b9c006171be1f9ddb12cc6e0d3d703b95f7f43cb5e2c6f5f15d3233fcf202"},
+    {file = "PyWavelets-1.4.1-cp310-cp310-win32.whl", hash = "sha256:67a0d28a08909f21400cb09ff62ba94c064882ffd9e3a6b27880a111211d59bd"},
+    {file = "PyWavelets-1.4.1-cp310-cp310-win_amd64.whl", hash = "sha256:91d3d393cffa634f0e550d88c0e3f217c96cfb9e32781f2960876f1808d9b45b"},
+    {file = "PyWavelets-1.4.1-cp311-cp311-macosx_10_13_x86_64.whl", hash = "sha256:64c6bac6204327321db30b775060fbe8e8642316e6bff17f06b9f34936f88875"},
+    {file = "PyWavelets-1.4.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:3f19327f2129fb7977bc59b966b4974dfd72879c093e44a7287500a7032695de"},
+    {file = "PyWavelets-1.4.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ad987748f60418d5f4138db89d82ba0cb49b086e0cbb8fd5c3ed4a814cfb705e"},
+    {file = "PyWavelets-1.4.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:875d4d620eee655346e3589a16a73790cf9f8917abba062234439b594e706784"},
+    {file = "PyWavelets-1.4.1-cp311-cp311-win32.whl", hash = "sha256:7231461d7a8eb3bdc7aa2d97d9f67ea5a9f8902522818e7e2ead9c2b3408eeb1"},
+    {file = "PyWavelets-1.4.1-cp311-cp311-win_amd64.whl", hash = "sha256:daf0aa79842b571308d7c31a9c43bc99a30b6328e6aea3f50388cd8f69ba7dbc"},
+    {file = "PyWavelets-1.4.1-cp38-cp38-macosx_10_13_x86_64.whl", hash = "sha256:ab7da0a17822cd2f6545626946d3b82d1a8e106afc4b50e3387719ba01c7b966"},
+    {file = "PyWavelets-1.4.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:578af438a02a86b70f1975b546f68aaaf38f28fb082a61ceb799816049ed18aa"},
+    {file = "PyWavelets-1.4.1-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9cb5ca8d11d3f98e89e65796a2125be98424d22e5ada360a0dbabff659fca0fc"},
+    {file = "PyWavelets-1.4.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:058b46434eac4c04dd89aeef6fa39e4b6496a951d78c500b6641fd5b2cc2f9f4"},
+    {file = "PyWavelets-1.4.1-cp38-cp38-win32.whl", hash = "sha256:de7cd61a88a982edfec01ea755b0740e94766e00a1ceceeafef3ed4c85c605cd"},
+    {file = "PyWavelets-1.4.1-cp38-cp38-win_amd64.whl", hash = "sha256:7ab8d9db0fe549ab2ee0bea61f614e658dd2df419d5b75fba47baa761e95f8f2"},
+    {file = "PyWavelets-1.4.1-cp39-cp39-macosx_10_13_x86_64.whl", hash = "sha256:23bafd60350b2b868076d976bdd92f950b3944f119b4754b1d7ff22b7acbf6c6"},
+    {file = "PyWavelets-1.4.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:d0e56cd7a53aed3cceca91a04d62feb3a0aca6725b1912d29546c26f6ea90426"},
+    {file = "PyWavelets-1.4.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:030670a213ee8fefa56f6387b0c8e7d970c7f7ad6850dc048bd7c89364771b9b"},
+    {file = "PyWavelets-1.4.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:71ab30f51ee4470741bb55fc6b197b4a2b612232e30f6ac069106f0156342356"},
+    {file = "PyWavelets-1.4.1-cp39-cp39-win32.whl", hash = "sha256:47cac4fa25bed76a45bc781a293c26ac63e8eaae9eb8f9be961758d22b58649c"},
+    {file = "PyWavelets-1.4.1-cp39-cp39-win_amd64.whl", hash = "sha256:88aa5449e109d8f5e7f0adef85f7f73b1ab086102865be64421a3a3d02d277f4"},
+    {file = "PyWavelets-1.4.1.tar.gz", hash = "sha256:6437af3ddf083118c26d8f97ab43b0724b956c9f958e9ea788659f6a2834ba93"},
 ]
 pywin32 = [
     {file = "pywin32-304-cp310-cp310-win32.whl", hash = "sha256:3c7bacf5e24298c86314f03fa20e16558a4e4138fc34615d7de4070c23e65af3"},
