@@ -1,6 +1,6 @@
 { pkgs, ... }: {
   services.yabai = {
-    enable = true;
+    enable = false;
     package = pkgs.yabai;
     config = {
       enableScriptingAddition = true;
@@ -45,7 +45,7 @@
 
   services.skhd = {
     # Hotkey daemon
-    enable = true;
+    enable = false;
     package = pkgs.skhd;
     skhdConfig = ''
       # open terminal
@@ -93,7 +93,7 @@
   };
 
   services.spacebar = {
-    enable = true;
+    enable = false;
     package = pkgs.spacebar;
     config = {
       position = "bottom";
