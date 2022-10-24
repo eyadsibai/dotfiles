@@ -10,6 +10,7 @@
     enable = false;
     package = pkgs.clipit;
   };
+  # services.borgmatic.enable = true;
 
   xdg.configFile."clipit/clipitrc" = lib.mkIf config.services.parcellite.enable {
     text = ''
