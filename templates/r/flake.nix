@@ -29,7 +29,7 @@
               Rcpp
               SOAR
               biganalytics
-              bigmemory
+              # bigmemory
               bigtabulate
               caret
               digest
