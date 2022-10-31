@@ -19,7 +19,6 @@
         pkgs = nixpkgs.legacyPackages.${system};
         custom_pkgs = dotfiles.legacyPackages.${system};
 
-
         libPaths = pkgs.lib.makeLibraryPath [
           pkgs.libstdcxx5
           pkgs.openblasCompat
@@ -27,6 +26,7 @@
           pkgs.zlib
           pkgs.stdenv.cc.cc.lib
         ];
+
         myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
           projectDir = ./.;
           python = pkgs."${python}";
@@ -48,6 +48,7 @@
             pkgs.llvmPackages_9.llvm
             pkgs.libclang
           ];
+
           buildInputs = with pkgs; [
             python310Packages.poetry
             custom_pkgs.rgf

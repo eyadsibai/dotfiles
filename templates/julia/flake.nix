@@ -12,7 +12,8 @@
 
     let
       pkgs = import nixpkgs {
-        config.allowBroken = true;        inherit system;
+        config.allowBroken = true;
+        inherit system;
       };
     in
 
