@@ -33,16 +33,16 @@ stdenv.mkDerivation rec {
     mkdir -p $out/bin
     mkdir -p ../bin
     cmake ..
-    echo $(pwd)
+    # echo $(pwd)
     make
     make install
-    cp -r ../bin/* $out/bin
-    # cp ../bin/forest_predict $out/bin
-    # cp ../bin/forest_train $out/bin
+    # cp -r ./src/exe/ $out/bin
+    cp ./src/exe/forest_predict $out/bin
+     cp ./src/exe/forest_train $out/bin
   '';
 
   meta = with lib; {
-    homepage = "https://github.com/RGF-team/rgf/FastRGF";
+    homepage = "https://github.com/RGF-team/rgf";
     description = "
       Fast Regularized
       Greedy
