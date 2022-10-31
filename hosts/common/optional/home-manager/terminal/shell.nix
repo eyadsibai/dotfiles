@@ -5,7 +5,7 @@
 }: {
   programs.bash = {
     enable = true;
-    initExtra = "neofetch";
+    # initExtra = "neofetch";
     historyIgnore = [ "exit" "tree" ];
   };
 
@@ -68,7 +68,7 @@
       alert = "notify-send --urgency=low -i \"$([ `$status = 0` ] && echo terminal || echo error)\" \"$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')\"";
     };
     functions = {
-      fish_greeting = "${pkgs.pfetch}/bin/pfetch";
+      # fish_greeting = "${pkgs.pfetch}/bin/pfetch";
       wh = "readlink -f (which $argv)";
       fix_bin_csv = "iconv -f utf-16 -t utf-8 $1 > $2";
       gi = "wget http://www.gitignore.io/api/$argv >> .gitignore";

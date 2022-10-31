@@ -26,17 +26,28 @@
           pkgs.lapack-reference
           pkgs.zlib
           pkgs.stdenv.cc.cc.lib
-          pkgs.llvmPackages_9.llvm
-
         ];
+      myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
+        projectDir = ./.;
+        python = pkgs."${python}";
+        preferWheels = true;
+      };
+
+      defaultPackage = with pkgs.poetry2nix;
+        mkPoetryApplication {
+          projectDir = ./.;
+          preferWheels = true;
+        };
+    in
+    rec {
+
 
         # myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
         # projectDir = ./.;
         # python = pkgs."${python}";
         # preferWheels = true;
         # };
-      in
-      rec {
+
 
         # should I replace it with pkgs.buildFHSUserEnv
         devShell = pkgs.mkShell {
@@ -81,16 +92,8 @@
             ]);
         };
 
-
-        defaultPackage = with pkgs.poetry2nix;
-          mkPoetryApplication {
-            projectDir = ./.;
-            preferWheels = true;
-          };
-
-
-        defaultApp = flake-utils.lib.mkApp {
-          drv = self.defaultPackage."${system}";
-        };
-      });
+      defaultApp = flake-utils.lib.mkApp {
+        drv = self.defaultPackage."${system}";
+      };
+    });
 }
