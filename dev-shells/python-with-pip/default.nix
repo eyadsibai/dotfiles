@@ -13,10 +13,15 @@ in
     # cudaPackages.cudatoolkit_11
   ]);
   runScript = "bash";
+
+  profile = ''
+    set -e
+    virtualenv venv
+    source venv/bin/activate
+
+    set +e
+
+  '';
+  # then pip install packages needed to work temporarily with.
+
 }).env
-
-# then run virtualenv venv
-# then run source venv/bin/activate
-# then pip install packages needed to work temporarily with.
-
-

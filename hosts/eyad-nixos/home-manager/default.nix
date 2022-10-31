@@ -171,7 +171,7 @@ in
       stig
       sysstat
       tcpdump
-      teamviewer
+      # teamviewer
       teleport
       termdown
       termshark
@@ -667,7 +667,10 @@ in
 
   };
 
-  services.safeeyes.enable = true;
+  services.safeeyes = {
+    # enable = true;
+  };
+
   programs.tmate.enable = true;
   programs.pls.enable = true;
   xdg.configFile."yandex-disk/config.cfg" = lib.mkIf (builtins.elem pkgs.yandex-disk config.home.packages) {
@@ -675,7 +678,7 @@ in
       auth="/home/eyad/.config/yandex-disk/passwd"
       dir="/home/eyad/Yandex.Disk"
       proxy="no"
-      exclude-dirs="from_dropbox,audio_books,games,photos,ebooks,Screenshots,papers,movies,videos,visual_computing/ics-502/assignments/assignment1/.direnv"
+      exclude-dirs="from_mac,photostructure,from_dropbox,audio_books,games,photos,ebooks,Screenshots,papers,movies,videos,visual_computing/ics-502/assignments/assignment1/.direnv,visual_computing/ics-502/assignments/assignment2/.direnv"
     '';
   };
 
@@ -808,7 +811,7 @@ in
 
     always_yes: true
 
-    track_features;
+    track_features:
       - nomkl
 
     auto_activate_base: false

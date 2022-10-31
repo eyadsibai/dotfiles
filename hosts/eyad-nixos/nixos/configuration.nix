@@ -134,6 +134,8 @@ in
     keyMap = "us";
   };
   # Enable the X11 windowing system.
+
+  services.teamviewer.enable = true;
   services.xserver = {
     enable = true;
     displayManager = {
