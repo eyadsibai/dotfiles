@@ -10,7 +10,6 @@
   shellcolord = pkgs.callPackage ./shellcolord { };
   wallpapers = pkgs.callPackage ./wallpapers { };
   icomoon-feather-ttf = pkgs.callPackage ./icomoon-feather-ttf { };
-  whatsie = pkgs.libsForQt514.callPackage ./whatsie { };
   latest-caprine = pkgs.callPackage (inputs.nixpkgs + "/pkgs/applications/networking/instant-messengers/caprine-bin/build-from-appimage.nix")
     {
 
