@@ -25,6 +25,8 @@
           pkgs.lapack-reference
           pkgs.zlib
           pkgs.stdenv.cc.cc.lib
+          pkgs.libGL
+          pkgs.glib
         ];
 
         myPoetryEnv = pkgs.poetry2nix.mkPoetryEnv {
