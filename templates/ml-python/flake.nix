@@ -40,7 +40,9 @@
             projectDir = ./.;
             preferWheels = true;
           };
+
       in
+
       rec {
 
         # should I replace it with pkgs.buildFHSUserEnv
@@ -52,7 +54,7 @@
           ];
 
           buildInputs = with pkgs; [
-            python310Packages.poetry
+            poetry
             custom_pkgs.rgf
             custom_pkgs.fast-rgf
             custom_pkgs.libfm
@@ -62,9 +64,9 @@
             tesseract5
             # tensorflow-lite
             pre-commit
-            # defaultPackage
+            #            defaultPackage
           ]
-            # ++ [ myPoetryEnv ]
+            #                      ++ [ myPoetryEnv ]
           ;
 
           shellHook =
