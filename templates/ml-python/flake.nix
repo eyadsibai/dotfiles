@@ -66,7 +66,7 @@
             pre-commit
             #            defaultPackage
           ]
-            #                      ++ [ myPoetryEnv ]
+            # ++ [ myPoetryEnv ]
           ;
 
           shellHook =
