@@ -10,10 +10,21 @@
   # programs.notmuch.enable = true;
   # services.lieer.enable = true;
 
+  programs.thunderbird = {
+    enable = true;
+    profiles."work" = {
+      #   name = "work";
+      isDefault = true;
+    };
+  };
+
+
+
   accounts.email.accounts = {
     "work" = {
-      address = "${config.secrets.email.work.address}";
+      address = "${config.secrets.emails.work.address}";
       primary = true; # needs to be rmeoved later
+      realName = "Eyad Sibai";
       # himalaya = {
 
       #   enable = true;
@@ -21,8 +32,13 @@
       # };
 
       imap = {
-        host = "${config.secrets.email.work.host}";
+        host = "${config.secrets.emails.work.host}";
         tls.enable = true;
+      };
+
+      thunderbird = {
+        enable = true;
+        profiles = [ "work" ];
       };
     };
     # "personal-gmail" = {
