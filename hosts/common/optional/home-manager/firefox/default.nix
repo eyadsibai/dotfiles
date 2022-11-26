@@ -8,11 +8,16 @@ let
   addons = pkgs.nur.repos.rycee.firefox-addons;
 in
 {
-  home.packages = with pkgs; [ nur.repos.wolfangaukang.vdhcoapp ff2mpv ];
+  home.packages = with pkgs; [
+    #  nur.repos.wolfangaukang.vdhcoapp
+    ff2mpv
+  ];
   # Browsers
   programs.firefox = {
     enable = true;
-    package = lib.mkDefault (pkgs.wrapFirefox pkgs.firefox-unwrapped { forceWayland = false; });
+    package = lib.mkDefault (pkgs.wrapFirefox pkgs.firefox-unwrapped {
+      # forceWayland = false;
+    });
     extensions = with addons; [
       ublock-origin
       vimium
