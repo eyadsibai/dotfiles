@@ -15,13 +15,13 @@ let
       prev.whatsapp-for-linux.overrideAttrs
         (
           oldAttrs: rec {
-            version = "1.4.7";
+            version = "1.5.0";
             src =
               prev.fetchFromGitHub
                 {
                   owner = "eneshecan";
-                  repo = "${oldAttrs.pname}";
-                  rev = "v${version}";
+                  repo = "${ oldAttrs. pname}";
+                  rev = "v${ version}";
                   # sha256 = prev.lib.fakeSha256;
                   sha256 = "sha256-LJ2c0+t+b4QnvCnsldutRA2N5EET+EpGNVoTqOGTQkY=";
                 };
@@ -38,28 +38,28 @@ let
           }
         );
 
-    yabai =
-      let
-        version = "5.0.0-dev";
-        buildSymlinks = prev.runCommand "build-symlinks" { } ''
-          mkdir -p $out/bin
-          ln -s /usr/bin/xcrun /usr/bin/xcodebuild /usr/bin/tiffutil /usr/bin/qlmanage $out/bin
-        '';
-      in
-      prev.yabai.overrideAttrs (old: {
-        inherit version;
-        src = inputs.yabai-src;
+    # yabai =
+    #   let
+    #     version = "5.0.0-dev";
+    #     buildSymlinks = prev.runCommand "build-symlinks" { } ''
+    #       mkdir -p $out/bin
+    #       ln -s /usr/bin/xcrun /usr/bin/xcodebuild /usr/bin/tiffutil /usr/bin/qlmanage $out/bin
+    #     '';
+    #   in
+    #   prev.yabai.overrideAttrs (old: {
+    #     inherit version;
+    #     src = inputs.yabai-src;
 
-        buildInputs = with prev.darwin.apple_sdk.frameworks; [
-          Carbon
-          Cocoa
-          ScriptingBridge
-          prev.xxd
-          SkyLight
-        ];
+    #     buildInputs = with prev.darwin.apple_sdk.frameworks; [
+    #       Carbon
+    #       Cocoa
+    #       ScriptingBridge
+    #       prev.xxd
+    #       SkyLight
+    #     ];
 
-        nativeBuildInputs = [ buildSymlinks ];
-      });
+    #     nativeBuildInputs = [ buildSymlinks ];
+    #   });
 
     # comma = prev.comma.overrideAttrs { pkgs = final; };
   };
