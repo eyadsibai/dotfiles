@@ -90,6 +90,7 @@
     let
       lib = import ./lib { inherit inputs; };
       inherit (lib) forAllSystems mkNixOSSystem mkVMNixOSSystem mkDarwinSystem mergeEnvs nixConfig toGuest;
+
       overlays = {
         default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlay;
@@ -117,6 +118,12 @@
       inherit lib;
       inherit overlays;
       inherit legacyPackages;
+
+      # packages = forAllSystems (system:
+      #   let pkgs = legacyPackages.${system};
+      #   in import ./pkgs { inherit inputs pkgs; }
+      # );
+
 
       templates = import ./templates;
 

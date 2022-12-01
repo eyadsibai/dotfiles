@@ -1,7 +1,7 @@
 { lib, pkgs, ... }:
 
 rec {
-  default = pkgs.callPackage ../shell.nix { };
+  default = import ../shell.nix { inherit pkgs; };
   python = import ./python { inherit pkgs; };
   python-with-pip = import ./python-with-pip { inherit pkgs; };
   cc = import ./cc { inherit pkgs; };
