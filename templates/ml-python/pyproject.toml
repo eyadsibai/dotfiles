@@ -60,6 +60,7 @@ setuptools = "^65.5.1"
 html5lib = "^1.1"
 six = "^1.16.0"
 flytekit = "^1.2.4"
+wandb = "^0.13.5"
 
 [tool.poetry.dev-dependencies]
 black = ">=21.10b0"
