@@ -92,8 +92,8 @@
               ]);
         };
 
-        defaultApp = flake-utils.lib.mkApp {
-          drv = self.defaultPackage."${system}";
-        };
+        # defaultApp = flake-utils.lib.mkApp {
+        #   drv = self.defaultPackage."${system}";
+        # };
       });
 }
