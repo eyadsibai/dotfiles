@@ -1,9 +1,11 @@
 { pkgs
 , config
+, inputs
 , ...
 }:
 let
   inherit (config.colorscheme) colors;
+  spicePkgs = inputs.spicetify-nix.packages.${pkgs.system}.default;
 in
 {
   home.packages = [
@@ -17,7 +19,8 @@ in
     enable = true;
     # specify that we want to use our custom colorscheme
     colorScheme = "custom";
-    theme = "catppuccin-mocha";
+    theme = spicePkgs.themes.catppuccin-mocha;
+
     # color definition for custom color scheme. (rosepine)
     customColorScheme = {
       text = "${colors.base05}";
@@ -38,10 +41,11 @@ in
       notification-error = "${colors.base03}";
       misc = "${colors.base02}";
     };
-    enabledExtensions = [
-      "fullAppDisplay.js"
-      "shuffle+.js"
-      "hidePodcasts.js"
-    ];
+    enabledExtensions = with spicePkgs.extensions;
+      [
+        fullAppDisplay
+        shuffle
+        hidePodcasts
+      ];
   };
 }

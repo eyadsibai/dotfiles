@@ -72,12 +72,12 @@ let
           config = lib.nixConfig;
         };
 
-    bleeding-edge =
-      import inputs.bleeding-edge
-        {
-          system = super.stdenv.system;
-          config = lib.nixConfig;
-        };
+    # bleeding-edge =
+    #   import inputs.bleeding-edge
+    #     {
+    #       system = super.stdenv.system;
+    #       config = lib.nixConfig;
+    #     };
 
     apple-silicon-86x =
       import inputs.nixpkgs
