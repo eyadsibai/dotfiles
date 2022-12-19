@@ -2,7 +2,6 @@
   description = "My Ultimate Flake";
   inputs = {
     unstable.url = "nixpkgs/nixos-unstable";
-    bleeding-edge.url = "nixpkgs/master";
     stable.url = "nixpkgs/nixos-22.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
@@ -48,28 +47,20 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    spacebar = {
-      url = "github:cmacrae/spacebar";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    nixpkgs-wayland = {
-      url = "github:nix-community/nixpkgs-wayland";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # nixpkgs-wayland = {
+    #   url = "github:nix-community/nixpkgs-wayland";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
-    hyprland = {
-      url = "github:hyprwm/hyprland";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    hyprwm-contrib = {
-      url = "github:hyprwm/contrib";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # hyprland = {
+    #   url = "github:hyprwm/hyprland";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
+    # hyprwm-contrib = {
+    #   url = "github:hyprwm/contrib";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
-    yabai-src = {
-      url = "github:koekeishiya/yabai";
-      flake = false;
-    };
     spicetify-nix = {
       url = "github:the-argus/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -96,8 +87,7 @@
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
         poetry2nix = inputs.poetry2nix.overlay;
-        spacebar = inputs.spacebar.overlay;
-        nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
+        # nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
         nixgl = inputs.nixgl.overlay;
         devshell = inputs.devshell.overlay;
         # comma = (inputs.flake-utils-plus.lib.genPkgOverlay inputs.comma "comma");
