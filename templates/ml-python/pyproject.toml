@@ -42,6 +42,8 @@ tensorflow = "^2.10.0"
 pytorch-metric-learning = "^1.6.0"
 pytorch-lightning = "^1.7.5"
 torch = "^1.13.1"
+#torch = [{markers = "sys_platform == 'macos'", url = "https://download.pytorch.org/whl/cpu/torch-1.13.0-cp310-none-macosx_11_0_arm64.whl"},
+#{markers = "sys_platform == 'linux'", url="https://download.pytorch.org/whl/torch-1.13.0-cp310-cp310-manylinux2014_aarch64.whl"}]
 timm = "^0.6.11"
 thinc = "^8.1.5"
 imagededup = "^0.3.0"
