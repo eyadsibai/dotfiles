@@ -2,7 +2,13 @@
 , pkgs
 , ...
 }: {
-  home.packages = with pkgs; [ pdfgrep pdftk pdfchain qpdf libreoffice-fresh ];
+  home.packages = with pkgs; [
+    pdfgrep
+    pdftk
+    pdfchain
+    qpdf
+    # libreoffice-fresh
+  ];
   programs.sioyek = {
     enable = true;
     bindings = {

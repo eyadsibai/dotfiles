@@ -181,7 +181,7 @@ in
       enable = true;
       dockerCompat = true;
       dockerSocket.enable = true;
-      defaultNetwork.dnsname.enable = true;
+      defaultNetwork.settings.dns_enabled = true;
     };
     lxd.enable = true;
     # virtualbox.host = {
@@ -256,9 +256,11 @@ in
   # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
-    permitRootLogin = "no";
-    # Use keys only. Remove if you want to SSH using password (not recommended)
-    passwordAuthentication = false;
+    settings = {
+      permitRootLogin = "no";
+      # Use keys only. Remove if you want to SSH using password (not recommended)
+      passwordAuthentication = false;
+    };
     allowSFTP = true;
   };
   security.apparmor.enable = false;
