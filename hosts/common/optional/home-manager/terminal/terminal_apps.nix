@@ -1,6 +1,7 @@
 { config
 , pkgs
 , lib
+, inputs
 , ...
 }:
 let
@@ -22,7 +23,7 @@ in
     # t conflict with time
     timewarrior
     eureka-ideas
-    taskell
+    stable.taskell
     nb
     ticker
     sent

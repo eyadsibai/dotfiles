@@ -109,7 +109,7 @@ in
       # "find" for files
       fdupes
       fff
-      ffmpeg_5-full
+      # ffmpeg_5-full
       # gimp
       # gnu image manipulation program
       glow
@@ -250,7 +250,7 @@ in
       #swaylock-fancy   # Screen Locker
       #waybar           # Bar
 
-      handbrake
+      # handbrake
 
       #new-lg4ff        # Logitech Drivers
       #shotcut          # Video editor
@@ -301,7 +301,7 @@ in
 
       pgcli
       # modern postgres client
-      mycli
+      stable.mycli
       iredis
       usql
       # mathematica
@@ -431,7 +431,7 @@ in
       # #dcraw # marked as insecure
 
       # #kdenlive
-      # ffmpeg-full
+      # stable.ffmpeg-full
       # # mlt
       # # frei0r
 
@@ -475,7 +475,7 @@ in
       # # Printing and scanning
       # simple-scan
     ]
-    ++ (lib.optionals systemConfig.networking.networkmanager.enable [ haskellPackages.network-manager-tui ]);
+    ++ (lib.optionals systemConfig.networking.networkmanager.enable [ stable.haskellPackages.network-manager-tui ]);
 
   programs.yt-dlp.enable = true;
   programs.gallery-dl.enable = true;

@@ -15,7 +15,6 @@ in
     package =
       pkgs.polybarFull.override
         {
-          i3GapsSupport = true;
           alsaSupport = true;
           iwSupport = true;
           pulseSupport = true;
