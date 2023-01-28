@@ -30,6 +30,7 @@ in
     ./steam.nix
     # ./fonts.nix
     ../../common/optional/nixos/samba
+    ./home-manager-tmp.nix
   ];
   home-manager.users.${username} = ../home-manager;
 
