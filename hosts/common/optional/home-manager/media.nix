@@ -5,7 +5,7 @@
     cmus
     vlc
     # media player
-    mps-youtube
+    yewtube
     youtube-dl
     ytcc
     darktable
