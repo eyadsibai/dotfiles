@@ -1,8 +1,23 @@
-{ pkgs, ... }: {
-  environment.systemPackages = with pkgs; [
-    easyeffects
-    # optional for audio post processing
-  ];
+{ config
+, pkgs
+, lib
+, username
+, ...
+}:
+let
+  sysConfig = config;
+  homeConfig = config.home-manager.users.${username};
+  inherit (homeConfig.colorscheme) colors;
+
+in
+{
+  home-manager.users.${username} = {
+    services.easyeffects.enable = true;
+  };
+  # environment.systemPackages = with pkgs; [
+  #   easyeffects
+  #   # optional for audio post processing
+  # ];
   security.rtkit.enable = true;
   hardware.pulseaudio.enable = false;
   services.pipewire = {
