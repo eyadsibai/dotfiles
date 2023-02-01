@@ -8,7 +8,7 @@
   imports = [
   ];
 
-  home-manager.users.${username} = ../home-manager;
+  home-manager.users.${username} = {home.stateVersion = "22.05";};
 
   wsl = {
     enable = true;
