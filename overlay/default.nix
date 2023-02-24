@@ -64,18 +64,20 @@ let
     # comma = prev.comma.overrideAttrs { pkgs = final; };
   };
 
-  additions_inside = self: super: {
+  additions_inside = final: _prev: {
     stable =
       import inputs.stable
         {
-          system = super.stdenv.system;
+          system = final.system;
           config = lib.nixConfig;
         };
+
+
 
     # bleeding-edge =
     #   import inputs.bleeding-edge
     #     {
-    #       system = super.stdenv.system;
+    #       system = final.system;
     #       config = lib.nixConfig;
     #     };
 
@@ -90,7 +92,7 @@ let
     firefox-darwin =
       import inputs.nixpkgs
         {
-          system = super.stdenv.system;
+          system = final.system;
           config = lib.nixConfig;
           overlays = [ inputs.firefox-darwin.overlay ];
         };
