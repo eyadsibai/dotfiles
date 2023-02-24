@@ -650,7 +650,7 @@ in
         # better htop
         # network state
         ethtool
-        bpytop
+        btop
         bottom
         # alternative to htop & ytop (btm)
         gotop
