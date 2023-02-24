@@ -8,7 +8,7 @@
     yewtube
     youtube-dl
     ytcc
-    darktable
+    # darktable
     castget
   ];
   services.mopidy = {
@@ -56,4 +56,5 @@
   services.mpd.enable = true;
   services.mpdris2.enable = true;
   services.playerctld.enable = true;
+  services.mpd-mpris.enable = true;
 }
