@@ -15,7 +15,7 @@
     reviewdog
     # pgcli # modern postgres client # TODO crash on install
     stable.mycli
-    iredis
+    # iredis
     usql
     vieb
 

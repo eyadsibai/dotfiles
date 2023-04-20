@@ -15,7 +15,6 @@
   icomoon-feather-ttf = pkgs.callPackage ./icomoon-feather-ttf { };
   latest-caprine = pkgs.callPackage (inputs.nixpkgs + "/pkgs/applications/networking/instant-messengers/caprine-bin/build-from-appimage.nix")
     {
-
       pname = "caprine";
       version = "2.56.1";
       sha256 = "sha256-NhHToaacje4TtZkW3TxtyGzH/uKGCWgGdtvI9oSTJF4=";

@@ -89,7 +89,7 @@
         poetry2nix = inputs.poetry2nix.overlay;
         # nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
         nixgl = inputs.nixgl.overlay;
-        devshell = inputs.devshell.overlay;
+        devshell = inputs.devshell.overlays.default;
         # comma = (inputs.flake-utils-plus.lib.genPkgOverlay inputs.comma "comma");
         # comma = inputs.comma.overlays.default;
       };
@@ -120,6 +120,7 @@
       nixosModules = import ./modules/nixos;
       darwinModules = import ./modules/darwin;
       homeManagerModules = import ./modules/home-manager;
+      gamingModules = import ./modules/gaming;
 
       devShells = forAllSystems (system:
         let
