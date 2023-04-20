@@ -228,7 +228,12 @@ rec {
 
   nixConfig = {
     # allowUnfree = true;
-    permittedInsecurePackages = [ "electron-12.2.3" "electron-13.6.9" "electron-14.2.9" ];
+    permittedInsecurePackages = [
+      "electron-12.2.3"
+      # "electron-13.6.9"
+      # "electron-14.2.9"
+      "electron-21.4.0"
+    ];
     allowUnfreePredicate = pkg:
       builtins.elem (inputs.nixpkgs.lib.getName pkg)
         [
@@ -254,16 +259,16 @@ rec {
           "dropbox"
           "mpv-convert-script"
           "video-cutter"
-          "steamcmd"
-          "steam-original"
-          "steam-runtime"
-          "steam-run"
+          # "steamcmd"
+          # "steam-original"
+          # "steam-runtime"
+          # "steam-run"
           "broadcom-bt-firmware"
           "b43-firmware"
           "xow_dongle-firmware"
           # "facetimehd-calibration"
           # "facetimehd-firmware"
-          "steam"
+          # "steam"
           "geogebra"
           "mathematica"
         ];

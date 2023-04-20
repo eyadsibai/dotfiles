@@ -662,7 +662,7 @@ in
         pgcli
         # modern postgres client
         stable.mycli
-        iredis
+        # iredis
         usql
         # mathematica
 

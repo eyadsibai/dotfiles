@@ -23,6 +23,7 @@ in
     inputs.hardware.nixosModules.common-gpu-amd
     inputs.hardware.nixosModules.common-pc-laptop-ssd
     inputs.hardware.nixosModules.lenovo-thinkpad
+
     ./hardware-configuration.nix
     ./networking.nix
     ./audio.nix
@@ -48,7 +49,7 @@ in
     };
     plymouth.enable = true;
     loader.efi.canTouchEfiVariables = true;
-    cleanTmpDir = true;
+    tmp.cleanOnBoot = true;
     supportedFilesystems = [ "ntfs" ];
     kernelPackages = pkgs.linuxPackages_latest;
     kernelParams = [
@@ -204,6 +205,7 @@ in
     };
   };
   users.mutableUsers = false;
+  programs.fish.enable = true;
   users.users.${username} = {
     isNormalUser = true;
     shell = pkgs.fish;

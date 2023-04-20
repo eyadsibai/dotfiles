@@ -25,7 +25,7 @@ in
         vimium
         bitwarden
         # buster-captcha-solver
-        netflix-1080p
+        # netflix-1080p
         # betterttv
         h264ify
         # umatrix
