@@ -6,7 +6,7 @@ mkShell
   buildInputs = [
     bluez
     bluewalker
-    bleak
+    # bleak
     redfang
     ubertooth
   ];

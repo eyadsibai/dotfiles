@@ -6,7 +6,7 @@ mkShell
   buildInputs = [
     badchars
     changetower
-    deepsea
+    # deepsea
     doona
     honeytrap
     jwt-cli

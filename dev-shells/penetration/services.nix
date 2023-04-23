@@ -21,7 +21,7 @@ mkShell
     sshchecker
     ssh-audit
     ssh-mitm
-    ssb
+    # ssb
     # IDS/IPS/WAF
     teler
     waf-tester

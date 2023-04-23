@@ -80,7 +80,9 @@
   outputs = inputs:
     let
       lib = import ./lib { inherit inputs; };
-      inherit (lib) forAllSystems mkNixOSSystem mkVMNixOSSystem mkDarwinSystem mergeEnvs nixConfig toGuest;
+      inherit (lib) forAllSystems mkNixOSSystem mkVMNixOSSystem
+        mkDarwinSystem mergeEnvs nixConfig toGuest
+        ;
 
       overlays = {
         default = import ./overlay { inherit inputs lib; };
@@ -109,6 +111,8 @@
       inherit overlays;
       inherit legacyPackages;
 
+
+
       # packages = forAllSystems (system:
       #   let pkgs = legacyPackages.${system};
       #   in import ./pkgs { inherit inputs pkgs; }
@@ -118,9 +122,10 @@
       templates = import ./templates;
 
       nixosModules = import ./modules/nixos;
+      # nixosModules = mapModulesRec ./modules/nixos import;
       darwinModules = import ./modules/darwin;
       homeManagerModules = import ./modules/home-manager;
-      gamingModules = import ./modules/gaming;
+      # gamingModules = import ./modules/gaming;
 
       devShells = forAllSystems (system:
         let

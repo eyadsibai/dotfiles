@@ -11,14 +11,13 @@ mkShell
     gitleaks
     gitls
     gokart
-    gosca
+    # gosca
     osv-detector
     pip-audit
-    pip-check
+    # pip-check
     python310Packages.safety
     secretscanner
-    shhgit
-    skjold
+    # shhgit
     skjold
     trufflehog
     whispers

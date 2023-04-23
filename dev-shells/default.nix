@@ -1,7 +1,8 @@
 { lib, pkgs, ... }:
-
+with lib;
+with lib.my;
 rec {
-  default = import ../shell.nix { inherit pkgs; };
+  # default = import ../shell.nix { inherit pkgs; };
   python = import ./python { inherit pkgs; };
   python-with-pip = import ./python-with-pip { inherit pkgs; };
   cc = import ./cc { inherit pkgs; };
@@ -35,7 +36,7 @@ rec {
   web = import ./penetration/web.nix { inherit pkgs; };
   windows = import ./penetration/windows.nix { inherit pkgs; };
   wireless = import ./penetration/wireless.nix { inherit pkgs; };
-  penetration-full = lib.mergeEnvs { inherit pkgs; } [
+  penetration-full = mergeEnvs { inherit pkgs; } [
     bluetooth
     code
     container
