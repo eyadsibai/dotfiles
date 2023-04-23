@@ -1,3 +1,0 @@
-{
-  steam = import ./steam.nix;
-}

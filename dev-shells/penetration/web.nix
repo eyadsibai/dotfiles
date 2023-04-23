@@ -9,7 +9,7 @@ mkShell
     cariddi
     chopchop
     commix
-    corsair-scan
+    # corsair-scan
     crlfsuite
     dalfox
     dirb
@@ -26,7 +26,7 @@ mkShell
     hakrawler
     hey
     httpx
-    hyperpotamus
+    # hyperpotamus
     jaeles
     jsubfinder
     jwt-hack
@@ -48,7 +48,7 @@ mkShell
     wprecon
     wpscan
     wfuzz
-    wuzz
+    # wuzz
     zap
   ];
   shellHook = "";

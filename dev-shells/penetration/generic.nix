@@ -41,8 +41,7 @@ mkShell
     openvpn
     samba
     step-cli
-    tightvnc
-    wireguard
+    # tightvnc
     wireguard-go
     wireguard-tools
     xrdp

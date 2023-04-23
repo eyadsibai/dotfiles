@@ -1,10 +1,18 @@
-{ config, lib, pkgs, username, ... }:
+{ config
+, options
+, lib
+, pkgs
+, username
+, ...
+}:
+with lib;
 
-
-let cfg = config.gaming.steam;
-in {
+let
+  cfg = config.modules.gaming.steam;
+in
+{
   options.modules.gaming.steam = {
-    enable = mkBoolOpt false;
+    enable = lib.mkEnableOption "enable steam";
 
   };
   config = mkIf cfg.enable
@@ -16,7 +24,7 @@ in {
         dedicatedServer.openFirewall = true;
         # Open ports in the firewall for Source Dedicated Server
       };
-      home-manager.users.${username}.home.packages = lib.mkIf config.programs.steam.enable [
+      home-manager.users.${username}.home.packages = mkIf config.programs.steam.enable [
         pkgs.steam-tui
         pkgs.steamPackages.steamcmd
         pkgs.steamPackages.steam-runtime

@@ -9,7 +9,7 @@ mkShell
     chisel
     httptunnel
     iodine
-    proxytunnel
+    # proxytunnel
     sish
     stunnel
     udptunnel

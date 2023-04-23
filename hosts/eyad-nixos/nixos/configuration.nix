@@ -28,12 +28,14 @@ in
     ./networking.nix
     ./audio.nix
     ./nix.nix
-    ./steam.nix
     # ./fonts.nix
     ../../common/optional/nixos/samba
     ./home-manager-tmp.nix
   ];
   home-manager.users.${username} = ../home-manager;
+
+  # modules.gaming.steam.enable = false;
+
 
   # Thermals and cooling
   services.thermald.enable = true;

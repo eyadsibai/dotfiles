@@ -9,7 +9,7 @@ mkShell
     driftnet
     dsniff
     goreplay
-    httpdump
+    # httpdump
     junkie
     netsniff-ng
     ngrep

@@ -4,7 +4,7 @@ with pkgs;
 mkShell
 {
   buildInputs = [
-    afl
+    # afl
     aflplusplus
     feroxbuster
     ffuf
