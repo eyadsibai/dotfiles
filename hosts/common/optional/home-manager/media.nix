@@ -53,8 +53,8 @@
       };
     };
   };
-  services.mpd.enable = true;
-  services.mpdris2.enable = true;
+  services.mpd.enable = false;
+  services.mpdris2.enable = false;
   services.playerctld.enable = true;
-  services.mpd-mpris.enable = true;
+  services.mpd-mpris.enable = false;
 }

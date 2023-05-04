@@ -46,7 +46,7 @@
 
 
 
-  services.dropbox.enable = true;
+  services.dropbox.enable = false;
   services.espanso.enable = false;
   # services.fusuma.enable = true;
   # services.git-sync.enable = true;

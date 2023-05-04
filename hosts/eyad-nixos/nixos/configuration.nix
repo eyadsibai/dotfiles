@@ -39,7 +39,7 @@ in
 
   # Thermals and cooling
   services.thermald.enable = true;
-  programs.kdeconnect.enable = true;
+  programs.kdeconnect.enable = false;
   boot = {
     loader.systemd-boot = {
       enable = true;
@@ -139,7 +139,7 @@ in
   };
   # Enable the X11 windowing system.
 
-  services.teamviewer.enable = true;
+  services.teamviewer.enable = false;
   services.xserver = {
     enable = true;
     displayManager = {
@@ -165,7 +165,7 @@ in
   services.gnome.gnome-keyring.enable = true;
   services.gnome.core-utilities.enable = false;
   services.netdata = {
-    enable = true;
+    enable = false;
     config = {
       global = {
         "default port" = "19999";
@@ -174,25 +174,25 @@ in
     };
   };
   # this is required for mounting android phones over mtp://
-  services.gvfs.enable = true;
+  services.gvfs.enable = false;
   # Enable CUPS to print documents.
   services.printing = {
-    enable = true;
+    enable = false;
     webInterface = true;
   };
   virtualisation = {
     podman = {
-      enable = true;
-      dockerCompat = true;
-      dockerSocket.enable = true;
-      defaultNetwork.settings.dns_enabled = true;
+      enable = false;
+      dockerCompat = false;
+      dockerSocket.enable = false;
+      defaultNetwork.settings.dns_enabled = false;
     };
-    lxd.enable = true;
+    lxd.enable = false;
     # virtualbox.host = {
     #   enable = true;
     #   enableExtensionPack = true;
     # };
-    libvirtd.enable = true;
+    libvirtd.enable = false;
     docker.rootless = {
       enable = false;
       setSocketVariable = true;
@@ -230,13 +230,13 @@ in
   };
   environment.systemPackages = with pkgs;
     [
-      arion # support docker-compose ... etc
-      docker-compose
+      # arion # support docker-compose ... etc
+      # docker-compose
       vim
       wget
       git
       # openvpn
-      wine
+      # wine
       # native wayland support (unstable)
       # wineWowPackages.waylandFull
       dig
@@ -311,8 +311,8 @@ in
   programs.dconf.enable = true;
   services.localtimed.enable = true;
 
-  programs.bash-my-aws.enable = true;
-  programs.thefuck.enable = true;
+  programs.bash-my-aws.enable = false;
+  programs.thefuck.enable = false;
   programs.traceroute.enable = true;
 
   # This value determines the NixOS release from which the default
