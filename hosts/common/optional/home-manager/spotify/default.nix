@@ -9,11 +9,11 @@ let
 in
 {
   home.packages = [
-    pkgs.spotify-tui
+    # pkgs.spotify-tui
     # pkgs.spotify
     # pkgs.spicetify-cli
   ];
-  services.spotifyd.enable = true;
+  services.spotifyd.enable = false;
 
   programs.spicetify = {
     enable = true;

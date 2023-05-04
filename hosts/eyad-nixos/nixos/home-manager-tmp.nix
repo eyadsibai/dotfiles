@@ -274,7 +274,7 @@ in
       templates = "$HOME/templates";
     };
     services.kdeconnect = {
-      enable = true;
+      enable = false;
       # package = pkgs.plasma5Packages.kdeconnect-kde;
     };
 
@@ -417,7 +417,7 @@ in
       [
         #      whatsie
 
-        lxappearance
+        # lxappearance
         cookiecutter
         git-crypt
         ### PERSONAL
@@ -426,18 +426,18 @@ in
         #  mopidy-spotify
         graphviz
         #ack
-        ani-cli
+        # ani-cli
         # fish support for nix shell
         arandr
         # simple GUI for xrandr
-        asciinema
+        # asciinema
         # record the terminal
         atool
-        audacious
+        # audacious
         # simple music player
         autojump
         # awscli
-        awscli2
+        # awscli2
         bitwarden
         bitwarden-cli
         # command-line client for the password manager
@@ -446,12 +446,12 @@ in
         # calibre
         # e-book reader
         catimg
-        chafa
+        # chafa
         # clerk
         cntr
         cobang
         # qr-code scanner
-        cointop
+        # cointop
         colorz
         # corefonts
         curlFull.dev
@@ -463,7 +463,7 @@ in
         # diagram design
         duf
         # disk usage/free utility
-        espeak
+        # espeak
         etcher
         farbfeld
         fd
@@ -479,9 +479,9 @@ in
         gotty
         hakuneko
         highlight
-        httpie
-        httping
-        hyperfine
+        # httpie
+        # httping
+        # hyperfine
         # command-line benchmarking tool
         jmtpfs
         # mount mtp devices
@@ -510,19 +510,19 @@ in
         # music player controller
         prettyping
         # a nicer ping
-        protonvpn-gui
+        # protonvpn-gui
         # official proton vpn client
         pulsemixer
         # pulseaudio mixer
         # remind
         rclone
-        reaverwps-t6x
-        ripgrep
+        # reaverwps-t6x
+        # ripgrep
         # fast grep
         rlwrap
         rmlint
         rsync
-        sc-im
+        # sc-im
         screenkey
         simple-scan
         # scanner gui
@@ -532,10 +532,10 @@ in
         stig
         sysstat
         tcpdump
-        # teamviewer
+
         teleport
         termdown
-        termshark
+        # termshark
         tldr
         # summary of a man page
         tree
@@ -557,10 +557,10 @@ in
         yad
         # yet another dialog - fork of zenity
         yq
-        vdirsyncer
+        # vdirsyncer
         zip
         # zotero
-        obsidian
+        # obsidian
         exercism
         peek
         imagemagick
@@ -572,8 +572,8 @@ in
         # upwork
         jrnl
         gparted
-        python310Packages.mistune_2_0
-        notion-app-enhanced
+        # python310Packages.mistune_2_0
+        # notion-app-enhanced
         statix
 
         # kepler
@@ -624,7 +624,7 @@ in
         helix
         k9s
         # jetbrains.pycharm-community
-        sherlock
+        # sherlock
         signal-cli
         signalbackup-tools
         signald

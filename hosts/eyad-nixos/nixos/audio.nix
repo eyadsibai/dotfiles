@@ -12,7 +12,7 @@ let
 in
 {
   home-manager.users.${username} = {
-    services.easyeffects.enable = true;
+    services.easyeffects.enable = false;
   };
   # environment.systemPackages = with pkgs; [
   #   easyeffects
