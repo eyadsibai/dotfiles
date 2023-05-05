@@ -17,44 +17,43 @@ in
     programs.gallery-dl.enable = true;
     home.enableNixpkgsReleaseCheck = true;
     imports = [
-      ../../common/optional/home-manager/wm/i3
-      ../../common/optional/home-manager/kaggle
+      ../../common/optional/home-manager/bitwarden
+      ../../common/optional/home-manager/development.nix
+      ../../common/optional/home-manager/direnv
+      ../../common/optional/home-manager/discord
+      # ../../common/optional/home-manager/email_cal_rss.nix
       ../../common/optional/home-manager/firefox
-      ../../common/optional/home-manager/micro
       ../../common/optional/home-manager/flameshot
-      ../../common/optional/home-manager/qutebrowser
+      ../../common/optional/home-manager/gtk
+      ../../common/optional/home-manager/htop
+      ../../common/optional/home-manager/kaggle
+      # ../../common/optional/home-manager/khard
+      ../../common/optional/home-manager/kitty
+      ../../common/optional/home-manager/media.nix
+      ../../common/optional/home-manager/menu
+      ../../common/optional/home-manager/micro
       ../../common/optional/home-manager/mpv
       ../../common/optional/home-manager/neovim
-      ../../common/optional/home-manager/htop
-      ../../common/optional/home-manager/nix-index
-      ../../common/optional/home-manager/picom
+      ../../common/optional/home-manager/networkmanager_dmenu
       ../../common/optional/home-manager/newsboat
       ../../common/optional/home-manager/ngrok
-      ../../common/optional/home-manager/networkmanager_dmenu
-      ../../common/optional/home-manager/kitty
-      ../../common/optional/home-manager/spotify
-      ../../common/optional/home-manager/menu
-      ../../common/optional/home-manager/bitwarden
-      ../../common/optional/home-manager/polybar
-      ../../common/optional/home-manager/social
-      ../../common/optional/home-manager/accounts
-      ../../common/optional/home-manager/sxhkd
-      ../../common/optional/home-manager/zathura
-      ../../common/optional/home-manager/xcape
-      ../../common/optional/home-manager/unclutter
-      ../../common/optional/home-manager/direnv
-      ../../common/optional/home-manager/htop
-      ../../common/optional/home-manager/udiskie
-      ../../common/optional/home-manager/terminal
-      ../../common/optional/home-manager/discord
-      ../../common/optional/home-manager/gtk
-      ../../common/optional/home-manager/development.nix
-      ../../common/optional/home-manager/email_cal_rss.nix
-      ../../common/optional/home-manager/media.nix
+      ../../common/optional/home-manager/nix-index
       ../../common/optional/home-manager/office.nix
+      ../../common/optional/home-manager/picom
+      ../../common/optional/home-manager/polybar
+      ../../common/optional/home-manager/qutebrowser
       ../../common/optional/home-manager/services.nix
+      ../../common/optional/home-manager/social
+      ../../common/optional/home-manager/spotify
+      ../../common/optional/home-manager/sxhkd
       ../../common/optional/home-manager/system.nix
-      ../../common/optional/home-manager/khard
+      ../../common/optional/home-manager/terminal
+      ../../common/optional/home-manager/udiskie
+      ../../common/optional/home-manager/unclutter
+      ../../common/optional/home-manager/wm/i3
+      ../../common/optional/home-manager/xcape
+      ../../common/optional/home-manager/zathura
+      # ../../common/optional/home-manager/accounts
     ];
 
     services.dunst = {
@@ -506,7 +505,7 @@ in
         # the famous rainbow cat!
         pavucontrol
         # pulseaudio volume control
-        playerctl
+        # playerctl
         # music player controller
         prettyping
         # a nicer ping
@@ -625,8 +624,8 @@ in
         k9s
         # jetbrains.pycharm-community
         # sherlock
-        signal-cli
-        signalbackup-tools
+        # signal-cli
+        # signalbackup-tools
         signald
         turses
         twitch-tui
