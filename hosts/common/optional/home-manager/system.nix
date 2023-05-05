@@ -5,7 +5,7 @@
 }: {
   home.packages = with pkgs; [
     dive
-    glances
+    # glances
     killall
     xorg.xkill
     ranger

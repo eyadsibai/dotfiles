@@ -17,7 +17,7 @@
     # rainbowstream
     # caprine-bin
     latest-caprine
-    wire-desktop
+    # wire-desktop
     kotatogram-desktop
     # gurk-rs
     # vk-messenger
