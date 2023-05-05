@@ -28,7 +28,6 @@
     enableAliases = true;
   };
 
-  programs.ledger.enable = true;
 
   programs.home-manager.enable = true;
 }
