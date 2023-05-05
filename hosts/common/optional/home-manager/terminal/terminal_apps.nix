@@ -40,9 +40,9 @@ in
     wp-cli
     http-prompt
   ];
-  programs.btop.enable = true;
-  programs.ledger.enable = true;
-  services.pueue.enable = pkgs.hostPlatform.isLinux;
+  programs.btop.enable = false;
+  programs.ledger.enable = false;
+  # services.pueue.enable = pkgs.hostPlatform.isLinux;
   programs.broot = {
     enable = false;
     enableBashIntegration = config.programs.bash.enable;
@@ -121,7 +121,7 @@ in
     '';
   };
   programs.lsd = { enable = true; };
-  programs.man = { enable = true; };
+  programs.man = { enable = false; };
   programs.mcfly = {
     enable = true;
     enableBashIntegration = config.programs.bash.enable;
@@ -129,7 +129,7 @@ in
     enableFishIntegration = config.programs.fish.enable;
   };
   programs.navi = {
-    enable = true;
+    enable = false;
     enableBashIntegration = config.programs.bash.enable;
     enableZshIntegration = config.programs.zsh.enable;
     enableFishIntegration = config.programs.fish.enable;
@@ -215,14 +215,14 @@ in
   };
   programs.taskwarrior = { enable = true; };
   programs.tmux = { enable = true; };
-  programs.topgrade = { enable = true; };
+  programs.topgrade = { enable = false; };
   programs.watson = {
-    enable = true;
+    enable = false;
     enableBashIntegration = config.programs.bash.enable;
     enableZshIntegration = config.programs.zsh.enable;
     enableFishIntegration = config.programs.fish.enable;
   };
-  programs.zellij.enable = true;
+  programs.zellij.enable = false;
   programs.zoxide = {
     enable = true;
     enableBashIntegration = config.programs.bash.enable;

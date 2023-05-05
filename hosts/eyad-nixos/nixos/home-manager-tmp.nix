@@ -395,7 +395,7 @@ in
       # enable = true;
     };
 
-    programs.tmate.enable = true;
+    programs.tmate.enable = false;
     programs.pls.enable = true;
     xdg.configFile."yandex-disk/config.cfg" = lib.mkIf (builtins.elem pkgs.yandex-disk homeConfig.home.packages) {
       text = ''
