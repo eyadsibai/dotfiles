@@ -29,7 +29,7 @@ super + m
 	$TERMINALL -e ncmpcpp
 
 super + space
-	(setxkbmap -query | grep -q "layout:\s\+eu") && setxkbmap ar || setxkbmap eu
+	(setxkbmap -query | grep -q "layout:\s\+eu") && setxkbmap ara || setxkbmap eu
 
 super + Escape
 	notify-send "reloaded sxhkd config" & pkill -USR1 -x sxhkd

@@ -22,7 +22,7 @@
     ncdu # disk space info (a better du)
   ];
 
-  programs.exa = {
+  programs.eza = {
     # better 'ls'
     enable = true;
     enableAliases = true;

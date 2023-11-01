@@ -199,6 +199,8 @@ rec
       # "electron-13.6.9"
       # "electron-14.2.9"
       "electron-21.4.0"
+      "electron-19.1.9"
+
     ];
     allowUnfree = true;
 

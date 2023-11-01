@@ -19,7 +19,7 @@ in
     enable = true;
     # specify that we want to use our custom colorscheme
     colorScheme = "custom";
-    theme = spicePkgs.themes.catppuccin-mocha;
+    theme = spicePkgs.themes.catppuccin;
 
     # color definition for custom color scheme. (rosepine)
     customColorScheme = {
