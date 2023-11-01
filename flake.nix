@@ -2,7 +2,7 @@
   description = "My Ultimate Flake";
   inputs = {
     unstable.url = "nixpkgs/nixos-unstable";
-    stable.url = "nixpkgs/nixos-22.05";
+    stable.url = "nixpkgs/nixos-23.05";
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
     hardware.url = "github:NixOS/nixos-hardware";
@@ -26,6 +26,7 @@
     firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
     eww.url = "github:elkowar/eww";
     devshell.url = "github:numtide/devshell";
+
     mpv-iptv = {
       url = "github:junners/mpv-iptv";
       flake = false;
@@ -39,7 +40,7 @@
     nix-colors.url = "github:misterio77/nix-colors";
     base16 = {
       url = "github:SenchoPens/base16.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      # inputs.nixpkgs.follows = "nixpkgs";
     };
 
     poetry2nix = {
@@ -88,7 +89,7 @@
         default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlay;
         neovim = inputs.neovim-nightly-overlay.overlay;
-        poetry2nix = inputs.poetry2nix.overlay;
+        # poetry2nix = inputs.poetry2nix.overlay;
         # nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
         nixgl = inputs.nixgl.overlay;
         devshell = inputs.devshell.overlays.default;

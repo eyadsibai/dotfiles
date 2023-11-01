@@ -671,7 +671,7 @@ in
         pdfarranger
         pdfslicer
         pdfsam-basic
-        pdfmixtool
+        # pdfmixtool
         meld
         colordiff
 
@@ -834,7 +834,8 @@ in
         # # Printing and scanning
         # simple-scan
       ]
-      ++ (lib.optionals sysConfig.networking.networkmanager.enable [ stable.haskellPackages.network-manager-tui ]);
+      # ++ (lib.optionals sysConfig.networking.networkmanager.enable [ stable.haskellPackages.network-manager-tui ])
+    ;
 
     home.keyboard.layout = "us,ar";
     home.keyboard.options = [ "grp:win_space_toggle" ];

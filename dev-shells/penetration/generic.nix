@@ -37,7 +37,7 @@ mkShell
     net-snmp
     nfs-utils
     ntp
-    openssh
+    # openssh
     openvpn
     samba
     step-cli

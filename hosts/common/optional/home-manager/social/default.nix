@@ -8,11 +8,11 @@
     zoom-us
     # element-desktop
     # tdesktop
-    teams
+    # teams
     # whatsapp-for-linux install whatsie through flatpak instead
     distrobox
-    gitter
-    cawbird
+    # gitter
+    # cawbird
     haxor-news
     # rainbowstream
     # caprine-bin

@@ -157,7 +157,7 @@ in
       xterm.enable = false;
       gnome.enable = false;
     };
-    layout = "us,ar";
+    layout = "us,ara";
     # use numpad as mouse # make CapsLock behave like Ctrl:
     xkbOptions = "grp:win_space_toggle,eurosign:e,keypad:pointerkeys,ctrl:nocaps";
   };
@@ -223,10 +223,10 @@ in
 
     hashedPassword = "${config.secrets.${hostname}.passwd.${username}}";
 
-    openssh.authorizedKeys.keys = [
-      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDeo6sUBHLNcMFePaungk359lteQLCaKyufYm7og8sYCuh50mWPcyTXqvMWURHLiGRMwrBg4re9JvMkYgCiSWowA5YOwhQdA460NWgBP7ctqHqE33v5/2/aNB/QngjcgrSUCsJfQTxNq6eqznkwdRc1b9JyyKL30TyGS8w8Cao+h+/pagI01SWpmUczIOmbS6R42gfAGcWd41/ZiHWGy3lNC22a/E9H4NFPu/G+n6BmHYTX8Z1Of3Etmk3e2gRybLpt/kt9sT/SawmVC4Y3YqUHRYc7Hua8RnpT35bYEAjVZcHqg2N4z9aYz1L8DA2qZJeLTbQlWfTERV46XaazUfASwnVEmUnV62UdEYvKWCpOFkn752dT/IE43BjrjscH5Vvk3ptIXrs/HjvaO9h6ghNccp3wz337eiqcY3sy89e6S56zNmNETDO5tNdrjSM031u9LJ/7leb540/xlBhcijwXlwgwEi1diOy8gNnV1kSY3MByyDgrN6QF2HUckaOOrhU= eyada@desktop"
-      # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
-    ];
+    #   openssh.authorizedKeys.keys = [
+    #     "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDeo6sUBHLNcMFePaungk359lteQLCaKyufYm7og8sYCuh50mWPcyTXqvMWURHLiGRMwrBg4re9JvMkYgCiSWowA5YOwhQdA460NWgBP7ctqHqE33v5/2/aNB/QngjcgrSUCsJfQTxNq6eqznkwdRc1b9JyyKL30TyGS8w8Cao+h+/pagI01SWpmUczIOmbS6R42gfAGcWd41/ZiHWGy3lNC22a/E9H4NFPu/G+n6BmHYTX8Z1Of3Etmk3e2gRybLpt/kt9sT/SawmVC4Y3YqUHRYc7Hua8RnpT35bYEAjVZcHqg2N4z9aYz1L8DA2qZJeLTbQlWfTERV46XaazUfASwnVEmUnV62UdEYvKWCpOFkn752dT/IE43BjrjscH5Vvk3ptIXrs/HjvaO9h6ghNccp3wz337eiqcY3sy89e6S56zNmNETDO5tNdrjSM031u9LJ/7leb540/xlBhcijwXlwgwEi1diOy8gNnV1kSY3MByyDgrN6QF2HUckaOOrhU= eyada@desktop"
+    #     # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
+    #   ];
   };
   environment.systemPackages = with pkgs;
     [
@@ -255,16 +255,16 @@ in
     enableSSHSupport = true;
   };
   services.fwupd.enable = true;
-  nixpkgs.config.allowUnfree = true;
+  # nixpkgs.config.allowUnfree = true;
 
   # services.fstrim.enable = true;
   # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
     settings = {
-      permitRootLogin = "no";
+      PermitRootLogin = "no";
       # Use keys only. Remove if you want to SSH using password (not recommended)
-      passwordAuthentication = false;
+      PasswordAuthentication = false;
     };
     allowSFTP = true;
   };
