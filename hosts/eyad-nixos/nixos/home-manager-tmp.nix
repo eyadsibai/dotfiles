@@ -528,7 +528,7 @@ in
         simplescreenrecorder
         # screen recorder gui
         speedtest-cli
-        stable.stig
+        # stig
         sysstat
         tcpdump
 
@@ -660,7 +660,7 @@ in
 
         pgcli
         # modern postgres client
-        stable.mycli
+        mycli
         # iredis
         usql
         # mathematica
