@@ -23,7 +23,7 @@ in
     # t conflict with time
     timewarrior
     eureka-ideas
-    stable.taskell
+    # taskell
     nb
     ticker
     sent
@@ -35,7 +35,7 @@ in
     libqalculate
     wego
     translate-shell
-    visidata
+    # visidata
     dasel
     wp-cli
     http-prompt

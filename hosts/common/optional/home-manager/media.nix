@@ -2,12 +2,12 @@
   home.packages = with pkgs; [
     cava
     cli-visualizer
-    cmus
+    # cmus
     vlc
     # media player
     yewtube
     youtube-dl
-    ytcc
+    # ytcc
     # darktable
     castget
   ];

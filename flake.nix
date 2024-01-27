@@ -2,7 +2,7 @@
   description = "My Ultimate Flake";
   inputs = {
     unstable.url = "nixpkgs/nixos-unstable";
-    stable.url = "nixpkgs/nixos-23.05";
+    stable.url = "nixpkgs/nixos-23.11";
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
     hardware.url = "github:NixOS/nixos-hardware";

@@ -448,7 +448,7 @@ in
         # chafa
         # clerk
         cntr
-        cobang
+        # cobang
         # qr-code scanner
         # cointop
         colorz
@@ -528,7 +528,7 @@ in
         simplescreenrecorder
         # screen recorder gui
         speedtest-cli
-        stig
+        stable.stig
         sysstat
         tcpdump
 
@@ -542,7 +542,7 @@ in
         tty-clock
         units
         urlscan
-        urlview
+        extract_url
         w3m
         # wavemon
         wget
