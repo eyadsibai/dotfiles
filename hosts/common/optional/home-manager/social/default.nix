@@ -15,8 +15,8 @@
     # cawbird
     haxor-news
     # rainbowstream
-    # caprine-bin
-    latest-caprine
+    caprine-bin
+    # latest-caprine
     # wire-desktop
     kotatogram-desktop
     # gurk-rs
