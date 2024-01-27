@@ -78,7 +78,7 @@ in
   };
   services.avahi = {
     enable = true;
-    nssmdns = true;
+    nssmdns4 = true;
     publish.addresses = true;
     publish.domain = true;
   };
@@ -94,6 +94,7 @@ in
 
   services.flatpak.enable = true;
   xdg.portal = {
+    config.common.default = "*";
 
     enable = true;
     # TODO add for i3
