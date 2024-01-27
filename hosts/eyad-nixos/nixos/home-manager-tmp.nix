@@ -669,7 +669,7 @@ in
         coursera-dl
         sfeed
         pdfarranger
-        pdfslicer
+        # pdfslicer
         pdfsam-basic
         # pdfmixtool
         meld
