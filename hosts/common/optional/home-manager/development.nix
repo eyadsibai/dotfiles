@@ -14,7 +14,7 @@
     t-rec
     reviewdog
     # pgcli # modern postgres client # TODO crash on install
-    stable.mycli
+    mycli
     # iredis
     usql
     vieb
