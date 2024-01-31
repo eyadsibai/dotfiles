@@ -4,7 +4,7 @@
 , ...
 }:
 let
-  inherit (config.colorscheme) colors kind;
+  inherit (config.colorscheme) palette variant;
 in
 {
   programs.qutebrowser = {

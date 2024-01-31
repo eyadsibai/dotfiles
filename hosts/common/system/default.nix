@@ -62,7 +62,7 @@ in
 
 
       auto-optimise-store = true;
-      experimental-features = [ "nix-command" "flakes" "auto-allocate-uids" "configurable-impure-env" ];
+      experimental-features = [ "nix-command" "flakes" "auto-allocate-uids" c "configurable-impure-env" ];
       warn-dirty = false;
       keep-derivations = true;
       keep-outputs = true;
