@@ -60,8 +60,9 @@ in
         "yoriksar-gh.cachix.org-1:YrztCV1unI7qDV6IXmiXFig5PgptqTlUa4MiobULGT8="
       ];
 
+
       auto-optimise-store = true;
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = [ "nix-command" "flakes" "auto-allocate-uids" "configurable-impure-env" ];
       warn-dirty = false;
       keep-derivations = true;
       keep-outputs = true;
