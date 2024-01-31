@@ -3,7 +3,7 @@
 , ...
 }:
 let
-  inherit (config.colorscheme) colors;
+  inherit (config.colorscheme) palette;
 in
 {
   services.flameshot = {
