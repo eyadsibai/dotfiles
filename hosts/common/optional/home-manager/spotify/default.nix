@@ -4,7 +4,7 @@
 , ...
 }:
 let
-  inherit (config.colorscheme) colors;
+  inherit (config.colorscheme) palette;
   spicePkgs = inputs.spicetify-nix.packages.${pkgs.system}.default;
 in
 {
@@ -23,23 +23,23 @@ in
 
     # color definition for custom color scheme. (rosepine)
     customColorScheme = {
-      text = "${colors.base05}";
-      subtext = "${colors.base04}";
-      sidebar-text = "${colors.base02}";
-      main = "${colors.base00}"; # main_bg
+      text = "${palette.base05}";
+      subtext = "${palette.base04}";
+      sidebar-text = "${palette.base02}";
+      main = "${palette.base00}"; # main_bg
 
-      sidebar = "${colors.base00}"; # sidebar bg
-      player = "${colors.base00}";
-      card = "${colors.base01}";
-      shadow = "${colors.base01}";
-      selected-row = "${colors.base03}";
-      button = "${colors.base08}";
-      button-active = "${colors.base08}";
-      button-disabled = "${colors.base04}";
-      tab-active = "${colors.base08}";
-      notification = "${colors.base02}";
-      notification-error = "${colors.base03}";
-      misc = "${colors.base02}";
+      sidebar = "${palette.base00}"; # sidebar bg
+      player = "${palette.base00}";
+      card = "${palette.base01}";
+      shadow = "${palette.base01}";
+      selected-row = "${palette.base03}";
+      button = "${palette.base08}";
+      button-active = "${palette.base08}";
+      button-disabled = "${palette.base04}";
+      tab-active = "${palette.base08}";
+      notification = "${palette.base02}";
+      notification-error = "${palette.base03}";
+      misc = "${palette.base02}";
     };
     enabledExtensions = with spicePkgs.extensions;
       [

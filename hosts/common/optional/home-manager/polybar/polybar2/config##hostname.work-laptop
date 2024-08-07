@@ -43,7 +43,7 @@ bottom = false
 height = 25
 ;dpi = 192
 
-background = ${colors.background}
+background = ${palette.background}
 foreground = ${colors.foreground}
 
 line-color = 3

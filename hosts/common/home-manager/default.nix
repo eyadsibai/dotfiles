@@ -14,7 +14,6 @@
   home.enableNixpkgsReleaseCheck = true;
 
   home.packages = with pkgs; [
-    rnix-lsp
     any-nix-shell
     nixpkgs-fmt
     comma
@@ -25,7 +24,6 @@
   programs.eza = {
     # better 'ls'
     enable = true;
-    enableAliases = true;
   };
 
 

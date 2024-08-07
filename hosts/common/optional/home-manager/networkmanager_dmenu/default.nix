@@ -4,7 +4,7 @@
 , ...
 }:
 let
-  inherit (config.colorscheme) colors;
+  inherit (config.colorscheme) palette;
 in
 {
   home.packages = [
@@ -37,13 +37,13 @@ in
   xdg.configFile."networkmanager-dmenu/colors.rasi" = lib.mkIf (builtins.elem pkgs.networkmanager_dmenu config.home.packages) {
     text = ''
         * {
-        al:   #${colors.base00};
-        bg:   #${colors.base00};
-        bga:  #${colors.base01};
-        fga:  #${colors.base0E};
-        fg:   #${colors.base0B};
-        ac:   #${colors.base03};
-        se:   #${colors.base01};
+        al:   #${palette.base00};
+        bg:   #${palette.base00};
+        bga:  #${palette.base01};
+        fga:  #${palette.base0E};
+        fg:   #${palette.base0B};
+        ac:   #${palette.base03};
+        se:   #${palette.base01};
       }
     '';
   };

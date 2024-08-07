@@ -88,7 +88,7 @@
       overlays = {
         default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlay;
-        neovim = inputs.neovim-nightly-overlay.overlay;
+        neovim = inputs.neovim-nightly-overlay.overlays.default;
         # poetry2nix = inputs.poetry2nix.overlay;
         # nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
         nixgl = inputs.nixgl.overlay;

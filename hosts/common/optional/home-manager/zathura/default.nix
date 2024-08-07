@@ -5,7 +5,7 @@
 }:
 # TODO https://github.com/LukeSmithxyz/voidrice/blob/master/.config/zathura/zathurarc
 let
-  inherit (config.colorscheme) colors;
+  inherit (config.colorscheme) palette;
 in
 {
   programs.zathura = {
@@ -14,35 +14,35 @@ in
       selection-clipboard = "clipboard";
       font = "${config.fontProfiles.regular.family} 12";
       recolor = true;
-      default-bg = "#${colors.base00}";
-      default-fg = "#${colors.base01}";
-      statusbar-bg = "#${colors.base02}";
-      statusbar-fg = "#${colors.base04}";
-      index-bg = "#${colors.base02}";
-      index-fg = "#${colors.base04}";
-      index-active-bg = "#${colors.base04}";
-      index-active-fg = "#${colors.base02}";
-      render-loading-bg = "#${colors.base02}";
-      render-loading-fg = "#${colors.base04}";
+      default-bg = "#${palette.base00}";
+      default-fg = "#${palette.base01}";
+      statusbar-bg = "#${palette.base02}";
+      statusbar-fg = "#${palette.base04}";
+      index-bg = "#${palette.base02}";
+      index-fg = "#${palette.base04}";
+      index-active-bg = "#${palette.base04}";
+      index-active-fg = "#${palette.base02}";
+      render-loading-bg = "#${palette.base02}";
+      render-loading-fg = "#${palette.base04}";
 
-      inputbar-bg = "#${colors.base00}";
-      inputbar-fg = "#${colors.base07}";
-      notification-bg = "#${colors.base00}";
-      notification-fg = "#${colors.base07}";
-      notification-error-bg = "#${colors.base00}";
-      notification-error-fg = "#${colors.base08}";
-      notification-warning-bg = "#${colors.base00}";
-      notification-warning-fg = "#${colors.base08}";
-      highlight-color = "#${colors.base0A}";
-      highlight-active-color = "#${colors.base0D}";
-      completion-bg = "#${colors.base01}";
-      completion-fg = "#${colors.base05}";
-      completion-highlight-bg = "#${colors.base0D}";
-      completion-highlight-fg = "#${colors.base07}";
-      completion-group-bg = "#${colors.base02}";
-      completion-group-fg = "#${colors.base08}";
-      recolor-lightcolor = "#${colors.base00}";
-      recolor-darkcolor = "#${colors.base06}";
+      inputbar-bg = "#${palette.base00}";
+      inputbar-fg = "#${palette.base07}";
+      notification-bg = "#${palette.base00}";
+      notification-fg = "#${palette.base07}";
+      notification-error-bg = "#${palette.base00}";
+      notification-error-fg = "#${palette.base08}";
+      notification-warning-bg = "#${palette.base00}";
+      notification-warning-fg = "#${palette.base08}";
+      highlight-color = "#${palette.base0A}";
+      highlight-active-color = "#${palette.base0D}";
+      completion-bg = "#${palette.base01}";
+      completion-fg = "#${palette.base05}";
+      completion-highlight-bg = "#${palette.base0D}";
+      completion-highlight-fg = "#${palette.base07}";
+      completion-group-bg = "#${palette.base02}";
+      completion-group-fg = "#${palette.base08}";
+      recolor-lightcolor = "#${palette.base00}";
+      recolor-darkcolor = "#${palette.base06}";
       window-title-home-tilde = true;
       statusbar-basename = true;
       statusbar-h-padding = 0;
