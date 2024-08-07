@@ -24,17 +24,17 @@
     theme =
       let
         inherit (config.lib.formats.rasi) mkLiteral;
-        inherit (config.colorscheme) colors;
+        inherit (config.colorscheme) palette;
       in
       {
         "*" = {
-          red = mkLiteral "#${colors.base08}";
-          blue = mkLiteral "#${colors.base0D}";
-          lightfg = mkLiteral "#${colors.base06}";
-          lightbg = mkLiteral "#${colors.base01}";
-          foreground = mkLiteral "#${colors.base05}";
-          background = mkLiteral "#${colors.base00}";
-          background-color = mkLiteral "#${colors.base00}";
+          red = mkLiteral "#${palette.base08}";
+          blue = mkLiteral "#${palette.base0D}";
+          lightfg = mkLiteral "#${palette.base06}";
+          lightbg = mkLiteral "#${palette.base01}";
+          foreground = mkLiteral "#${palette.base05}";
+          background = mkLiteral "#${palette.base00}";
+          background-color = mkLiteral "#${palette.base00}";
           separatorcolor = mkLiteral "@foreground";
           border-color = mkLiteral "@foreground";
           selected-normal-foreground = mkLiteral "@lightbg";

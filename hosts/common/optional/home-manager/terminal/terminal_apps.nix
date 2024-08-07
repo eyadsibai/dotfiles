@@ -15,7 +15,7 @@ in
   home.packages = with pkgs; [
     # swaglyrics
     streamlink
-    clog-cli
+    # clog-cli
     doing
     # buku
     papis

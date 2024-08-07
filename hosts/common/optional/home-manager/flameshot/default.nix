@@ -12,7 +12,8 @@ in
       General = {
         disabledTrayIcon = true;
         showStartupLaunchMessage = false;
-        uiColor = "#${colors.base00}";
+        uiColor = "#${palette
+.base00}";
         showHelp = false;
       };
     };

@@ -23,7 +23,7 @@ in
   environment.variables = { EDITOR = "micro"; };
 
   nix = {
-    package = pkgs.nixUnstable;
+    package = pkgs.nixVersions.latest;
     # This will add each flake input as a registry
     # To make nix3 commands consistent with your flake
     registry = lib.mapAttrs (_: value: { flake = value; }) inputs;
@@ -62,7 +62,7 @@ in
 
 
       auto-optimise-store = true;
-      experimental-features = [ "nix-command" "flakes" "auto-allocate-uids" c "configurable-impure-env" ];
+      experimental-features = [ "nix-command" "flakes" "auto-allocate-uids" "configurable-impure-env" ];
       warn-dirty = false;
       keep-derivations = true;
       keep-outputs = true;

@@ -160,7 +160,7 @@ in
     };
     layout = "us,ara";
     # use numpad as mouse # make CapsLock behave like Ctrl:
-    xkbOptions = "grp:win_space_toggle,eurosign:e,keypad:pointerkeys,ctrl:nocaps";
+    xkb.options = "grp:win_space_toggle,eurosign:e,keypad:pointerkeys,ctrl:nocaps";
   };
   services.usbmuxd.enable = true;
   services.gnome.gnome-keyring.enable = true;
@@ -200,7 +200,13 @@ in
     };
   };
   # Enable touchpad support (enabled default in most desktopManager).
-  services.xserver.libinput = {
+  trace: evaluation warning: The option `services.xserver.xkbOptions' defined in `/nix/store/y94v119xz36ancr55dd1cc7sp27xqyzs-source/hosts/eyad-nixos/nixos/configuration.nix' has been renamed to `services.xserver.xkb.options'.
+  trace: evaluation warning: The option `services.xserver.layout' defined in `/nix/store/y94v119xz36ancr55dd1cc7sp27xqyzs-source/hosts/eyad-nixos/nixos/configuration.nix' has been renamed to `services.xserver.xkb.layout'.
+
+
+
+
+  services.libinput = {
     enable = true;
     touchpad = {
       naturalScrolling = false;

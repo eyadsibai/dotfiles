@@ -5,7 +5,7 @@
 , ...
 }:
 let
-  inherit (config.colorscheme) colors;
+  inherit (config.colorscheme) palette;
 in
 {
   home.packages = [ pkgs.terminus_font ];
@@ -31,12 +31,12 @@ in
 
     script = "polybar -q main &";
     config = {
-      "color" = {
-        background = "#${colors.base00}";
-        background-alt = "#${colors.base03}";
-        foreground = "#${colors.base05}";
-        foreground-alt = "#${colors.base0D}";
-        primary = "#${colors.base02}";
+      "palette" = {
+        background = "#${palette.base00}";
+        background-alt = "#${palette.base03}";
+        foreground = "#${palette.base05}";
+        foreground-alt = "#${palette.base0D}";
+        primary = "#${palette.base02}";
 
         white = "#FFFFFF";
         black = "#000000";
@@ -62,8 +62,8 @@ in
         exec = "${pkgs.coreutils}/bin/uname -r | ${pkgs.coreutils}/bin/cut -d- -f1";
         interval = 999999999;
         format = "%{T3}%{T-} <label>";
-        format-foreground = "\${colors.background}";
-        format-background = "\${color.secondary}";
+        format-foreground = "\${palette.background}";
+        format-background = "\${palette.secondary}";
         format-padding = 1;
         label = "%output%";
         # label-font = 1;
@@ -85,8 +85,8 @@ in
   #     offset-x = "1%";
   #     scroll-up = "i3wm-wsnext";
   #     scroll-down = "i3wm-wsprev";
-  #     background = "${colors.base00}";
-  #     foreground = "${colors.base05}";
+  #     background = "${palette.base00}";
+  #     foreground = "${palette.base05}";
   #     radius = 0;
   #     font-0 = "${config.fontProfiles.monospace.family}:size=10;3";
   #     font-1 = "${config.fontProfiles.regular.family}:style=Bold:size=10;3";
@@ -101,8 +101,8 @@ in
   #     width = "100%";
   #     height = 14;
   #     offset-x = "1%";
-  #     background = "${colors.base00}";
-  #     foreground = "${colors.base05}";
+  #     background = "${palette.base00}";
+  #     foreground = "${palette.base05}";
   #     radius-top = 0;
   #     tray-position = "none";
   #     # tray-detached = false;
@@ -139,12 +139,12 @@ in
   #       type = "internal/alsa";
   #       format-volume = "墳 <label-volume>";
   #       format-volume-padding = 1;
-  #       format-volume-foreground = "${colors.base05}";
+  #       format-volume-foreground = "${palette.base05}";
   #       format-volume-background = tertiary;
   #       label-volume = "%percentage%%";
   #       format-muted = "<label-muted>";
   #       format-muted-padding = 1;
-  #       format-muted-foreground = "${colors.base05}";
+  #       format-muted-foreground = "${palette.base05}";
   #       # format-muted-foreground = urgency;
   #       format-muted-background = tertiary;
   #       # format-muted-prefix = "婢 ";
@@ -159,11 +159,11 @@ in
   #       label-full = " 100%";
   #       format-full-padding = 1;
   #       format-full-foreground = secondary;
-  #       format-full-background = "${colors.base05}";
+  #       format-full-background = "${palette.base05}";
   #       format-charging = " <animation-charging> <label-charging>";
   #       format-charging-padding = 1;
   #       format-charging-foreground = secondary;
-  #       format-charging-background = "${colors.base05}";
+  #       format-charging-background = "${palette.base05}";
   #       label-charging = "%percentage%% +%consumption%W";
   #       animation-charging-0 = "";
   #       animation-charging-1 = "";
@@ -174,7 +174,7 @@ in
   #       format-discharging = "<ramp-capacity> <label-discharging>";
   #       format-discharging-padding = 1;
   #       format-discharging-foreground = secondary;
-  #       format-discharging-background = "${colors.base05}";
+  #       format-discharging-background = "${palette.base05}";
   #       label-discharging = "%percentage%% -%consumption%W";
   #       ramp-capacity-0 = "";
   #       ramp-capacity-0-foreground = urgency;
@@ -189,8 +189,8 @@ in
   #       type = "internal/cpu";
   #       interval = "0.5";
   #       format = " <label>";
-  #       format-foreground = "${colors.base05}";
-  #       format-background = "${colors.base00}";
+  #       format-foreground = "${palette.base05}";
+  #       format-background = "${palette.base00}";
   #       format-padding = 1;
   #       label = "CPU %percentage%%";
   #     };
@@ -201,7 +201,7 @@ in
   #       pin-workspaces = false;
   #       strip-wsnumbers = true;
   #       format = "<label-state> <label-mode>";
-  #       format-background = "${colors.base01}";
+  #       format-background = "${palette.base01}";
   #       ws-icon-0 = "1;";
   #       ws-icon-1 = "2;";
   #       ws-icon-2 = "3;﬏";
@@ -215,16 +215,16 @@ in
   #       label-mode = "%mode%";
   #       label-mode-padding = 1;
   #       label-unfocused = "%icon%";
-  #       label-unfocused-foreground = "${colors.base03}";
+  #       label-unfocused-foreground = "${palette.base03}";
   #       label-unfocused-padding = 1;
   #       label-focused = "%index% %icon%";
   #       label-focused-font = 2;
-  #       label-focused-foreground = "${colors.base05}";
+  #       label-focused-foreground = "${palette.base05}";
   #       label-focused-padding = 1;
   #       label-visible = "%icon%";
   #       label-visible-padding = 1;
   #       label-urgent = "%index%";
-  #       label-urgent-foreground = "${colors.base07}";
+  #       label-urgent-foreground = "${palette.base07}";
   #       label-urgent-padding = 1;
   #       label-separator = "";
   #     };
@@ -241,8 +241,8 @@ in
   #       type = "internal/memory";
   #       interval = 3;
   #       format = " <label>";
-  #       format-background = "${colors.base00}";
-  #       format-foreground = "${colors.base03}";
+  #       format-background = "${palette.base00}";
+  #       format-foreground = "${palette.base03}";
   #       format-padding = 1;
   #       label = "RAM %percentage_used%%";
   #     };
@@ -254,14 +254,14 @@ in
   #       accumulate-stats = true;
   #       unknown-as-up = true;
   #       format-connected = "<label-connected>";
-  #       format-connected-background = "${colors.base00}";
-  #       format-connected-underline = "${colors.base0B}";
+  #       format-connected-background = "${palette.base00}";
+  #       format-connected-underline = "${palette.base0B}";
   #       format-connected-overline = bg;
   #       format-connected-padding = 2;
   #       format-connected-margin = 0;
   #       format-disconnected = "<label-disconnected>";
-  #       format-disconnected-background = "${colors.base00}";
-  #       format-disconnected-underline = "${colors.base0B}";
+  #       format-disconnected-background = "${palette.base00}";
+  #       format-disconnected-underline = "${palette.base0B}";
   #       format-disconnected-overline = bg;
   #       format-disconnected-padding = 2;
   #       format-disconnected-margin = 0;
@@ -277,14 +277,14 @@ in
   #       warn-temperature = 60;
   #       units = true;
   #       format = "<label>";
-  #       format-background = "${colors.base00}";
-  #       format-underline = "${colors.base0B}";
-  #       format-overline = "${colors.base00}";
+  #       format-background = "${palette.base00}";
+  #       format-underline = "${palette.base0B}";
+  #       format-overline = "${palette.base00}";
   #       format-padding = 2;
   #       format-margin = 0;
   #       format-warn = "<label-warn>";
-  #       format-warn-background = "${colors.base00}";
-  #       format-warn-underline = "${colors.base0B}";
+  #       format-warn-background = "${palette.base00}";
+  #       format-warn-underline = "${palette.base0B}";
   #       format-warn-overline = bg;
   #       format-warn-padding = 2;
   #       format-warn-margin = 0;
@@ -297,7 +297,7 @@ in
   #       type = "custom/menu";
   #       expand-right = true;
   #       format = "<label-toggle> <menu>";
-  #       format-background = "${colors.base00}";
+  #       format-background = "${palette.base00}";
   #       format-padding = 1;
   #       label-open = "";
   #       label-close = "";
@@ -317,13 +317,13 @@ in
   #       accumulate-stats = true;
   #       format-connected = "<label-connected>";
   #       label-connected = "%ifname%";
-  #       label-connected-background = "${colors.base00}";
-  #       label-connected-foreground = "${colors.base03}";
+  #       label-connected-background = "${palette.base00}";
+  #       label-connected-foreground = "${palette.base03}";
   #       label-connected-padding = 1;
   #       format-disconnected = "<label-disconnected>";
   #       label-disconnected = "offline";
-  #       label-disconnected-background = "${colors.base00}";
-  #       label-disconnected-foreground = "${colors.base03}";
+  #       label-disconnected-background = "${palette.base00}";
+  #       label-disconnected-foreground = "${palette.base03}";
   #       label-disconnected-padding = 1;
   #     };
   #   #--------------------SOLID TRANSITIONS--------------------#
@@ -331,28 +331,28 @@ in
   #     {
   #       type = "custom/text";
   #       content = "";
-  #       content-background = "${colors.base00}";
+  #       content-background = "${palette.base00}";
   #       content-foreground = tertiary;
   #     };
   #   "module/dsTS" =
   #     {
   #       type = "custom/text";
   #       content = "";
-  #       content-background = "${colors.base00}";
+  #       content-background = "${palette.base00}";
   #       content-foreground = secondary;
   #     };
   #   "module/dsST" =
   #     {
   #       type = "custom/text";
   #       content = "";
-  #       content-background = "${colors.base00}";
+  #       content-background = "${palette.base00}";
   #       content-foreground = tertiary;
   #     };
   #   "module/daPT" =
   #     {
   #       type = "custom/text";
   #       content = "";
-  #       content-background = "${colors.base00}";
+  #       content-background = "${palette.base00}";
   #       content-foreground = tertiary;
   #     };
   #   "module/daTP" =
@@ -360,28 +360,28 @@ in
   #       type = "custom/text";
   #       content = "";
   #       content-background = tertiary;
-  #       content-foreground = "${colors.base00}";
+  #       content-foreground = "${palette.base00}";
   #     };
   #   "module/daST" =
   #     {
   #       type = "custom/text";
   #       content = "";
   #       content-background = secondary;
-  #       content-foreground = "${colors.base00}";
+  #       content-foreground = "${palette.base00}";
   #     };
   #   "module/daTS" =
   #     {
   #       type = "custom/text";
   #       content = "";
   #       content-background = secondary;
-  #       content-foreground = "${colors.base00}";
+  #       content-foreground = "${palette.base00}";
   #     };
   #   "module/daSP" =
   #     {
   #       type = "custom/text";
   #       content = "";
   #       content-background = secondary;
-  #       content-foreground = "${colors.base00}";
+  #       content-foreground = "${palette.base00}";
   #     };
   #   #--------------------GAPS TRANSITIONS--------------------#
   #   "module/dulT" =
@@ -389,14 +389,14 @@ in
   #       type = "custom/text";
   #       content = "";
   #       content-foreground = tertiary;
-  #       content-background = "${colors.base00}";
+  #       content-background = "${palette.base00}";
   #     };
   #   "module/ddrT" =
   #     {
   #       type = "custom/text";
   #       content = "";
   #       content-foreground = tertiary;
-  #       content-background = "${colors.base00}";
+  #       content-background = "${palette.base00}";
   #     };
   #   "module/ddlT" =
   #     {

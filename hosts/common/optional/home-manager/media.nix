@@ -6,7 +6,7 @@
     vlc
     # media player
     yewtube
-    youtube-dl
+    yt-dlp
     # ytcc
     # darktable
     castget
