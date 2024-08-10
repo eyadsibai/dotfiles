@@ -22,7 +22,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     nix-doom-emacs.url = "github:nix-community/nix-doom-emacs";
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
-    mach-nix.url = "github:DavHau/mach-nix";
+
     firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
     eww.url = "github:elkowar/eww";
     devshell.url = "github:numtide/devshell";
