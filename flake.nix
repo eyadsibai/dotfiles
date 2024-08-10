@@ -2,7 +2,7 @@
   description = "My Ultimate Flake";
   inputs = {
     unstable.url = "nixpkgs/nixos-unstable";
-    stable.url = "nixpkgs/nixos-23.11";
+    # stable.url = "nixpkgs/nixos-23.11";
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
     hardware.url = "github:NixOS/nixos-hardware";
@@ -43,20 +43,22 @@
       # inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    poetry2nix = {
-      url = "github:nix-community/poetry2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
 
     # nixpkgs-wayland = {
     #   url = "github:nix-community/nixpkgs-wayland";
     #   inputs.nixpkgs.follows = "nixpkgs";
     # };
 
-    # hyprland = {
-    #   url = "github:hyprwm/hyprland";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
+    hyprland = {
+      url = "github:hyprwm/hyprland";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    hyprland-plugins = {
+      url = "github:hyprwm/hyprland-plugins";
+      inputs.hyprland.follows = "hyprland";
+    };
+
     # hyprwm-contrib = {
     #   url = "github:hyprwm/contrib";
     #   inputs.nixpkgs.follows = "nixpkgs";
@@ -134,6 +136,9 @@
         in
         import ./dev-shells { inherit pkgs lib; }
       );
+
+      formatter = forAllSystems (pkgs: pkgs.alejandra);
+
 
       darwinConfigurations = {
         "eyad-mac" =
