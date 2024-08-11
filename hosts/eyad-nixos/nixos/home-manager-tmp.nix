@@ -7,7 +7,6 @@
 let
   sysConfig = config;
   homeConfig = config.home-manager.users.${username};
-  palette = config.lib.stylix.colors;
 
 
 in
@@ -119,10 +118,6 @@ in
           # %p progress value if set ([ 0%] to [100%]) or nothing
           # format = "%s > %b"
           format = "<b>%s</b>\n%b";
-          # color = "#${palette.base00}";
-          # frame_color = "#${palette.base03}";
-          # separator_color = "#${palette.base03}";
-          # font = "${config.stylix.fonts.sansSerif.name} 12";
           sticky_history = "yes";
           history_length = 20;
           dmenu = "${homeConfig.home.preferredApps.menu.dmenu-cmd}";
@@ -151,18 +146,12 @@ in
           context = "ctrl+shift+period";
         };
         urgency_low = {
-          # background = "#${palette.base00}";
-          # foreground = "#${palette.base05}";
           timeout = 10;
         };
         urgency_normal = {
-          # background = "#${palette.base00}";
-          # foreground = "#${palette.base05}";
           timeout = 5;
         };
         urgency_critical = {
-          # background = "#${palette.base00}";
-          # foreground = "#${palette.base05}";
           timeout = 5;
         };
       };

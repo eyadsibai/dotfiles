@@ -21,7 +21,6 @@ in
     enable = true;
     font = {
       name = config.stylix.fonts.monospace.name;
-      size = 12;
     };
     settings = {
       window_padding_width = 15;
