@@ -39,7 +39,7 @@ let
     --activity-card-background: var(--background-secondary);
     }
     body {
-    font-family: ${config.fontProfiles.regular.family}, sans serif;
+    font-family: ${config.stylix.fonts.sansSerif.name}, sans serif;
     }
     .scroller-1Bvpku {
     background-color: var(--background-primary);

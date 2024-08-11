@@ -42,7 +42,7 @@
           notification = false;
         }
         {
-          command = "${pkgs.feh}/bin/feh --bg-scale ${config.wallpaper}";
+          command = "${pkgs.feh}/bin/feh --bg-scale ${config.stylix.image}";
           always = true;
           notification = false;
         }

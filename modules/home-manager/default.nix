@@ -8,6 +8,5 @@
   shellcolor = import ./shellcolor.nix;
   wallpaper = import ./wallpaper.nix;
   secrets = import ./secrets.nix;
-  iterm2 = import ./iterm2.nix;
 
 }

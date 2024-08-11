@@ -76,7 +76,7 @@ in
   programs.bat = {
     enable = true;
     config = { pager = "less -FR"; };
-    config.theme = "base16";
+    # config.theme = "base16";
   };
   # programs.dircolors = {
   #   enable = true;

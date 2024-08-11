@@ -45,15 +45,11 @@ in
       image = ./x.jpeg;
       polarity = "dark";
       fonts = {
-        # serif = {
-        #   package = pkgs.dejavu_fonts;
-        #   name = "DejaVu Serif";
-        # };
+        serif = {
+          package = pkgs.fira;
+          name = "Fira Sans";
+        };
 
-        # sansSerif = {
-        #   package = pkgs.dejavu_fonts;
-        #   name = "DejaVu Sans";
-        # };
 
         monospace = {
           package = pkgs.nerdfonts.override
