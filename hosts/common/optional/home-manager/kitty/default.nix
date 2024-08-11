@@ -3,7 +3,8 @@
 , ...
 }:
 let
-  inherit (config.colorscheme) palette;
+  palette = config.lib.stylix.colors;
+
   kitty-xterm = pkgs.writeShellScriptBin "xterm" ''
     ${config.programs.kitty.package}/bin/kitty -1 "$@"
   '';
@@ -19,7 +20,7 @@ in
   programs.kitty = {
     enable = true;
     font = {
-      name = config.fontProfiles.monospace.family;
+      name = config.stylix.fonts.monospace.name;
       size = 12;
     };
     settings = {

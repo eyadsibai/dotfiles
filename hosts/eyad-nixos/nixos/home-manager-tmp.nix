@@ -119,9 +119,9 @@ in
           # %p progress value if set ([ 0%] to [100%]) or nothing
           # format = "%s > %b"
           format = "<b>%s</b>\n%b";
-          color = "#${palette.base00}";
-          frame_color = "#${palette.base03}";
-          separator_color = "#${palette.base03}";
+          # color = "#${palette.base00}";
+          # frame_color = "#${palette.base03}";
+          # separator_color = "#${palette.base03}";
           # font = "${config.stylix.fonts.sansSerif.name} 12";
           sticky_history = "yes";
           history_length = 20;
@@ -136,7 +136,7 @@ in
 
         frame = {
           width = 0;
-          color = "#${palette.base01}";
+          # color = "#${palette.base01}";
         };
         experimental = {
           per_monitor_dpi = true;
@@ -151,18 +151,18 @@ in
           context = "ctrl+shift+period";
         };
         urgency_low = {
-          background = "#${palette.base00}";
-          foreground = "#${palette.base05}";
+          # background = "#${palette.base00}";
+          # foreground = "#${palette.base05}";
           timeout = 10;
         };
         urgency_normal = {
-          background = "#${palette.base00}";
-          foreground = "#${palette.base05}";
+          # background = "#${palette.base00}";
+          # foreground = "#${palette.base05}";
           timeout = 5;
         };
         urgency_critical = {
-          background = "#${palette.base00}";
-          foreground = "#${palette.base05}";
+          # background = "#${palette.base00}";
+          # foreground = "#${palette.base05}";
           timeout = 5;
         };
       };

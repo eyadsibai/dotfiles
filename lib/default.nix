@@ -126,6 +126,8 @@ rec
             home-manager = {
               useUserPackages = true;
               useGlobalPkgs = true;
+              backupFileExtension = "backup";
+
               users.${username} = {
                 imports =
                   [
@@ -137,7 +139,7 @@ rec
                   ++ attrValues (import ../modules/home-manager);
               };
               extraSpecialArgs = { inherit inputs outputs hostname username colorscheme wallpaper; };
-              backupFileExtension = "backup";
+
             };
           }
         ];
