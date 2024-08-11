@@ -5,7 +5,8 @@
 , ...
 }:
 let
-  inherit (config.colorscheme) palette;
+  palette = config.lib.stylix.colors;
+
 in
 {
   home.packages = [ pkgs.terminus_font ];

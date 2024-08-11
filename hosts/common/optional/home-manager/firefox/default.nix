@@ -155,7 +155,7 @@ in
         "browser.urlbar.suggest.calculator" = true;
         "browser.urlbar.suggest.history" = true;
 
-        "devtools.theme" = config.colorscheme.variant;
+        "devtools.theme" = config.stylix.polarity;
 
         # FIXME: use global font defaults
         "font.default.x-western" = "sans-serif";

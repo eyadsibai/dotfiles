@@ -55,12 +55,12 @@ in
         background = true;
       };
       fonts = {
-        default_family = config.fontProfiles.regular.family;
+        default_family = config.stylix.fonts.sansSerif.name;
         default_size = "12pt";
-        tabs.selected = "8pt ${config.fontProfiles.monospace.family}";
-        tabs.unselected = "8pt ${config.fontProfiles.monospace.family}";
-        statusbar = "8pt ${config.fontProfiles.monospace.family}";
-        web.family.fantasy = config.fontProfiles.regular.family;
+        tabs.selected = "8pt ${config.stylix.fonts.monospace.name}";
+        tabs.unselected = "8pt ${config.stylix.fonts.monospace.name}";
+        statusbar = "8pt ${config.stylix.fonts.monospace.name}";
+        web.family.fantasy = config.stylix.fonts.sansSerif.name;
       };
       colors = {
         webpage = {

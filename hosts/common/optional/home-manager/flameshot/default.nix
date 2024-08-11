@@ -3,7 +3,8 @@
 , ...
 }:
 let
-  inherit (config.colorscheme) palette;
+  palette = config.lib.stylix.colors;
+
 in
 {
   services.flameshot = {

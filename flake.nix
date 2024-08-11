@@ -37,7 +37,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nix-colors.url = "github:misterio77/nix-colors";
+    stylix.url = "github:danth/stylix";
+
     base16 = {
       url = "github:SenchoPens/base16.nix";
       # inputs.nixpkgs.follows = "nixpkgs";
