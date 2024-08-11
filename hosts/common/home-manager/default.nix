@@ -8,7 +8,6 @@
   imports = [
     ./version_control.nix
     ./shellcolor.nix
-    ./rice.nix
     ./fonts.nix
   ];
   home.enableNixpkgsReleaseCheck = true;

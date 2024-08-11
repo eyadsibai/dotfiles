@@ -7,7 +7,6 @@
 let
   sysConfig = config;
   homeConfig = config.home-manager.users.${username};
-  inherit (homeConfig.colorscheme) palette;
 
 in
 {

@@ -3,10 +3,11 @@
 , inputs
 , ...
 }:
-let
-  inherit (inputs.nix-colors.lib-contrib { inherit pkgs; }) gtkThemeFromScheme;
-in
-rec {
+# let
+#   inherit (inputs.nix-colors.lib-contrib { inherit pkgs; }) gtkThemeFromScheme;
+# in
+# rec
+{
   gtk = {
     enable = true;
     font = {
@@ -14,8 +15,8 @@ rec {
       size = 12;
     };
     theme = {
-      name = "${config.colorscheme.slug}";
-      package = gtkThemeFromScheme { scheme = config.colorscheme; };
+      # name = "${config.colorscheme.slug}";
+      # package = gtkThemeFromScheme { scheme = config.colorscheme; };
     };
     iconTheme = {
       name = "Papirus";
@@ -32,8 +33,8 @@ rec {
   services.xsettingsd = {
     enable = true;
     settings = {
-      "Net/ThemeName" = "${gtk.theme.name}";
-      "Net/IconThemeName" = "${gtk.iconTheme.name}";
+      # "Net/ThemeName" = "${gtk.theme.name}";
+      # "Net/IconThemeName" = "${gtk.iconTheme.name}";
     };
   };
 }

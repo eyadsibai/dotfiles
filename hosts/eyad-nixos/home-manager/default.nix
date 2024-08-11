@@ -9,6 +9,6 @@
 let
   sysConfig = outputs.nixosConfigurations.${hostname}.config;
   homeConfig = config;
-  inherit (config.colorscheme) palette;
+  palette = config.lib.stylix.colors;
 in
 { }

@@ -1,7 +1,8 @@
 { config, persistence, pkgs, lib, ... }:
 
 let
-  inherit (config.colorscheme) palette;
+  palette = config.lib.stylix.colors;
+
   css = ''
     .theme-dark {
     --header-primary: #${palette.base05};

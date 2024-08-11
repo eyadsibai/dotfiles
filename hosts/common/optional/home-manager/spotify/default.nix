@@ -4,7 +4,7 @@
 , ...
 }:
 let
-  inherit (config.colorscheme) palette;
+  palette = config.lib.stylix.colors;
   spicePkgs = inputs.spicetify-nix.packages.${pkgs.system}.default;
 in
 {

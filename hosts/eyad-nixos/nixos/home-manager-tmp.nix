@@ -7,7 +7,8 @@
 let
   sysConfig = config;
   homeConfig = config.home-manager.users.${username};
-  inherit (homeConfig.colorscheme) palette;
+  palette = config.lib.stylix.colors;
+
 
 in
 {
@@ -121,7 +122,7 @@ in
           color = "#${palette.base00}";
           frame_color = "#${palette.base03}";
           separator_color = "#${palette.base03}";
-          font = "${homeConfig.fontProfiles.regular.family} 12";
+          # font = "${config.stylix.fonts.sansSerif.name} 12";
           sticky_history = "yes";
           history_length = 20;
           dmenu = "${homeConfig.home.preferredApps.menu.dmenu-cmd}";

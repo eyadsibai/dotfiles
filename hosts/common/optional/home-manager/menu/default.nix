@@ -24,7 +24,7 @@
     theme =
       let
         inherit (config.lib.formats.rasi) mkLiteral;
-        inherit (config.colorscheme) palette;
+        palette = config.lib.stylix.colors;
       in
       {
         "*" = {

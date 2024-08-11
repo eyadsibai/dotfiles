@@ -4,7 +4,7 @@
   # List your module files here
   # my-module = import ./my-module.nix;
   preferred-apps = import ./preferred-apps.nix;
-  fonts = import ./fonts.nix;
+  # fonts = import ./fonts.nix;
   shellcolor = import ./shellcolor.nix;
   wallpaper = import ./wallpaper.nix;
   secrets = import ./secrets.nix;

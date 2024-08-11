@@ -1,6 +1,7 @@
 { config, ... }:
 let
-  inherit (config.colorscheme) palette;
+  palette = config.lib.stylix.colors;
+
 in
 {
   programs.shellcolor = {

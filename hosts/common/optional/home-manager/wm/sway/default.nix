@@ -21,7 +21,7 @@
         terminal = "${terminal.cmd}";
         menu = "${menu.run-cmd}";
         fonts = {
-          names = [ config.fontProfiles.regular.family ];
+          names = [ config.stylix.fonts.sansSerif.name ];
           size = 12.0;
         };
         output = {

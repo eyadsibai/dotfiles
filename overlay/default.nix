@@ -11,32 +11,32 @@ let
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
-    whatsapp-for-linux =
-      prev.whatsapp-for-linux.overrideAttrs
-        (
-          oldAttrs: rec {
-            version = "1.6.0";
-            src =
-              prev.fetchFromGitHub
-                {
-                  owner = "eneshecan";
-                  repo = "${ oldAttrs. pname}";
-                  rev = "v${ version}";
-                  sha256 = prev.lib.fakeSha256;
-                  # sha256 = "sha256-LJ2c0+t+b4QnvCnsldutRA2N5EET+EpGNVoTqOGTQkY=";
-                };
-            buildInputs = [
-              prev.glib-networking
-              prev.gtkmm3
-              prev.libayatana-appindicator
-              prev.webkitgtk
-              prev.gst_all_1.gst-libav
-              prev.gst_all_1.gst-plugins-bad
-              prev.gst_all_1.gst-plugins-base
-              prev.gst_all_1.gst-plugins-good
-            ];
-          }
-        );
+    # whatsapp-for-linux =
+    #   prev.whatsapp-for-linux.overrideAttrs
+    #     (
+    #       oldAttrs: rec {
+    #         version = "1.6.0";
+    #         src =
+    #           prev.fetchFromGitHub
+    #             {
+    #               owner = "eneshecan";
+    #               repo = "${ oldAttrs. pname}";
+    #               rev = "v${ version}";
+    #               sha256 = prev.lib.fakeSha256;
+    #               # sha256 = "sha256-LJ2c0+t+b4QnvCnsldutRA2N5EET+EpGNVoTqOGTQkY=";
+    #             };
+    #         buildInputs = [
+    #           prev.glib-networking
+    #           prev.gtkmm3
+    #           prev.libayatana-appindicator
+    #           prev.webkitgtk
+    #           prev.gst_all_1.gst-libav
+    #           prev.gst_all_1.gst-plugins-bad
+    #           prev.gst_all_1.gst-plugins-base
+    #           prev.gst_all_1.gst-plugins-good
+    #         ];
+    #       }
+    #     );
 
     # yabai =
     #   let
