@@ -69,9 +69,24 @@ in
           package = pkgs.noto-fonts-emoji;
           name = "Noto Color Emoji";
         };
+        sizes = {
+          applications = 12;
+          terminal = 14;
+          desktop = 10;
+          popups = 10;
+        };
       };
 
-      # base16Scheme =
+      base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-storm.yaml";
+      cursor.package = pkgs.bibata-cursors;
+      cursor.name = "Bibata-Modern-Ice";
+      opacity = {
+        applications = 0.95;
+        terminal = 0.95;
+        desktop = 0.95;
+        popups = 0.95;
+      };
+
     };
   # Thermals and cooling
   services.thermald.enable = true;
