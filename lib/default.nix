@@ -133,6 +133,8 @@ rec
                   [
                     # ../hosts/${hostname}/home-manager
                     ../hosts/common/home-manager/nixos
+                    nix-index-database.nixosModules.nix-index
+
                     # inputs.nix-doom-emacs.hmModule
                     inputs.spicetify-nix.homeManagerModule
                   ]

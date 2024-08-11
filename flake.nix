@@ -8,6 +8,8 @@
     hardware.url = "github:NixOS/nixos-hardware";
     nur.url = "github:nix-community/NUR";
     nix-index-database.url = "github:Mic92/nix-index-database";
+    nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
+
 
     home-manager = {
       # url = "github:nix-community/home-manager/release-22.11";
