@@ -120,6 +120,7 @@ rec
           inputs.nixpkgs.nixosModules.notDetected
           inputs.nur.nixosModules.nur
           inputs.stylix.nixosModules.stylix
+          inputs.nix-index-database.nixosModules.nix-index
 
           inputs.home-manager.nixosModules.home-manager
           {
@@ -131,9 +132,9 @@ rec
               users.${username} = {
                 imports =
                   [
+
                     # ../hosts/${hostname}/home-manager
                     ../hosts/common/home-manager/nixos
-                    nix-index-database.nixosModules.nix-index
 
                     # inputs.nix-doom-emacs.hmModule
                     inputs.spicetify-nix.homeManagerModule
