@@ -169,7 +169,7 @@
           };
 
         "eyad-nixos" =
-          mkNixOSSystem {
+          mkSingleUserNixOSSystem {
             hostname = "eyad-nixos";
             system = "x86_64-linux";
             inherit legacyPackages;
@@ -178,12 +178,7 @@
             wallpaper = "aurora-borealis-water-mountain";
           };
 
-        "vm-linux-aarch64-darwin" = mkVMNixOSSystem {
-          hostname = "vm-linux-aarch64-darwin";
-          guest-system = "aarch64-linux";
-          host-system = "aarch64-darwin";
-          inherit legacyPackages;
-        };
+
       };
     };
 }

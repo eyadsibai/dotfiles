@@ -6,6 +6,6 @@
   networkmanager-profiles = import ./networkmanager-profiles.nix;
   secrets = import ./secrets.nix;
   cryptos = import ./cryptos.nix;
-  steam = import ./steam.nix;
+  gaming = import ./gaming.nix;
 
 }

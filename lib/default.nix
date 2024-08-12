@@ -148,6 +148,58 @@ rec
         ];
     };
 
+
+  mkSingleUserNixOSSystem =
+    { hostname
+    , legacyPackages
+    , username ? "eyad"
+    , system
+    , colorscheme ? null
+    , wallpaper ? null
+    }:
+    nixosSystem {
+      inherit system;
+      pkgs = legacyPackages.${system};
+      specialArgs = {
+        inherit inputs outputs hostname username colorscheme wallpaper;
+      };
+      modules =
+        attrValues (import ../modules/nixos)
+        ++ [
+          ../hosts/${hostname}
+          ../hosts/common/system/nixos
+          inputs.nixpkgs.nixosModules.notDetected
+          inputs.nur.nixosModules.nur
+          inputs.stylix.nixosModules.stylix
+          inputs.nix-index-database.nixosModules.nix-index
+
+          inputs.home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useUserPackages = true;
+              useGlobalPkgs = true;
+              backupFileExtension = "backup";
+
+              users.${username} = {
+                # TODO move these inside the nixos and get rif of them
+                imports =
+                  [
+
+                    # ../hosts/${hostname}/home-manager
+                    ../hosts/common/home-manager/nixos
+
+                    # inputs.nix-doom-emacs.hmModule
+                    inputs.spicetify-nix.homeManagerModule
+                  ]
+                  ++ attrValues (import ../modules/home-manager);
+              };
+              extraSpecialArgs = { inherit inputs outputs hostname username colorscheme wallpaper; };
+
+            };
+          }
+        ];
+    };
+    
   mkDarwinSystem =
     { hostname
     , legacyPackages
