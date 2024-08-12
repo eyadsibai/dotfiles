@@ -37,7 +37,6 @@ in
       ../../common/optional/home-manager/networkmanager_dmenu
       ../../common/optional/home-manager/newsboat
       ../../common/optional/home-manager/ngrok
-      ../../common/optional/home-manager/nix-index
       ../../common/optional/home-manager/office.nix
       ../../common/optional/home-manager/picom
       ../../common/optional/home-manager/polybar
@@ -54,6 +53,7 @@ in
       ../../common/optional/home-manager/xcape
       ../../common/optional/home-manager/zathura
       # ../../common/optional/home-manager/accounts
+      ../../common/optional/home-manager/pyradio
     ];
 
     services.dunst = {

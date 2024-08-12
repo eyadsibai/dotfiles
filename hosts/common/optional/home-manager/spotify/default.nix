@@ -9,6 +9,7 @@ let
 in
 {
   home.packages = [
+    pkgs.spotify-player
     # pkgs.spotify-tui
     # pkgs.spotify
     # pkgs.spicetify-cli

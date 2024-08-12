@@ -1,4 +1,4 @@
-{ pkgs, config, ... }: {
+{ pkgs, config, lib, ... }: {
   home.packages = [ pkgs.pyradio ];
   xdg.configFile."pyradio/config" = lib.mkIf (builtins.elem pkgs.pyradio config.home.packages) {
     source = ./config;
