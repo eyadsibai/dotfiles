@@ -131,7 +131,6 @@ in
 
         frame = {
           width = 0;
-          # color = "#${palette.base01}";
         };
         experimental = {
           per_monitor_dpi = true;
