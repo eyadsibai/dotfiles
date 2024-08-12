@@ -54,6 +54,7 @@ in
       base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-storm.yaml";
       cursor.package = pkgs.bibata-cursors;
       cursor.name = "Bibata-Modern-Ice";
+      cursor.size = 16;
       opacity = {
         applications = 0.95;
         terminal = 0.95;
