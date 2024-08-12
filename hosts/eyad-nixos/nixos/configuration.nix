@@ -33,7 +33,6 @@ in
     ./home-manager-tmp.nix
     ./ricing.nix
   ];
-  home-manager.users.${username} = ../home-manager;
 
   # modules.gaming.steam.enable = false;
 
