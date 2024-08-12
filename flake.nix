@@ -87,7 +87,7 @@
     let
       lib = import ./lib { inherit inputs; };
       inherit (lib) forAllSystems mkNixOSSystem mkVMNixOSSystem
-        mkDarwinSystem mergeEnvs nixConfig toGuest
+        mkDarwinSystem mergeEnvs nixConfig toGuest mkSingleUserNixOSSystem
         ;
 
       overlays = {
