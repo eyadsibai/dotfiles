@@ -15,8 +15,8 @@ in
     text = lib.generators.toINI { }
       {
         dmenu = {
-          picom
-            dmenu_command = "${config.home.preferredApps.menu.dmenu-cmd} -theme ${config.xdg.configHome}/networkmanager-dmenu/networkmenu.rasi";
+
+          dmenu_command = "${config.home.preferredApps.menu.dmenu-cmd} -theme ${config.xdg.configHome}/networkmanager-dmenu/networkmenu.rasi";
           rofi_highlight = true;
           wifi_chars = "▂▄▆█";
           pinentry = "${pkgs.pinentry-rofi}/bin/pinentry-rofi";

@@ -28,6 +28,12 @@
       MOZ_ENABLE_WAYLAND = "true";
       QT_QPA_PLATFORM = "wayland";
       LIBSEAT_BACKEND = "logind";
+      SDL_VIDEODRIVER = "wayland";
+      QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
+
+      _JAVA_AWT_WM_NONREPARENTING = "1";
+
+
 
     };
 
@@ -53,6 +59,8 @@
   ];
 
   home-manager.users.${username} = {
+
+    programs.wofi.enable = true;
     wayland.windowManager.hyprland = {
       enable = true;
       systemd = {
