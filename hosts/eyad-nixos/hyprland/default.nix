@@ -80,8 +80,8 @@
 
 
         general = {
-          gaps_in = 10;
-          gaps_out = 15;
+          gaps_in = 5;
+          gaps_out = 10;
           border_size = 2;
           # "col.active_border" = rgba config.colorscheme.colors.primary "aa";
           # "col.inactive_border" = rgba config.colorscheme.colors.surface "aa";
