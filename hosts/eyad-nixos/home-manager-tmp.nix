@@ -38,7 +38,6 @@ in
       ../common/optional/home-manager/newsboat
       ../common/optional/home-manager/ngrok
       ../common/optional/home-manager/office.nix
-      ../common/optional/home-manager/picom
       #    ../common/optional/home-manager/polybar
       ../common/optional/home-manager/qutebrowser
       ../common/optional/home-manager/services.nix

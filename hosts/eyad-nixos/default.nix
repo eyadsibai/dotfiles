@@ -20,8 +20,8 @@ in
 {
   imports = [
     inputs.hardware.nixosModules.common-cpu-amd-pstate
-    inputs.hardware.nixosModules.common-gpu-amd
-    inputs.hardware.nixosModules.common-pc-laptop-ssd
+
+    #  inputs.hardware.nixosModules.common-pc-laptop-ssd
     inputs.hardware.nixosModules.lenovo-thinkpad
 
     ./hardware-configuration.nix
@@ -71,6 +71,7 @@ in
       "iommu=soft"
       "idle=nomwait"
       "tpm_tis.interrupts=0"
+      "nvme_core.default_ps_max_latency_us=250"
       # "initcall_blacklist=acpi_cpufreq_init"
     ];
     kernelModules = [
@@ -79,11 +80,11 @@ in
       "msr"
       # "kvm-intel"
       # "amdgpu"
-      "acpi_call"
+      #      "acpi_call"
       "usbmon"
       "usbserial"
-      "timer_stats"
-      # "amd-pstate"
+      #     "timer_stats"
+      "amd-pstate"
     ];
   };
   services.avahi = {
