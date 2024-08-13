@@ -6,7 +6,7 @@
 
   # TODO INSTALL https://gitlab.com/dwt1/dmscripts
   programs.rofi = {
-    enable = true;
+    enable = false;
     plugins = with pkgs; [ rofi-calc rofi-emoji ];
     terminal = "${config.home.preferredApps.terminal.cmd}";
     extraConfig = {
