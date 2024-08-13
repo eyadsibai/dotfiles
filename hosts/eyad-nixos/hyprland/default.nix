@@ -25,10 +25,10 @@
       # Hint electron apps to use native wayland
       NIXOS_OZONE_WL = "1";
 
-    MOZ_ENABLE_WAYLAND = true;
-    QT_QPA_PLATFORM = "wayland";
-    LIBSEAT_BACKEND = "logind";
-  
+      MOZ_ENABLE_WAYLAND = "true";
+      QT_QPA_PLATFORM = "wayland";
+      LIBSEAT_BACKEND = "logind";
+
     };
 
   services.greetd = {
