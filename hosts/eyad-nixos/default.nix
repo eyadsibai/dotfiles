@@ -80,10 +80,10 @@ in
       "msr"
       # "kvm-intel"
       # "amdgpu"
-      #      "acpi_call"
+      "acpi_call"
       "usbmon"
       "usbserial"
-      #     "timer_stats"
+      "timer_stats"
       "amd-pstate"
     ];
   };
@@ -108,8 +108,10 @@ in
     config.common.default = "*";
 
     enable = true;
-    # TODO add for i3
-    extraPortals = [ pkgs.xdg-desktop-portal-gtk ]; # add xdg-desktopn-portal-wlr for wayland
+    extraPortals = [
+      pkgs.xdg-desktop-portal-gtk
+      pkgs.xdg-desktop-portal-wlr
+    ];
   };
   services.tlp = {
     enable = !config.services.xserver.desktopManager.gnome.enable;
@@ -120,6 +122,8 @@ in
       CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
     };
   };
+
+  programs.nix-index-database.comma.enable = true;
 
   services.upower = {
     enable = true;
@@ -136,7 +140,6 @@ in
     enableWattsUpPro = false;
   };
 
-  # services.postgresql.enable = true;
   # services.auto-cpufreq.enable = true;
   # services.logind.lidSwitch = "ignore"; # Laptop does not go to sleep when lid is closed
   # hardware.ledger.enable = true;

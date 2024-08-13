@@ -41,11 +41,6 @@
 
     stylix.url = "github:danth/stylix";
 
-    base16 = {
-      url = "github:SenchoPens/base16.nix";
-      # inputs.nixpkgs.follows = "nixpkgs";
-    };
-
 
     # nixpkgs-wayland = {
     #   url = "github:nix-community/nixpkgs-wayland";
@@ -62,25 +57,16 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    # hyprwm-contrib = {
-    #   url = "github:hyprwm/contrib";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
+    hyprwm-contrib = {
+      url = "github:hyprwm/contrib";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     spicetify-nix = {
       url = "github:A1ca7raz/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    polybar-themes = {
-      url = "github:adi1090x/polybar-themes";
-      flake = false;
-    };
-
-    flake-utils-plus = {
-      url = "github:gytis-ivaskevicius/flake-utils-plus";
-    };
-    macos-builder.url = "github:Gabriella439/macos-builder";
 
   };
   outputs = inputs:
@@ -98,8 +84,6 @@
         # nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
         nixgl = inputs.nixgl.overlay;
         devshell = inputs.devshell.overlays.default;
-        # comma = (inputs.flake-utils-plus.lib.genPkgOverlay inputs.comma "comma");
-        # comma = inputs.comma.overlays.default;
       };
 
       legacyPackages = forAllSystems (system:

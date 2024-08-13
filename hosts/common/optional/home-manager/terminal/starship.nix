@@ -67,7 +67,7 @@ in
         nix_inspect = {
           disabled = false;
           when = "test -z $IN_NIX_SHELL";
-          command = "${nix-inspect}/bin/nix-inspect kitty imagemagick ncurses";
+          command = "${pkgs.nix-inspect}/bin/nix-inspect kitty imagemagick ncurses";
           format = "[$symbol(-> $output)]($style)";
           # symbol = " ";
           symbol = " ";
