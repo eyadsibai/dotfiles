@@ -217,27 +217,32 @@ let
 
 in
 {
-  home.packages = with pkgs; [ discord discocss ];
-  xdg.configFile."discocss/custom.css".text = css;
+  home.packages = with pkgs; [
 
-  #   programs.discocss = {
-  #     enable = true;
-  #     discordAlias = true;
+    discord.override
+    {
+      # remove any overrides that you don't want
+      withOpenASAR = true;
+      withVencord = true;
+      withTTS = true;
 
-  #     css = css;
+    }
+    # for screen sharing with audio
+    vesktop
 
-  #     # https://github.com/nix-community/home-manager/pull/3297
-  #     # package = pkgs.discocss.overrideAttrs (_: {
-  #     #   patches = [
-  #     #     (pkgs.fetchpatch {
-  #     #       url = "https://github.com/mlvzk/discocss/commit/83b53f3d08cd1d448caa4aa77a4a19f2fdc2f523.patch";
-  #     #       sha256 = "sha256-T7OCmX2ZVcTSSp+nXVSNvOSB5IDg9dG5b/mL9kIemmk=";
-  #     #     })
-  #     #   ];
-  #     # });
-  #     # another alternative
-  #     #     package = (builtins.getFlake "github:mlvzk/discocss/aa71249beed302d4b99bfaa16cda3e0929181f5f").packages.${pkgs.system}.discocss;
 
-  #   };
 
-}
+  ];
+
+  xdg.configFile = {
+    "discord/settings.json".text = ''
+      {
+        "SKIP_HOST_UPDATE": true,
+        "IS_MAXIMIZED": false,
+        "IS_MINIMIZED": false,
+        "OPEN_ON_STARTUP": false,
+        "MINIMIZE_TO_TRAY": false,
+      }
+    '';
+
+  }
