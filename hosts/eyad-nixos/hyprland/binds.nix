@@ -28,9 +28,40 @@ in
       "$mod SHIFT, 9, movetoworkspace, 9"
       "$mod SHIFT, 0, movetoworkspace, 10"
 
+      "$mod, H, focus, left"
+      "$mod, J, focus, down"
+      "$mod, K, focus, up"
+      "$mod, L, focus, right"
+      "$mod, Left, focus, left"
+      "$mod, Down, focus, down"
+      "$mod, Up, focus, up"
+      "$mod, Right, focus, right"
+
+      "$mod SHIFT, H, move, left"
+      "$mod SHIFT, J, move, down"
+      "$mod SHIFT, K, move, up"
+      "$mod SHIFT, L, move, right"
+      "$mod SHIFT, Left, move, left"
+      "$mod SHIFT, Down, move, down"
+      "$mod SHIFT, Up, move, up"
+      "$mod SHIFT, Right, move, right"
+
+
+      
+      
+
       "$mod, Return, exec, ${homeConfig.home.preferredApps.terminal.cmd}"
+      "$mod, D, exec, ${homeConfig.home.preferredApps.menu.drun-cmd}"
+      "$mod Shift, D, exec, ${homeConfig.home.preferredApps.menu.window-cmd}"
+      "$mod, N, exec, ${pkgs.networkmanager_dmenu}/bin/networkmanager_dmenu"
+      "$mod, P, exec, ${homeConfig.home.preferredApps.menu.password-cmd}"
+      "$mod Shift, X, exec, systemctl suspend"
+      "Print, exec, ${pkgs.flameshot}/bin/flameshot gui"
+      "$mod, B, exec, ${homeConfig.home.preferredApps.browser.cmd}"
 
       "$mod, F, fullscreen"
+      "$mod SHIFT, Q, kill"
+
 
     ];
   };

@@ -160,7 +160,7 @@ in
     serverAliveInterval = 60;
     extraConfig = ''
       PubkeyAuthentication = yes
-      GSSAPIAuthentication = no
+      # GSSAPIAuthentication = no
       UseRoaming = no
       VisualHostKey = yes
     '';
