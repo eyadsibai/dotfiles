@@ -44,10 +44,10 @@ in
           name = "Noto Color Emoji";
         };
         sizes = {
-          applications = 12;
-          terminal = 14;
-          desktop = 10;
-          popups = 10;
+          applications = 8;
+          terminal = 10;
+          desktop = 8;
+          popups = 8;
         };
       };
 

@@ -32,7 +32,7 @@ in
     #    ../common/optional/nixos/samba
     ./home-manager-tmp.nix
     ./ricing.nix
-    ./hyprland.nix
+    ./hyprland
   ];
 
   modules.gaming.enable = false;
@@ -45,7 +45,7 @@ in
   programs.nh = {
     enable = true;
     flake = "/home/eyad/workspace/dotfiles";
-    clean.enable = true;
+    clean.enable = false;
     clean.extraArgs = "--keep-since 4d --keep 3";
   };
 
