@@ -13,7 +13,7 @@
     distrobox
     # gitter
     # cawbird
-    haxor-news
+    # haxor-news
     # rainbowstream
     caprine-bin
     # latest-caprine

@@ -4,16 +4,11 @@
 , ...
 }:
 # TODO https://github.com/LukeSmithxyz/voidrice/blob/master/.config/zathura/zathurarc
-let
-  palette = config.lib.stylix.colors;
-
-in
 {
   programs.zathura = {
     enable = true;
     options = {
       selection-clipboard = "clipboard";
-      font = "${config.stylix.fonts.sansSerif.name} 12";
       recolor = true;
       window-title-home-tilde = true;
       statusbar-basename = true;
@@ -23,8 +18,7 @@ in
     };
     mappings = {
       f = "toggle_fullscreen";
-      "[fullscreen] f" = "toggle_fullscreen";
-      # "<C-i>" = "recolor";
+     # "[fullscreen] f" = "toggle_fullscreen";
       w = "adjust_window width";
       n = "navigate next";
       b = "navigate previous";
