@@ -57,7 +57,7 @@ in
       };
       fonts = {
         default_family = config.stylix.fonts.sansSerif.name;
-        default_size = "12pt";
+
         tabs.selected = "8pt ${config.stylix.fonts.monospace.name}";
         tabs.unselected = "8pt ${config.stylix.fonts.monospace.name}";
         statusbar = "8pt ${config.stylix.fonts.monospace.name}";
