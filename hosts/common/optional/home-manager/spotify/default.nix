@@ -15,7 +15,7 @@ in
     # pkgs.spicetify-cli
   ];
   services.spotifyd.enable = false;
-  programs.spotify-player = true;
+  programs.spotify-player.enable = true;
   programs.spicetify = {
     enable = true;
     # specify that we want to use our custom colorscheme
