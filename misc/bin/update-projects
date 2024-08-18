@@ -1,42 +1,25 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -o errexit  # Exit on error
-set -o nounset  # Trigger error when expanding unset variables
+# Check if the base directory is provided as an argument
+if [ -z "$1" ]; then
+  echo "Usage: $0 /path/to/your/repos"
+  exit 1
+fi
 
-function fetchRemote
-{
-    local path=$1
-    if [ ! -d "${path}" ] ; then
-        # Not a folder
-        return 0
-    fi
-    if [ ! -e "${path}/.git" ] ; then
-        # Not a git folder
-        return 0
-    fi
-    cd "${path}"
-    if [[ `git remote show|wc --lines` -eq 0 ]] ; then
-        # No remote defined
-        return 0
-    fi
-    git prune-all
-    git cleanup-local
-    git fetch
-    git co master
-    git pull --rebase origin master
-    git co -
+# Directory where all your repositories are stored
+BASE_DIR="$1"
+
+# Function to fetch updates for a single repository
+fetch_repo() {
+  local dir="$1"
+  echo "Fetching updates for $dir"
+  cd "$dir" || exit
+  git fetch --all
+  echo "Done with $dir"
+  echo "-------------------------------"
 }
 
-origdir=`pwd`
+export -f fetch_repo
 
-for folderItem in $HOME/workspace/iZettle/*;
-do
-    fetchRemote $folderItem || true
-done
-
-for folderItem in $HOME/workspace/*;
-do
-    fetchRemote $folderItem || true
-done
-
-cd ${origdir}
+# Find all directories containing a .git folder and run fetch_repo in parallel
+find "$BASE_DIR" -mindepth 1 -maxdepth 1 -type d -exec test -d {}/.git \; -print | parallel fetch_repo

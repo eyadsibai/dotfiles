@@ -21,7 +21,7 @@ in
     programs.kakoune.enable = true;
 
     home.packages = with pkgs; [
-      spotify-player
+      # spotify-player
     ];
 
   };

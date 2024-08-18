@@ -219,19 +219,16 @@ in
 {
   home.packages = with pkgs; [
 
-    discord.override
-    {
-      # remove any overrides that you don't want
-      withOpenASAR = true;
-      withVencord = true;
-      withTTS = true;
+    (discord.override
+      {
+        # remove any overrides that you don't want
+        withOpenASAR = true;
+        withVencord = true;
+        withTTS = true;
 
-    }
+      })
     # for screen sharing with audio
     vesktop
-
-
-
   ];
 
   xdg.configFile = {
@@ -245,4 +242,5 @@ in
       }
     '';
 
-  }
+  };
+}

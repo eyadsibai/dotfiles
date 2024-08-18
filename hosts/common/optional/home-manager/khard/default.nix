@@ -1,5 +1,5 @@
 { pkgs, ... }: {
-  home.packages = with pkgs; [ khard ];
+  programs.khard.enable = false;
   xdg.configFile."khard/khard.conf".text = ''
     [addressbooks]
     [[contacts]]

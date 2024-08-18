@@ -155,30 +155,22 @@ in
   # Enable the X11 windowing system.
 
   services.teamviewer.enable = false;
-  services.xserver = {
-    enable = true;
-    displayManager = {
-      lightdm.enable = true;
-      gdm.enable = false;
-      gdm.wayland = false;
-      sessionCommands = ''
-        ${pkgs.xorg.xset}/bin/xset r rate 660 25
-      '';
-      #   ${pkgs.xorg.setxkbmap}/bin/setxkbmap -layout us -option ctrl:nocaps
-      # ${pkgs.xorg.xset}/bin/xset r rate 200 40
-    };
-    # videoDrivers = [ "amdgpu" ];
-    desktopManager = {
-      xterm.enable = false;
-      gnome.enable = false;
-    };
-
-    # use numpad as mouse # make CapsLock behave like Ctrl:
-    xkb = {
-      options = "grp:win_space_toggle,eurosign:e,keypad:pointerkeys,ctrl:nocaps";
-
-    };
-  };
+  #   services.xserver = {
+  #     enable = false;
+  #     sessionCommands = ''
+  #         ${pkgs.xorg.xset}/bin/xset r rate 660 25
+  #       '';
+  #       #   ${pkgs.xorg.setxkbmap}/bin/setxkbmap -layout us -option ctrl:nocaps
+  #       # ${pkgs.xorg.xset}/bin/xset r rate 200 40
+  #     };
+  #     # videoDrivers = [ "amdgpu" ];
+  #
+  #     # use numpad as mouse # make CapsLock behave like Ctrl:
+  #     xkb = {
+  #       options = "grp:win_space_toggle,eurosign:e,keypad:pointerkeys,ctrl:nocaps";
+  #
+  #     };
+  #   };
   services.usbmuxd.enable = true;
   services.gnome.gnome-keyring.enable = true;
   services.dbus.enable = true;

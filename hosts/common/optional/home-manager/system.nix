@@ -8,6 +8,7 @@
     # glances
     killall
     xorg.xkill
-    ranger
+    # ranger
   ];
+  programs.ranger.enable = true;
 }

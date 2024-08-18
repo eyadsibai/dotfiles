@@ -1,16 +1,19 @@
 { pkgs, config, ... }: {
   home.packages = with pkgs; [
-    cava
+
     cli-visualizer
     # cmus
     vlc
     # media player
     yewtube
-    yt-dlp
+
     # ytcc
     # darktable
     castget
   ];
+
+  programs.cava.enable = true;
+  programs.yt-dlp.enable = true;
   services.mopidy = {
     enable = false;
     extensionPackages = with pkgs; [
