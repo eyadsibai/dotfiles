@@ -38,7 +38,6 @@ in
       ../common/optional/home-manager/newsboat
       ../common/optional/home-manager/ngrok
       ../common/optional/home-manager/office.nix
-      #    ../common/optional/home-manager/polybar
       ../common/optional/home-manager/qutebrowser
       ../common/optional/home-manager/services.nix
       ../common/optional/home-manager/social
@@ -47,9 +46,6 @@ in
       ../common/optional/home-manager/system.nix
       ../common/optional/home-manager/terminal
       ../common/optional/home-manager/udiskie
-      ../common/optional/home-manager/unclutter
-      #      ../common/optional/home-manager/wm/i3
-      ../common/optional/home-manager/xcape
       ../common/optional/home-manager/zathura
       # ../../common/optional/home-manager/accounts
       ../common/optional/home-manager/pyradio
@@ -532,7 +528,6 @@ in
         # wavemon
         wget
         # wpgtk
-        xclip
         xdotool
         xdragon
         xsel
@@ -718,8 +713,6 @@ in
         # python3Packages.magic-wormhole
         # croc
 
-
-
         # # Printing and scanning
         # simple-scan
 
@@ -784,8 +777,6 @@ in
         # gitAndTools.hub
 
 
-        # # Separate tiling window manager
-        # #i3
 
         # patchelf
 
@@ -809,8 +800,6 @@ in
         # # Bluetooth
         # bluedevil
 
-        # # Printing and scanning
-        # simple-scan
       ]
       # ++ (lib.optionals sysConfig.networking.networkmanager.enable [ stable.haskellPackages.network-manager-tui ])
     ;

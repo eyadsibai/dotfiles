@@ -8,16 +8,13 @@ let
   addons = pkgs.nur.repos.rycee.firefox-addons;
 in
 {
-  home.packages = with pkgs; [
-    #  nur.repos.wolfangaukang.vdhcoapp
-    ff2mpv
-  ];
+  # home.packages = with pkgs; [
+  #   ff2mpv
+  # ];
   # Browsers
   programs.firefox = {
     enable = true;
-    package = lib.mkDefault (pkgs.wrapFirefox pkgs.firefox-unwrapped {
-      forceWayland = true;
-    });
+    package = lib.mkDefault (pkgs.wrapFirefox pkgs.firefox-unwrapped { });
 
     profiles.eyad = {
       extensions = with addons; [
