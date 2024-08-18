@@ -49,7 +49,7 @@
 
       show_wifi_passwords = "sudo bash -c \"cat /etc/NetworkManager/system-connections/* | grep -e id= -e psk= -e wep | grep -v uuid= | grep -v ssid=\"";
 
-      xclip = "xclip -selection -c";
+      # xclip = "xclip -selection -c";
       conda_export = "conda env export --no-builds | grep -v \"^prefix: \" > environment.yml";
 
       # ls = "ls --color=auto -a";
