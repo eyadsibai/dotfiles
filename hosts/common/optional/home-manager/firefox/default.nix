@@ -16,7 +16,7 @@ in
   programs.firefox = {
     enable = true;
     package = lib.mkDefault (pkgs.wrapFirefox pkgs.firefox-unwrapped {
-      # forceWayland = false;
+      forceWayland = true;
     });
 
     profiles.eyad = {
@@ -49,40 +49,20 @@ in
         # ff2mpv
         # floccus
         # fraidycat
+        video-downloadhelper
+        leechblock-ng
 
-        (
-          buildFirefoxXpiAddon
-            rec {
-              pname = "Video-DownloadHelper";
-              version = "7.6.0";
-              addonId = "{b9db16a4-6edc-47ec-a1f4-b86292ed211d}";
-              url = "https://addons.mozilla.org/firefox/downloads/file/3804074/video_downloadhelper-${version}-fx.xpi";
-              sha256 = "sha256-vVHZwQZOhpogQDAS4BAxm0bvCrcrsz8ioxDdOqsnelM=";
-              meta = { };
-            }
-        )
-        (
-          buildFirefoxXpiAddon
-            rec {
-              pname = "ticktick";
-              version = "1.1.5.0";
-              addonId = "{52198036-5173-4877-a8e8-62474781798d}";
-              url = "https://addons.mozilla.org/firefox/downloads/file/3972098/ticktick_todo-${version}.xpi";
-              sha256 = "sha256-wVczdaWzzuBC8DwqcFT4g/KkAK6UCfD0LjIHQMiettA=";
-              meta = { };
-            }
-        )
-        (
-          buildFirefoxXpiAddon
-            rec {
-              pname = "leechblock-ng";
-              version = "1.5.1";
-              addonId = "leechblockng@proginosko.com";
-              url = "https://addons.mozilla.org/firefox/downloads/file/3542788/leechblock_ng-${version}-an+fx.xpi?src=";
-              sha256 = "sha256-d8K0vD+LpZ8xmKB8jX1Sjj4gTHNLLCZQAD4LT/rpUJE=";
-              meta = { };
-            }
-        )
+        # (
+        #   buildFirefoxXpiAddon
+        #     rec {
+        #       pname = "ticktick";
+        #       version = "1.1.5.0";
+        #       addonId = "{52198036-5173-4877-a8e8-62474781798d}";
+        #       url = "https://addons.mozilla.org/firefox/downloads/file/3972098/ticktick_todo-${version}.xpi";
+        #       sha256 = "sha256-wVczdaWzzuBC8DwqcFT4g/KkAK6UCfD0LjIHQMiettA=";
+        #       meta = { };
+        #     }
+        # )
       ];
 
       # id = 0;

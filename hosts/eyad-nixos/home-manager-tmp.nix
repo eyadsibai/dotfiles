@@ -478,8 +478,6 @@ in
         mediainfo
         mpc_cli
         multilockscreen
-        # fast lockscreen based on i3lock
-        mosh
         # ssh replacesment
         ncpamixer
         neofetch
@@ -823,7 +821,7 @@ in
     programs.htop.enable = true;
     programs.feh.enable = true;
     programs.bottom.enable = true;
-    programs.btop.enable = true; # better htop
+    # programs.btop.enable = true; # better htop
 
     home.keyboard.layout = "us,ar";
     home.keyboard.options = [ "grp:win_space_toggle" ];
