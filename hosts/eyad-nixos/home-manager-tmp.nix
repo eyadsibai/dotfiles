@@ -422,7 +422,6 @@ in
         atool
         # audacious
         # simple music player
-        autojump
         # awscli
         # awscli2
         bitwarden
@@ -567,14 +566,11 @@ in
 
         # Terminal
         pfetch # Minimal fetch
-        ranger # File Manager
 
         # Video/Audio
         # plex-media-player
         # stremio #Media Streamer
 
-        # Apps
-        remmina
 
         # File MGMT
         rsync
@@ -604,16 +600,16 @@ in
         #shotcut          # Video editor
         #shotwell         # Raw Image Manager
         #light            # Display Brightness
-
         hyperfine
         dogdns
         sd
-        helix
-        k9s
         # jetbrains.pycharm-community
         # sherlock
         # signal-cli
         # signalbackup-tools
+
+
+
         signald
         turses
         twitch-tui
@@ -632,13 +628,10 @@ in
         iftop
         # per peer network rates
         # general purpose
-        htop
-        feh
-        # better htop
+
         # network state
         ethtool
-        btop
-        bottom
+
         # alternative to htop & ytop (btm)
         gotop
         gtop
@@ -667,7 +660,6 @@ in
         yle-dl
 
         pdf2svg
-
 
         # gksu
 
@@ -825,6 +817,14 @@ in
       # ++ (lib.optionals sysConfig.networking.networkmanager.enable [ stable.haskellPackages.network-manager-tui ])
     ;
 
+    services.remmina.enable = true;
+    programs.helix.enable = true;
+    programs.k9s.enable = true;
+    programs.htop.enable = true;
+    programs.feh.enable = true;
+    programs.bottom.enable = true;
+    programs.btop.enable = true; # better htop
+
     home.keyboard.layout = "us,ar";
     home.keyboard.options = [ "grp:win_space_toggle" ];
     xsession = {
@@ -832,6 +832,7 @@ in
       scriptPath = ".hm-xsession";
     };
     programs.gpg.enable = true;
+    programs.autojump.enable = true;
     home.stateVersion = "22.05";
 
 

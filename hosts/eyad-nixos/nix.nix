@@ -10,8 +10,12 @@
       trusted-users = [ "root" "@wheel" ];
       sandbox = true;
 
+      keep-outputs = true
+        keep-derivations = true
+      };
+      daemonIOSchedClass = "idle";
+      daemonCPUSchedPolicy = "idle";
+
+
     };
-    daemonIOSchedClass = "idle";
-    daemonCPUSchedPolicy = "idle";
-  };
-}
+  }

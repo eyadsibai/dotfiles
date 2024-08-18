@@ -27,7 +27,7 @@ in
     nb
     ticker
     sent
-    bandwhich
+    # bandwhich
     up
     ts
     yank
@@ -222,7 +222,7 @@ in
     enableZshIntegration = config.programs.zsh.enable;
     enableFishIntegration = config.programs.fish.enable;
   };
-  programs.zellij.enable = false;
+  programs.zellij.enable = true;
   programs.zoxide = {
     enable = true;
     enableBashIntegration = config.programs.bash.enable;

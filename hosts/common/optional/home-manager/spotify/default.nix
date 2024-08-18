@@ -9,13 +9,13 @@ let
 in
 {
   home.packages = [
-    pkgs.spotify-player
+    # pkgs.spotify-player
     # pkgs.spotify-tui
     # pkgs.spotify
     # pkgs.spicetify-cli
   ];
   services.spotifyd.enable = false;
-
+  programs.spotify-player = true;
   programs.spicetify = {
     enable = true;
     # specify that we want to use our custom colorscheme
