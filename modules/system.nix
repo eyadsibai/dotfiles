@@ -48,7 +48,7 @@ imports =
   services.xrdp.enable = true;
 
   services.xrdp.openFirewall = true;
- services.xrdp.defaultWindowManager = "${pkgs.gnome3.gnome-session}/bin/gnome-session";
+  services.xrdp.defaultWindowManager = "${pkgs.gnome-session}/bin/gnome-session";
   networking.firewall.allowedTCPPorts = [ 3389
   # 9200 #elasticsearch
    ];
