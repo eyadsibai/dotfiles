@@ -28,7 +28,7 @@ cudaPackages.cudnn
       jetbrains.jdk
       jetbrains.idea-ultimate
 
-      devenv
+      devbox
 
 	  timg
       # solaar
