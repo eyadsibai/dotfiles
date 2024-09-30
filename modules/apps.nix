@@ -5,10 +5,10 @@
   environment.systemPackages = with pkgs; [
 
 # CUDA
-cudaPackages.cudnn
-(cudaPackages.cudatoolkit.overrideAttrs (oldAttrs: {
-    cudaVersion = "12.3";
-  }))
+# cudaPackages.cudnn
+# (cudaPackages.cudatoolkit.overrideAttrs (oldAttrs: {
+#     cudaVersion = "12.3";
+#   }))
 
   cachix
     just
@@ -28,8 +28,9 @@ cudaPackages.cudnn
       jetbrains.jdk
       jetbrains.idea-ultimate
 
+      devenv
       devbox
-
+	  virtualenv
 	  timg
       # solaar
 
