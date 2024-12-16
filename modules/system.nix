@@ -27,7 +27,7 @@ imports =
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.configurationLimit = 4;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages;
 
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -41,7 +41,7 @@ imports =
   services.tailscale.enable = true;
 
   services.ollama = {
-    enable = true;
+    enable = false;
     acceleration = "cuda";
   };
 
@@ -95,7 +95,8 @@ imports =
     open = false;
     nvidiaSettings = true;
 
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+   package = config.boot.kernelPackages.nvidiaPackages.stable;
+   # package = config.boot.kernelPackages.nvidiaPackages.beta;
   };
 
 
