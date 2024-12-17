@@ -74,7 +74,8 @@ rec
 
           ../hosts/${hostname}
           # ../hosts/common/system/nixos
-          inputs.nur.nixosModules.nur
+          inputs.nur.modules.nixos.default
+
           { virtualisation.host.pkgs = legacyPackages.${host-system}; }
           inputs.home-manager.nixosModules.home-manager
           {
@@ -118,7 +119,7 @@ rec
           ../hosts/${hostname}
           ../hosts/common/system/nixos
           inputs.nixpkgs.nixosModules.notDetected
-          inputs.nur.nixosModules.nur
+          inputs.nur.modules.nixos.default
           inputs.stylix.nixosModules.stylix
           inputs.nix-index-database.nixosModules.nix-index
 
@@ -137,7 +138,7 @@ rec
                     ../hosts/common/home-manager/nixos
 
                     # inputs.nix-doom-emacs.hmModule
-                    inputs.spicetify-nix.homeManagerModule
+                    # inputs.spicetify-nix.homeManagerModule
                   ]
                   ++ attrValues (import ../modules/home-manager);
               };
@@ -169,7 +170,7 @@ rec
           ../hosts/${hostname}
           ../hosts/common/system/nixos
           inputs.nixpkgs.nixosModules.notDetected
-          inputs.nur.nixosModules.nur
+          inputs.nur.modules.nixos.default
           inputs.stylix.nixosModules.stylix
           inputs.nix-index-database.nixosModules.nix-index
 
@@ -189,7 +190,7 @@ rec
                     ../hosts/common/home-manager/nixos
 
                     # inputs.nix-doom-emacs.hmModule
-                    inputs.spicetify-nix.homeManagerModule
+                    # inputs.spicetify-nix.homeManagerModule
                   ]
                   ++ attrValues (import ../modules/home-manager);
               };
@@ -199,7 +200,7 @@ rec
           }
         ];
     };
-    
+
   mkDarwinSystem =
     { hostname
     , legacyPackages

@@ -62,10 +62,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    spicetify-nix = {
-      url = "github:A1ca7raz/spicetify-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # spicetify-nix = {
+    #   url = "github:Gerg-L/spicetify-nix";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
 
   };
@@ -78,7 +78,7 @@
 
       overlays = {
         default = import ./overlay { inherit inputs lib; };
-        nur = inputs.nur.overlay;
+        nur = inputs.nur.overlays.default;
         neovim = inputs.neovim-nightly-overlay.overlays.default;
         # poetry2nix = inputs.poetry2nix.overlay;
         # nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;

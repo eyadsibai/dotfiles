@@ -213,7 +213,10 @@ in
       };
     };
   };
-  programs.taskwarrior = { enable = true; };
+  programs.taskwarrior = {
+    enable = true;
+    package = pkgs.taskwarrior3;
+  };
   programs.tmux = { enable = true; };
   programs.topgrade = { enable = false; };
   programs.watson = {
