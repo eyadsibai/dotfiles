@@ -6,10 +6,8 @@
 , ...
 }: {
   home.packages = with pkgs; [
-    (nerdfonts.override
-      {
-        fonts = [ "Terminus" ];
-      })
+    nerd-fonts.terminess-ttf
+
   ];
 
 

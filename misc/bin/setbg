@@ -17,7 +17,7 @@ type wal >/dev/null 2>&1 && {
 	cat ~/.cache/wal/sequences && \
 	xsetroot -name "fsignal:xrdb";
 	i3-msg restart;
-	spicetify apply;
+	# spicetify apply;
 	killall spotify;
 	}
 	#setsid dwmblocks >/dev/null 2>&1 & }
