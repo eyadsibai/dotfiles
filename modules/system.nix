@@ -39,6 +39,8 @@ imports =
 
   services.xserver.videoDrivers = ["nvidia"];
   services.tailscale.enable = true;
+  services.n8n.enable = true;
+  services.n8n.openFirewall = true;
 
   services.ollama = {
     enable = false;
@@ -146,7 +148,7 @@ docker-compose
 
   # Enable sound with pipewire.
   # sound.enable = true;
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
