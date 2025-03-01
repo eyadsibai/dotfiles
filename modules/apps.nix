@@ -33,7 +33,7 @@
 	  virtualenv
 	  timg
       # solaar
-
+ghostty
   ];
   environment.variables.EDITOR = "nvim";
 

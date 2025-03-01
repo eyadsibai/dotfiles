@@ -117,11 +117,18 @@ imports =
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
 
+  virtualisation.libvirtd.enable = true;
+  programs.virt-manager.enable = true;
+
+
  virtualisation.docker.enable = true;
  # virtualisation.docker.enableNvidia = true; ## deprecated
 
 hardware.nvidia-container-toolkit.enable = true;
   users.extraGroups.docker.members = [ "eyad" ];
+  users.extraGroups.libvirt.members = [ "eyad" ];
+
+
 
 
   
@@ -133,6 +140,12 @@ hardware.nvidia-container-toolkit.enable = true;
 
 environment.systemPackages = with pkgs; [
 docker-compose
+virt-manager
+virt-viewer
+spice
+spice-gtk
+win-virtio # for windows virtio drivers
+OVMF # UEFI firmware for qemu
   ];
 
   # Configure keymap in X11
