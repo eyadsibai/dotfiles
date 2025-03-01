@@ -1,4 +1,4 @@
-{...}: {
+{ ... }: {
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -15,7 +15,7 @@
 
   };
 
-  
+
 
   programs.nushell = {
     enable = true;
@@ -37,6 +37,6 @@
 
   programs.zellij = {
     enable = true;
-    
+
   };
 }

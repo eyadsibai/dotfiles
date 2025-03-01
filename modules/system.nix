@@ -1,9 +1,10 @@
-{config, pkgs, ...}:
+{ config, pkgs, ... }:
 {
 
 
-imports =
-    [ # Include the results of the hardware scan.
+  imports =
+    [
+      # Include the results of the hardware scan.
       ../hardware-configuration.nix
     ];
 
@@ -37,7 +38,7 @@ imports =
   };
 
 
-  services.xserver.videoDrivers = ["nvidia"];
+  services.xserver.videoDrivers = [ "nvidia" ];
   services.tailscale.enable = true;
   services.n8n.enable = true;
   services.n8n.openFirewall = true;
@@ -51,30 +52,31 @@ imports =
 
   services.xrdp.openFirewall = true;
   services.xrdp.defaultWindowManager = "${pkgs.gnome-session}/bin/gnome-session";
-  networking.firewall.allowedTCPPorts = [ 3389
-  # 9200 #elasticsearch
-   ];
-   networking.firewall.allowedUDPPorts = [9200];
-    services.gnome.gnome-remote-desktop.enable = true;
+  networking.firewall.allowedTCPPorts = [
+    3389
+    # 9200 #elasticsearch
+  ];
+  networking.firewall.allowedUDPPorts = [ 9200 ];
+  services.gnome.gnome-remote-desktop.enable = true;
 
 
   security.polkit.enable = true;
   security.polkit.extraConfig = ''
-      polkit.addRule(function(action, subject) {
-        if (
-          subject.isInGroup("users")
-            && (
-              action.id == "org.freedesktop.login1.reboot" ||
-              action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
-              action.id == "org.freedesktop.login1.power-off" ||
-              action.id == "org.freedesktop.login1.power-off-multiple-sessions"
-            )
+    polkit.addRule(function(action, subject) {
+      if (
+        subject.isInGroup("users")
+          && (
+            action.id == "org.freedesktop.login1.reboot" ||
+            action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
+            action.id == "org.freedesktop.login1.power-off" ||
+            action.id == "org.freedesktop.login1.power-off-multiple-sessions"
           )
-        {
-          return polkit.Result.YES;
-        }
-      })
-    '';
+        )
+      {
+        return polkit.Result.YES;
+      }
+    })
+  '';
 
   # hardware.logitech.wireless.enable = true;
   # hardware.logitech.wireless.enableGraphical = true;
@@ -82,14 +84,14 @@ imports =
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
-#    package = inputs.hyprland.packages."${pkgs.system}".hyprland;
+    #    package = inputs.hyprland.packages."${pkgs.system}".hyprland;
 
   };
 
 
   hardware.nvidia = {
 
-   # most wayland compositors need this
+    # most wayland compositors need this
     modesetting.enable = true;
     powerManagement.enable = false;
     powerManagement.finegrained = false;
@@ -97,8 +99,8 @@ imports =
     open = false;
     nvidiaSettings = true;
 
-   package = config.boot.kernelPackages.nvidiaPackages.stable;
-   # package = config.boot.kernelPackages.nvidiaPackages.beta;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    # package = config.boot.kernelPackages.nvidiaPackages.beta;
   };
 
 
@@ -121,31 +123,31 @@ imports =
   programs.virt-manager.enable = true;
 
 
- virtualisation.docker.enable = true;
- # virtualisation.docker.enableNvidia = true; ## deprecated
+  virtualisation.docker.enable = true;
+  # virtualisation.docker.enableNvidia = true; ## deprecated
 
-hardware.nvidia-container-toolkit.enable = true;
+  hardware.nvidia-container-toolkit.enable = true;
   users.extraGroups.docker.members = [ "eyad" ];
   users.extraGroups.libvirt.members = [ "eyad" ];
 
 
 
 
-  
-   virtualisation.docker.rootless = {
-     enable = true;
-     setSocketVariable = true;
-   };
+
+  virtualisation.docker.rootless = {
+    enable = true;
+    setSocketVariable = true;
+  };
 
 
-environment.systemPackages = with pkgs; [
-docker-compose
-virt-manager
-virt-viewer
-spice
-spice-gtk
-win-virtio # for windows virtio drivers
-OVMF # UEFI firmware for qemu
+  environment.systemPackages = with pkgs; [
+    docker-compose
+    virt-manager
+    virt-viewer
+    spice
+    spice-gtk
+    win-virtio # for windows virtio drivers
+    OVMF # UEFI firmware for qemu
   ];
 
   # Configure keymap in X11
@@ -193,6 +195,6 @@ OVMF # UEFI firmware for qemu
   services.openssh.enable = true;
   services.openssh.settings.PasswordAuthentication = true;
 
-    system.stateVersion = "23.11"; # Did you read the comment?
+  system.stateVersion = "23.11"; # Did you read the comment?
 
 }

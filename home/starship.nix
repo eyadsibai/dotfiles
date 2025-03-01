@@ -1,4 +1,4 @@
-{...}: {
+{ ... }: {
   programs.starship = {
     enable = true;
 
@@ -8,25 +8,25 @@
     enableTransience = true;
 
     settings = {
-        format = builtins.concatStringsSep "" [
-         "$nix_shell"
-         "$os"
-         "$directory"
-         "$container"
-         "$git_branch $git_status"
-         "$python"
-         "$nodejs"
-         "$lua"
-         "$rust"
-         "$java"
-         "$c"
-         "$golang"
-         "$cmd_duration"
-         "$status"
-         "$line_break"
-         "[❯](bold purple)"
-         ''''${custom.space}''
-       ];
+      format = builtins.concatStringsSep "" [
+        "$nix_shell"
+        "$os"
+        "$directory"
+        "$container"
+        "$git_branch $git_status"
+        "$python"
+        "$nodejs"
+        "$lua"
+        "$rust"
+        "$java"
+        "$c"
+        "$golang"
+        "$cmd_duration"
+        "$status"
+        "$line_break"
+        "[❯](bold purple)"
+        ''''${custom.space}''
+      ];
       character = {
         success_symbol = "[›](bold green)";
         error_symbol = "[›](bold red)";
