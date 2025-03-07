@@ -40,6 +40,13 @@
 
   services.xserver.videoDrivers = [ "nvidia" ];
   services.tailscale.enable = true;
+  services.tailscale.useRoutingFeatures = "both";
+
+  services.tailscale.extraSetFlags = [
+    "--advertise-routes=192.168.50.0/24" # allow routing traffic from other nodes to lan
+    "--accept-routes" # route traffic to other lan
+    "--advertise-exit-node" # allow allow routing traffic through this node
+  ];
   services.n8n.enable = true;
   services.n8n.openFirewall = true;
 
@@ -119,7 +126,18 @@
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
 
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd =
+    {
+      enable = true;
+      qemu = {
+        package = pkgs.qemu_kvm;
+        ovmf = {
+          enable = true;
+          packages = [ pkgs.OVMFFull.fd ];
+        };
+        swtpm.enable = true;
+      };
+    };
   programs.virt-manager.enable = true;
 
 
@@ -192,8 +210,14 @@
 
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
-  services.openssh.settings.PasswordAuthentication = true;
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = true;
+      X11Forwarding = true;
+
+    };
+  };
 
   system.stateVersion = "23.11"; # Did you read the comment?
 
