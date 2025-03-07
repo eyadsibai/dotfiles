@@ -36,7 +36,6 @@
     ghostty
     lmstudio
     quickemu
-    open-webui
 
   ];
   environment.variables.EDITOR = "nvim";

@@ -37,7 +37,8 @@
     enable32Bit = true;
   };
 
-
+services.open-webui.enable = true;
+services.open-webui.openFirewall = true;
   services.xserver.videoDrivers = [ "nvidia" ];
   services.tailscale.enable = true;
   services.tailscale.useRoutingFeatures = "both";
