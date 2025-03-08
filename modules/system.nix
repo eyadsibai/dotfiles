@@ -28,7 +28,8 @@
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.configurationLimit = 4;
-  boot.kernelPackages = pkgs.linuxPackages;
+  # boot.kernelPackages = pkgs.linuxPackages;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -37,8 +38,8 @@
     enable32Bit = true;
   };
 
-services.open-webui.enable = true;
-services.open-webui.openFirewall = true;
+  services.open-webui.enable = false;
+  services.open-webui.openFirewall = false;
   services.xserver.videoDrivers = [ "nvidia" ];
   services.tailscale.enable = true;
   services.tailscale.useRoutingFeatures = "both";
@@ -52,9 +53,14 @@ services.open-webui.openFirewall = true;
   services.n8n.openFirewall = true;
 
   services.ollama = {
-    enable = false;
-    acceleration = "cuda";
+    enable = true;
+    # acceleration = "cuda";
   };
+
+  services.nextjs-ollama-llm-ui.enable = true;
+
+  programs.pay-respects.aiIntegration = false;
+
 
   services.xrdp.enable = true;
 
