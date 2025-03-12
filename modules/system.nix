@@ -28,8 +28,8 @@
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.configurationLimit = 4;
-  # boot.kernelPackages = pkgs.linuxPackages;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages;
+  # boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -39,7 +39,7 @@
   };
 
   services.open-webui.enable = false;
-  services.open-webui.openFirewall = false;
+  services.open-webui.openFirewall = true;
   services.xserver.videoDrivers = [ "nvidia" ];
   services.tailscale.enable = true;
   services.tailscale.useRoutingFeatures = "both";
@@ -53,14 +53,30 @@
   services.n8n.openFirewall = true;
 
   services.ollama = {
-    enable = true;
+    enable = false;
+    openFirewall = true;
     # acceleration = "cuda";
+	# package = pkgs.ollama-cuda.override { cudaGcc = pkgs.gcc11; };
+    # acceleration = false;
   };
 
-  services.nextjs-ollama-llm-ui.enable = true;
+  services.nextjs-ollama-llm-ui.enable = false;
 
-  programs.pay-respects.aiIntegration = false;
+  # programs.pay-respects.aiIntegration = false;
 
+services.searx = {
+  enable = false;
+  redisCreateLocally = true;
+  settings.server = {
+    bind_address = "::1";
+    # port = yourPort;
+    # WARNING: setting secret_key here might expose it to the nix cache
+    # see below for the sops or environment file instructions to prevent this
+    # secret_key = "Your secret key.";
+  };
+};
+
+services.tika.enable = true;
 
   services.xrdp.enable = true;
 
@@ -113,9 +129,11 @@
     open = false;
     nvidiaSettings = true;
 
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    # package = config.boot.kernelPackages.nvidiaPackages.stable;
     # package = config.boot.kernelPackages.nvidiaPackages.beta;
   };
+
+  hardware.steam-hardware.enable = true;
 
 
 

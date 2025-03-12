@@ -37,6 +37,9 @@
     lmstudio
     quickemu
 
+    gum
+	oterm
+
   ];
   environment.variables.EDITOR = "nvim";
 
