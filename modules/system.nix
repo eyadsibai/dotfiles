@@ -27,7 +27,7 @@
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.configurationLimit = 4;
+  boot.loader.systemd-boot.configurationLimit = 2;
   boot.kernelPackages = pkgs.linuxPackages;
   # boot.kernelPackages = pkgs.linuxPackages_latest;
 
@@ -53,14 +53,14 @@
   services.n8n.openFirewall = true;
 
   services.ollama = {
-    enable = false;
+    enable = true;
     openFirewall = true;
     # acceleration = "cuda";
 	# package = pkgs.ollama-cuda.override { cudaGcc = pkgs.gcc11; };
     # acceleration = false;
   };
 
-  services.nextjs-ollama-llm-ui.enable = false;
+  services.nextjs-ollama-llm-ui.enable = true;
 
   # programs.pay-respects.aiIntegration = false;
 
