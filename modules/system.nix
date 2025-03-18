@@ -38,7 +38,7 @@
     enable32Bit = true;
   };
 
-  services.open-webui.enable = false;
+  services.open-webui.enable = true;
   services.open-webui.openFirewall = true;
   services.xserver.videoDrivers = [ "nvidia" ];
   services.tailscale.enable = true;
@@ -55,7 +55,7 @@
   services.ollama = {
     enable = true;
     openFirewall = true;
-    # acceleration = "cuda";
+    acceleration = "cuda";
 	# package = pkgs.ollama-cuda.override { cudaGcc = pkgs.gcc11; };
     # acceleration = false;
   };
