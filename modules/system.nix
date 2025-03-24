@@ -38,8 +38,9 @@
     enable32Bit = true;
   };
 
-  services.open-webui.enable = true;
+  services.open-webui.enable = false;
   services.open-webui.openFirewall = true;
+
   services.xserver.videoDrivers = [ "nvidia" ];
   services.tailscale.enable = true;
   services.tailscale.useRoutingFeatures = "both";
@@ -49,7 +50,7 @@
     "--accept-routes" # route traffic to other lan
     "--advertise-exit-node" # allow allow routing traffic through this node
   ];
-  services.n8n.enable = true;
+  services.n8n.enable = false;
   services.n8n.openFirewall = true;
 
   services.ollama = {
