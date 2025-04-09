@@ -38,7 +38,7 @@
     enable32Bit = true;
   };
 
-  services.open-webui.enable = false;
+  services.open-webui.enable = true;
   services.open-webui.openFirewall = true;
 
   services.xserver.videoDrivers = [ "nvidia" ];

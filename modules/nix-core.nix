@@ -13,6 +13,19 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.cudaSupport = true;
+  nixpkgs.overlays = [
+    (final: prev: {
+      pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [(
+        python-final: python-prev: {
+          onnxruntime = python-prev.onnxruntime.overridePythonAttrs (
+            oldAttrs: {
+              buildInputs = lib.lists.remove pkgs.onnxruntime oldAttrs.buildInputs;
+            }
+          );
+        }
+      )];
+    })
+  ];
   #  nixpkgs.config.cudaCapabilities = ["12.2" "12.3"];
   # Use this instead of services.nix-daemon.enable if you
   # don't wan't the daemon service to be managed for you.

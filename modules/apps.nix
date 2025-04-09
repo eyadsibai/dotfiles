@@ -38,8 +38,9 @@
     quickemu
 
     gum
-	oterm
-	vscode.fhs
+    oterm
+    vscode.fhs
+    vllm
 
   ];
   environment.variables.EDITOR = "nvim";
