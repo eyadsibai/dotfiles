@@ -1,9 +1,9 @@
 { config, pkgs, ... }:
 {
   # Import shared configuration
-  imports = [
-    ./system.nix
-  ];
+  # imports = [
+  #   ../system.nix
+  # ];
 
   # Enable the X11 windowing system
   services.xserver.enable = true;

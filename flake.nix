@@ -43,28 +43,38 @@
         "${hostname}" = nixpkgs.lib.nixosSystem {
           inherit system specialArgs;
           modules = [
+            # Core system and user config
             ./modules/nix-core.nix
-            ./modules/hyprland.nix
-            ./modules/apps.nix
+            ./modules/system.nix # Merged core, shell, starship HM config
             ./modules/host-users.nix
-            ./modules/coding.nix
+
+            # Desktop Environment (choose one)
+            ./modules/desktop/gnome.nix
+            # ./modules/desktop/hyprland.nix
+
+            # Applications and Development
+            ./modules/apps.nix
+            ./modules/coding.nix # Merged git HM config
+            ./modules/ai/default.nix # AI specific packages
+
+            # Home Manager module itself
             inputs.home-manager.nixosModules.home-manager
             {
+              # Configure HM options here if needed globally,
+              # user-specific settings are now in respective modules.
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
-              home-manager.users.${username} = import ./home;
               home-manager.backupFileExtension = "bak";
               home-manager.extraSpecialArgs = specialArgs;
-
-              # Optionally, use home-manager.extraSpecialArgs to pass
-              # arguments to home.nix
             }
+
+            # Other modules
             inputs.nix-index-database.nixosModules.nix-index
             { programs.nix-index-database.comma.enable = true; }
           ];
         };
       };
-      formatter.${system} = nixpkgs.legacyPackages.${system}.alejandra;
+      formatter.${system} = nixpkgs.legacyPackages.${system}.nixpkgs-fmt;
 
     };
 }

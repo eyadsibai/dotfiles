@@ -121,15 +121,16 @@
   };
 
   # Common system packages
-  environment.systemPackages = with pkgs; [
-    docker-compose
-    virt-manager
-    virt-viewer
-    spice
-    spice-gtk
-    win-virtio # for windows virtio drivers
-    OVMF # UEFI firmware for qemu
-  ];
+  # Moved to modules/apps.nix
+  # environment.systemPackages = with pkgs; [
+  #   docker-compose
+  #   virt-manager
+  #   virt-viewer
+  #   spice
+  #   spice-gtk
+  #   win-virtio # for windows virtio drivers
+  #   OVMF # UEFI firmware for qemu
+  # ];
 
   # Keyboard layout
   services.xserver = {
@@ -156,6 +157,120 @@
     settings = {
       PasswordAuthentication = true;
       X11Forwarding = true;
+    };
+  };
+
+  # Home Manager settings merged from home/ directory
+  home-manager.users.eyad = { pkgs, ... }: {
+    # Set state version (from original home/default.nix)
+    home.stateVersion = "23.11";
+
+    # From home/core.nix
+    home.packages = with pkgs; [
+      nnn # terminal file manager
+
+      # archives
+      zip
+      xz
+      unzip
+      p7zip
+
+      # utils
+      ripgrep # recursively searches directories for a regex pattern
+      jq # A lightweight and flexible command-line JSON processor
+      yq-go # yaml processer https://github.com/mikefarah/yq
+      fzf # A command-line fuzzy finder
+
+      aria2 # A lightweight multi-protocol & multi-source command-line download utility
+      socat # replacement of openbsd-netcat
+      nmap # A utility for network discovery and security auditing
+
+      # misc
+      cowsay
+      file
+      which
+      tree
+      gnused
+      gnutar
+      gawk
+      zstd
+      caddy
+      gnupg
+
+      # productivity
+      glow # markdown previewer in terminal
+    ];
+
+    programs = {
+      # From home/core.nix
+      eza = {
+        enable = true;
+        git = true;
+        icons = "auto";
+      };
+      skim = {
+        enable = true;
+        enableBashIntegration = true;
+      };
+
+      # From home/shell.nix
+      zsh = {
+        enable = true;
+        enableCompletion = true;
+      };
+      bash = {
+        enable = true;
+      };
+      nushell = {
+        enable = true;
+      };
+      carapace = {
+        enable = true;
+        enableNushellIntegration = true;
+        enableZshIntegration = true;
+        enableBashIntegration = true;
+      };
+
+      # From home/starship.nix
+      starship = {
+        enable = true;
+        enableBashIntegration = true;
+        enableZshIntegration = true;
+        enableNushellIntegration = true;
+        enableTransience = true;
+        settings = {
+          format = builtins.concatStringsSep "" [
+            "$nix_shell"
+            "$os"
+            "$directory"
+            "$container"
+            "$git_branch $git_status"
+            "$python"
+            "$nodejs"
+            "$lua"
+            "$rust"
+            "$java"
+            "$c"
+            "$golang"
+            "$cmd_duration"
+            "$status"
+            "$line_break"
+            "[❯](bold purple)"
+            ''''${custom.space}''
+          ];
+          character = {
+            success_symbol = "[›](bold green)";
+            error_symbol = "[›](bold red)";
+          };
+          aws = {
+            symbol = "🅰 ";
+          };
+          gcloud = {
+            format = "on [$symbol$active(\($region\))]($style) ";
+            symbol = "🅶 ️";
+          };
+        };
+      };
     };
   };
 

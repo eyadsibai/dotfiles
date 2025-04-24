@@ -2,7 +2,7 @@
 {
   # Import shared configuration
   imports = [
-    ./system.nix
+    ../system.nix
   ];
 
   # Hyprland configuration
