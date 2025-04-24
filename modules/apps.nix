@@ -39,8 +39,7 @@
 
     gum
     oterm
-    vscode.fhs
-    vllm
+    # vllm
 
   ];
   environment.variables.EDITOR = "nvim";

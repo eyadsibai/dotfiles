@@ -38,7 +38,7 @@
     enable32Bit = true;
   };
 
-  services.open-webui.enable = true;
+  # services.open-webui.enable = true;
   services.open-webui.openFirewall = true;
 
   services.xserver.videoDrivers = [ "nvidia" ];
@@ -57,27 +57,27 @@
     enable = true;
     openFirewall = true;
     acceleration = "cuda";
-    # package = pkgs.ollama-cuda.override { cudaGcc = pkgs.gcc11; };
+	# package = pkgs.ollama-cuda.override { cudaGcc = pkgs.gcc11; };
     # acceleration = false;
   };
 
-  services.nextjs-ollama-llm-ui.enable = true;
+  # services.nextjs-ollama-llm-ui.enable = true;
 
   # programs.pay-respects.aiIntegration = false;
 
-  services.searx = {
-    enable = false;
-    redisCreateLocally = true;
-    settings.server = {
-      bind_address = "::1";
-      # port = yourPort;
-      # WARNING: setting secret_key here might expose it to the nix cache
-      # see below for the sops or environment file instructions to prevent this
-      # secret_key = "Your secret key.";
-    };
+services.searx = {
+  enable = false;
+  redisCreateLocally = true;
+  settings.server = {
+    bind_address = "::1";
+    # port = yourPort;
+    # WARNING: setting secret_key here might expose it to the nix cache
+    # see below for the sops or environment file instructions to prevent this
+    # secret_key = "Your secret key.";
   };
+};
 
-  services.tika.enable = true;
+services.tika.enable = true;
 
   services.xrdp.enable = true;
 
@@ -137,13 +137,11 @@
   hardware.steam-hardware.enable = true;
 
 
-
   # Set your time zone.
   time.timeZone = "Asia/Riyadh";
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
-
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
@@ -173,7 +171,6 @@
   hardware.nvidia-container-toolkit.enable = true;
   users.extraGroups.docker.members = [ "eyad" ];
   users.extraGroups.libvirt.members = [ "eyad" ];
-
 
 
 
