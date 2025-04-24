@@ -17,7 +17,6 @@
 
     htop
     tmux
-    git
     #      unityhub    #  thunderbird
     # nix-index
     #      obs-studio

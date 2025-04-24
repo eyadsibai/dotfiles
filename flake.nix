@@ -19,7 +19,11 @@
 
     stylix.url = "github:danth/stylix";
 
-    #hyprland.url = "github:hyprwm/Hyprland";
+    hyprland.url = "github:hyprwm/Hyprland";
+    hyprland-plugins = {
+      url = "github:hyprwm/hyprland-plugins";
+      inputs.hyprland.follows = "hyprland";
+    };
   };
 
   outputs = { self, nixpkgs, home-manager, nix-index-database, ... }@inputs:
@@ -40,9 +44,10 @@
           inherit system specialArgs;
           modules = [
             ./modules/nix-core.nix
-            ./modules/system.nix
+            ./modules/hyprland.nix
             ./modules/apps.nix
             ./modules/host-users.nix
+            ./modules/coding.nix
             inputs.home-manager.nixosModules.home-manager
             {
               home-manager.useGlobalPkgs = true;

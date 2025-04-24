@@ -38,11 +38,7 @@
 
   programs = {
     # modern vim
-    neovim = {
-      enable = true;
-      defaultEditor = true;
-      vimAlias = true;
-    };
+
 
     # A modern replacement for ‘ls’
     # useful in bash/zsh prompt, not in nushell.
@@ -59,20 +55,5 @@
       enableBashIntegration = true;
     };
 
-    direnv = {
-      enable = true;
-      nix-direnv.enable = true;
-    };
-
-    #   vscode = {
-    #      enable=true;
-    #        extensions = with pkgs.vscode-extensions; [
-    #   dracula-theme.theme-dracula
-    #   vscodevim.vim
-    #   yzhang.markdown-all-in-one
-    #     ms-python.python
-    #    ms-vsliveshare.vsliveshare
-    # ];
-    #   };
   };
 }
