@@ -57,7 +57,7 @@
     enable = true;
     openFirewall = true;
     acceleration = "cuda";
-	# package = pkgs.ollama-cuda.override { cudaGcc = pkgs.gcc11; };
+    # package = pkgs.ollama-cuda.override { cudaGcc = pkgs.gcc11; };
     # acceleration = false;
   };
 
@@ -65,19 +65,19 @@
 
   # programs.pay-respects.aiIntegration = false;
 
-services.searx = {
-  enable = false;
-  redisCreateLocally = true;
-  settings.server = {
-    bind_address = "::1";
-    # port = yourPort;
-    # WARNING: setting secret_key here might expose it to the nix cache
-    # see below for the sops or environment file instructions to prevent this
-    # secret_key = "Your secret key.";
+  services.searx = {
+    enable = false;
+    redisCreateLocally = true;
+    settings.server = {
+      bind_address = "::1";
+      # port = yourPort;
+      # WARNING: setting secret_key here might expose it to the nix cache
+      # see below for the sops or environment file instructions to prevent this
+      # secret_key = "Your secret key.";
+    };
   };
-};
 
-services.tika.enable = true;
+  services.tika.enable = true;
 
   services.xrdp.enable = true;
 
