@@ -1,6 +1,4 @@
-{ config
-, pkgs
-, lib
+{ lib
 , ...
 }: {
   # enable flakes globally

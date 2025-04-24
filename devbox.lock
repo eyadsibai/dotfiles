@@ -52,6 +52,54 @@
         }
       }
     },
+    "nixd@latest": {
+      "last_modified": "2025-04-07T13:23:10Z",
+      "resolved": "github:NixOS/nixpkgs/b0b4b5f8f621bfe213b8b21694bab52ecfcbf30b#nixd",
+      "source": "devbox-search",
+      "version": "2.6.2",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/1jbfcrh6pjkm39276rbjjjnwsdzcsfff-nixd-2.6.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/1jbfcrh6pjkm39276rbjjjnwsdzcsfff-nixd-2.6.2"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/dfx38wq1pp4cyy12m957pj5aqz1s4s5y-nixd-2.6.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/dfx38wq1pp4cyy12m957pj5aqz1s4s5y-nixd-2.6.2"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/l8alyyqpr0kia89l5mb688b7sb9mvh96-nixd-2.6.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/l8alyyqpr0kia89l5mb688b7sb9mvh96-nixd-2.6.2"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/hzakjz06vm740sb998nribsq3xg77g1z-nixd-2.6.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/hzakjz06vm740sb998nribsq3xg77g1z-nixd-2.6.2"
+        }
+      }
+    },
     "nixpkgs-fmt@latest": {
       "last_modified": "2025-03-11T17:52:14Z",
       "resolved": "github:NixOS/nixpkgs/0d534853a55b5d02a4ababa1d71921ce8f0aee4c#nixpkgs-fmt",

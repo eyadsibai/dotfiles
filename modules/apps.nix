@@ -13,24 +13,16 @@
     cachix
     just
     micro
-    nixpkgs-fmt
     firefox
-    micro
 
     htop
     tmux
-    poetry
     git
     #      unityhub    #  thunderbird
     # nix-index
     #      obs-studio
     spotify
-    jetbrains.jdk
-    jetbrains.idea-ultimate
 
-    devenv
-    devbox
-    virtualenv
     timg
     # solaar
     ghostty
