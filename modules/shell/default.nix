@@ -8,6 +8,7 @@
     ./starship.nix
     ./carapace.nix
     ./cli-tools.nix
+    ./yazi.nix # Added yazi
   ];
 
   options.shell = {

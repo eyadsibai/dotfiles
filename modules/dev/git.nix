@@ -6,9 +6,18 @@ in
 {
   options.dev.git = {
     enable = lib.mkEnableOption "Git configuration";
+    includeWorkConfig = lib.mkEnableOption "Include work-specific git config (~/work/.gitconfig)";
+    delta = {
+      enable = lib.mkEnableOption "Enable git delta";
+    };
   };
 
   config = lib.mkIf cfg.enable {
+    # Ensure HM generated config is used
+    home.activation.removeExistingGitconfig = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
+      rm -f ~/.gitconfig
+    '';
+
     environment.systemPackages = with pkgs; [
       git
     ];
@@ -19,17 +28,27 @@ in
         lfs.enable = true;
         userName = "eyadsibai"; # Using the specific username from home/git.nix
         userEmail = useremail; # Using the passed useremail variable
+
+        includes = lib.mkIf cfg.includeWorkConfig [
+          {
+            path = "~/work/.gitconfig";
+            condition = "gitdir:~/work/";
+          }
+        ];
+
         extraConfig = {
           init.defaultBranch = "master";
           push.autoSetupRemote = true;
           pull.rebase = true;
         };
+
         delta = {
-          enable = false;
+          enable = cfg.delta.enable; # Use option
           options = {
             features = "side-by-side";
           };
         };
+
         aliases = {
           br = "branch";
           co = "checkout";

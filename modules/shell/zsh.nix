@@ -2,6 +2,7 @@
 
 let
   cfg = config.shell.zsh;
+  stdenv = pkgs.stdenv;
 in
 {
   options.shell.zsh = {
@@ -16,6 +17,12 @@ in
       programs.zsh = {
         enable = true;
         enableCompletion = true;
+        # Add initExtra for Darwin Homebrew compatibility
+        initExtra = lib.mkIf stdenv.isDarwin ''
+          if [[ $(uname -m) == 'arm64' ]]; then
+           eval "$(/opt/homebrew/bin/brew shellenv)"
+          fi
+        '';
         # Add other zsh settings here if needed
       };
     };

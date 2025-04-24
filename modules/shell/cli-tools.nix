@@ -8,6 +8,8 @@ in
     enable = lib.mkEnableOption "Core CLI tools (nnn, archives, utils, misc, glow)";
     enableEza = lib.mkEnableOption "eza (ls replacement)";
     enableSkim = lib.mkEnableOption "skim (grep replacement)";
+    enableRipgrep = lib.mkEnableOption "ripgrep program (completions, etc)";
+    enableJq = lib.mkEnableOption "jq program (completions, etc)";
   };
 
   config = lib.mkIf cfg.enable {
@@ -56,6 +58,13 @@ in
         skim = lib.mkIf cfg.enableSkim {
           enable = true;
           enableBashIntegration = true; # Consider making conditional
+        };
+        # Enable programs for completions etc.
+        ripgrep = lib.mkIf cfg.enableRipgrep {
+          enable = true;
+        };
+        jq = lib.mkIf cfg.enableJq {
+          enable = true;
         };
       };
     };

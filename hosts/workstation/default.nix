@@ -4,11 +4,13 @@
     ./hardware-configuration.nix
 
     # Import shared modules
-    ../../modules/nix-core.nix
+    # ../../modules/nix-core.nix # Replaced by modules/nix/default.nix
+    ../../modules/nix/default.nix # Core Nix settings
     ../../modules/system.nix # Will be cleaned up later
     ../../modules/shell/default.nix # Shell, prompt, CLI tools
     ../../modules/host-users.nix
-    ../../modules/apps.nix
+    # ../../modules/apps.nix # Replaced by modules/apps/default.nix
+    ../../modules/apps/default.nix # General application config
     # ../../modules/coding.nix # Replaced by dev module
     ../../modules/dev/default.nix # Development tools/languages
     ../../modules/virtualization/default.nix # Virtualization (Docker, Libvirt)
@@ -46,8 +48,12 @@
 
   # Enable desired development features
   dev = {
-    git.enable = true;
-    editors.neovim.enable = true;
+    git = {
+      enable = true;
+      includeWorkConfig = true; # Assuming you want this enabled
+      delta.enable = true; # Assuming you want delta enabled (was true in Darwin)
+    };
+    editors.nixvim.enable = true; # Updated path
     languages.java.enable = true;
     tools.direnv.enable = true;
     tools.nix.enable = true;
@@ -70,6 +76,9 @@
       enableSkim = true;
     };
   };
+
+  # Set Home Manager state version for this user on this host
+  home-manager.users.eyad.home.stateVersion = "23.11";
 
   # Enable desired virtualization features
   virtualization = {
@@ -128,5 +137,54 @@
       enable = true;
       allowUserPowerManagement = true; # Keep existing rule enabled
     };
+  };
+
+  # Configure Nix settings for this host
+  nix = {
+    allowUnfree = true;
+    enableFlakes = true;
+    gc = {
+      automatic = true;
+      deleteOlderThan = "7d";
+    };
+    optimise.automatic = true;
+    linux = { # Linux specific settings
+      sandbox = true;
+      cudaSupport = true;
+      keepOutputs = true;
+      keepDerivations = true;
+      maxJobs = 32;
+      cores = 0;
+      substituters = [
+        "https://cache.nixos.org/"
+        "https://ai.cachix.org"
+        "https://nix-community.cachix.org"
+      ];
+      trustedPublicKeys = [
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "ai.cachix.org-1:N9dzRK+alWwoKXQlnn0H6aUx0lU/mspIoz8hMvGvbbc="
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      ];
+    };
+  };
+
+  # Enable desired apps features
+  apps = {
+    general.enable = true; # Enable the general HM packages
+    system.enable = true; # Enable the general system packages (currently none)
+    firefox.enable = true;
+    micro.enable = true;
+    htop.enable = true;
+    tmux.enable = true;
+    gnupg-agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
+    # Enable apps from Darwin config
+    yt-dlp.enable = true;
+    kakoune.enable = true; # Note: Also enabling helix and nixvim in dev section
+    btop.enable = true;
+    bat.enable = true;
+    zathura.enable = true;
   };
 }

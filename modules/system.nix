@@ -1,9 +1,9 @@
 { config, pkgs, inputs, ... }:
 {
-  imports = [
-    # Include the results of the hardware scan.
-    ../hardware-configuration.nix
-  ];
+  # Hardware config should be imported by the host config (e.g., hosts/workstation/default.nix)
+  # imports = [
+  #  ../hardware-configuration.nix
+  # ];
 
   # programs.zsh.enable = true; # Moved to modules/shell/zsh.nix
   programs.nix-ld.enable = true;
@@ -35,21 +35,6 @@
     enable32Bit = true;
   };
 
-  # Services -> Moved to modules/services/* and modules/ai/ollama.nix
-  # services.tailscale = { ... };
-  # services.n8n = { ... };
-  # services.ollama = { ... }; # Moved to modules/ai/ollama.nix
-  # services.tika.enable = true;
-  # services.xrdp = { ... };
-
-  # Firewall configuration -> Moved to modules/security/firewall.nix
-  # networking.firewall.allowedTCPPorts = [ ... ]; # Handled by service modules or firewall.nix
-  # networking.firewall.allowedUDPPorts = [ 9200 ]; # Moved to firewall.nix
-
-  # Security configuration -> Moved to modules/security/polkit.nix
-  # security.polkit.enable = true;
-  # security.polkit.extraConfig = '' ... '';
-
   # Nvidia configuration
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia = {
@@ -62,27 +47,6 @@
 
   hardware.steam-hardware.enable = true;
 
-  # Virtualization -> Moved to modules/virtualization/*
-  # virtualisation.libvirtd = { ... };
-  # programs.virt-manager.enable = true;
-  # virtualisation.docker.enable = true;
-  # hardware.nvidia-container-toolkit.enable = true;
-  # users.extraGroups.docker.members = [ "eyad" ]; # Handled in docker.nix
-  # users.extraGroups.libvirt.members = [ "eyad" ]; # Handled in libvirt.nix
-  # virtualisation.docker.rootless = { ... };
-
-  # Common system packages
-  # Moved to modules/apps.nix or modules/virtualization/*
-  # environment.systemPackages = with pkgs; [
-  #   docker-compose
-  #   virt-manager
-  #   virt-viewer
-  #   spice
-  #   spice-gtk
-  #   win-virtio # for windows virtio drivers
-  #   OVMF # UEFI firmware for qemu
-  # ];
-
   # Keyboard layout
   services.xserver = {
     xkb.layout = "us";
@@ -92,25 +56,14 @@
   # Printing
   services.printing.enable = true;
 
-  # Audio configuration -> Moved to modules/services/pipewire.nix
-  # services.pulseaudio.enable = false;
-  # security.rtkit.enable = true; # Moved to pipewire.nix
-  # services.pipewire = { ... };
-
-  # SSH server -> Moved to modules/services/openssh.nix
-  # services.openssh = { ... };
-
   # Home Manager settings merged from home/ directory
   # Shell/CLI parts moved to modules/shell/*
+  # Home Manager user block is needed for HM module to function, but specific settings
+  # like stateVersion are better set per-host or within feature modules.
+  # This empty block might still be needed for the HM module to evaluate correctly across all features.
   home-manager.users.eyad = { pkgs, ... }: {
-    # Set state version (from original home/default.nix)
-    home.stateVersion = "23.11";
-
-    # Packages and programs from old home/core.nix and home/shell.nix
-    # are now managed in modules/shell/cli-tools.nix, modules/shell/zsh.nix, etc.
-    # home.packages = [ ... ];
-    # programs = { ... };
+    # All specific HM settings moved to feature modules (shell, dev, etc.) or host config (stateVersion)
   };
 
-  system.stateVersion = "23.11";
+  system.stateVersion = "23.11"; # System state version remains relevant here
 }

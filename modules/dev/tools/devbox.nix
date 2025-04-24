@@ -1,4 +1,4 @@
-{ lib, config, pkgs, ... }:
+{ lib, config, pkgs, username, ... }:
 
 let
   cfg = config.dev.tools.devbox;
@@ -9,7 +9,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = with pkgs; [
+    # environment.systemPackages = with pkgs; [ devbox ]; # Moved to HM
+    home-manager.users."${username}".home.packages = with pkgs; [
       devbox
     ];
   };
