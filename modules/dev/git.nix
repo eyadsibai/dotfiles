@@ -1,33 +1,20 @@
-{ pkgs, username, hostname, useremail, lib, ... }:
+{ lib, config, pkgs, username, useremail, ... }:
+
+let
+  cfg = config.dev.git;
+in
 {
-  services.envfs.enable = true;
+  options.dev.git = {
+    enable = lib.mkEnableOption "Git configuration";
+  };
 
-  environment.systemPackages = with pkgs; [
-    nixd
-    nil
-    gnumake
-    jetbrains.jdk
-    jetbrains.idea-ultimate
-    devbox
-    git
-  ];
+  config = lib.mkIf cfg.enable {
+    environment.systemPackages = with pkgs; [
+      git
+    ];
 
-  home-manager.users."${username}" = {
-    programs = {
-      neovim = {
-        enable = true;
-        defaultEditor = true;
-        vimAlias = true;
-      };
-
-
-      direnv = {
-        enable = true;
-        nix-direnv.enable = true;
-      };
-
-      # From home/git.nix
-      git = {
+    home-manager.users."${username}" = {
+      programs.git = {
         enable = true;
         lfs.enable = true;
         userName = "eyadsibai"; # Using the specific username from home/git.nix
@@ -57,17 +44,6 @@
           foreach = "submodule foreach";
         };
       };
-
-      #   vscode = {
-      #      enable=true;
-      #        extensions = with pkgs.vscode-extensions; [
-      #   dracula-theme.theme-dracula
-      #   vscodevim.vim
-      #   yzhang.markdown-all-in-one
-      #     ms-python.python
-      #    ms-vsliveshare.vsliveshare
-      # ];
-      #   };
     };
   };
 }

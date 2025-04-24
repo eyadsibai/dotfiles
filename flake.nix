@@ -42,36 +42,7 @@
       nixosConfigurations = {
         "${hostname}" = nixpkgs.lib.nixosSystem {
           inherit system specialArgs;
-          modules = [
-            # Core system and user config
-            ./modules/nix-core.nix
-            ./modules/system.nix # Merged core, shell, starship HM config
-            ./modules/host-users.nix
-
-            # Desktop Environment (choose one)
-            ./modules/desktop/gnome.nix
-            # ./modules/desktop/hyprland.nix
-
-            # Applications and Development
-            ./modules/apps.nix
-            ./modules/coding.nix # Merged git HM config
-            ./modules/ai/default.nix # AI specific packages
-
-            # Home Manager module itself
-            inputs.home-manager.nixosModules.home-manager
-            {
-              # Configure HM options here if needed globally,
-              # user-specific settings are now in respective modules.
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.backupFileExtension = "bak";
-              home-manager.extraSpecialArgs = specialArgs;
-            }
-
-            # Other modules
-            inputs.nix-index-database.nixosModules.nix-index
-            { programs.nix-index-database.comma.enable = true; }
-          ];
+          modules = [ ./hosts/workstation ]; # Point to the host-specific configuration
         };
       };
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixpkgs-fmt;

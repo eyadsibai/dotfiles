@@ -31,14 +31,14 @@
     oterm
     # vllm
 
-    # Virtualization packages moved from system.nix
-    docker-compose
-    virt-manager
-    virt-viewer
-    spice
-    spice-gtk
-    win-virtio # for windows virtio drivers
-    OVMF # UEFI firmware for qemu
+    # Virtualization packages moved to modules/virtualization/*
+    # docker-compose
+    # virt-manager
+    # virt-viewer
+    # spice
+    # spice-gtk
+    # win-virtio # for windows virtio drivers
+    # OVMF # UEFI firmware for qemu
   ];
   environment.variables.EDITOR = "nvim";
 
