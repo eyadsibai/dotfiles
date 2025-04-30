@@ -379,7 +379,7 @@ in
     };
 
     programs.tmate.enable = false;
-    programs.pls.enable = true;
+    # programs.pls.enable = true;
     xdg.configFile."yandex-disk/config.cfg" = lib.mkIf (builtins.elem pkgs.yandex-disk homeConfig.home.packages) {
       text = ''
         auth="/home/eyad/.config/yandex-disk/passwd"
@@ -603,7 +603,7 @@ in
 
 
 
-        signald
+        # signald
         turses
         twitch-tui
         # block IO monitoring

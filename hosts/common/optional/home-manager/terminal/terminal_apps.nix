@@ -120,7 +120,7 @@ in
       esac
     '';
   };
-  programs.lsd = { enable = true; };
+  # programs.lsd = { enable = true; };
   programs.man = { enable = false; };
   programs.mcfly = {
     enable = true;
