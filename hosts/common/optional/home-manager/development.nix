@@ -8,7 +8,7 @@
     # secure tunneling to localhost
     insomnia
     # rest client with graphql support
-    beekeeper-studio
+    # beekeeper-studio
     vscode
     # earthly
     t-rec
