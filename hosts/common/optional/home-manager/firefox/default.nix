@@ -17,7 +17,7 @@ in
     package = lib.mkDefault (pkgs.wrapFirefox pkgs.firefox-unwrapped { });
 
     profiles.eyad = {
-      extensions = with addons; [
+      extensions.packages = with addons; [
         ublock-origin
         vimium
         bitwarden

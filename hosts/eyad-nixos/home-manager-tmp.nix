@@ -532,7 +532,7 @@ in
         xdragon
         xsel
         # clipboard support (also for neovim)
-        xsv
+        xan
         yad
         # yet another dialog - fork of zenity
         yq
