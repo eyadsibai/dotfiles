@@ -25,7 +25,7 @@
       # Allow Mopidy to play sound via Pulseaudio that might be running under some
       # other user. See:
       # https://wiki.archlinux.org/index.php/Music_Player_Daemon/Tips_and_tricks#Local_.28with_separate_mpd_user.29
-      hardware.pulseaudio.extraConfig = ''
+      services.pulseaudio.extraConfig = ''
         load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1
       '';
 
