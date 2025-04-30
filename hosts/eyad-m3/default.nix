@@ -51,7 +51,8 @@ in
       deleteOlderThan = "7d";
     };
     optimise.automatic = true; # From Darwin core
-    darwin = { # Darwin specific settings
+    darwin = {
+      # Darwin specific settings
       hostPlatform = "aarch64-darwin"; # From Darwin core
       nixbldGID = 30000; # From Darwin core
     };
@@ -117,7 +118,8 @@ in
     micro.enable = true;
     htop.enable = true;
     tmux.enable = true;
-    gnupg-agent = { # Keep gnupg agent via HM
+    gnupg-agent = {
+      # Keep gnupg agent via HM
       enable = true;
       enableSSHSupport = true;
     };

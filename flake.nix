@@ -56,7 +56,7 @@
 
       # Define hosts
       linuxHost = { hostname = "workstation"; system = nixosSystem; };
-      macHost = { hostname = "macbook"; system = darwinSystem; }; # Placeholder hostname
+      macHost = { hostname = "eyad-m3"; system = darwinSystem; }; # Placeholder hostname
 
     in
     {
@@ -71,7 +71,7 @@
       darwinConfigurations."${macHost.hostname}" = darwin.lib.darwinSystem {
         system = macHost.system;
         specialArgs = mkSpecialArgs macHost.system // { hostname = macHost.hostname; };
-        modules = [ ./hosts/macbook ]; # Point to the Darwin host config (to be created)
+        modules = [ ./hosts/eyad-m3 ]; # Point to the Darwin host config (to be created)
       };
 
       # Formatters for both systems
