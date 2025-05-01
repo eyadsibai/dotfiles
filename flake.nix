@@ -39,7 +39,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, darwin, nixvim, nix-index-database, ... }@inputs: # Add darwin, nixvim
+  outputs = { self, nixpkgs, home-manager, darwin, nixvim, nix-index-database, ... }@inputs: # Remove envfs
     let
       username = "eyad";
       useremail = "eyad.alsibai@gmail.com";
@@ -49,8 +49,8 @@
       darwinSystem = "aarch64-darwin"; # Adjust if your Mac is Intel (x86_64-darwin)
 
       # Helper function to generate specialArgs for each system
-      mkSpecialArgs = system: inputs // {
-        inherit username useremail nixvim;
+      mkSpecialArgs = system: {
+        inherit username useremail nixvim inputs;
         # Add system-specific args if needed later
       };
 
@@ -63,6 +63,7 @@
       # NixOS Configurations (Linux)
       nixosConfigurations."${linuxHost.hostname}" = nixpkgs.lib.nixosSystem {
         system = linuxHost.system;
+        pkgs = nixpkgs.legacyPackages.${linuxHost.system};
         specialArgs = mkSpecialArgs linuxHost.system // { hostname = linuxHost.hostname; };
         modules = [ ./hosts/workstation ]; # Point to the NixOS host config
       };
@@ -70,6 +71,7 @@
       # Darwin Configurations (macOS)
       darwinConfigurations."${macHost.hostname}" = darwin.lib.darwinSystem {
         system = macHost.system;
+        pkgs = nixpkgs.legacyPackages.${macHost.system};
         specialArgs = mkSpecialArgs macHost.system // { hostname = macHost.hostname; };
         modules = [ ./hosts/eyad-m3 ]; # Point to the Darwin host config (to be created)
       };

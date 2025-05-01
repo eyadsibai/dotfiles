@@ -8,8 +8,10 @@ in
     enable = lib.mkEnableOption "Install common fonts for Darwin";
   };
 
-  config = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
-    fonts.packages = with pkgs; [
+  # Define config unconditionally
+  config = {
+    # Use lib.optionals for list assignments
+    fonts.packages = lib.optionals (cfg.enable && pkgs.stdenv.isDarwin) (with pkgs; [
       # From Darwin system.nix
       material-design-icons
       font-awesome
@@ -19,6 +21,6 @@ in
       nerd-fonts.symbols-only
       # From Darwin apps.nix
       sketchybar-app-font
-    ];
+    ]);
   };
 }

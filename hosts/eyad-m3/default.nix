@@ -1,4 +1,4 @@
-{ inputs, system, specialArgs, pkgs, ... }: # Added pkgs
+{ inputs, system, specialArgs, ... }: # Keep system; remove lib and pkgs
 
 let
   username = specialArgs.username; # Get username from specialArgs
@@ -6,12 +6,12 @@ in
 {
   # Import shared modules
   imports = [
-    ../../modules/nix/default.nix # Core Nix settings
+    ../../modules/nix # Core Nix settings
     ../../modules/host-users.nix # Shared host/user settings
-    ../../modules/shell/default.nix
-    ../../modules/dev/default.nix
-    ../../modules/apps/default.nix
-    ../../modules/ai/default.nix
+    ../../modules/shell
+    ../../modules/dev
+    ../../modules/apps
+    # ../../modules/ai
     # ../../modules/services/default.nix # Linux-specific
     # ../../modules/security/default.nix # Linux-specific
     # ../../modules/virtualization/default.nix # Linux-specific
@@ -20,24 +20,28 @@ in
     # Darwin-specific modules
     ../../modules/darwin/default.nix # Imports sketchybar, borders, system-settings etc.
 
+    # Import stylix module directly to avoid circular dependency
+    inputs.stylix.darwinModules.stylix
+
     # Home Manager darwin module itself
     inputs.home-manager.darwinModules.home-manager
-  ];
+  ]; # End of imports list
 
   # Basic Darwin System Settings (Most moved to modules/darwin/*)
-  # users.users.${username}.home = "/Users/${username}"; # HM handles this now
+  users.users.${username}.home = "/Users/${username}"; # HM handles this now
   # system.stateVersion = 5; # Set below
 
   # Home Manager Configuration for this host
   home-manager.useUserPackages = true; # From original Darwin flake
-  home-manager.extraSpecialArgs = specialArgs; # From original Darwin flake
+  # Pass only necessary args to HM to avoid potential recursion
+  home-manager.extraSpecialArgs = { inherit (specialArgs) username hostname nixvim useremail; };
   home-manager.backupFileExtension = "bak"; # From original Darwin flake
   home-manager.users.${username} = {
     # HM settings are imported via the feature modules above
 
     # Set HM state version and home directory
     home.stateVersion = "23.11"; # Match the NixOS host
-    home.homeDirectory = "/Users/${username}"; # Correct home for macOS
+    # home.homeDirectory = "/Users/${username}/"; # Correct home for macOS
   };
 
   # --- Set Custom Options for this Host ---
@@ -94,7 +98,7 @@ in
       idea.enable = false; # Managed by Homebrew Cask on Darwin
       # nix.enable = false;
     };
-    # envfs.enable = false;
+    # envfs.enable = false; # Explicitly disable Linux-only service
   };
 
   # Apps settings (enable features used in Darwin config, disable overlaps with Homebrew)
@@ -102,15 +106,15 @@ in
     general = {
       enable = true;
       # Override default packages to remove those handled by Homebrew Cask
-      packages = with pkgs; [
-        cachix
-        just
-        timg
-        gum
-        oterm
-        # spotify # Managed by Homebrew Cask
-        # ghostty # Managed by Homebrew Cask
-        quickemu
+      packages = [
+        "cachix"
+        "just"
+        "timg"
+        "gum"
+        "oterm"
+        # "spotify" # Managed by Homebrew Cask
+        # "ghostty" # Managed by Homebrew Cask
+        "quickemu"
       ];
     };
     # system.enable = false;
@@ -129,10 +133,10 @@ in
     zathura.enable = true;
   };
 
-  # AI settings (disable features not used in Darwin config)
+  # # AI settings (disable features not used in Darwin config)
   # ai = {
   #   lmstudio.enable = false;
-  #   ollama.enable = false; # No Ollama in original Darwin config
+  #   ollama.enable = false; # Explicitly disable Linux-only service
   # };
 
   # Darwin specific settings

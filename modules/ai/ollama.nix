@@ -18,6 +18,7 @@ in
     };
   };
 
+  # Only apply on Linux systems
   config = lib.mkIf cfg.enable {
     services.ollama = {
       enable = true;

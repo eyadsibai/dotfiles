@@ -1,4 +1,5 @@
-{ lib, config, pkgs, inputs, ... }:
+{ lib, config, pkgs, ... }:
+# Remove inputs from function arguments to avoid circular dependency
 
 let
   cfg = config.darwin.stylix;
@@ -18,12 +19,13 @@ in
     };
   };
 
-  imports = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) [
-    inputs.stylix.darwinModules.stylix # Import the actual stylix darwin module
-  ];
+  # Remove imports section - stylix should be imported directly in the host file
+  # instead of here to avoid circular dependencies
 
-  config = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
-    stylix = {
+  # Define config unconditionally
+  config = {
+    # Use lib.mkIf for non-list attributes
+    stylix = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
       enable = true; # Enable stylix itself
       image = cfg.image;
       polarity = cfg.polarity;

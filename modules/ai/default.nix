@@ -1,6 +1,10 @@
-{ lib, config, pkgs, username, ... }: {
+{ lib, config, pkgs, username, ... }:
+
+{
   imports = [
-    ./ollama.nix
+  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+    # Linux-specific modules
+    ../ollama.nix
   ];
 
   options.ai = {
@@ -10,10 +14,15 @@
     };
   };
 
-  config = lib.mkIf config.ai.lmstudio.enable {
-    # environment.systemPackages = with pkgs; [ lmstudio ]; # Moved to HM
-    home-manager.users."${username}".home.packages = with pkgs; [
-      lmstudio
-    ];
+  # Define config unconditionally
+  config = {
+    # Use lib.optionals for list assignments
+    home-manager.users = lib.mkIf config.ai.lmstudio.enable {
+      "${username}" = {
+        home.packages = with pkgs; [
+          lmstudio
+        ];
+      };
+    };
   };
 }

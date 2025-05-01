@@ -1,7 +1,8 @@
 { lib, pkgs, ... }:
 
 {
-  imports = lib.mkIf pkgs.stdenv.isDarwin [
+  # This module is only imported on Darwin, so the imports list can be unconditional.
+  imports = [
     ./sketchybar.nix
     ./borders.nix
     ./system-settings.nix

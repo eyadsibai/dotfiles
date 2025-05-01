@@ -9,9 +9,10 @@ in
     # Add options for taps, brews, casks, masApps if more control is needed
   };
 
-  config = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
-    # From Darwin darwin/apps.nix
-    homebrew = {
+  # Define config unconditionally
+  config = {
+    # Use lib.mkIf for non-list attributes
+    homebrew = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
       enable = true;
       onActivation = {
         autoUpdate = true;

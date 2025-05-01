@@ -9,9 +9,11 @@ in
     # Could add an option for the NOPASSWD rule if desired
   };
 
-  config = lib.mkIf (cfg.enableTouchIdSudo && pkgs.stdenv.isDarwin) {
-    security.pam.services.sudo_local.touchIdAuth = true;
+  # Define config unconditionally
+  config = {
+    # Use lib.mkIf for non-list attributes
+    security.pam.services.sudo_local.touchIdAuth = lib.mkIf (cfg.enableTouchIdSudo && pkgs.stdenv.isDarwin) true;
     # Consider if this NOPASSWD rule is truly desired - it's a security risk
-    # security.sudo.extraConfig = "%admin ALL = (ALL) NOPASSWD: ALL";
+    # security.sudo.extraConfig = lib.mkIf (cfg.enableTouchIdSudo && pkgs.stdenv.isDarwin) "%admin ALL = (ALL) NOPASSWD: ALL";
   };
 }

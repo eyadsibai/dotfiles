@@ -8,8 +8,10 @@ in
     enable = lib.mkEnableOption "Install Darwin-specific system packages";
   };
 
-  config = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
-    environment.systemPackages = with pkgs; [
+  # Define config unconditionally
+  config = {
+    # Use lib.optionals for list assignments
+    environment.systemPackages = lib.optionals (cfg.enable && pkgs.stdenv.isDarwin) (with pkgs; [
       # From Darwin darwin/apps.nix (excluding those handled by HM or elsewhere)
       statix
       wget
@@ -21,6 +23,6 @@ in
       nb
       cointop
       colima
-    ];
+    ]);
   };
 }

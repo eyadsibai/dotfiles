@@ -9,10 +9,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # environment.systemPackages = with pkgs; [ nixd nil ]; # Moved to HM
-    home-manager.users."${username}".home.packages = with pkgs; [
-      nixd
-      nil
-    ];
+    # Use the Darwin-compatible pattern for home-manager.users
+    home-manager.users = lib.mkIf cfg.enable {
+      "${username}" = {
+        home.packages = with pkgs; [
+          nixd
+          nil
+        ];
+      };
+    };
   };
 }

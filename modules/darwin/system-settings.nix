@@ -9,8 +9,10 @@ in
     # Add more granular options later if needed
   };
 
-  config = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
-    system.defaults = {
+  # Define config unconditionally
+  config = {
+    # Use lib.mkIf for non-list attributes
+    system.defaults = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
       # From Darwin system.nix
       menuExtraClock.Show24Hour = true;
       dock = {
@@ -120,7 +122,7 @@ in
     };
 
     # Keyboard settings from Darwin system.nix
-    system.keyboard = {
+    system.keyboard = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
       enableKeyMapping = true;
       remapCapsLockToControl = false;
       remapCapsLockToEscape = true; # CapsLock -> Escape
@@ -128,7 +130,7 @@ in
     };
 
     # Enable system-wide zsh integration (from Darwin system.nix)
-    programs.zsh.enable = true;
-    environment.shells = [ pkgs.zsh pkgs.nushell ]; # Add shells to system list
+    programs.zsh.enable = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) true;
+    environment.shells = lib.optionals (cfg.enable && pkgs.stdenv.isDarwin) [ pkgs.zsh pkgs.nushell ]; # Add shells to system list
   };
 }

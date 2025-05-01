@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ ... }:
 
 {
   imports = [
@@ -12,7 +12,7 @@
     ./tools/make.nix
     ./tools/devbox.nix
     ./tools/idea.nix
-    ./envfs.nix
+    # ./envfs.nix
   ];
 
   options.dev = {

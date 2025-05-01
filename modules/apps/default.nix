@@ -77,17 +77,26 @@
 
   config = {
     # Configure based on options
-    home-manager.users."${username}".home.packages = lib.mkIf config.apps.general.enable config.apps.general.packages;
-    environment.systemPackages = lib.mkIf config.apps.system.enable config.apps.system.packages;
 
-    home-manager.users."${username}".programs = {
-      firefox.enable = lib.mkIf config.apps.firefox.enable true;
-      micro.enable = lib.mkIf config.apps.micro.enable true;
-      htop.enable = lib.mkIf config.apps.htop.enable true;
-      tmux.enable = lib.mkIf config.apps.tmux.enable true;
-      gnupg.agent = lib.mkIf config.apps.gnupg-agent.enable {
-        enable = true;
-        enableSSHSupport = config.apps.gnupg-agent.enableSSHSupport;
+    # Define lists unconditionally and use optionals to add packages
+    environment.systemPackages = lib.optionals config.apps.system.enable config.apps.system.packages;
+
+    # Use the Darwin-compatible pattern for home-manager.users
+    home-manager.users = {
+      "${username}" = {
+        home.packages = lib.optionals config.apps.general.enable config.apps.general.packages;
+
+        programs = {
+          # Use mkIf for enabling entire program sections
+          firefox.enable = lib.mkIf config.apps.firefox.enable true;
+          micro.enable = lib.mkIf config.apps.micro.enable true;
+          htop.enable = lib.mkIf config.apps.htop.enable true;
+          tmux.enable = lib.mkIf config.apps.tmux.enable true;
+          # gnupg.agent = lib.mkIf config.apps.gnupg-agent.enable {
+          #   enable = true;
+          #   enableSSHSupport = config.apps.gnupg-agent.enableSSHSupport;
+          # };
+        };
       };
     };
   };

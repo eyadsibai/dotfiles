@@ -9,9 +9,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home-manager.users."${username}".programs.bat = {
-      enable = true;
-      # Add config if needed
+    # Use the Darwin-compatible pattern for home-manager.users
+    home-manager.users = lib.mkIf cfg.enable {
+      "${username}" = {
+        programs.bat = {
+          enable = true;
+          # Add config if needed
+        };
+      };
     };
   };
 }

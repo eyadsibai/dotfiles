@@ -9,10 +9,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home-manager.users."${username}" = {
-      programs.nushell = {
-        enable = true;
-        # Add other nushell settings here if needed
+    # Use the Darwin-compatible pattern for home-manager.users
+    home-manager.users = lib.mkIf cfg.enable {
+      "${username}" = {
+        programs.nushell = {
+          enable = true;
+          # Add other nushell settings here if needed
+        };
       };
     };
   };

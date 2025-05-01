@@ -1,4 +1,4 @@
-{ inputs, system, specialArgs, ... }: {
+{ inputs, system, pkgs, specialArgs, ... }: {
   imports = [
     # Import host-specific hardware configuration
     ./hardware-configuration.nix
@@ -148,7 +148,8 @@
       deleteOlderThan = "7d";
     };
     optimise.automatic = true;
-    linux = { # Linux specific settings
+    linux = {
+      # Linux specific settings
       sandbox = true;
       cudaSupport = true;
       keepOutputs = true;

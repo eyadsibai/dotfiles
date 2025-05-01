@@ -13,54 +13,58 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Ensure HM generated config is used
-    home.activation.removeExistingGitconfig = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
-      rm -f ~/.gitconfig
-    '';
-
+    # Add git to system packages
     environment.systemPackages = with pkgs; [
       git
     ];
 
-    home-manager.users."${username}" = {
-      programs.git = {
-        enable = true;
-        lfs.enable = true;
-        userName = "eyadsibai"; # Using the specific username from home/git.nix
-        userEmail = useremail; # Using the passed useremail variable
+    # Use the Darwin-compatible pattern for home-manager.users
+    home-manager.users = lib.mkIf cfg.enable {
+      "${username}" = {
+        # Ensure HM generated config is used (moved inside HM config)
+        home.activation.removeExistingGitconfig = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
+          rm -f ~/.gitconfig
+        '';
 
-        includes = lib.mkIf cfg.includeWorkConfig [
-          {
-            path = "~/work/.gitconfig";
-            condition = "gitdir:~/work/";
-          }
-        ];
+        programs.git = {
+          enable = true;
+          lfs.enable = true;
+          userName = "eyadsibai"; # Using the specific username from home/git.nix
+          userEmail = useremail; # Using the passed useremail variable
 
-        extraConfig = {
-          init.defaultBranch = "master";
-          push.autoSetupRemote = true;
-          pull.rebase = true;
-        };
+          includes = lib.optionals cfg.includeWorkConfig [ # Use optionals for lists
+            {
+              path = "~/work/.gitconfig";
+              condition = "gitdir:~/work/";
+            }
+          ];
 
-        delta = {
-          enable = cfg.delta.enable; # Use option
-          options = {
-            features = "side-by-side";
+          extraConfig = {
+            init.defaultBranch = "master";
+            push.autoSetupRemote = true;
+            pull.rebase = true;
           };
-        };
 
-        aliases = {
-          br = "branch";
-          co = "checkout";
-          st = "status";
-          ls = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
-          ll = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --numstat";
-          cm = "commit -m";
-          ca = "commit -am";
-          dc = "diff --cached";
-          amend = "commit --amend -m";
-          update = "submodule update --init --recursive";
-          foreach = "submodule foreach";
+          delta = {
+            enable = cfg.delta.enable; # Use option
+            options = {
+              features = "side-by-side";
+            };
+          };
+
+          aliases = {
+            br = "branch";
+            co = "checkout";
+            st = "status";
+            ls = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
+            ll = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --numstat";
+            cm = "commit -m";
+            ca = "commit -am";
+            dc = "diff --cached";
+            amend = "commit --amend -m";
+            update = "submodule update --init --recursive";
+            foreach = "submodule foreach";
+          };
         };
       };
     };
