@@ -10,16 +10,13 @@ in
     allowUnfree = lib.mkEnableOption "Allow unfree packages from nixpkgs";
     enableFlakes = lib.mkEnableOption "Enable Nix Flakes support";
     gc = {
-      automatic = lib.mkEnableOption "Automatic garbage collection";
       deleteOlderThan = lib.mkOption {
         type = lib.types.str;
         default = "7d";
         description = "How long to keep garbage collection generations.";
       };
     };
-    optimise = {
-      automatic = lib.mkEnableOption "Automatic store optimisation";
-    };
+
 
     # Linux Specific Settings
     linux = {
@@ -70,10 +67,11 @@ in
     nixpkgs.config.allowUnfree = cfg.allowUnfree;
     # nix.settings.experimental-features = lib.mkIf cfg.enableFlakes [ "nix-command" "flakes" ]; # Merged below
     nix.gc = {
-      automatic = cfg.gc.automatic;
       options = "--delete-older-than ${cfg.gc.deleteOlderThan}";
     };
-    nix.optimise.automatic = cfg.optimise.automatic;
+    # Only set optimise.automatic on Linux, Darwin has its own implementation
+
+    # nix.optimise.automatic = lib.mkIf stdenv.isLinux cfg.optimize.automatic;
 
     # Apply Linux Specific Settings
     nix.settings = lib.mkMerge [
@@ -86,7 +84,7 @@ in
         cores = cfg.linux.cores;
         substituters = cfg.linux.substituters;
         trusted-public-keys = cfg.linux.trustedPublicKeys;
-        auto-optimise-store = cfg.optimise.automatic; # NixOS puts this here
+        auto-optimise-store = lib.mkIf (cfg.optimise ? automatic) cfg.optimise.automatic; # NixOS puts this here
       })
       # Add Darwin specific nix.settings here if needed, e.g.
       # (lib.mkIf stdenv.isDarwin { /* ... */ })

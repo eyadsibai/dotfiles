@@ -33,7 +33,7 @@ in
       spice
       spice-gtk
       win-virtio # for windows virtio drivers
-      OVMF # UEFI firmware for qemu
+      # OVMF # UEFI firmware for qemu
     ];
   };
 }

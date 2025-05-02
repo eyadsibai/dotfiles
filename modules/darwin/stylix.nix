@@ -7,6 +7,11 @@ in
 {
   options.darwin.stylix = {
     enable = lib.mkEnableOption "Stylix theme management for Darwin";
+    base16Scheme = lib.mkOption {
+      # type = lib.types.enum [ "default" "gruvbox" "catppuccin" ];
+      default = "default";
+      description = "Base16 color scheme to use.";
+    };
     image = lib.mkOption {
       type = lib.types.path;
       description = "Path to the wallpaper image for Stylix.";
@@ -27,7 +32,8 @@ in
     # Use lib.mkIf for non-list attributes
     stylix = lib.mkIf (cfg.enable && pkgs.stdenv.isDarwin) {
       enable = true; # Enable stylix itself
-      image = cfg.image;
+      base16Scheme = cfg.base16Scheme or "default"; # Default to "default" if not set
+      # image = cfg.image;
       polarity = cfg.polarity;
       # Add other stylix settings here if needed
     };

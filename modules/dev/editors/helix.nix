@@ -6,15 +6,15 @@ let
   # Helper for prettier formatter command
   prettier = lang: {
     command = lib.getExe pkgs.nodePackages.prettier;
-    args = ["--parser" lang];
+    args = [ "--parser" lang ];
   };
   prettierLangs = map (e: { name = e; formatter = prettier e; });
-  langs = ["css" "scss" "html"];
+  langs = [ "css" "scss" "html" ];
 
   # Helper for deno formatter command
   deno = lang: {
     command = lib.getExe pkgs.deno;
-    args = ["fmt" "-" "--ext" lang];
+    args = [ "fmt" "-" "--ext" lang ];
   };
 
 in
@@ -43,7 +43,7 @@ in
             bash-language-server
             clang-tools # clangd
             cmake-language-server
-            deno # deno lsp
+            pkgs.deno # deno lsp - use pkgs.deno to avoid name collision with the deno formatter function
             nil # nix lsp
             nodePackages.typescript-language-server # js, ts
             basedpyright # python
@@ -55,7 +55,6 @@ in
           ];
 
           settings = {
-            theme = "catppuccin_mocha"; # Assuming catppuccin theme is desired
             editor = {
               color-modes = true;
               completion-trigger-len = 1;
@@ -73,7 +72,7 @@ in
               line-number = "relative";
               lsp.display-inlay-hints = true;
               lsp.display-messages = true;
-              statusline.center = ["position-percentage"];
+              statusline.center = [ "position-percentage" ];
               true-color = true;
               whitespace.characters = {
                 newline = "↴";
@@ -108,28 +107,28 @@ in
                   language-servers = [ "bash-language-server" ];
                   formatter = {
                     command = lib.getExe pkgs.shfmt;
-                    args = ["-i" "2"];
+                    args = [ "-i" "2" ];
                   };
                 }
                 {
                   name = "clojure";
                   injection-regex = "(clojure|clj|edn|boot|yuck)";
-                  file-types = ["clj" "cljs" "cljc" "clje" "cljr" "cljx" "edn" "boot" "yuck"];
+                  file-types = [ "clj" "cljs" "cljc" "clje" "cljr" "cljx" "edn" "boot" "yuck" ];
                   # Add clojure-lsp if needed via extraPackages
                 }
                 {
                   name = "cmake";
                   auto-format = true;
-                  language-servers = ["cmake-language-server"];
+                  language-servers = [ "cmake-language-server" ];
                   formatter = {
                     command = lib.getExe pkgs.cmake-format;
-                    args = ["-"];
+                    args = [ "-" ];
                   };
                 }
                 {
                   name = "javascript";
                   auto-format = true;
-                  language-servers = ["dprint" "typescript-language-server"];
+                  language-servers = [ "dprint" "typescript-language-server" ];
                 }
                 {
                   name = "json";
@@ -138,7 +137,7 @@ in
                 }
                 {
                   name = "markdown";
-                  language-servers = ["dprint" "markdown-oxide"]; # Using markdown-oxide from Darwin config
+                  language-servers = [ "dprint" "markdown-oxide" ]; # Using markdown-oxide from Darwin config
                 }
                 {
                   name = "nix";
@@ -155,17 +154,17 @@ in
                 }
                 {
                   name = "qml";
-                  language-servers = ["qmlls"];
+                  language-servers = [ "qmlls" ];
                 }
                 {
                   name = "typescript";
                   auto-format = true;
-                  language-servers = ["dprint" "typescript-language-server"];
+                  language-servers = [ "dprint" "typescript-language-server" ];
                 }
                 {
                   name = "typst";
                   auto-format = true;
-                  language-servers = ["tinymist"];
+                  language-servers = [ "tinymist" ];
                 }
                 # Add C/C++ with clangd if needed
                 { name = "c"; language-servers = [ "clangd" ]; }
@@ -175,7 +174,7 @@ in
 
             language-server = {
               # Configs for specific LSPs from Darwin config
-              clangd.config.fallbackFlags = ["-std=c++2b"]; # Example, adjust as needed
+              clangd.config.fallbackFlags = [ "-std=c++2b" ]; # Example, adjust as needed
 
               deno-lsp = {
                 # command = lib.getExe pkgs.deno; # Command set by helix module
@@ -187,7 +186,7 @@ in
                   unstable = true;
                   suggest = {
                     completeFunctionCalls = false;
-                    imports = {hosts."https://deno.land" = true;};
+                    imports = { hosts."https://deno.land" = true; };
                   };
                   inlayHints = {
                     enumMemberValues.enabled = true;
@@ -202,7 +201,7 @@ in
 
               nil = {
                 # command = lib.getExe pkgs.nil; # Command set by helix module
-                config.nil.formatting.command = ["${lib.getExe pkgs.alejandra}" "-q"];
+                config.nil.formatting.command = [ "${lib.getExe pkgs.alejandra}" "-q" ];
               };
 
               tinymist = {

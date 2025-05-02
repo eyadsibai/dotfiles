@@ -1,4 +1,4 @@
-{ inputs, system, specialArgs, ... }: # Keep system; remove lib and pkgs
+{ inputs, system, pkgs, specialArgs, ... }: # Add pkgs back
 
 let
   username = specialArgs.username; # Get username from specialArgs
@@ -106,15 +106,15 @@ in
     general = {
       enable = true;
       # Override default packages to remove those handled by Homebrew Cask
-      packages = [
-        "cachix"
-        "just"
-        "timg"
-        "gum"
-        "oterm"
-        # "spotify" # Managed by Homebrew Cask
-        # "ghostty" # Managed by Homebrew Cask
-        "quickemu"
+      packages = with pkgs; [
+        cachix
+        just
+        timg
+        gum
+        oterm
+        # spotify # Managed by Homebrew Cask
+        # ghostty # Managed by Homebrew Cask
+        # quickemu # Removed - causes issues with broken OVMF dependency on Darwin
       ];
     };
     # system.enable = false;
@@ -149,7 +149,8 @@ in
     homebrew.enable = true;
     stylix = {
       enable = true;
-      image = ../../config/darwin/wallpaper.png; # Assuming wallpaper is copied here
+      base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
+      # image = ../../config/darwin/wallpaper.png; # Assuming wallpaper is copied here
       polarity = "dark";
     };
     system-packages.enable = true; # Enable Darwin system packages

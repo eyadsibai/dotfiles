@@ -21,10 +21,19 @@ in
     # Use the Darwin-compatible pattern for home-manager.users
     home-manager.users = lib.mkIf cfg.enable {
       "${username}" = {
-        # Ensure HM generated config is used (moved inside HM config)
-        home.activation.removeExistingGitconfig = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
-          rm -f ~/.gitconfig
-        '';
+        # Instead of using lib.hm.dag which isn't available here,
+        # we'll use a simple initialization script
+        # home.sessionVariables = {
+        #   # This is a dummy variable to ensure the command runs
+        #   GIT_CONFIG_CLEANED = builtins.toString (builtins.derivation {
+        #     name = "clean-gitconfig";
+        #     system = pkgs.system;
+        #     builder = pkgs.writeShellScript "clean-gitconfig.sh" ''
+        #       rm -f ~/.gitconfig
+        #       touch $out
+        #     '';
+        #   });
+        # };
 
         programs.git = {
           enable = true;
@@ -32,10 +41,11 @@ in
           userName = "eyadsibai"; # Using the specific username from home/git.nix
           userEmail = useremail; # Using the passed useremail variable
 
-          includes = lib.optionals cfg.includeWorkConfig [ # Use optionals for lists
+          includes = lib.optionals cfg.includeWorkConfig [
+            # Use optionals for lists
             {
-              path = "~/work/.gitconfig";
-              condition = "gitdir:~/work/";
+              path = "~/dev/.gitconfig";
+              condition = "gitdir:~/dev/";
             }
           ];
 
