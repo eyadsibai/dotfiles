@@ -6,17 +6,7 @@
 , hostname
 , ...
 }:
-let
-  homeConfig = config.home-manager.users.${username};
-
-
-  # nixos-conf-editor = (import (pkgs.fetchFromGitHub {
-  #   owner = "vlinkz";
-  #   repo = "nixos-conf-editor";
-  #   rev = "0.0.6";
-  #   sha256 = "sha256-wJMUY4OCntFfR1BkTsia5tdNmaF5MBB3/n208Q/MPGA=";
-  # })) { };
-in
+# let block removed as variables were unused here
 {
   imports = [
     inputs.hardware.nixosModules.common-cpu-amd-pstate
@@ -28,9 +18,8 @@ in
     ./networking.nix
     ./audio.nix
     ./nix.nix
-    # ./fonts.nix
-    #    ../common/optional/nixos/samba
-    ./home-manager-tmp.nix
+    # Commented-out imports removed
+    ./home.nix
     ./ricing.nix
     ./hyprland
   ];
@@ -152,25 +141,9 @@ in
     font = "Lat2-Terminus16";
     keyMap = "us";
   };
-  # Enable the X11 windowing system.
+  # Enable the X11 windowing system. (Commented block removed)
 
   services.teamviewer.enable = false;
-  #   services.xserver = {
-  #     enable = false;
-  #     sessionCommands = ''
-  #         ${pkgs.xorg.xset}/bin/xset r rate 660 25
-  #       '';
-  #       #   ${pkgs.xorg.setxkbmap}/bin/setxkbmap -layout us -option ctrl:nocaps
-  #       # ${pkgs.xorg.xset}/bin/xset r rate 200 40
-  #     };
-  #     # videoDrivers = [ "amdgpu" ];
-  #
-  #     # use numpad as mouse # make CapsLock behave like Ctrl:
-  #     xkb = {
-  #       options = "grp:win_space_toggle,eurosign:e,keypad:pointerkeys,ctrl:nocaps";
-  #
-  #     };
-  #   };
   services.usbmuxd.enable = true;
   services.gnome.gnome-keyring.enable = true;
   services.dbus.enable = true;
@@ -243,17 +216,11 @@ in
   };
   environment.systemPackages = with pkgs;
     [
-      # arion # support docker-compose ... etc
-      # docker-compose
+      # Keep essential packages, remove commented ones
       vim
       wget
       git
-      # openvpn
-      # wine
-      # native wayland support (unstable)
-      # wineWowPackages.waylandFull
       dig
-      # nixos-conf-editor
     ]
     ++ (lib.optional (!config.virtualisation.docker.enable) docker-client)
     ++ (lib.optional (config.virtualisation.podman.enable) podman-compose);
@@ -270,7 +237,7 @@ in
   services.fwupd.enable = true;
   # nixpkgs.config.allowUnfree = true;
 
-  # services.fstrim.enable = true;
+  services.fstrim.enable = true; # Enable periodic TRIM for SSDs
   # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
@@ -289,15 +256,7 @@ in
   '';
   security.polkit.enable = true;
 
-  # services.xserver.desktopManager.session = [
-  #   {
-  #     name = "HomeManager";
-  #     start = ''
-  #       ${pkgs.runtimeShell} $HOME/.hm-xsession &
-  #       waitPID=$!
-  #     '';
-  #   }
-  # ];
+  # Commented xserver session block removed
 
   security.pam.loginLimits = [
     {
@@ -314,8 +273,8 @@ in
     }
   ];
 
-  # No access time and continuous TRIM for SSD
-  fileSystems."/".options = [ "noatime" "discard" ];
+  # Use `noatime` for performance. Continuous TRIM (`discard`) is removed in favor of periodic TRIM.
+  fileSystems."/".options = [ "noatime" ];
 
   boot.kernel.sysctl = {
     "fs.inotify.max_user_watches" = 524288;
@@ -335,5 +294,4 @@ in
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "22.05";
-  # Did you read the comment?
 }

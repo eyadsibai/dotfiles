@@ -1,71 +1,75 @@
 {
   description = "My Ultimate Flake";
   inputs = {
-    unstable.url = "nixpkgs/nixos-unstable";
-    # stable.url = "nixpkgs/nixos-23.11";
+    # Main Nixpkgs input, tracking nixos-unstable.
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
+    # Hardware-specific configurations.
     hardware.url = "github:NixOS/nixos-hardware";
+    # Nix User Repository for community packages/modules.
     nur.url = "github:nix-community/NUR";
+    # Database for nix-index tool.
     nix-index-database.url = "github:Mic92/nix-index-database";
     nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
 
-
+    # Home Manager for user-level configuration.
     home-manager = {
-      # url = "github:nix-community/home-manager/release-22.11";
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Nix support for macOS.
     darwin = {
       url = "github:lnl7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # NixOS on Windows Subsystem for Linux.
     nixos-wsl.url = "github:nix-community/nixos-wsl";
+    # Utilities for flakes (though custom lib.forAllSystems is used here).
     flake-utils.url = "github:numtide/flake-utils";
+    # Doom Emacs configuration flake.
     nix-doom-emacs.url = "github:nix-community/nix-doom-emacs";
+    # Overlay for nightly Neovim builds.
     neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
 
+    # Firefox builds specifically for Darwin.
     firefox-darwin.url = "github:bandithedoge/nixpkgs-firefox-darwin";
+    # ElKowar's Wacky Widgets.
     eww.url = "github:elkowar/eww";
+    # Development shell environment tooling.
     devshell.url = "github:numtide/devshell";
 
+    # MPV script for IPTV (non-flake input).
     mpv-iptv = {
       url = "github:junners/mpv-iptv";
       flake = false;
     };
 
+    # Wrapper for running GUI apps with proprietary NVIDIA drivers.
     nixgl = {
       url = "github:guibou/nixGL";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # System-wide theming and colorscheme management.
     stylix.url = "github:danth/stylix";
 
-
-    # nixpkgs-wayland = {
-    #   url = "github:nix-community/nixpkgs-wayland";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
-
+    # Hyprland Wayland compositor.
     hyprland = {
       url = "github:hyprwm/hyprland";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Plugins for Hyprland.
     hyprland-plugins = {
       url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
     };
 
+    # Contrib scripts and tools for Hyprland.
     hyprwm-contrib = {
       url = "github:hyprwm/contrib";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # spicetify-nix = {
-    #   url = "github:Gerg-L/spicetify-nix";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
 
 
   };
@@ -80,8 +84,6 @@
         default = import ./overlay { inherit inputs lib; };
         nur = inputs.nur.overlays.default;
         neovim = inputs.neovim-nightly-overlay.overlays.default;
-        # poetry2nix = inputs.poetry2nix.overlay;
-        # nixpkgs-wayland = inputs.nixpkgs-wayland.overlay;
         nixgl = inputs.nixgl.overlay;
         devshell = inputs.devshell.overlays.default;
       };
@@ -91,6 +93,8 @@
           inputs.nixpkgs
           {
             inherit system;
+            # Apply all defined overlays.
+            # builtins.attrValues converts the attribute set 'overlays' into a list of overlay functions.
             overlays = builtins.attrValues overlays;
             config = nixConfig;
           }
@@ -102,20 +106,11 @@
       inherit legacyPackages;
 
 
-
-      # packages = forAllSystems (system:
-      #   let pkgs = legacyPackages.${system};
-      #   in import ./pkgs { inherit inputs pkgs; }
-      # );
-
-
       templates = import ./templates;
 
       nixosModules = import ./modules/nixos;
-      # nixosModules = mapModulesRec ./modules/nixos import;
       darwinModules = import ./modules/darwin;
       homeManagerModules = import ./modules/home-manager;
-      # gamingModules = import ./modules/gaming;
 
       devShells = forAllSystems (system:
         let
@@ -153,7 +148,8 @@
           };
 
         "eyad-nixos" =
-          mkSingleUserNixOSSystem {
+          # Using the consolidated mkNixOSSystem function
+          mkNixOSSystem {
             hostname = "eyad-nixos";
             system = "x86_64-linux";
             inherit legacyPackages;
