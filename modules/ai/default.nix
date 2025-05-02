@@ -2,9 +2,9 @@
 
 {
   imports = [
-  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
-    # Linux-specific modules
-    ../ollama.nix
+    # Import ollama module unconditionally.
+    # Its own configuration should determine if it's active.
+    ./ollama.nix
   ];
 
   options.ai = {

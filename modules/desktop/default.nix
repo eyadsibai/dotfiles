@@ -13,13 +13,15 @@ in
   };
 
   imports = [
-    (lib.mkIf (cfg.environment == "gnome") ./gnome.nix)
-    (lib.mkIf (cfg.environment == "hyprland") ./hyprland.nix)
-    (lib.mkIf (cfg.environment == "kde") ./kde.nix)
-    (lib.mkIf (cfg.environment == "bspwm") ./bspwm.nix)
-    (lib.mkIf (cfg.environment == "i3") ./i3.nix)
-    (lib.mkIf (cfg.environment == "awesome") ./awesome.nix)
-    (lib.mkIf (cfg.environment == "dwm") ./dwm.nix)
-    (lib.mkIf (cfg.environment == "sway") ./sway.nix)
+    # Explicitly import the module content within mkIf
+    (lib.mkIf (cfg.environment == "gnome") (import ./gnome.nix))
+    (lib.mkIf (cfg.environment == "hyprland") (import ./hyprland.nix))
+    (lib.mkIf (cfg.environment == "kde") (import ./kde.nix))
+    (lib.mkIf (cfg.environment == "bspwm") (import ./bspwm.nix))
+    (lib.mkIf (cfg.environment == "i3") (import ./i3.nix))
+    (lib.mkIf (cfg.environment == "awesome") (import ./awesome.nix))
+    (lib.mkIf (cfg.environment == "dwm") (import ./dwm.nix))
+    (lib.mkIf (cfg.environment == "sway") (import ./sway.nix))
+    # No import needed for "none"
   ];
 }
