@@ -2,14 +2,14 @@
   home.packages = with pkgs; [
     # discord using discocss instead
     signal-desktop
-    skypeforlinux
     slack
     # slack-term
     zoom-us
     # element-desktop
     # tdesktop
     # teams
-    # whatsapp-for-linux install whatsie through flatpak instead
+    # whatsapp-for      targets.firefox.profileNames = [];
+-linux install whatsie through flatpak instead
     distrobox
     # gitter
     # cawbird

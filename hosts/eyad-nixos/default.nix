@@ -94,7 +94,7 @@ in
     publish.domain = true;
   };
   # NOTE: required for the wireless card
-  hardware.enableRedistributableFirmware = true;
+  hardware.enableRedistributableFirmgnomeware = true;
   hardware.trackpoint.enable = true;
   hardware.bluetooth = {
     enable = true;
@@ -174,7 +174,7 @@ in
   services.usbmuxd.enable = true;
   services.gnome.gnome-keyring.enable = true;
   services.dbus.enable = true;
-  services.gnome.core-utilities.enable = false;
+  services.gnome.core-apps.enable = false;
   services.netdata = {
     enable = false;
     config = {
@@ -325,7 +325,7 @@ in
   services.localtimed.enable = true;
 
   programs.bash-my-aws.enable = false;
-  programs.thefuck.enable = false;
+  programs.pay-respects.enable = false;
   programs.traceroute.enable = true;
 
   # This value determines the NixOS release from which the default

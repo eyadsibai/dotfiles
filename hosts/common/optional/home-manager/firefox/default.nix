@@ -12,7 +12,7 @@ in
   #   ff2mpv
   # ];
 
-  # config.stylix.targets.firefox.profileNames = ["eyad"];
+  config.stylix.targets.firefox.profileNames = ["eyad"];
   # Browsers
   programs.firefox = {
     enable = true;
