@@ -17,10 +17,11 @@ in
     nixpkgs-fmt
   ];
 
-  environment.homeBinInPath = true;
-  environment.localBinInPath = true;
-
-  environment.variables = { EDITOR = "micro"; };
+  environment = {
+    homeBinInPath = true;
+    localBinInPath = true;
+    variables = { EDITOR = "micro"; };
+  };
 
   nix = {
     package = pkgs.nixVersions.latest;
