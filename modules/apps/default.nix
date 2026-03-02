@@ -21,17 +21,12 @@
       enable = lib.mkEnableOption "General Home Manager packages from old apps.nix";
       packages = lib.mkOption {
         type = with lib.types; listOf package;
-        default = with pkgs; [
-          # CLI/TUI Tools without specific programs.* modules
-          cachix
-          just
-          timg
-          gum
-          oterm
-          # GUI Apps without specific programs.* modules
-          spotify
-          ghostty # Primarily terminal, but often used like a GUI app
-          quickemu
+        default = [
+          "cachix"
+          "just"
+          "timg"
+          "gum"
+          "oterm"
         ];
         description = "List of general packages to install via Home Manager.";
       };
@@ -84,7 +79,7 @@
     # Use the Darwin-compatible pattern for home-manager.users
     home-manager.users = {
       "${username}" = {
-        home.packages = lib.optionals config.apps.general.enable config.apps.general.packages;
+        home.packages = lib.optionals config.apps.general.enable (map (name: pkgs.${name}) config.apps.general.packages);
 
         programs = {
           # Use mkIf for enabling entire program sections

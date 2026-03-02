@@ -1,52 +1,23 @@
-{ inputs, system, pkgs, specialArgs, ... }: # Add pkgs back
-
-let
-  username = specialArgs.username; # Get username from specialArgs
-in
+# Host configuration for eyad-m3 (macOS)
 {
-  # Import shared modules
   imports = [
-    ../../modules/nix # Core Nix settings
-    ../../modules/host-users.nix # Shared host/user settings
+    ../../modules/nix
+    ../../modules/host-and-users.nix
     ../../modules/shell
     ../../modules/dev
     ../../modules/apps
     # ../../modules/ai
-    # ../../modules/services/default.nix # Linux-specific
-    # ../../modules/security/default.nix # Linux-specific
-    # ../../modules/virtualization/default.nix # Linux-specific
-    # ../../modules/desktop/default.nix # Linux-specific
-
-    # Darwin-specific modules
-    ../../modules/darwin/default.nix # Imports sketchybar, borders, system-settings etc.
-
-    # Import stylix module directly to avoid circular dependency
-    inputs.stylix.darwinModules.stylix
-
-    # Home Manager darwin module itself
-    inputs.home-manager.darwinModules.home-manager
-  ]; # End of imports list
-
-  # Basic Darwin System Settings (Most moved to modules/darwin/*)
-  users.users.${username}.home = "/Users/${username}"; # HM handles this now
-  # system.stateVersion = 5; # Set below
-
-  # Home Manager Configuration for this host
-  home-manager.useUserPackages = true; # From original Darwin flake
-  # Pass only necessary args to HM to avoid potential recursion
-  home-manager.extraSpecialArgs = { inherit (specialArgs) username hostname nixvim useremail; };
-  home-manager.backupFileExtension = "bak"; # From original Darwin flake
-  home-manager.users.${username} = {
-    # HM settings are imported via the feature modules above
-
-    # Set HM state version and home directory
-    home.stateVersion = "23.11"; # Match the NixOS host
-    # home.homeDirectory = "/Users/${username}/"; # Correct home for macOS
-  };
+    # ../../modules/services/default.nix
+    # ../../modules/security/default.nix
+    # ../../modules/virtualization/default.nix
+    # ../../modules/desktop/default.nix
+    ../../modules/darwin/default.nix
+    ./module.nix
+  ];
 
   # --- Set Custom Options for this Host ---
+  # (all dynamic config using specialArgs is now in module.nix)
 
-  # Nix settings (using shared module)
   nix = {
     allowUnfree = true;
     enableFlakes = true;
@@ -54,15 +25,13 @@ in
       automatic = true;
       deleteOlderThan = "7d";
     };
-    optimise.automatic = true; # From Darwin core
+    optimise.automatic = true;
     darwin = {
-      # Darwin specific settings
-      hostPlatform = "aarch64-darwin"; # From Darwin core
-      nixbldGID = 30000; # From Darwin core
+      hostPlatform = "aarch64-darwin";
+      nixbldGID = 30000;
     };
   };
 
-  # Shell settings (enable features used in Darwin config)
   shell = {
     zsh.enable = true;
     nushell.enable = true;
@@ -72,74 +41,54 @@ in
       enable = true;
       enableEza = true;
       enableSkim = true;
-      enableRipgrep = true; # From Darwin apps.nix
-      enableJq = true; # From Darwin apps.nix
+      enableRipgrep = true;
+      enableJq = true;
     };
-    yazi.enable = true; # From Darwin shell.nix
+    yazi.enable = true;
   };
 
-  # Dev settings (enable features used in Darwin config)
   dev = {
     git = {
       enable = true;
-      includeWorkConfig = true; # From Darwin git.nix
-      delta.enable = true; # From Darwin git.nix
+      includeWorkConfig = true;
+      delta.enable = true;
     };
     editors = {
       nixvim.enable = true;
       helix.enable = true;
       kakoune.enable = true;
     };
-    # languages.java.enable = false;
     tools = {
       direnv.enable = true;
-      # make.enable = false;
-      # devbox.enable = false;
-      idea.enable = false; # Managed by Homebrew Cask on Darwin
-      # nix.enable = false;
+      idea.enable = false;
     };
-    # envfs.enable = false; # Explicitly disable Linux-only service
   };
 
-  # Apps settings (enable features used in Darwin config, disable overlaps with Homebrew)
   apps = {
     general = {
       enable = true;
-      # Override default packages to remove those handled by Homebrew Cask
-      packages = with pkgs; [
-        cachix
-        just
-        timg
-        gum
-        oterm
-        # spotify # Managed by Homebrew Cask
-        # ghostty # Managed by Homebrew Cask
-        # quickemu # Removed - causes issues with broken OVMF dependency on Darwin
+      packages = [
+        "cachix"
+        "just"
+        "timg"
+        "gum"
+        "oterm"
       ];
     };
-    # system.enable = false;
-    firefox.enable = false; # Managed by Homebrew Cask
+    firefox.enable = false;
     micro.enable = true;
     htop.enable = true;
     tmux.enable = true;
     gnupg-agent = {
-      # Keep gnupg agent via HM
       enable = true;
       enableSSHSupport = true;
     };
-    yt-dlp.enable = false; # Managed by Homebrew Brew
+    yt-dlp.enable = false;
     btop.enable = true;
     bat.enable = true;
     zathura.enable = true;
   };
 
-  # # AI settings (disable features not used in Darwin config)
-  # ai = {
-  #   lmstudio.enable = false;
-  #   ollama.enable = false; # Explicitly disable Linux-only service
-  # };
-
-  # Darwin specific settings
   darwin = {
     sketchybar.enable = true;
     borders.enable = true;
@@ -150,16 +99,11 @@ in
     stylix = {
       enable = true;
       base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
-      # image = ../../config/darwin/wallpaper.png; # Assuming wallpaper is copied here
       polarity = "dark";
     };
-    system-packages.enable = true; # Enable Darwin system packages
+    system-packages.enable = true;
   };
 
-  # Ensure nix-darwin sets the hostname if not done elsewhere
   system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
-  system.stateVersion = 5; # Set state version from original Darwin config
-
-  # Set hostname (can be overridden by a module if needed)
-  networking.hostName = specialArgs.hostname;
+  system.stateVersion = 5;
 }

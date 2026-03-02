@@ -1,47 +1,23 @@
-{ inputs, system, pkgs, specialArgs, ... }: {
+# Host configuration for workstation (NixOS)
+{
   imports = [
-    # Import host-specific hardware configuration
     ./hardware-configuration.nix
-
-    # Import shared modules
-    # ../../modules/nix-core.nix # Replaced by modules/nix/default.nix
-    ../../modules/nix/default.nix # Core Nix settings
-    ../../modules/system.nix # Will be cleaned up later
-    ../../modules/shell/default.nix # Shell, prompt, CLI tools
-    ../../modules/host-users.nix
-    # ../../modules/apps.nix # Replaced by modules/apps/default.nix
-    ../../modules/apps/default.nix # General application config
-    # ../../modules/coding.nix # Replaced by dev module
-    ../../modules/dev/default.nix # Development tools/languages
-    ../../modules/virtualization/default.nix # Virtualization (Docker, Libvirt)
-    ../../modules/services/default.nix # System services
-    ../../modules/security/default.nix # Firewall, Polkit
-    ../../modules/ai/default.nix # AI tools (lmstudio, ollama)
-
-    # Desktop Environment Selection
+    ../../modules/nix/default.nix
+    ../../modules/system.nix
+    ../../modules/shell/default.nix
+    ../../modules/host-and-users.nix
+    ../../modules/apps/default.nix
+    ../../modules/dev/default.nix
+    ../../modules/virtualization/default.nix
+    ../../modules/services/default.nix
+    ../../modules/security/default.nix
+    ../../modules/ai/default.nix
     ../../modules/desktop/default.nix
-
-    # Home Manager module itself
-    inputs.home-manager.nixosModules.home-manager
-    {
-      # Configure HM options here if needed globally,
-      # user-specific settings are now in respective modules.
-      home-manager.useGlobalPkgs = true;
-      home-manager.useUserPackages = true;
-      home-manager.backupFileExtension = "bak";
-      home-manager.extraSpecialArgs = specialArgs; # Pass specialArgs down
-    }
-
-    # Other modules
-    inputs.nix-index-database.nixosModules.nix-index
-    { programs.nix-index-database.comma.enable = true; }
+    ./module.nix
+    # Home Manager and nix-index-database modules are added in flake.nix, not here
   ];
 
-  # Set hostname (can also be done in modules/host-users.nix if preferred)
-  networking.hostName = specialArgs.hostname;
-
-  # Set system state version
-  system.stateVersion = "23.11"; # Or your desired version
+  system.stateVersion = "23.11";
 
   # --- Set Custom Options ---
   desktop.environment = "gnome"; # Set the desired desktop environment
@@ -54,6 +30,7 @@
       delta.enable = true; # Assuming you want delta enabled (was true in Darwin)
     };
     editors.nixvim.enable = true; # Updated path
+    editors.kakoune.enable = true; # Moved from apps section to correct path
     languages.java.enable = true;
     tools.direnv.enable = true;
     tools.nix.enable = true;
@@ -171,7 +148,16 @@
 
   # Enable desired apps features
   apps = {
-    general.enable = true; # Enable the general HM packages
+    general = {
+      enable = true;
+      packages = [
+        "cachix"
+        "just"
+        "timg"
+        "gum"
+        "oterm"
+      ];
+    };
     system.enable = true; # Enable the general system packages (currently none)
     firefox.enable = true;
     micro.enable = true;
@@ -183,7 +169,6 @@
     };
     # Enable apps from Darwin config
     yt-dlp.enable = true;
-    kakoune.enable = true; # Note: Also enabling helix and nixvim in dev section
     btop.enable = true;
     bat.enable = true;
     zathura.enable = true;

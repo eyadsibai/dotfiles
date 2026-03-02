@@ -51,7 +51,7 @@
       # Helper function to generate specialArgs for each system
       mkSpecialArgs = system: {
         inherit username useremail nixvim inputs;
-        # Add system-specific args if needed later
+        # Do NOT include pkgs here to avoid recursion
       };
 
       # Define hosts
@@ -63,17 +63,30 @@
       # NixOS Configurations (Linux)
       nixosConfigurations."${linuxHost.hostname}" = nixpkgs.lib.nixosSystem {
         system = linuxHost.system;
-        pkgs = nixpkgs.legacyPackages.${linuxHost.system};
         specialArgs = mkSpecialArgs linuxHost.system // { hostname = linuxHost.hostname; };
-        modules = [ ./hosts/workstation ]; # Point to the NixOS host config
+        modules = [
+          ./hosts/workstation
+          inputs.home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "bak";
+            home-manager.extraSpecialArgs = mkSpecialArgs linuxHost.system // { hostname = linuxHost.hostname; };
+          }
+          inputs.nix-index-database.nixosModules.nix-index
+          { programs.nix-index-database.comma.enable = true; }
+        ];
       };
 
       # Darwin Configurations (macOS)
       darwinConfigurations."${macHost.hostname}" = darwin.lib.darwinSystem {
         system = macHost.system;
-        pkgs = nixpkgs.legacyPackages.${macHost.system};
         specialArgs = mkSpecialArgs macHost.system // { hostname = macHost.hostname; };
-        modules = [ ./hosts/eyad-m3 ]; # Point to the Darwin host config (to be created)
+        modules = [
+          ./hosts/eyad-m3
+          inputs.stylix.darwinModules.stylix
+          inputs.home-manager.darwinModules.home-manager
+        ];
       };
 
       # Formatters for both systems
