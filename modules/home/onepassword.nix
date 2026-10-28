@@ -22,6 +22,21 @@ let
       "${home}/.1password/agent.sock";
   # At the machine itself, or over SSH without a forwarded agent (then the local
   # app is the only key source left; its prompt shows on this machine's screen)
+  opSshSign =
+    if isDarwin then
+      "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+    else
+      "${pkgs._1password-gui}/bin/op-ssh-sign";
+  # op-ssh-sign asks this machine's 1Password app, whose prompt shows on this
+  # machine's screen. Over SSH with a forwarded agent, sign through that agent
+  # instead, so the 1Password you're sitting at approves it
+  signer = pkgs.writeShellScript "git-ssh-sign" ''
+    if [ -n "$SSH_CONNECTION" ] && [ -n "$SSH_AUTH_SOCK" ]; then
+      exec ${pkgs.openssh}/bin/ssh-keygen "$@"
+    fi
+    exec "${opSshSign}" "$@"
+  '';
+
   # Kept at a fixed path: an option name (the Match line) can't refer to the store
   useLocalAgent = ".ssh/use-local-1password-agent";
 in
@@ -43,11 +58,7 @@ in
       format = "ssh";
       key = signingKey;
       signByDefault = true;
-      signer =
-        if isDarwin then
-          "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
-        else
-          "${pkgs._1password-gui}/bin/op-ssh-sign";
+      signer = "${signer}";
     };
     # Lets `git log --show-signature` verify our own commits
     settings.gpg.ssh.allowedSignersFile = "${config.xdg.configHome}/git/allowed_signers";

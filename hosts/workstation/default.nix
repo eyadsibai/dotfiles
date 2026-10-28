@@ -94,6 +94,8 @@
 
   home-manager.users.${username} = {
     home.packages = [ pkgs.lmstudio ];
+    # The Firefox profile that already holds this machine's history, logins and tabs
+    programs.firefox.profiles.default.path = "go1slwu4.default-1734374689132";
     # System monitor with the NVIDIA GPU panel
     programs.btop.package = pkgs.btop.override { cudaSupport = true; };
     home.stateVersion = "23.11";

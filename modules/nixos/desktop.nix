@@ -116,6 +116,7 @@ in
         imports = [
           ../home/omarchy.nix
           ../home/desktop-apps.nix
+          ../home/firefox.nix
         ];
         programs.nixarchy.package = omarchy;
 

@@ -2,7 +2,6 @@
 { pkgs, ... }:
 {
   home.packages = with pkgs; [
-    firefox
     ghostty
     spotify
     jetbrains.idea
