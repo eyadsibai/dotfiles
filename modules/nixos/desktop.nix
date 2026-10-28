@@ -18,6 +18,37 @@ let
   # (which would otherwise be compiled locally, as its cache is not trusted here)
   omarchy = (pkgs.extend inputs.nixarchy.overlays.default).omarchy.override {
     inherit (pkgs) hyprland;
+    inherit chromium;
+  };
+
+  # Omarchy's Chromium flags (config/chromium-flags.conf) with its bundled extensions
+  # (copy URL, yt-dlp, WhatsApp). On Arch, Chromium's launcher reads that file and the
+  # extensions sit in /usr/share/omarchy; nixpkgs' launcher reads no flags file, so
+  # they are built in here, from the system profile's copy of the Omarchy tree
+  omarchyExtensions = "/run/current-system/sw/share/omarchy/default/chromium/extensions";
+  chromium = pkgs.chromium.override {
+    commandLineArgs = [
+      "--password-store=gnome-libsecret"
+      # One --enable-features only: Chromium keeps the last, so repeat the Wayland one
+      # nixpkgs adds (NIXOS_OZONE_WL) instead of replacing it
+      "--enable-features=WaylandWindowDecorations,TouchpadOverscrollHistoryNavigation"
+      "--load-extension=${
+        lib.concatMapStringsSep "," (e: "${omarchyExtensions}/${e}") [
+          "copy-url"
+          "yt-dlp"
+          "whatsapp-slim"
+        ]
+      }"
+      "--no-default-browser-check"
+    ];
+  };
+
+  # Copy URL and yt-dlp talk to small host programs. Omarchy registers them once, by
+  # store path, which the next update removes; re-register them at every activation
+  # through the stable /run/current-system path instead
+  nativeHosts = {
+    "com.omarchy.copy_url" = "omarchy-chromium-copy-url-host";
+    "com.omarchy.ytdlp" = "omarchy-chromium-ytdlp-host";
   };
 
   # nixarchy's session launcher, read from its wayland-sessions entry at login
@@ -72,29 +103,43 @@ in
       };
     };
 
-    home-manager.users.${username} = {
-      imports = [
-        ../home/omarchy.nix
-        ../home/desktop-apps.nix
-      ];
-      programs.nixarchy.package = omarchy;
+    # A module function, for Home Manager's lib (lib.hm.dag)
+    home-manager.users.${username} =
+      { lib, ... }:
+      {
+        imports = [
+          ../home/omarchy.nix
+          ../home/desktop-apps.nix
+        ];
+        programs.nixarchy.package = omarchy;
 
-      # Lock the autologin session as soon as the shell can draw the lock screen.
-      # Later logins went through the greeter and are left alone.
-      xdg.configFile."omarchy/hooks/post-boot.d/10-lock-after-autologin" = lib.mkIf cfg.autoLogin {
-        text = ''
-          marker="/tmp/omarchy-autolock-$USER-$(cat /proc/sys/kernel/random/boot_id)"
-          [[ -e $marker ]] && exit 0
-          touch "$marker"
-          for _ in $(seq 30); do
-            omarchy-system-lock
-            sleep 1
-            omarchy-hyprland-session-locked && exit 0
-          done
-          echo "Could not lock the session after autologin" >&2
-          exit 1
-        '';
+        home.activation.omarchyChromiumHosts = lib.hm.dag.entryAfter [ "writeBoundary" ] (
+          lib.concatStrings (
+            lib.mapAttrsToList (name: host: ''
+              run mkdir -p "$HOME/.config/chromium/NativeMessagingHosts"
+              [[ -v DRY_RUN ]] || ${lib.getExe pkgs.gnused} 's|__HOST_PATH__|/run/current-system/sw/bin/${host}|' \
+                ${omarchy}/share/omarchy/default/chromium/native-messaging-hosts/${name}.json \
+                > "$HOME/.config/chromium/NativeMessagingHosts/${name}.json"
+            '') nativeHosts
+          )
+        );
+
+        # Lock the autologin session as soon as the shell can draw the lock screen.
+        # Later logins went through the greeter and are left alone.
+        xdg.configFile."omarchy/hooks/post-boot.d/10-lock-after-autologin" = lib.mkIf cfg.autoLogin {
+          text = ''
+            marker="/tmp/omarchy-autolock-$USER-$(cat /proc/sys/kernel/random/boot_id)"
+            [[ -e $marker ]] && exit 0
+            touch "$marker"
+            for _ in $(seq 30); do
+              omarchy-system-lock
+              sleep 1
+              omarchy-hyprland-session-locked && exit 0
+            done
+            echo "Could not lock the session after autologin" >&2
+            exit 1
+          '';
+        };
       };
-    };
   };
 }
