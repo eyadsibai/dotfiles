@@ -57,8 +57,8 @@
     enableNushellIntegration = true;
   };
 
-  # Omarchy's prompt (config/starship.toml from the Omarchy tree, copied here so the
-  # Macs match); nushell is the only shell Omarchy's own init doesn't cover
+  # Omarchy's prompt plus context that shows only when it applies (see starship.toml),
+  # the same on every host; nushell is the only shell Omarchy's own init doesn't cover
   programs.starship = {
     enable = true;
     enableBashIntegration = true;

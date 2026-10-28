@@ -1,6 +1,24 @@
+# Omarchy's prompt (config/starship.toml from the Omarchy tree), plus context that
+# only appears when it applies, so the everyday prompt is exactly upstream's:
+#
+#   eyad@workstation            only over SSH (or as root)
+#   dotfiles master (a1b2c3d)   upstream's directory + git, plus a detached HEAD's
+#   (REBASING 2/5)              commit and a rebase/merge in progress
+#   ❄️                          inside a nix or devenv shell
+#   🐍 3.12 (venv) ⬢ 22         language versions, only inside such a project
+#   🅰 profile  🅶 project      aws / gcloud context, only when set
+#   zsh / nu                    which shell, when it isn't bash
+#   ✦ 2                         background jobs
+#   3.5s  1                     commands over 2 s, and non-zero exit codes
+#
+# Everything is on the left: bash has no right prompt without ble.sh.
+
 add_newline = true
-command_timeout = 200
-format = "[$directory$git_branch$git_status]($style)$character"
+# Upstream's 200 ms; python/java version lookups inside a project can exceed it
+command_timeout = 500
+format = "$username$hostname[$directory$git_branch$git_commit$git_status$git_state]($style)$nix_shell$python$nodejs$rust$golang$java$lua$c$aws$gcloud$container$shell$jobs$cmd_duration$status$character"
+
+# ── Upstream Omarchy ────────────────────────────────────────────────────────
 
 [character]
 error_symbol = "[✗](bold cyan)"
@@ -22,11 +40,121 @@ style      = "cyan"
 ahead      = "⇡${count} "
 diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
 behind     = "⇣${count} "
-conflicted = " "
-up_to_date = " "
+conflicted = " "
+up_to_date = " "
 untracked  = "? "
-modified   = " "
+modified   = " "
 stashed    = ""
 staged     = ""
 renamed    = ""
 deleted    = ""
+
+# ── Additions ───────────────────────────────────────────────────────────────
+
+# Shown over SSH, or when root (show_always is off)
+[username]
+format = "[$user]($style)"
+style_user = "italic cyan"
+style_root = "bold red"
+
+[hostname]
+ssh_only = true
+format = "[@$hostname]($style) "
+style = "italic cyan"
+
+# A detached HEAD shows its commit (and tag) where the branch would be
+[git_commit]
+format = "[\\($hash$tag\\)]($style) "
+style = "italic cyan"
+tag_disabled = false
+
+[git_state]
+format = "[\\($state( $progress_current/$progress_total)\\)]($style) "
+style = "bold cyan"
+
+# Set by nix develop, nix shell and devenv. Not `heuristic`: that looks for
+# /nix/store in PATH, which every NixOS login shell has
+[nix_shell]
+format = "[$symbol]($style)"
+symbol = "❄️ "
+style = "bold cyan"
+
+[python]
+version_format = "${raw}"
+format = "[$symbol$version( \\($virtualenv\\))]($style) "
+style = "cyan"
+
+[nodejs]
+version_format = "${raw}"
+format = "[$symbol$version]($style) "
+style = "cyan"
+
+[rust]
+version_format = "${raw}"
+format = "[$symbol$version]($style) "
+style = "cyan"
+
+[golang]
+version_format = "${raw}"
+format = "[$symbol$version]($style) "
+style = "cyan"
+
+[java]
+version_format = "${raw}"
+format = "[$symbol$version]($style) "
+style = "cyan"
+
+[lua]
+version_format = "${raw}"
+format = "[$symbol$version]($style) "
+style = "cyan"
+
+[c]
+version_format = "${raw}"
+format = "[$symbol$version]($style) "
+style = "cyan"
+
+[aws]
+format = "[$symbol($profile )(\\($region\\) )]($style)"
+symbol = "🅰 "
+style = "cyan"
+
+[gcloud]
+format = "[$symbol$active(\\($region\\)) ]($style)"
+symbol = "🅶 "
+style = "cyan"
+
+[container]
+format = "[$symbol$name]($style) "
+symbol = "📦 "
+style = "cyan"
+
+# Nothing for bash (the login shell); the others name themselves
+[shell]
+disabled = false
+format = "[$indicator]($style)"
+bash_indicator = ""
+zsh_indicator = "zsh "
+nu_indicator = "nu "
+style = "italic cyan"
+
+[jobs]
+format = "[$symbol$number]($style) "
+number_threshold = 1
+symbol = "✦ "
+style = "cyan"
+
+# Slow commands get their time in the prompt; after a minute, a desktop
+# notification too (useful for builds started and then forgotten)
+[cmd_duration]
+min_time = 2_000
+format = "[$duration]($style) "
+style = "italic cyan"
+show_notifications = true
+min_time_to_notify = 60_000
+
+# The exit code; upstream's ✗ character already marks the failure
+[status]
+disabled = false
+format = "[$status]($style) "
+style = "bold red"
