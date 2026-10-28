@@ -31,6 +31,10 @@
     })
   '';
 
+  # Keep the root disk tidy: cap the journal (it had grown to 4 GB) and empty /tmp on boot
+  services.journald.settings.Journal.SystemMaxUse = "1G";
+  boot.tmp.cleanOnBoot = true;
+
   services.printing.enable = true;
 
   services.pulseaudio.enable = false;
@@ -45,7 +49,7 @@
   programs.zsh.enable = true;
   # Run unpatched dynamic binaries (e.g. downloaded tools, pip wheels)
   programs.nix-ld.enable = true;
-  # Kept at system level: it exports SSH_AUTH_SOCK to the whole GNOME session,
+  # Kept at system level: it exports SSH_AUTH_SOCK to the whole desktop session,
   # not just shells (Home Manager's gpg-agent only reaches shells)
   programs.gnupg.agent = {
     enable = true;

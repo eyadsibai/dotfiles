@@ -22,9 +22,7 @@
     "usb_storage"
     "sd_mod"
   ];
-  boot.initrd.kernelModules = [ "nvidia" ];
   boot.kernelModules = [ "kvm-intel" ];
-  boot.extraModulePackages = [ config.boot.kernelPackages.nvidia_x11 ];
 
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/e44a14ea-0644-49a3-a3c5-d66ad27a1f94";

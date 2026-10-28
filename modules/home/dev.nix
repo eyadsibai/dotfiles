@@ -7,7 +7,7 @@ in
     gnumake
     nil
     nixd
-    devbox
+    devenv # per-project environments: devenv.nix + `use devenv` in .envrc
     jetbrains.jdk
   ];
 

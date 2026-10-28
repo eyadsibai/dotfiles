@@ -8,15 +8,20 @@
       "flakes"
     ];
     sandbox = true;
-    # Up to 4 builds at once, 8 cores each: 32 threads in total, matching the CPU
-    # (cores = 0 would let every one of the parallel builds use all 32)
-    max-jobs = 4;
+    # Up to 16 builds at once, 8 cores each. Most builds are tiny (config files,
+    # wrappers), so many in parallel keeps the 32 threads busy; the rare big
+    # compiles running together can oversubscribe, which 125 GB of RAM absorbs
+    max-jobs = 16;
     cores = 8;
     # Keep build inputs around so dev shells survive garbage collection
     keep-outputs = true;
     keep-derivations = true;
 
     substituters = [
+      # Mirror of cache.nixos.org, tried first: the route to cache.nixos.org's CDN
+      # caps each download at ~1 MB/s here, the mirror does 3-4x that. Same files,
+      # signed by the cache.nixos.org key, so nothing new is trusted.
+      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store?priority=30"
       "https://cache.nixos.org/"
       "https://nix-community.cachix.org"
       # Prebuilt cudaSupport packages (replaces the retired cuda-maintainers.cachix.org)

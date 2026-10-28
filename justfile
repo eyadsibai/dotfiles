@@ -39,3 +39,7 @@ secret name:
 # List system generations
 generations:
     nixos-rebuild list-generations
+
+# Boot this configuration in a throwaway VM (no NVIDIA) to try desktop changes
+vm:
+    nix run .#nixosConfigurations.{{host}}.config.system.build.vm

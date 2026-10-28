@@ -18,6 +18,16 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Omarchy's desktop packaged for NixOS. Pinned to a release tag: bump on
+    # purpose, after the Arch machines are on the same Omarchy version.
+    nixarchy = {
+      url = "github:olafkfreund/nixarchy/v4.0.6-1";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+      inputs.sops-nix.follows = "sops-nix";
+      inputs.nix-index-database.follows = "nix-index-database";
+    };
   };
 
   outputs =
