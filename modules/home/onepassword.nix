@@ -22,18 +22,21 @@ let
       "${home}/.1password/agent.sock";
   # At the machine itself, or over SSH without a forwarded agent (then the local
   # app is the only key source left; its prompt shows on this machine's screen)
-  useLocalAgent = pkgs.writeShellScript "use-local-1password-agent" ''
-    [ -z "$SSH_CONNECTION" ] || [ -z "$SSH_AUTH_SOCK" ]
-  '';
+  # Kept at a fixed path: an option name (the Match line) can't refer to the store
+  useLocalAgent = ".ssh/use-local-1password-agent";
 in
 {
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks.local-1password-agent = {
-      match = "host * exec ${useLocalAgent}";
-      identityAgent = ''"${agentSocket}"'';
-    };
+    settings."Match host * exec ~/${useLocalAgent}".IdentityAgent = ''"${agentSocket}"'';
+  };
+  home.file.${useLocalAgent} = {
+    executable = true;
+    text = ''
+      #!/bin/sh
+      [ -z "$SSH_CONNECTION" ] || [ -z "$SSH_AUTH_SOCK" ]
+    '';
   };
 
   # Sign commits with the same key, held in 1Password (the "id_rsa" item, an ed25519 key)
