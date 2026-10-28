@@ -29,11 +29,6 @@
   # big compiles running together can oversubscribe, which 125 GB of RAM absorbs
   nix.settings.max-jobs = 16;
   nix.settings.cores = 8;
-  # Prebuilt cudaSupport packages (replaces the retired cuda-maintainers.cachix.org)
-  nix.settings.substituters = [ "https://cache.nixos-cuda.org" ];
-  nix.settings.trusted-public-keys = [
-    "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M="
-  ];
 
   networking.hostName = "workstation";
 

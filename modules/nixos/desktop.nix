@@ -73,6 +73,10 @@ in
       # Only cache.nixos.org and the caches in nix.nix are trusted; nixarchy's own
       # pieces are small and build locally
       binaryCaches = false;
+      # Except the community CUDA cache (cache.nixos-cuda.org): cache.nixos.org has
+      # no cudaSupport builds, and ollama-cuda alone is a huge compile. nixarchy adds
+      # it only where hardware.nvidia is enabled, so the laptop and `just vm` skip it
+      cudaCache = true;
       # Leave Claude Code's config, editors and command-not-found as Home Manager has them
       mcp = false;
       nixSkills = false;
