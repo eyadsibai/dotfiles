@@ -33,6 +33,10 @@
     ];
 
     casks = [
+      # SSH agent and commit signing (modules/home/onepassword.nix); turn the agent on
+      # once in the app: Settings → Developer → "Use the SSH agent"
+      "1password"
+      "1password-cli"
       "codex"
       "kitty"
       "visual-studio-code"
