@@ -4,5 +4,6 @@
     ./cli.nix
     ./shell.nix
     ./dev.nix
+    ./onepassword.nix
   ];
 }

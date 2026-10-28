@@ -49,12 +49,10 @@
   programs.zsh.enable = true;
   # Run unpatched dynamic binaries (e.g. downloaded tools, pip wheels)
   programs.nix-ld.enable = true;
-  # Kept at system level: it exports SSH_AUTH_SOCK to the whole desktop session,
-  # not just shells (Home Manager's gpg-agent only reaches shells)
-  programs.gnupg.agent = {
-    enable = true;
-    enableSSHSupport = true;
-  };
+  # GPG agent for signing/encryption only; SSH keys come from 1Password's agent,
+  # exported to the whole desktop session (not just shells) from here
+  programs.gnupg.agent.enable = true;
+  environment.sessionVariables.SSH_AUTH_SOCK = "$HOME/.1password/agent.sock";
 
   # Populate /bin and /usr/bin for scripts with hard-coded paths
   services.envfs.enable = true;
