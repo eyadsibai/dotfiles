@@ -60,9 +60,6 @@
     "--advertise-exit-node"
   ];
 
-  # TODO: document what listens on this port
-  networking.firewall.allowedUDPPorts = [ 9200 ];
-
   # `just vm`: this configuration in a throwaway QEMU VM, to try desktop changes
   # before rebooting into them. No GPU passthrough, so the NVIDIA bits are off.
   virtualisation.vmVariant = {
