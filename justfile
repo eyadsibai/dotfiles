@@ -1,26 +1,33 @@
-host := "workstation"
+# Host to build: this machine's name unless given, e.g. `just build eyad-nixos`
+host := `hostname -s`
+# `nh os` on NixOS, `nh darwin` on macOS
+nh := if os() == "macos" { "nh darwin" } else { "nh os" }
 
 # List recipes
 default:
     @just --list
 
 # Build, show the package diff, then activate
-switch:
-    nh os switch . -H {{host}}
+switch name=host:
+    {{nh}} switch . -H {{name}}
 
 # Build and show the diff without activating
-build:
-    nh os build . -H {{host}}
+build name=host:
+    {{nh}} build . -H {{name}}
 
-# Activate on next boot only
-boot:
-    nh os boot . -H {{host}}
+# Activate on next boot only (NixOS)
+boot name=host:
+    nh os boot . -H {{name}}
+
+# Boot a NixOS host in a throwaway VM (no NVIDIA) to try desktop changes
+vm name=host:
+    nix run .#nixosConfigurations.{{name}}.config.system.build.vm
 
 # Update all flake inputs (or one: just update nixpkgs)
 update *inputs:
     nix flake update {{inputs}}
 
-# Evaluate the configuration and run flake checks
+# Evaluate every host and run flake checks
 check:
     nix flake check
 
@@ -36,10 +43,6 @@ clean:
 secret name:
     sops secrets/{{name}}.yaml
 
-# List system generations
+# List system generations (NixOS)
 generations:
     nixos-rebuild list-generations
-
-# Boot this configuration in a throwaway VM (no NVIDIA) to try desktop changes
-vm:
-    nix run .#nixosConfigurations.{{host}}.config.system.build.vm

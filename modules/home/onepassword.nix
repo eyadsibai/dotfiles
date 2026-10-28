@@ -20,7 +20,7 @@ in
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks."*".identityAgent = ''"${agentSocket}"'';
+    settings."*".IdentityAgent = ''"${agentSocket}"'';
   };
 
   # Start the app hidden at login so the agent is always there (a login item on macOS)

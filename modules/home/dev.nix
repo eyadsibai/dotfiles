@@ -1,15 +1,23 @@
-{ pkgs, useremail, ... }:
+{
+  lib,
+  pkgs,
+  useremail,
+  ...
+}:
 let
   prettyLog = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
 in
 {
-  home.packages = with pkgs; [
-    gnumake
-    nil
-    nixd
-    devenv # per-project environments: devenv.nix + `use devenv` in .envrc
-    jetbrains.jdk
-  ];
+  home.packages =
+    with pkgs;
+    [
+      gnumake
+      nil
+      nixd
+      devenv # per-project environments: devenv.nix + `use devenv` in .envrc
+    ]
+    # JetBrains' JDK is built for Linux only
+    ++ lib.optional stdenv.hostPlatform.isLinux jetbrains.jdk;
 
   programs.neovim = {
     enable = true;

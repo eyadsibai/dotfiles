@@ -10,6 +10,29 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/nixos
+    ../../modules/nixos/desktop.nix
+    ../../modules/nixos/sunshine.nix
+    ../../modules/nixos/virtualisation.nix
+    ../../modules/nixos/ai.nix
+  ];
+
+  # Used remotely as much as at the desk: boot into the (locked) desktop so
+  # Sunshine and gliff have a session, and never sleep
+  my.desktop.autoLogin = true;
+  systemd.targets.sleep.enable = false;
+  systemd.targets.suspend.enable = false;
+  systemd.targets.hibernate.enable = false;
+  systemd.targets.hybrid-sleep.enable = false;
+
+  # 32 threads: up to 16 builds at once, 8 cores each. Most builds are tiny
+  # (config files, wrappers), so many in parallel keeps the CPU busy; the rare
+  # big compiles running together can oversubscribe, which 125 GB of RAM absorbs
+  nix.settings.max-jobs = 16;
+  nix.settings.cores = 8;
+  # Prebuilt cudaSupport packages (replaces the retired cuda-maintainers.cachix.org)
+  nix.settings.substituters = [ "https://cache.nixos-cuda.org" ];
+  nix.settings.trusted-public-keys = [
+    "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M="
   ];
 
   networking.hostName = "workstation";
@@ -48,7 +71,7 @@
 
   hardware.nvidia-container-toolkit.enable = true;
   # No global nixpkgs.config.cudaSupport: it only rebuilt Firefox and btop. CUDA is
-  # enabled per package instead (ollama-cuda in modules/nixos/ai.nix, btop in modules/home/cli.nix).
+  # enabled per package instead (ollama-cuda in modules/nixos/ai.nix, btop below).
 
   hardware.steam-hardware.enable = true;
 
@@ -76,11 +99,10 @@
   };
 
   home-manager.users.${username} = {
-    imports = [
-      ../../modules/home
-      ../../modules/home/desktop-apps.nix
-      ../../modules/home/omarchy.nix
-    ];
+    imports = [ ../../modules/home ];
+    home.packages = [ pkgs.lmstudio ];
+    # System monitor with the NVIDIA GPU panel
+    programs.btop.package = pkgs.btop.override { cudaSupport = true; };
     home.stateVersion = "23.11";
   };
 

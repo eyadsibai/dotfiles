@@ -1,4 +1,9 @@
-{ username, ... }:
+{
+  config,
+  lib,
+  username,
+  ...
+}:
 {
   users.users.${username} = {
     isNormalUser = true;
@@ -6,9 +11,9 @@
     extraGroups = [
       "networkmanager"
       "wheel"
-      "docker"
-      "libvirtd"
-    ];
+    ]
+    ++ lib.optional config.virtualisation.docker.enable "docker"
+    ++ lib.optional config.virtualisation.libvirtd.enable "libvirtd";
     openssh.authorizedKeys.keyFiles = [ ./authorized-keys ];
   };
 

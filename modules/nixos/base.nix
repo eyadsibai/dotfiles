@@ -6,12 +6,6 @@
 
   networking.networkmanager.enable = true;
 
-  # Always-on machine: never sleep
-  systemd.targets.sleep.enable = false;
-  systemd.targets.suspend.enable = false;
-  systemd.targets.hibernate.enable = false;
-  systemd.targets.hybrid-sleep.enable = false;
-
   # Let local users reboot / power off without a password
   security.polkit.enable = true;
   security.polkit.extraConfig = ''

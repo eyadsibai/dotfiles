@@ -5,7 +5,6 @@
     firefox
     ghostty
     spotify
-    lmstudio
     jetbrains.idea
     zed-editor
     vscode

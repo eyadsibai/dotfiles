@@ -1,7 +1,6 @@
 { pkgs, ... }:
 {
   home.packages = with pkgs; [
-    nnn # terminal file manager
     micro
     tmux
     just
@@ -28,7 +27,6 @@
     awscli2
 
     # network
-    aria2
     socat
     nmap
     caddy
@@ -51,15 +49,49 @@
     icons = "auto";
   };
 
-  # System monitor; built with CUDA support for the NVIDIA GPU panel
   programs.btop = {
     enable = true;
-    package = pkgs.btop.override { cudaSupport = true; };
     settings.proc_sorting = "cpu direct";
   };
 
   programs.skim = {
     enable = true;
     enableBashIntegration = true;
+  };
+
+  programs.nnn = {
+    enable = true;
+    bookmarks = {
+      D = "~/Downloads";
+      p = "~/dev";
+      c = "~/.config";
+    };
+    plugins = {
+      src =
+        (pkgs.fetchFromGitHub {
+          owner = "jarun";
+          repo = "nnn";
+          rev = "v4.9";
+          sha256 = "sha256-g19uI36HyzTF2YUQKFP4DE2ZBsArGryVHhX79Y0XzhU=";
+        })
+        + "/plugins";
+      mappings = {
+        p = "preview-tui";
+        o = "fzopen";
+      };
+    };
+  };
+
+  programs.aria2 = {
+    enable = true;
+    settings = {
+      max-connection-per-server = 4;
+      split = 4;
+      min-split-size = "1M";
+      disk-cache = "64M";
+      file-allocation = "falloc";
+      continue = true;
+      max-concurrent-downloads = 5;
+    };
   };
 }
