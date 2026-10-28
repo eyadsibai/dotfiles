@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 {
   # Helpers carried over from the old fish setup, as scripts so every shell has them
   home.packages = [
@@ -57,41 +57,13 @@
     enableNushellIntegration = true;
   };
 
+  # Omarchy's prompt (config/starship.toml from the Omarchy tree, copied here so the
+  # Macs match); nushell is the only shell Omarchy's own init doesn't cover
   programs.starship = {
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
     enableNushellIntegration = true;
-    enableTransience = true;
-    settings = {
-      format = builtins.concatStringsSep "" [
-        "$nix_shell"
-        "$os"
-        "$directory"
-        "$container"
-        "$git_branch $git_status"
-        "$python"
-        "$nodejs"
-        "$lua"
-        "$rust"
-        "$java"
-        "$c"
-        "$golang"
-        "$cmd_duration"
-        "$status"
-        "$line_break"
-        "[❯](bold purple)"
-        "\${custom.space}"
-      ];
-      character = {
-        success_symbol = "[›](bold green)";
-        error_symbol = "[›](bold red)";
-      };
-      aws.symbol = "🅰 ";
-      gcloud = {
-        format = "on [$symbol$active(\($region\))]($style) ";
-        symbol = "🅶 ️";
-      };
-    };
+    settings = lib.importTOML ./starship.toml;
   };
 }
