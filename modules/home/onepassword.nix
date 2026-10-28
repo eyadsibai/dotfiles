@@ -9,10 +9,12 @@
   config,
   lib,
   pkgs,
+  useremail,
   ...
 }:
 let
   inherit (pkgs.stdenv.hostPlatform) isDarwin isLinux;
+  signingKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOpovYakzNvqZRJKiE7H43QJ1Y1zJt3ixf+tvzDBNXJe";
   home = config.home.homeDirectory;
   agentSocket =
     if isDarwin then
@@ -29,6 +31,23 @@ in
     settings."Match host * exec \"test -z \${SSH_CONNECTION%%%% *}\"".IdentityAgent =
       ''"${agentSocket}"'';
   };
+
+  # Sign commits with the same key, held in 1Password (the "id_rsa" item, an ed25519 key)
+  programs.git = {
+    signing = {
+      format = "ssh";
+      key = signingKey;
+      signByDefault = true;
+      signer =
+        if isDarwin then
+          "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+        else
+          "${pkgs._1password-gui}/bin/op-ssh-sign";
+    };
+    # Lets `git log --show-signature` verify our own commits
+    settings.gpg.ssh.allowedSignersFile = "${config.xdg.configHome}/git/allowed_signers";
+  };
+  xdg.configFile."git/allowed_signers".text = "${useremail} ${signingKey}\n";
 
   # Start the app hidden at login so the agent is always there (a login item on macOS)
   xdg.configFile."autostart/1password.desktop" = lib.mkIf isLinux {
