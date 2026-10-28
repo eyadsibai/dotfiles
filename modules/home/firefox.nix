@@ -20,6 +20,8 @@ in
 {
   programs.firefox = {
     enable = true;
+    # Where the existing profiles live (newer Home Manager defaults to ~/.config/mozilla)
+    configPath = ".mozilla/firefox";
 
     # Home Manager owns ~/.mozilla/native-messaging-hosts, where the 1Password app
     # would otherwise write this itself: lets the extension unlock with the desktop app
