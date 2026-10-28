@@ -8,5 +8,6 @@
     ./ssh.nix
     ./herdr
     ./newsboat
+    ./mpv.nix
   ];
 }
