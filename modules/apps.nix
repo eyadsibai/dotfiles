@@ -28,7 +28,7 @@
     quickemu
 
     gum
-    oterm
+    # oterm # disabled 2026-10: depends on fastmcp, marked broken in nixpkgs
     # vllm
 
     # Virtualization packages moved from system.nix
@@ -37,7 +37,7 @@
     virt-viewer
     spice
     spice-gtk
-    win-virtio # for windows virtio drivers
+    virtio-win # for windows virtio drivers
     OVMF # UEFI firmware for qemu
   ];
   environment.variables.EDITOR = "nvim";

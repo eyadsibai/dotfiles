@@ -7,7 +7,7 @@
     nil
     gnumake
     jetbrains.jdk
-    jetbrains.idea-ultimate
+    jetbrains.idea
     devbox
     git
   ];
@@ -30,20 +30,13 @@
       git = {
         enable = true;
         lfs.enable = true;
-        userName = "eyadsibai"; # Using the specific username from home/git.nix
-        userEmail = useremail; # Using the passed useremail variable
-        extraConfig = {
+        settings = {
+          user.name = "eyadsibai"; # Using the specific username from home/git.nix
+          user.email = useremail; # Using the passed useremail variable
           init.defaultBranch = "master";
           push.autoSetupRemote = true;
           pull.rebase = true;
-        };
-        delta = {
-          enable = false;
-          options = {
-            features = "side-by-side";
-          };
-        };
-        aliases = {
+          alias = {
           br = "branch";
           co = "checkout";
           st = "status";
@@ -54,7 +47,21 @@
           dc = "diff --cached";
           amend = "commit --amend -m";
           update = "submodule update --init --recursive";
-          foreach = "submodule foreach";
+            foreach = "submodule foreach";
+          };
+        };
+      };
+
+      gh = {
+        enable = true;
+        gitCredentialHelper.enable = true;
+        settings.git_protocol = "ssh";
+      };
+
+      delta = {
+        enable = false;
+        options = {
+          features = "side-by-side";
         };
       };
 

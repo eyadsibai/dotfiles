@@ -50,7 +50,7 @@
   services.ollama = {
     enable = true;
     openFirewall = true;
-    acceleration = "cuda";
+    package = pkgs.ollama-cuda;
   };
 
   services.tika.enable = true;
@@ -100,10 +100,7 @@
     enable = true;
     qemu = {
       package = pkgs.qemu_kvm;
-      ovmf = {
-        enable = true;
-        packages = [ pkgs.OVMFFull.fd ];
-      };
+      # OVMF images shipped with QEMU are now available by default
       swtpm.enable = true;
     };
   };
