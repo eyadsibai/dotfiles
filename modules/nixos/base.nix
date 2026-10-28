@@ -1,5 +1,12 @@
 { pkgs, ... }:
 {
+  boot.loader.systemd-boot = {
+    enable = true;
+    editor = false; # no editing kernel parameters (e.g. init=/bin/sh) at the boot menu
+    configurationLimit = 10; # boot-menu rollback targets
+  };
+  boot.loader.efi.canTouchEfiVariables = true;
+
   time.timeZone = "Asia/Riyadh";
   i18n.defaultLocale = "en_US.UTF-8";
   services.xserver.xkb.layout = "us";

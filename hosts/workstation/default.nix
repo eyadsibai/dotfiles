@@ -37,12 +37,6 @@
 
   networking.hostName = "workstation";
 
-  boot.loader.systemd-boot = {
-    enable = true;
-    configurationLimit = 10; # boot-menu rollback targets
-  };
-  boot.loader.efi.canTouchEfiVariables = true;
-
   # Stay on the default LTS kernel (nixarchy would default to the newest one):
   # fewer surprises with the NVIDIA driver on a machine that is often used remotely
   boot.kernelPackages = pkgs.linuxPackages;
@@ -99,7 +93,6 @@
   };
 
   home-manager.users.${username} = {
-    imports = [ ../../modules/home ];
     home.packages = [ pkgs.lmstudio ];
     # System monitor with the NVIDIA GPU panel
     programs.btop.package = pkgs.btop.override { cudaSupport = true; };

@@ -6,11 +6,8 @@
     discord
     slack
     teams
-    telegram-desktop
     signal-desktop
     zoom-us
-
-    google-chrome
 
     # media
     iina
@@ -35,7 +32,6 @@
     insomnia
     colima
     wget
-    curl
     httpie
     duf
     dust

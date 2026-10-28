@@ -9,13 +9,7 @@
 
   users.users.${username}.home = "/Users/${username}";
 
-  home-manager.users.${username} = {
-    imports = [
-      ../../modules/home
-      ../../modules/darwin/home.nix
-    ];
-    home.stateVersion = "23.11";
-  };
+  home-manager.users.${username}.home.stateVersion = "23.11";
 
   system.primaryUser = username;
   system.stateVersion = 5;

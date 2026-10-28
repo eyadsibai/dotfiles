@@ -16,9 +16,4 @@
     ++ lib.optional config.virtualisation.libvirtd.enable "libvirtd";
     openssh.authorizedKeys.keyFiles = [ ./authorized-keys ];
   };
-
-  nix.settings.trusted-users = [
-    username
-    "root"
-  ];
 }

@@ -2,15 +2,11 @@
 { pkgs, ... }:
 {
   environment.systemPackages = with pkgs; [
-    nixpkgs-fmt
     statix
-    alejandra
-    devbox
     atuin
     curlFull
     R
   ];
 
   programs.gnupg.agent.enable = true;
-  programs.nix-index.enable = true;
 }

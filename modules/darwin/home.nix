@@ -34,7 +34,6 @@
   programs.zathura.enable = true;
   programs.kakoune.enable = true;
   programs.bat.enable = true;
-  programs.fzf.enable = true;
 
   programs.mpv = {
     enable = true;

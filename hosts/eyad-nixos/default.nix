@@ -17,12 +17,6 @@
 
   networking.hostName = "eyad-nixos";
 
-  boot.loader.systemd-boot = {
-    enable = true;
-    editor = false;
-    configurationLimit = 10;
-  };
-  boot.loader.efi.canTouchEfiVariables = true;
   boot.supportedFilesystems = [ "ntfs" ];
   # Workarounds this ThinkPad needed for backlight, power states and NVMe latency
   boot.kernelParams = [
@@ -53,10 +47,7 @@
   services.fstrim.enable = true;
   services.libinput.touchpad.disableWhileTyping = true;
 
-  home-manager.users.${username} = {
-    imports = [ ../../modules/home ];
-    home.stateVersion = "22.05";
-  };
+  home-manager.users.${username}.home.stateVersion = "22.05";
 
   system.stateVersion = "22.05";
 }

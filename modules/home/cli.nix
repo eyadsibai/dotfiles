@@ -19,7 +19,6 @@
     ripgrep
     jq
     yq-go
-    fzf
 
     # storage & cloud
     rclone
@@ -39,9 +38,10 @@
     gnused
     gnutar
     gawk
-    gnupg
     glow # markdown viewer
   ];
+
+  programs.fzf.enable = true;
 
   programs.eza = {
     enable = true;

@@ -21,22 +21,15 @@
     };
 
     taps = [
-      "nikitabobko/tap"
-      "dimentium/autoraise"
-      "localsend/localsend"
       "colindean/fonts-nonfree"
     ];
 
     brews = [
-      "kakoune"
       "helix"
-      "rust"
-      "neovim"
       "rustup"
       "python"
       "gemini-cli"
       "opencode"
-      "gh"
     ];
 
     casks = [
