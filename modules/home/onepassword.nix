@@ -1,10 +1,9 @@
 # 1Password as the SSH agent: private keys live in the vault and SSH asks the app
 # to sign. Turn it on once in the app: Settings → Developer → "Use the SSH agent".
-# Key files still in ~/.ssh keep working as a fallback until they are removed.
 #
-# Only for sessions at the machine itself: logged in over SSH, the local app's
-# approval prompt would appear on a screen nobody is looking at, so SSH then uses
-# the agent forwarded from the machine you came from (`ssh -A`, i.e. its 1Password).
+# Logged in over SSH, the local app's approval prompt would appear on a screen nobody
+# is looking at, so a forwarded agent (`ssh -A`, i.e. your own 1Password) wins when
+# there is one; without one, SSH falls back to this machine's app.
 {
   config,
   lib,
@@ -21,15 +20,20 @@ let
       "${home}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
     else
       "${home}/.1password/agent.sock";
+  # At the machine itself, or over SSH without a forwarded agent (then the local
+  # app is the only key source left; its prompt shows on this machine's screen)
+  useLocalAgent = pkgs.writeShellScript "use-local-1password-agent" ''
+    [ -z "$SSH_CONNECTION" ] || [ -z "$SSH_AUTH_SOCK" ]
+  '';
 in
 {
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    # True when $SSH_CONNECTION is empty; %%%% is a literal %% to ssh, and %% keeps a
-    # single word so `test` stays quiet when it is set
-    settings."Match host * exec \"test -z \${SSH_CONNECTION%%%% *}\"".IdentityAgent =
-      ''"${agentSocket}"'';
+    matchBlocks.local-1password-agent = {
+      match = "host * exec ${useLocalAgent}";
+      identityAgent = ''"${agentSocket}"'';
+    };
   };
 
   # Sign commits with the same key, held in 1Password (the "id_rsa" item, an ed25519 key)
