@@ -6,5 +6,7 @@
     ./dev.nix
     ./onepassword.nix
     ./ssh.nix
+    ./herdr
+    ./newsboat
   ];
 }

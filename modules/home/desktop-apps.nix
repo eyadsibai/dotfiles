@@ -8,5 +8,11 @@
     jetbrains.idea
     zed-editor
     vscode
+
+    # chat
+    slack
+    signal-desktop
+    zoom-us
+    discord
   ];
 }
