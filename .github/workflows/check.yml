@@ -1,0 +1,21 @@
+name: check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Check formatting
+        run: nix fmt -- --ci
+      - name: Flake check
+        run: nix flake check --no-build
+      # Evaluating the system catches option/package breakage without building
+      # CUDA-heavy derivations on a hosted runner
+      - name: Evaluate workstation
+        run: nix eval --raw .#nixosConfigurations.workstation.config.system.build.toplevel.drvPath
