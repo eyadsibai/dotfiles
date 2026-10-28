@@ -84,6 +84,12 @@ in
     programs.hyprland.package = lib.mkForce pkgs.hyprland;
     programs.hyprland.portalPackage = lib.mkForce pkgs.xdg-desktop-portal-hyprland;
 
+    # Unlock the login keyring with the password typed at the lock screen, as a
+    # greeter login already does (greetd includes the login PAM stack). With
+    # autologin there is no password at login, so the first unlock opens it. Omarchy
+    # on Arch avoids the prompt with an unencrypted keyring instead.
+    security.pam.services.omarchy-lock-password.enableGnomeKeyring = true;
+
     services.greetd = {
       enable = true;
       settings = {

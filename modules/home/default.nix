@@ -5,5 +5,6 @@
     ./shell.nix
     ./dev.nix
     ./onepassword.nix
+    ./ssh.nix
   ];
 }

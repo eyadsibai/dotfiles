@@ -27,8 +27,6 @@ let
 in
 {
   programs.ssh = {
-    enable = true;
-    enableDefaultConfig = false;
     settings."Match host * exec ~/${useLocalAgent}".IdentityAgent = ''"${agentSocket}"'';
   };
   home.file.${useLocalAgent} = {
