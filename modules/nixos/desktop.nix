@@ -124,6 +124,13 @@ in
         ];
         programs.nixarchy.package = omarchy;
 
+        # omatheme's own activation step copies a changed ~/.config/starship.toml into
+        # its runtime dir but doesn't re-render the prompt from it; that only happens
+        # at login or on a theme change, so a switched prompt stayed stale until then
+        home.activation.hyprchromaShell = lib.hm.dag.entryAfter [ "nixarchyThemeEngineShell" ] ''
+          [[ -v DRY_RUN ]] || run ${config.programs.nixarchyThemeEngine.package}/bin/hyprchroma shell --quiet
+        '';
+
         home.activation.omarchyChromiumHosts = lib.hm.dag.entryAfter [ "writeBoundary" ] (
           lib.concatStrings (
             lib.mapAttrsToList (name: host: ''
