@@ -43,6 +43,9 @@ in
 {
   programs.ssh = {
     settings."Match host * exec ~/${useLocalAgent}".IdentityAgent = ''"${agentSocket}"'';
+    # `ssh -A` forwards $SSH_AUTH_SOCK, which on a Mac is launchd's empty agent rather
+    # than 1Password's; name the socket so logging in to the workstation forwards it
+    settings."Host workstation" = lib.mkIf isDarwin { ForwardAgent = ''"${agentSocket}"''; };
   };
   home.file.${useLocalAgent} = {
     executable = true;
