@@ -135,14 +135,14 @@ secrets at activation, into RAM, never into the store.
 
 ## Where nixarchy needed help
 
-Fixed here, reported upstream. The workarounds live in `modules/nixos/desktop.nix` and go
-when the fixes land.
+Fixed here, reported upstream. The workarounds live in `modules/nixos/desktop.nix` and
+`modules/home/omarchy-apps.nix`, and go when the fixes reach a nixarchy release.
 
 | Gap | Fix | Upstream |
 |---|---|---|
-| Chromium starts without Omarchy's bundled extensions (copy-url, yt-dlp, WhatsApp): Omarchy enables them through a flags file that Arch's launcher reads and nixpkgs' doesn't. | Flags built into the Chromium the Omarchy package installs; native-messaging hosts re-registered at every activation via a stable `/run/current-system` path. | [#1491](https://github.com/olafkfreund/nixarchy/issues/1491) |
-| After an autologin boot the login keyring stays locked until some app asks for its password. | The lock screen's PAM service unlocks it, so the first unlock after boot opens the keyring. It stays encrypted. | [#1492](https://github.com/olafkfreund/nixarchy/issues/1492) |
-| Xournal++'s seeded config points its LaTeX template at `/usr/share`. | Not fixed; I don't use it. | [#1493](https://github.com/olafkfreund/nixarchy/issues/1493) |
+| Chromium starts without Omarchy's bundled extensions (copy-url, yt-dlp, WhatsApp): Omarchy enables them through a flags file that Arch's launcher reads and nixpkgs' doesn't. | Flags built into the Chromium the Omarchy package installs; native-messaging hosts re-registered at every activation via a stable `/run/current-system` path. | [#1491](https://github.com/olafkfreund/nixarchy/issues/1491), fixed after v4.5.0-rc2-1 |
+| After an autologin boot the login keyring stays locked until some app asks for its password. | The lock screen's PAM service unlocks it, so the first unlock after boot opens the keyring. It stays encrypted. | [#1492](https://github.com/olafkfreund/nixarchy/issues/1492), fixed after v4.5.0-rc2-1 |
+| Five Omarchy preinstalls aren't in nixarchy: Hype, Monologue, Signed, disktree, Superwhisper. | Packaged in `pkgs/` and installed for the user; Superwhisper also gets its user service and Omarchy bar panel. | not reported |
 
 ## Day to day
 

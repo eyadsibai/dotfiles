@@ -79,6 +79,9 @@ in
       # no cudaSupport builds, and ollama-cuda alone is a huge compile. nixarchy adds
       # it only where hardware.nvidia is enabled, so the laptop and `just vm` skip it
       cudaCache = true;
+      # Voxtype, one of Omarchy's two dictation backends; the other, Superwhisper,
+      # comes from modules/home/omarchy-apps.nix. Pick with omarchy-dictation-use
+      dictation.enable = true;
       # Leave Claude Code's config, editors and command-not-found as Home Manager has them
       mcp = false;
       nixSkills = false;
@@ -122,6 +125,7 @@ in
       {
         imports = [
           ../home/omarchy.nix
+          ../home/omarchy-apps.nix
           ../home/desktop-apps.nix
           ../home/firefox.nix
         ];
