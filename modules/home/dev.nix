@@ -43,6 +43,18 @@ in
     nix-direnv.enable = true;
   };
 
+  # Pager for diff, log, show and `git add -p`
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate = true;
+      side-by-side = true;
+      line-numbers = true;
+      syntax-theme = "ansi"; # follows the terminal's Omarchy theme colours
+    };
+  };
+
   programs.git = {
     enable = true;
     lfs.enable = true;
@@ -57,6 +69,8 @@ in
       };
       pull.rebase = true;
       rebase.autoStash = true;
+      merge.conflictStyle = "zdiff3"; # conflicts show the common ancestor too
+      diff.colorMoved = "default";
       apply.whitespace = "fix";
       help.autocorrect = "prompt";
       feature.manyFiles = true;
