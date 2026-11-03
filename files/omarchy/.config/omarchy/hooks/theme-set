@@ -1,0 +1,204 @@
+#!/bin/bash
+
+# Community theme-set hook pack (2026-04-17), adapted for Omarchy 4.x:
+#   * the applied theme lives in ~/.local/state/omarchy/current/theme
+#     (pre-4.0 kept it under ~/.config/omarchy/current/theme)
+#   * colors come from `omarchy-theme-color --all`, the resolver Omarchy's own
+#     templates use, so the ANSI slots (color0..15), selection colors and the
+#     light/dark mode exist for every theme, including stock ones whose
+#     colors.toml only carries semantic names
+#
+# Exports the variables theme-set.d/*.sh have always consumed (bare hex, no
+# leading '#'), plus theme_dir and theme_mode (dark|light). Set
+# THEME_SET_HOOK_DRY_RUN=1 to print the resolved variables and exit before any
+# child hook runs; THEME_SET_COLORS_FILE overrides the colors.toml read.
+
+success() {
+    echo -e "\e[32m[SUCCESS]\e[0m $1"
+}
+
+skipped() {
+    echo -e "\033[0;34m[SKIPPED]\e[0m $1 not found. Skipping.."
+    exit 0
+}
+
+warning() {
+    echo -e "\033[0;33m[WARNING]\e[0m $1"
+}
+
+error() {
+    echo -e "\e[31m[ERROR]\e[0m $1"
+    exit 1
+}
+
+export -f success warning error skipped
+
+hex2rgb() {
+    hex_input=$1
+    r=$((16#${hex_input:0:2}))
+    g=$((16#${hex_input:2:2}))
+    b=$((16#${hex_input:4:2}))
+    echo "$r, $g, $b"
+}
+
+rgb2hex() {
+    local r=$1 g=$2 b=$3
+    ((r < 0)) && r=0; ((r > 255)) && r=255
+    ((g < 0)) && g=0; ((g > 255)) && g=255
+    ((b < 0)) && b=0; ((b > 255)) && b=255
+    printf "%02x%02x%02x" "$r" "$g" "$b"
+}
+
+# Shift every channel by $2, clamped to 00..ff so light themes never yield a
+# three-digit channel (rose-pine's #faf4ed + 14 used to break generated CSS).
+change_shade() {
+    local hex_input=$1 shade=$2
+    local r=$((16#${hex_input:0:2} + shade))
+    local g=$((16#${hex_input:2:2} + shade))
+    local b=$((16#${hex_input:4:2} + shade))
+    rgb2hex "$r" "$g" "$b"
+}
+
+restart_scripts=()
+restart_file=$(mktemp)
+export restart_file
+require_restart() {
+    echo "$1" >> "$restart_file"
+}
+
+export -f rgb2hex hex2rgb change_shade require_restart
+
+theme_dir="$HOME/.local/state/omarchy/current/theme"
+if [[ ! -f "$theme_dir/colors.toml" && -f "$HOME/.config/omarchy/current/theme/colors.toml" ]]; then
+    theme_dir="$HOME/.config/omarchy/current/theme"
+fi
+input_file="${THEME_SET_COLORS_FILE:-$theme_dir/colors.toml}"
+
+if [[ ! -f "$input_file" ]]; then
+    error "colors.toml not found at $input_file. Ensure your theme includes colors.toml."
+fi
+
+resolver=$(command -v omarchy-theme-color || true)
+[[ -n "$resolver" ]] || resolver=/usr/share/omarchy/bin/omarchy-theme-color
+if [[ ! -x "$resolver" ]]; then
+    error "omarchy-theme-color not found; cannot resolve theme colors."
+fi
+
+declare -A theme_colors
+while IFS=$'\t' read -r key value; do
+    [[ -n "$key" ]] && theme_colors[$key]=$value
+done < <("$resolver" --file "$input_file" --all)
+
+# Child hooks interpolate '#${var}', so strip the resolver's leading '#'.
+color_of() {
+    local value=${theme_colors[$1]}
+    printf "%s" "${value#\#}"
+}
+
+primary_foreground=$(color_of foreground)
+primary_background=$(color_of background)
+cursor_color=$(color_of cursor)
+selection_foreground=$(color_of selection_foreground)
+selection_background=$(color_of selection_background)
+normal_black=$(color_of color0)
+normal_red=$(color_of color1)
+normal_green=$(color_of color2)
+normal_yellow=$(color_of color3)
+normal_blue=$(color_of color4)
+normal_magenta=$(color_of color5)
+normal_cyan=$(color_of color6)
+normal_white=$(color_of color7)
+bright_black=$(color_of color8)
+bright_red=$(color_of color9)
+bright_green=$(color_of color10)
+bright_yellow=$(color_of color11)
+bright_blue=$(color_of color12)
+bright_magenta=$(color_of color13)
+bright_cyan=$(color_of color14)
+bright_white=$(color_of color15)
+theme_mode=${theme_colors[mode]:-dark}
+# Semantic extras beyond the ANSI slots (bare hex like the rest).
+accent=$(color_of accent)
+muted=$(color_of muted)
+selection=$(color_of selection)
+lighter_background=$(color_of lighter_background)
+dark_background=$(color_of dark_background)
+darker_background=$(color_of darker_background)
+light_foreground=$(color_of light_foreground)
+dark_foreground=$(color_of dark_foreground)
+orange=$(color_of orange)
+brown=$(color_of brown)
+
+if [[ -z "$primary_background" || -z "$primary_foreground" ]]; then
+    error "Could not resolve background/foreground from $input_file."
+fi
+
+export theme_dir theme_mode accent muted selection lighter_background dark_background darker_background light_foreground dark_foreground orange brown
+export primary_background primary_foreground cursor_color selection_foreground selection_background
+export normal_black normal_red normal_green normal_yellow normal_blue normal_magenta normal_cyan normal_white
+export bright_black bright_red bright_green bright_yellow bright_blue bright_magenta bright_cyan bright_white
+
+rgb_primary_foreground=$(hex2rgb $primary_foreground)
+rgb_primary_background=$(hex2rgb $primary_background)
+rgb_normal_black=$(hex2rgb $normal_black)
+rgb_normal_red=$(hex2rgb $normal_red)
+rgb_normal_green=$(hex2rgb $normal_green)
+rgb_normal_yellow=$(hex2rgb $normal_yellow)
+rgb_normal_blue=$(hex2rgb $normal_blue)
+rgb_normal_magenta=$(hex2rgb $normal_magenta)
+rgb_normal_cyan=$(hex2rgb $normal_cyan)
+rgb_normal_white=$(hex2rgb $normal_white)
+rgb_bright_black=$(hex2rgb $bright_black)
+rgb_bright_red=$(hex2rgb $bright_red)
+rgb_bright_green=$(hex2rgb $bright_green)
+rgb_bright_yellow=$(hex2rgb $bright_yellow)
+rgb_bright_blue=$(hex2rgb $bright_blue)
+rgb_bright_magenta=$(hex2rgb $bright_magenta)
+rgb_bright_cyan=$(hex2rgb $bright_cyan)
+rgb_bright_white=$(hex2rgb $bright_white)
+
+export rgb_primary_foreground rgb_primary_background
+export rgb_normal_black rgb_normal_red rgb_normal_green rgb_normal_yellow rgb_normal_blue rgb_normal_magenta rgb_normal_cyan rgb_normal_white
+export rgb_bright_black rgb_bright_red rgb_bright_green rgb_bright_yellow rgb_bright_blue rgb_bright_magenta rgb_bright_cyan rgb_bright_white
+
+if [[ -n "$THEME_SET_HOOK_DRY_RUN" ]]; then
+    for name in theme_dir theme_mode primary_background primary_foreground cursor_color \
+                selection_background selection_foreground \
+                normal_black normal_red normal_green normal_yellow normal_blue normal_magenta normal_cyan normal_white \
+                bright_black bright_red bright_green bright_yellow bright_blue bright_magenta bright_cyan bright_white \
+                accent muted selection lighter_background dark_foreground rgb_primary_background; do
+        printf "%s=%s\n" "$name" "${!name}"
+    done
+    rm -f "$restart_file"
+    exit 0
+fi
+
+if [[ -d ~/.config/omarchy/hooks/theme-set.d ]]; then
+    for hook in ~/.config/omarchy/hooks/theme-set.d/*.sh; do
+        if [[ -f "$hook" && -x "$hook" ]]; then
+            if ! "$hook" "$@"; then
+                error "Hook $(basename "$hook") failed!" >&2
+            fi
+        fi
+    done
+
+    if [[ -f "$restart_file" ]]; then
+        mapfile -t restart_scripts < "$restart_file"
+        rm "$restart_file"
+    fi
+    if [[ ${#restart_scripts[@]} -gt 0 ]]; then
+        running=()
+        for app in "${restart_scripts[@]}"; do
+            if pgrep -x "$app" > /dev/null; then
+                running+=("${app^}")
+            fi
+        done
+        if [[ ${#running[@]} -gt 0 ]]; then
+            apps=""
+            for app in "${running[@]}"; do
+                apps+="- $app"$'\n'
+            done
+            notify-send "Omarchy Theme Hook" "The following apps require a restart to apply theme:\n\n$apps"
+        fi
+    fi
+fi

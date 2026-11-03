@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Keeps the files in files/ that replace an Omarchy default in step with upstream.
+#
+# omarchy-defaults/<path> holds the Omarchy default each override was last merged
+# against. When an Omarchy update changes $OMARCHY_PATH/config/<path>, `merge` applies
+# only Omarchy's change to our copy (git merge-file: ours, the old default, the new
+# one) and records the new default; `check` just lists what would merge.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+mode=${1:-check}
+defaults=${OMARCHY_PATH:-/usr/share/omarchy}/config
+version=$(omarchy-version)
+changed=0 conflicts=0
+
+# The recorded defaults are shared by every machine; one still on an older Omarchy
+# would merge its older defaults backwards over the newer ones
+recorded=$(cat omarchy-defaults/VERSION 2>/dev/null || echo 0)
+# 4.5.0-rc3 sorts before 4.5.0 once written 4.5.0~rc3
+if [[ $(printf '%s\n' "${recorded/-/\~}" "${version/-/\~}" | sort -V | head -1) != "${recorded/-/\~}" ]]; then
+  echo "This machine runs Omarchy $version, older than the $recorded the defaults were recorded from; update Omarchy first."
+  exit 0
+fi
+
+while IFS= read -r ours; do
+  rel=${ours#files/*/.config/}
+  new=$defaults/$rel
+  base=omarchy-defaults/$rel
+  [[ -f $new ]] || continue
+  if [[ ! -f $base ]]; then
+    # First sight of this file: today's default becomes the starting point
+    [[ $mode == merge ]] && install -D -m 644 "$new" "$base"
+    continue
+  fi
+  cmp -s "$base" "$new" && continue
+  changed=1
+  if [[ $mode == check ]]; then
+    echo "Omarchy changed $rel  (override: $ours)"
+    continue
+  fi
+  if git merge-file -L "$ours" -L "omarchy before" -L "omarchy $version" "$ours" "$base" "$new"; then
+    echo "merged    $ours"
+  else
+    echo "CONFLICT  $ours  (look for <<<<<<< markers)"
+    conflicts=1
+  fi
+  install -m 644 "$new" "$base"
+done < <(find files/*/.config -type f | sort)
+
+[[ $mode == merge ]] && mkdir -p omarchy-defaults && echo "$version" > omarchy-defaults/VERSION
+
+if [[ $mode == check ]]; then
+  ((changed)) && echo "Run \`just omarchy-merge\` to bring these in." || echo "No Omarchy defaults changed under your overrides."
+elif ((conflicts)); then
+  echo "Resolve the conflicts before the next login: Hyprland and the bar won't read a file with markers."
+  exit 1
+fi

@@ -1,0 +1,153 @@
+{
+  "bar": {
+    "centerAnchor": "omarchy.clock",
+    "layout": {
+      "center": [
+        {
+          "id": "omarchy.indicators"
+        },
+        {
+          "id": "omarchy.clock",
+          "format": "dddd HH:mm",
+          "formatAlt": "d MMMM 'W'ww yyyy",
+          "verticalFormat": "HH\n—\nmm",
+          "birthYear": 1985,
+          "lifeExpectancy": 90
+        },
+        {
+          "id": "omarchy.keyboard-layout"
+        },
+        {
+          "id": "omarchy.weather"
+        },
+        {
+          "id": "io.github.sonderbydk.omacaffeine"
+        },
+        {
+          "id": "eyad.water",
+          "bodyWeightKg": 168,
+          "climate": "Warm",
+          "wakeTime": "09:00",
+          "barDisplay": "Icon",
+          "dailyGoalMl": 5800
+        },
+        {
+          "id": "eyad.commute",
+          "provider": "mock"
+        },
+        {
+          "id": "omarchy.system-update"
+        }
+      ],
+      "left": [
+        {
+          "id": "omarchy.workspaces"
+        },
+        {
+          "id": "omarchy.menu"
+        },
+        {
+          "id": "omarchy.media"
+        }
+      ],
+      "right": [
+        {
+          "id": "omarchy.tray"
+        },
+        {
+          "id": "flux"
+        },
+        {
+          "id": "io.github.spencerbull.omapilot",
+          "ttsModel": "kokoro-82m",
+          "ttsVoice": "af_heart",
+          "provider": "builtin",
+          "voiceEnabled": true,
+          "ttsProvider": "kokoro",
+          "webHandoffProvider": "google",
+          "builtinModel": "openai-codex::gpt-5.3-codex-spark",
+          "codexModel": ""
+        },
+        {
+          "id": "port-forward"
+        },
+        {
+          "id": "eyad.metro"
+        },
+        {
+          "id": "37signals.hey",
+          "openAction": "app",
+          "notify": true
+        },
+        {
+          "id": "eyad.meetings"
+        },
+        {
+          "id": "eyad.akiflow"
+        },
+        {
+          "id": "io.github.haripako.teams"
+        },
+        {
+          "id": "io.github.elevate08.qs-bitwarden-cli",
+          "colorizeIcon": false,
+          "autoCopyTotpSec": 4
+        },
+        {
+          "id": "io.github.fabean.herdr"
+        },
+        {
+          "id": "omaconnect"
+        },
+        {
+          "id": "crmne.hyprmoncfg"
+        },
+        {
+          "id": "omarchy.tailscale"
+        },
+        {
+          "id": "omarchy.dropbox"
+        },
+        {
+          "id": "eyad.agents"
+        },
+        {
+          "id": "omarchy.bluetooth"
+        },
+        {
+          "id": "omarchy.network"
+        },
+        {
+          "id": "omarchy.audio"
+        },
+        {
+          "id": "omarchy.monitor"
+        },
+        {
+          "id": "omarchy.power"
+        }
+      ]
+    },
+    "position": "top",
+    "transparent": false
+  },
+  "idle": {
+    "lock": 300,
+    "screensaver": 150
+  },
+  "plugins": [
+    {
+      "id": "next-key"
+    },
+    {
+      "id": "eyad.background"
+    }
+  ],
+  "version": 1,
+  "disabledPlugins": [
+    "omarchy.background"
+  ],
+  "cloneSourceRestores": [
+    "eyad.background"
+  ]
+}

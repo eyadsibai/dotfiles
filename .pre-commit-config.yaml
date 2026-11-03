@@ -1,0 +1,29 @@
+# Install with: uvx pre-commit install
+# Only files/tv has checks; every hook is limited to it.
+repos:
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        files: ^files/tv/
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.9
+    hooks:
+      - id: ruff-check
+        # tv-check is a uv script: no .py extension and a uv shebang
+        files: ^files/tv/(\.local/bin/tv-check|tests/.*\.py)$
+        types_or: [file]
+  - repo: local
+    hooks:
+      - id: parsers
+        name: playlist parsers agree
+        entry: files/tv/tests/parsers.sh
+        language: system
+        files: ^files/tv/(\.local/bin/tv|\.local/bin/tv-check|\.config/mpv/tv/tv\.lua|\.config/tv/tv\.m3u|tests/.*)$
+        pass_filenames: false
+      - id: regressions
+        name: TV regression tests (offline)
+        entry: uv run --no-project --python ">=3.12" python -B -m unittest discover -s files/tv/tests -v
+        language: system
+        files: ^(files/tv/(\.local/bin/tv(-check)?|\.config/mpv/tv/.*|tests/.*)|\.pre-commit-config\.yaml)$
+        pass_filenames: false

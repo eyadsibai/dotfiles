@@ -1,0 +1,22 @@
+name: tv
+
+on:
+  push:
+    paths: ["files/tv/**", ".pre-commit-config.yaml", ".github/workflows/tv.yml"]
+  pull_request:
+    paths: ["files/tv/**", ".pre-commit-config.yaml", ".github/workflows/tv.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+      # mpv lets files/tv/tests/parsers.sh check tv.lua too
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends mpv
+      - run: uvx pre-commit run --all-files --show-diff-on-failure

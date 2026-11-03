@@ -1,0 +1,13 @@
+[Unit]
+Description=herdr → desk buddy bridge
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/eyad/dev/claude-desktop-buddy/tools/herdr_bridge.py run
+Restart=always
+RestartSec=5
+Environment=BUDDY_PORT=/dev/ttyACM0
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Jenkins inbound agent (host-linux)
+After=network-online.target
+
+[Service]
+EnvironmentFile=/home/eyad/dev/jenkins/secrets/agent.env
+Environment=PATH=/home/eyad/.local/share/mise/shims:/home/eyad/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=/home/eyad/dev/jenkins/agent
+ExecStart=/home/eyad/.local/share/mise/installs/java/26.0.2.1/bin/java -jar /home/eyad/dev/jenkins/agent/agent.jar -url http://127.0.0.1:8080/ -name host-linux -secret ${JENKINS_AGENT_SECRET} -webSocket -workDir /home/eyad/dev/jenkins/agent
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

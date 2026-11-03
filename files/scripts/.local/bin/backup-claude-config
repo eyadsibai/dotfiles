@@ -1,0 +1,465 @@
+#!/usr/bin/env bash
+# Back up Claude Code configuration to a timestamped, compressed archive.
+#
+# Captures the files that shape Claude Code's behavior (settings, CLAUDE.md,
+# rules, hooks, skills, plugin manifests, memory, plans) and skips everything
+# that regenerates itself (cloned plugin repos, session transcripts, caches).
+#
+# Credentials are excluded by default -- see --include-credentials.
+
+set -euo pipefail
+
+readonly CLAUDE_DIR="${HOME}/.claude"
+readonly CLAUDE_JSON="${HOME}/.claude.json"
+readonly AGENTS_DIR="${HOME}/.agents"
+
+DEST_DIR="${CLAUDE_BACKUP_DIR:-${HOME}/.local/share/claude-config-backups}"
+KEEP=10
+INCLUDE_CREDENTIALS=0
+ENCRYPT=0
+VERBOSE=0
+
+usage() {
+	cat <<'EOF'
+Usage: backup-claude-config [options]
+
+Options:
+  -d, --dest DIR           Backup directory (default: ~/.local/share/claude-config-backups)
+  -k, --keep N             Keep the N most recent archives (default: 10, 0 = keep all)
+      --include-credentials  Include .credentials.json and the OAuth identity from
+                           .claude.json. Implies --encrypt unless overridden.
+      --encrypt            Encrypt the archive with age (passphrase prompt)
+  -v, --verbose            List every file as it is staged
+  -h, --help               Show this help
+
+Environment:
+  CLAUDE_BACKUP_DIR        Same as --dest
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	-d | --dest)
+		DEST_DIR="$2"
+		shift 2
+		;;
+	-k | --keep)
+		KEEP="$2"
+		shift 2
+		;;
+	--include-credentials)
+		INCLUDE_CREDENTIALS=1
+		ENCRYPT=1
+		shift
+		;;
+	--encrypt)
+		ENCRYPT=1
+		shift
+		;;
+	--no-encrypt)
+		ENCRYPT=0
+		shift
+		;;
+	-v | --verbose)
+		VERBOSE=1
+		shift
+		;;
+	-h | --help)
+		usage
+		exit 0
+		;;
+	*)
+		echo "unknown option: $1" >&2
+		usage >&2
+		exit 2
+		;;
+	esac
+done
+
+[[ "$KEEP" =~ ^[0-9]+$ ]] || {
+	echo "--keep needs a non-negative integer, got: $KEEP" >&2
+	exit 2
+}
+
+if [[ ! -d "$CLAUDE_DIR" ]]; then
+	echo "no Claude Code config at $CLAUDE_DIR" >&2
+	exit 1
+fi
+
+if ((ENCRYPT)) && ! command -v age >/dev/null; then
+	echo "--encrypt needs 'age' on PATH" >&2
+	exit 1
+fi
+
+readonly STAMP="$(date +%Y%m%d-%H%M%S)"
+readonly NAME="claude-config-${STAMP}"
+readonly STAGE="$(mktemp -d "${TMPDIR:-/tmp}/${NAME}.XXXXXX")"
+trap 'rm -rf "$STAGE"' EXIT
+
+readonly ROOT="${STAGE}/${NAME}"
+readonly FILES="${ROOT}/files"
+mkdir -p "$FILES"
+
+MANIFEST_BODY="$(mktemp "${STAGE}/manifest.XXXXXX")"
+SKIPPED=()
+
+note() { printf '%s\n' "$*" >>"$MANIFEST_BODY"; }
+say() { ((VERBOSE)) && printf '  + %s\n' "$1" || true; }
+
+# copy_into <source path> <destination dir relative to files/>
+# Preserves symlinks and permissions. Missing sources are recorded, not fatal.
+copy_into() {
+	local src="$1" reldir="$2"
+	if [[ ! -e "$src" && ! -L "$src" ]]; then
+		SKIPPED+=("${src/#$HOME/\~} (absent)")
+		return 0
+	fi
+	local dst="${FILES}/${reldir}"
+	mkdir -p "$dst"
+	cp -a "$src" "$dst/"
+	say "${src/#$HOME/\~}"
+	note "  ${src/#$HOME/\~}"
+}
+
+echo "Staging Claude Code config..."
+
+# --- ~/.claude: top-level config files -------------------------------------
+note "Top-level config:"
+for f in CLAUDE.md settings.json settings.local.json keybindings.json .mcp.json; do
+	copy_into "${CLAUDE_DIR}/${f}" ".claude"
+done
+
+# --- ~/.claude: config directories -----------------------------------------
+# skills/ is copied with cp -a so its symlinks survive as symlinks; the targets
+# that live under $HOME are captured separately below.
+note ""
+note "Config directories:"
+for d in rules shared hooks bin patches themes agents commands local-plugins skills buddy; do
+	copy_into "${CLAUDE_DIR}/${d}" ".claude"
+done
+
+# --- Plugin manifests (not the 5 GB of cloned repos) ------------------------
+note ""
+note "Plugin manifests (repos are re-cloned on restore, not archived):"
+for f in installed_plugins.json known_marketplaces.json blocklist.json config.json; do
+	copy_into "${CLAUDE_DIR}/plugins/${f}" ".claude/plugins"
+done
+
+# --- Memory files across every project -------------------------------------
+note ""
+note "Memory:"
+memory_count=0
+if [[ -d "${CLAUDE_DIR}/projects" ]]; then
+	while IFS= read -r -d '' mem; do
+		slug="$(basename "$(dirname "$mem")")"
+		copy_into "$mem" ".claude/projects/${slug}"
+		memory_count=$((memory_count + 1))
+	done < <(find "${CLAUDE_DIR}/projects" -maxdepth 2 -name memory -type d -print0 2>/dev/null)
+fi
+[[ $memory_count -eq 0 ]] && note "  (none found)"
+
+# --- Plans ------------------------------------------------------------------
+note ""
+note "Plans:"
+copy_into "${CLAUDE_DIR}/plans" ".claude"
+
+# --- Standalone skills backing the ~/.claude/skills symlinks ----------------
+note ""
+note "Standalone skills (targets of ~/.claude/skills symlinks):"
+copy_into "${AGENTS_DIR}/skills" ".agents"
+copy_into "${AGENTS_DIR}/.skill-lock.json" ".agents"
+
+# --- ~/.claude.json, filtered ----------------------------------------------
+# Keeps the config-bearing keys and drops caches, telemetry, onboarding flags,
+# and (unless asked for) the OAuth identity.
+note ""
+note "Filtered ~/.claude.json:"
+if [[ -f "$CLAUDE_JSON" ]]; then
+	INCLUDE_CREDENTIALS="$INCLUDE_CREDENTIALS" python3 - "$CLAUDE_JSON" "${FILES}/.claude.json" <<'PY'
+import json, os, sys
+
+src, dst = sys.argv[1], sys.argv[2]
+with open(src) as fh:
+    data = json.load(fh)
+
+TOP = ["mcpServers", "githubRepoPaths", "favoritePlugins", "autoUpdates", "installMethod"]
+# Per-project keys that are settings; everything else there is session telemetry.
+PROJECT = [
+    "allowedTools", "mcpServers", "mcpContextUris",
+    "enabledMcpjsonServers", "disabledMcpjsonServers", "disabledMcpServers",
+    "hasTrustDialogAccepted", "hasClaudeMdExternalIncludesApproved",
+]
+
+out = {k: data[k] for k in TOP if k in data}
+
+projects = {}
+for path, cfg in (data.get("projects") or {}).items():
+    kept = {k: v for k, v in cfg.items() if k in PROJECT and v not in (None, [], {})}
+    if kept:
+        projects[path] = kept
+out["projects"] = projects
+
+if os.environ.get("INCLUDE_CREDENTIALS") == "1":
+    for k in ("oauthAccount", "userID"):
+        if k in data:
+            out[k] = data[k]
+
+with open(dst, "w") as fh:
+    json.dump(out, fh, indent=2, sort_keys=True)
+    fh.write("\n")
+
+print(f"  kept {len(out)} top-level keys, {len(projects)} project entries "
+      f"(of {len(data)} and {len(data.get('projects') or {})})")
+PY
+	note "  ~/.claude.json -> config keys only (caches, telemetry, machineID stripped)"
+else
+	SKIPPED+=("~/.claude.json (absent)")
+fi
+
+# --- Credentials, only on request ------------------------------------------
+if ((INCLUDE_CREDENTIALS)); then
+	note ""
+	note "Credentials (INCLUDED -- archive is sensitive):"
+	copy_into "${CLAUDE_DIR}/.credentials.json" ".claude"
+else
+	SKIPPED+=("~/.claude/.credentials.json (excluded by default)")
+	SKIPPED+=("oauthAccount / userID / machineID in ~/.claude.json (stripped)")
+fi
+
+# --- Follow symlinks out of the config tree --------------------------------
+# Skills and local plugins are often symlinks to content living elsewhere in
+# $HOME (a hand-written plugin in ~/dev, say). The link alone is worthless on
+# restore, so the target's content is captured at its home-relative path --
+# `rsync files/ ~/` then puts it back where the link expects it.
+#
+# Targets are left external when they are package-owned (/usr/share), installed
+# applications (~/.local/share, ~/.local/lib), or caches: those are reinstalled,
+# not restored, and archiving them would balloon the backup.
+readonly MAX_LINK_MB=50
+SYMLINKS="${ROOT}/SYMLINKS.txt"
+declare -A SEEN_TARGET=()
+
+record_link() {
+	printf '%-34s %-10s %s\n' "$1" "$2" "$3" >>"$SYMLINKS"
+}
+
+capture_link_target() {
+	local link="$1" name target rel size_mb
+	name="$(basename "$link")"
+	target="$(readlink -f "$link" 2>/dev/null || true)"
+
+	if [[ -z "$target" || ! -e "$target" ]]; then
+		record_link "$name" "broken" "$(readlink "$link" 2>/dev/null || echo '?')"
+		SKIPPED+=("symlink ${name} -> dangling target")
+		return 0
+	fi
+
+	case "$target" in
+	"${AGENTS_DIR}"/*)
+		# Already archived wholesale as ~/.agents/skills.
+		record_link "$name" "captured" "${target/#$HOME/\~}"
+		return 0
+		;;
+	"${HOME}"/.local/share/* | "${HOME}"/.local/lib/* | "${HOME}"/.cache/*)
+		record_link "$name" "external" "${target/#$HOME/\~} (installed app)"
+		return 0
+		;;
+	"${HOME}"/*) ;; # fall through and capture
+	*)
+		record_link "$name" "external" "${target} (system/package-owned)"
+		return 0
+		;;
+	esac
+
+	if [[ -n "${SEEN_TARGET[$target]:-}" ]]; then
+		record_link "$name" "captured" "${target/#$HOME/\~}"
+		return 0
+	fi
+
+	size_mb=$(($(du -sm "$target" 2>/dev/null | cut -f1 || echo 0)))
+	if ((size_mb > MAX_LINK_MB)); then
+		record_link "$name" "too-big" "${target/#$HOME/\~} (${size_mb}MB > ${MAX_LINK_MB}MB)"
+		SKIPPED+=("${target/#$HOME/\~} (${size_mb}MB, over --link limit)")
+		return 0
+	fi
+
+	# Mirror the target at its home-relative path inside files/.
+	rel="${target#"${HOME}"/}"
+	mkdir -p "${FILES}/$(dirname "$rel")"
+	cp -a "$target" "${FILES}/$(dirname "$rel")/"
+	SEEN_TARGET[$target]=1
+	say "${target/#$HOME/\~} (via ${name})"
+	note "  ${target/#$HOME/\~}  (target of ${name})"
+	record_link "$name" "captured" "${target/#$HOME/\~}"
+}
+
+note ""
+note "Symlink targets followed out of the config tree:"
+{
+	echo "# Symlinks found in the Claude Code config at backup time."
+	echo "#"
+	echo "#   captured  target content is inside this archive"
+	echo "#   external  reinstall it separately; the link dangles until you do"
+	echo "#   too-big   over the ${MAX_LINK_MB}MB limit, back it up yourself"
+	echo "#   broken    already dangling before the backup ran"
+	echo
+	printf '%-34s %-10s %s\n' "LINK" "STATE" "TARGET"
+} >"$SYMLINKS"
+
+link_targets_captured=0
+for scan in "${CLAUDE_DIR}/skills" "${CLAUDE_DIR}/local-plugins" \
+	"${CLAUDE_DIR}/agents" "${CLAUDE_DIR}/commands" "${AGENTS_DIR}/skills"; do
+	[[ -d "$scan" ]] || continue
+	printf '\n# %s\n' "${scan/#$HOME/\~}" >>"$SYMLINKS"
+	found=0
+	for link in "$scan"/*; do
+		[[ -L "$link" ]] || continue
+		capture_link_target "$link"
+		found=1
+	done
+	((found)) || echo "  (no symlinks)" >>"$SYMLINKS"
+done
+link_targets_captured=${#SEEN_TARGET[@]}
+((link_targets_captured)) || note "  (none needed capturing)"
+
+# --- Manifest ---------------------------------------------------------------
+claude_version="$(claude --version 2>/dev/null | head -1 || echo unknown)"
+staged_size="$(du -sh "$FILES" | cut -f1)"
+
+{
+	echo "Claude Code config backup"
+	echo "========================="
+	echo
+	echo "Created:         $(date -Is)"
+	echo "Host:            $(hostname)"
+	echo "User:            ${USER}"
+	echo "Claude version:  ${claude_version}"
+	echo "Staged size:     ${staged_size}"
+	echo "Credentials:     $( ((INCLUDE_CREDENTIALS)) && echo "INCLUDED" || echo "excluded")"
+	echo "Encrypted:       $( ((ENCRYPT)) && echo "yes (age)" || echo "no")"
+	echo
+	echo "Captured"
+	echo "--------"
+	cat "$MANIFEST_BODY"
+	echo
+	echo "Skipped"
+	echo "-------"
+	if ((${#SKIPPED[@]})); then
+		printf '  %s\n' "${SKIPPED[@]}"
+	else
+		echo "  (nothing)"
+	fi
+	echo
+	echo "Deliberately not archived (regenerates itself)"
+	echo "----------------------------------------------"
+	echo "  ~/.claude/plugins/{cache,marketplaces}   cloned repos, restored by 'claude plugin install'"
+	echo "  ~/.claude/projects/*/*.jsonl             session transcripts"
+	echo "  ~/.claude/{remote,security,file-history,debug,session-env}"
+	echo "  ~/.claude/{telemetry,statsig,shell-snapshots,paste-cache,todos,tasks,sessions}"
+	echo "  ~/.claude/history.jsonl"
+	echo
+	echo "Installed plugins at backup time"
+	echo "--------------------------------"
+	jq -r '(.repositories // .plugins // .) | keys[]? // empty' \
+		"${CLAUDE_DIR}/plugins/installed_plugins.json" 2>/dev/null |
+		sed 's/^/  /' || echo "  (see files/.claude/plugins/installed_plugins.json)"
+} >"${ROOT}/MANIFEST.txt"
+
+# --- Restore instructions ---------------------------------------------------
+cat >"${ROOT}/RESTORE.md" <<'EOF'
+# Restoring this backup
+
+## 1. Unpack
+
+    tar --zstd -xf claude-config-<stamp>.tar.zst      # add nothing for plain archives
+    # encrypted:
+    age -d claude-config-<stamp>.tar.zst.age | tar --zstd -x
+
+## 2. Copy the files back
+
+Everything under `files/` mirrors your home directory, so:
+
+    rsync -av --backup --suffix=.pre-restore files/ "$HOME"/
+
+`--backup` renames anything it would overwrite to `*.pre-restore`, so a restore
+onto a live setup is reversible. Drop it for a clean machine.
+
+Symlinks under `.claude/skills/` and `.claude/local-plugins/` are preserved as
+symlinks. Where a link pointed to content elsewhere in your home directory (a
+hand-written plugin in `~/dev`, say), that content is archived at its original
+home-relative path, so the same `rsync` restores it and the link resolves.
+
+Check `SYMLINKS.txt` for the full picture. Anything marked `external` is
+package-owned or an installed app (Omarchy skills, terminal-browser) and must be
+reinstalled separately — those links dangle harmlessly until you do.
+
+## 3. Reinstall plugins
+
+The plugin *repos* are not archived, only the manifests. Restore them with:
+
+    jq -r '(.repositories // .plugins // .) | keys[]' \
+      ~/.claude/plugins/installed_plugins.json
+
+then `claude plugin install <name>` for each, or let Claude Code re-fetch them
+from `known_marketplaces.json` on next launch.
+
+## 4. Log in
+
+Unless this archive was made with `--include-credentials`, authentication was not
+captured. Run `claude` and sign in once.
+
+## Note on `.claude.json`
+
+The archived copy is *filtered* — MCP servers, per-project trust and tool
+permissions, and repo paths only. Caches, telemetry, and machine identity were
+stripped. Restoring it over an existing `~/.claude.json` therefore drops UI state
+(tips seen, onboarding flags), which Claude Code simply rebuilds. To be careful,
+merge instead of overwrite:
+
+    jq -s '.[0] * .[1]' ~/.claude.json files/.claude.json > /tmp/merged.json
+    mv /tmp/merged.json ~/.claude.json
+EOF
+
+# --- Archive ----------------------------------------------------------------
+mkdir -p "$DEST_DIR"
+chmod 700 "$DEST_DIR"
+
+archive="${DEST_DIR}/${NAME}.tar.zst"
+tar -C "$STAGE" --zstd -cf "$archive" "$NAME"
+
+if ((ENCRYPT)); then
+	echo "Encrypting (you will be asked for a passphrase)..."
+	age -p -o "${archive}.age" "$archive"
+	rm -f "$archive"
+	archive="${archive}.age"
+fi
+
+chmod 600 "$archive"
+
+# --- Retention --------------------------------------------------------------
+# Pruned archives go to the trash when possible, so an over-aggressive --keep
+# is recoverable. Only claude-config-* archives are ever considered.
+pruned=0
+prune_dest="deleted"
+if ((KEEP > 0)); then
+	while IFS= read -r old; do
+		if command -v trash >/dev/null; then
+			trash "$old" >/dev/null 2>&1 && prune_dest="trashed" || rm -f "$old"
+		else
+			rm -f "$old"
+		fi
+		pruned=$((pruned + 1))
+	done < <(find "$DEST_DIR" -maxdepth 1 -name 'claude-config-*.tar.zst*' -printf '%T@ %p\n' 2>/dev/null |
+		sort -rn | tail -n +$((KEEP + 1)) | cut -d' ' -f2-)
+fi
+
+echo
+echo "Backup complete"
+echo "  archive:  ${archive}"
+echo "  size:     $(du -h "$archive" | cut -f1)  (from ${staged_size} staged)"
+echo "  memory:   ${memory_count} project memory dir(s)"
+((link_targets_captured)) && echo "  linked:   ${link_targets_captured} symlink target(s) followed (see SYMLINKS.txt)"
+((pruned)) && echo "  pruned:   ${pruned} old archive(s) ${prune_dest}, keeping ${KEEP}"
+((INCLUDE_CREDENTIALS)) && echo "  WARNING:  contains credentials — keep this archive private"
+echo
+echo "Inspect with:  tar --zstd -tf '${archive}' | head"

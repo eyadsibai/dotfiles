@@ -1,0 +1,557 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = []
+# ///
+"""tv-check: probe every channel in the TV playlist; prune dead ones, revive pruned ones.
+
+Your playlist (~/.config/tv/tv.m3u) is only ever read. Pruned channels are listed
+in ~/.local/state/tv/offline.m3u, and the player plays ~/.local/state/tv/playing.m3u:
+your playlist minus the pruned channels, rebuilt after every prune or revive and
+by --sync (the tv launcher runs it on every start, so your edits show up at once).
+
+  tv-check                    probe all channels, print live/dead per group
+  tv-check --dead             print only the channels that failed
+  tv-check --filter rotana    only probe channels whose name or group matches
+  tv-check --prune            drop channels that have failed in the last 2 runs
+                              (see --prune-after) from playing.m3u by adding them
+                              to offline.m3u. Refuses when over half the probed
+                              channels are dead (network down?); see --max-dead
+  tv-check --offline          also probe the pruned channels
+  tv-check --revive           bring back pruned channels that worked in the last
+                              2 runs (see --revive-after), at their place in your
+                              playlist; implies --offline
+  tv-check --sync             rebuild playing.m3u without probing and print its path
+  tv-check --json             machine-readable result:
+                              {channels, offline, pruned, revived, playing}
+  tv-check --dump             print the parsed playlist (N, group, name, url; tab-separated)
+
+Every run updates ~/.local/state/tv/health.json with per-URL failure and success
+streaks, so one bad probe never prunes anything and one lucky probe never revives. Channels tagged "[Not 24/7]" are
+reported but never pruned. Probing mirrors what mpv does: same referer /
+user-agent headers, TLS verification off, and tv-resolve="…" channels are
+probed through a freshly fetched signed link.
+
+Only channels that are in your playlist count: remove one from it and its
+offline.m3u entry is ignored. State uses $XDG_STATE_HOME/tv when set. Custom
+playlists keep their offline.m3u and playing.m3u under tv/playlists/<path-hash>/;
+the default playlist uses tv/ itself. Only one check may run at a time.
+"""
+
+from __future__ import annotations
+
+import argparse
+import fcntl
+import functools
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+
+CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "tv"
+STATE_DIR = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state") / "tv"
+HEALTH_FILE = STATE_DIR / "health.json"
+
+
+class CheckError(Exception):
+    """An expected conflict that needs a new run, not a traceback."""
+
+
+def archive_dir(playlist: Path) -> Path:
+    """Keep the default archive compatible; isolate overrides by canonical path."""
+    if playlist.resolve() == (CONFIG_DIR / "tv.m3u").resolve():
+        return STATE_DIR
+    key = hashlib.sha256(os.fsencode(playlist.resolve())).hexdigest()
+    return STATE_DIR / "playlists" / key
+
+
+@contextmanager
+def checker_lock():
+    # Health is shared by URL across playlists, so lock all checks, not just edits.
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    with (STATE_DIR / "check.lock").open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise CheckError("another tv-check is already running; try again when it finishes") from exc
+        yield
+
+
+@contextmanager
+def write_lock():
+    """Held briefly while offline.m3u and playing.m3u are written, so a --sync
+    from the launcher waits for a check's write instead of racing it."""
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    with (STATE_DIR / "write.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield
+
+
+def snapshot(path: Path) -> bytes | None:
+    try:
+        return path.read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+@dataclass
+class Entry:
+    name: str
+    group: str
+    url: str
+    lines: list[str]
+    referrer: str | None = None
+    user_agent: str | None = None
+    origin: str | None = None
+    resolve: str | None = None
+    live: bool | None = None
+    detail: str = ""
+    attempts: int = 0
+
+    @property
+    def not_24_7(self) -> bool:
+        return "not 24/7" in self.name.lower()
+
+    @property
+    def protected(self) -> bool:
+        return self.not_24_7
+
+
+@dataclass
+class Node:
+    raw: str | None = None
+    entry: Entry | None = None
+
+
+def extinf_name(line: str) -> str:
+    """Text after the first comma outside a quoted attribute value (same rule as
+    tv and tv.lua; tests/parsers.sh checks they agree)."""
+    quoted = False
+    for i, ch in enumerate(line):
+        if ch == '"':
+            quoted = not quoted
+        elif ch == "," and not quoted:
+            return line[i + 1 :].strip()
+    return ""
+
+
+def attr(line: str, name: str) -> str | None:
+    m = re.search(rf'{name}="([^"]*)"', line)
+    return m.group(1) if m else None
+
+
+def parse_playlist(path: Path) -> list[Node]:
+    nodes: list[Node] = []
+    pending: list[str] = []
+
+    def flush_pending() -> None:
+        nodes.extend(Node(raw=line) for line in pending)
+        pending.clear()
+
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.rstrip("\r")
+        if line.startswith("#EXTINF"):
+            flush_pending()
+            pending.append(line)
+        elif line.startswith("#EXTVLCOPT:") and pending:
+            pending.append(line)
+        elif line.startswith("#") or not line.strip():
+            nodes.append(Node(raw=line))
+        else:
+            url = line.strip()
+            extinf = pending[0] if pending and pending[0].startswith("#EXTINF") else ""
+            entry = Entry(
+                name=extinf_name(extinf) or url,
+                group=(attr(extinf, "group-title") or "").split(";")[0].strip() or "Other",
+                url=url,
+                lines=[*pending, line],
+                referrer=attr(extinf, "http-referrer"),
+                user_agent=attr(extinf, "http-user-agent"),
+                origin=attr(extinf, "http-origin"),
+                resolve=attr(extinf, "tv-resolve"),
+            )
+            for opt in pending[1:]:
+                key, _, value = opt[len("#EXTVLCOPT:") :].partition("=")
+                if key == "http-referrer":
+                    entry.referrer = value.strip()
+                elif key == "http-user-agent":
+                    entry.user_agent = value.strip()
+                elif key == "http-origin":
+                    entry.origin = value.strip()
+            pending.clear()
+            nodes.append(Node(entry=entry))
+    flush_pending()
+    return nodes
+
+
+@functools.lru_cache
+def fetch_text(url: str) -> str:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return resp.read().decode("utf-8", errors="replace")
+
+
+def resolve(entry: Entry) -> str | None:
+    """The signed URL for a tv-resolve channel: the line in that playlist whose URL
+    minus its ?query matches the channel's (same rule as tv.lua)."""
+    try:
+        text = fetch_text(entry.resolve)
+    except (OSError, ValueError):
+        return None
+    base = entry.url.split("?", 1)[0]
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and line.split("?", 1)[0] == base:
+            return line
+    return None
+
+
+def probe(entry: Entry, timeout: float) -> tuple[bool, str]:
+    url = entry.url
+    if entry.resolve:
+        url = resolve(entry)
+        if not url:
+            return False, f"no signed link from {entry.resolve}"[:90]
+    cmd = [
+        "ffprobe", "-v", "error", "-tls_verify", "0",
+        "-rw_timeout", str(int(timeout * 1_000_000)),
+    ]
+    if entry.user_agent:
+        cmd += ["-user_agent", entry.user_agent]
+    headers = ""
+    if entry.referrer:
+        headers += f"Referer: {entry.referrer}\r\n"
+    if entry.origin:
+        headers += f"Origin: {entry.origin}\r\n"
+    if headers:
+        cmd += ["-headers", headers]
+    cmd += ["-show_entries", "stream=codec_type,codec_name,width,height", "-of", "json", url]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 8, check=False)
+    except subprocess.TimeoutExpired:
+        return False, "timeout"
+    if proc.returncode == 0:
+        try:
+            streams = json.loads(proc.stdout or "{}").get("streams", [])
+        except json.JSONDecodeError:
+            streams = []
+        video = [s for s in streams if s.get("codec_type") == "video" and s.get("width")]
+        audio = [s for s in streams if s.get("codec_type") == "audio"]
+        if video:
+            best = max(video, key=lambda s: s.get("width") or 0)
+            return True, f"{best.get('codec_name', '?')} {best.get('width')}x{best.get('height')}"
+        if audio:
+            return True, f"audio-only {audio[0].get('codec_name', '?')}"
+        return False, "no streams found"
+    err_lines = [line.strip() for line in proc.stderr.splitlines() if line.strip()]
+    err = err_lines[-1] if err_lines else "ffprobe failed"
+    err = re.sub(r"^\[[^\]]+\]\s*", "", err)
+    if url in err:
+        err = err.replace(url + ": ", "")
+    return False, err[:90]
+
+
+def run_probes(entries: list[Entry], workers: int, timeout: float, label: str) -> None:
+    total = len(entries)
+    done = 0
+    show_progress = sys.stderr.isatty()
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+        futures = {pool.submit(probe, e, timeout): e for e in entries}
+        for fut in as_completed(futures):
+            entry = futures[fut]
+            entry.live, entry.detail = fut.result()
+            entry.attempts += 1
+            done += 1
+            if show_progress:
+                print(f"\r{label}: {done}/{total}", end="", file=sys.stderr, flush=True)
+    if show_progress and total:
+        print("", file=sys.stderr)
+
+
+def atomic_write(path: Path, text: str) -> None:
+    """Replace path with text in one step, so readers (mpv) and crashes never see
+    a half-written file. Writes through a symlink to its target."""
+    path = path.resolve()
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        if path.exists():
+            shutil.copymode(path, tmp)
+        os.replace(tmp, path)
+        dir_fd = os.open(path.parent, os.O_DIRECTORY)
+        try:
+            os.fsync(dir_fd)
+        finally:
+            os.close(dir_fd)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
+def load_health() -> dict:
+    try:
+        return json.loads(HEALTH_FILE.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def update_health(health: dict, entries: list[Entry]) -> None:
+    """Record results by URL, retaining records belonging to other playlists."""
+    now = datetime.now(UTC).isoformat(timespec="seconds")
+    for e in entries:
+        rec = health.setdefault(e.url, {})
+        rec["name"] = e.name
+        rec["group"] = e.group
+        rec["last_checked"] = now
+        if e.live:
+            rec["fails"] = 0
+            rec["oks"] = int(rec.get("oks", 0)) + 1
+            rec["last_ok"] = now
+            rec.pop("last_error", None)
+        else:
+            rec["fails"] = int(rec.get("fails", 0)) + 1
+            rec["oks"] = 0
+            rec["last_error"] = e.detail
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    atomic_write(HEALTH_FILE, json.dumps(health, indent=1, ensure_ascii=False, sort_keys=True))
+
+
+def render(nodes: list[Node], drop: set[str]) -> list[str]:
+    """The lines of nodes without the entries whose URL is in drop, and without
+    the "# pruned …" note (and the blank line before it) written above each one."""
+    out: list[str] = []
+    for node in nodes:
+        if node.entry is None:
+            out.append(node.raw or "")
+        elif node.entry.url in drop:
+            if out and out[-1].startswith("# pruned "):
+                out.pop()
+                if out and not out[-1].strip():
+                    out.pop()
+        else:
+            out.extend(node.entry.lines)
+    return out
+
+
+def offline_urls(offline_file: Path) -> set[str]:
+    if not offline_file.is_file():
+        return set()
+    return {n.entry.url for n in parse_playlist(offline_file) if n.entry is not None}
+
+
+def write_playing(playlist: Path, archive: Path) -> Path:
+    """Rebuild playing.m3u from the playlist as it is now, minus offline.m3u.
+    Call with write_lock held."""
+    lines = render(parse_playlist(playlist), offline_urls(archive / "offline.m3u"))
+    note = f"# Generated by tv-check from {playlist} minus the pruned channels. Edit that file, not this one."
+    at = 1 if lines and lines[0].startswith("#EXTM3U") else 0
+    lines[at:at] = [note]
+    archive.mkdir(parents=True, exist_ok=True)
+    playing = archive / "playing.m3u"
+    atomic_write(playing, "\n".join(lines).rstrip("\n") + "\n")
+    return playing
+
+
+def update_offline(off_nodes: list[Node], pruned: list[Entry], revived: list[Entry],
+                   offline_file: Path, before: bytes | None) -> None:
+    """Add pruned channels to offline.m3u and drop revived ones. Refuses if the
+    file was edited by hand since it was read."""
+    if snapshot(offline_file) != before:
+        raise CheckError(f"{offline_file} changed during the check; rerun to use the updated file")
+    lines = render(off_nodes, {e.url for e in revived}) if off_nodes else ["#EXTM3U"]
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    for e in pruned:
+        lines += ["", f"# pruned {stamp}: {e.name} ({e.detail})", *e.lines]
+    offline_file.parent.mkdir(parents=True, exist_ok=True)
+    atomic_write(offline_file, "\n".join(lines).rstrip("\n") + "\n")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("-p", "--playlist", type=Path, default=Path(os.environ.get("TV_M3U") or CONFIG_DIR / "tv.m3u"))
+    ap.add_argument("-j", "--jobs", type=int, default=12, help="parallel probes (default 12)")
+    ap.add_argument("-t", "--timeout", type=float, default=15, help="seconds per probe (default 15)")
+    ap.add_argument("-f", "--filter", help="only channels whose name or group contains this (case-insensitive)")
+    ap.add_argument("--no-retry", action="store_true", help="skip the second attempt for failed channels")
+    ap.add_argument("--dead", action="store_true", help="print only dead channels")
+    ap.add_argument("--json", action="store_true", help="print JSON instead of the table")
+    ap.add_argument("--dump", action="store_true", help="print the parsed playlist and exit (no probing)")
+    ap.add_argument("--sync", action="store_true", help="rebuild playing.m3u from the playlist, print its path and exit (no probing)")
+    ap.add_argument("--prune", action="store_true", help="drop channels dead for --prune-after runs from playing.m3u")
+    ap.add_argument("--prune-after", type=int, default=2, help="consecutive failed runs before --prune drops a channel (default 2)")
+    ap.add_argument("--max-dead", type=float, default=0.5,
+                    help="refuse to --prune when more than this fraction of probed channels is dead (default 0.5)")
+    ap.add_argument("--offline", action="store_true", help="also probe the pruned channels")
+    ap.add_argument("--revive", action="store_true", help="bring back pruned channels live for --revive-after runs (implies --offline)")
+    ap.add_argument("--revive-after", type=int, default=2, help="consecutive live runs before --revive restores a channel (default 2)")
+    args = ap.parse_args()
+
+    if args.dump:
+        if not args.playlist.is_file():
+            print(f"tv-check: playlist not found: {args.playlist}", file=sys.stderr)
+            return 2
+        entries = [n.entry for n in parse_playlist(args.playlist) if n.entry is not None]
+        for i, e in enumerate(entries, 1):
+            print(f"{i}\t{e.group}\t{e.name}\t{e.url}")
+        return 0
+
+    if args.sync:
+        if not args.playlist.is_file():
+            print(f"tv-check: playlist not found: {args.playlist}", file=sys.stderr)
+            return 2
+        playlist = args.playlist.resolve()
+        try:
+            with write_lock():
+                print(write_playing(playlist, archive_dir(playlist)))
+        except OSError as exc:
+            print(f"tv-check: {exc}", file=sys.stderr)
+            return 2
+        return 0
+
+    if not shutil.which("ffprobe"):
+        print("tv-check: ffprobe not found (install ffmpeg)", file=sys.stderr)
+        return 2
+    if not args.playlist.is_file():
+        print(f"tv-check: playlist not found: {args.playlist}", file=sys.stderr)
+        return 2
+
+    args.playlist = args.playlist.resolve()
+    try:
+        with checker_lock():
+            return check_playlist(args)
+    except (OSError, CheckError) as exc:
+        print(f"tv-check: {exc}", file=sys.stderr)
+        return 2
+
+
+def check_playlist(args: argparse.Namespace) -> int:
+    archive = archive_dir(args.playlist)
+    offline_file = archive / "offline.m3u"
+    offline_before = snapshot(offline_file)
+    entries = [n.entry for n in parse_playlist(args.playlist) if n.entry is not None]
+    off_nodes = parse_playlist(offline_file) if offline_file.is_file() else []
+    off_urls = {n.entry.url for n in off_nodes if n.entry is not None}
+    # Pruned channels are probed with the playlist's current headers, not the
+    # copy in offline.m3u, and only while they're still in the playlist.
+    active = [e for e in entries if e.url not in off_urls]
+    off_entries = [e for e in entries if e.url in off_urls]
+
+    def matches(e: Entry) -> bool:
+        q = (args.filter or "").lower()
+        return q in e.name.lower() or q in e.group.lower()
+
+    selected = [e for e in active if matches(e)]
+    off_selected = [e for e in off_entries if matches(e)] if args.offline or args.revive else []
+    if not selected and not off_selected:
+        print("tv-check: no channels selected", file=sys.stderr)
+        return 1
+
+    started = time.monotonic()
+    probed = selected + off_selected
+    run_probes(probed, args.jobs, args.timeout, "probing")
+    failed = [e for e in probed if not e.live]
+    if failed and not args.no_retry:
+        time.sleep(2)
+        run_probes(failed, max(1, args.jobs // 2), args.timeout, "retrying failed")
+
+    # Health is keyed by URL, so record it even if the playlist was edited meanwhile.
+    health = load_health()
+    update_health(health, probed)
+    elapsed = time.monotonic() - started
+
+    def streak(e: Entry, key: str) -> int:
+        return int(health.get(e.url, {}).get(key, 0))
+
+    live = [e for e in selected if e.live]
+    dead = [e for e in selected if not e.live]
+    prunable = [e for e in dead if not e.protected and streak(e, "fails") >= args.prune_after]
+    back = [e for e in off_selected if e.live]
+    revivable = [e for e in back if streak(e, "oks") >= args.revive_after]
+
+    # Everything failing at once is the network (or a VPN, or DNS), not the channels.
+    prune_refused = bool(args.prune and prunable and len(dead) > args.max_dead * len(selected))
+    pruned = prunable if args.prune and not prune_refused else []
+    revived = revivable if args.revive else []
+    playing = None
+    if pruned or revived or args.prune or args.revive:
+        with write_lock():
+            if pruned or revived:
+                update_offline(off_nodes, pruned, revived, offline_file, offline_before)
+            # Rebuilt from the playlist as it is now, so edits made while probing count.
+            playing = write_playing(args.playlist, archive)
+
+    if args.json:
+        print(json.dumps({
+            "channels": [{
+                "name": e.name, "group": e.group, "url": e.url, "live": bool(e.live),
+                "detail": e.detail, "fails": health.get(e.url, {}).get("fails", 0),
+                "protected": e.protected,
+            } for e in selected],
+            "offline": [{
+                "name": e.name, "group": e.group, "url": e.url, "live": bool(e.live),
+                "detail": e.detail, "oks": streak(e, "oks"),
+            } for e in off_selected],
+            "pruned": [e.url for e in pruned],
+            "revived": [e.url for e in revived],
+            "playing": str(playing) if playing else None,
+        }, indent=1, ensure_ascii=False))
+    else:
+        if not args.dead and selected:
+            groups: dict[str, list[int]] = {}
+            for e in selected:
+                g = groups.setdefault(e.group, [0, 0])
+                g[0 if e.live else 1] += 1
+            width = max(len(g) for g in groups) + 2
+            print(f"{'group':<{width}} live  dead")
+            for g, (nl, nd) in sorted(groups.items()):
+                print(f"{g:<{width}} {nl:>4}  {nd:>4}")
+            print()
+        if dead:
+            print("dead channels:")
+            for e in sorted(dead, key=lambda e: (e.group, e.name.lower())):
+                flag = " [never pruned]" if e.protected else ""
+                print(f"  {e.group:<24} {e.name:<44} {e.detail}  (run {streak(e, 'fails')}){flag}")
+            print()
+        print(f"{len(live)} live, {len(dead)} dead of {len(selected)} probed in {elapsed:.0f}s")
+        if prunable:
+            names = ", ".join(e.name for e in prunable[:6]) + (" …" if len(prunable) > 6 else "")
+            print(f"{len(prunable)} dead for {args.prune_after}+ runs: {names}")
+            if not args.prune:
+                print("run with --prune to drop them from the channel list")
+        if off_selected:
+            print(f"offline: {len(back)} of {len(off_selected)} pruned channels are live again")
+            for e in sorted(back, key=lambda e: (e.group, e.name.lower())):
+                print(f"  {e.group:<24} {e.name:<44} {e.detail}  (live {streak(e, 'oks')} runs)")
+            if revivable and not args.revive:
+                print(f"{len(revivable)} live for {args.revive_after}+ runs; run with --revive to restore them")
+        if pruned:
+            print(f"pruned {len(pruned)} channels (listed in {offline_file})")
+        elif args.prune and not prune_refused:
+            print("nothing to prune")
+        if revived:
+            print(f"revived {len(revived)} channels: " + ", ".join(e.name for e in revived))
+        elif args.revive:
+            print("nothing to revive")
+    if prune_refused:
+        print(f"tv-check: not pruning: {len(dead)} of {len(selected)} channels are dead, which looks like a network"
+              f" problem (--max-dead {args.max_dead:g}; pass --max-dead 1 to prune anyway)", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

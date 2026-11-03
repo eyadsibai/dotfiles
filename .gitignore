@@ -1,3 +1,7 @@
 result
 result-*
 .direnv/
+
+# Tool caches
+.ruff_cache/
+__pycache__/

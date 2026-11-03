@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Mirror the Honor Magic V6 (PNM-N49) to cachy with scrcpy over wireless adb.
+#
+# The wireless-debugging port is randomised every time the toggle is flipped,
+# and Android clears the toggle on reboot -- so the port is rediscovered by
+# scanning rather than hardcoded. The pairing itself is persistent: you only
+# need `adb pair` again if the phone is factory reset or you forget this PC.
+#
+# Extra args are passed straight through to scrcpy, e.g.
+#   mirror-v6 --display-id=1     # inner (unfolded) screen instead of the cover
+#   mirror-v6 --turn-screen-off  # blank the phone panel while mirroring
+
+set -euo pipefail
+
+MAC="ba:39:6b:dc:11:6a"
+SUBNET="192.168.0.0/24"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/mirror-v6.ip"
+
+log()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
+die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
+
+serial=$(adb devices | awk '/\tdevice$/ {print $1; exit}')
+
+if [ -n "$serial" ]; then
+  log "Already connected: $serial"
+else
+  ip=""
+  [ -f "$STATE" ] && ip=$(cat "$STATE")
+
+  if [ -n "$ip" ] && ping -c1 -W1 "$ip" >/dev/null 2>&1; then
+    log "Phone at $ip (cached)"
+  else
+    log "Locating phone on $SUBNET ..."
+    nmap -sn "$SUBNET" >/dev/null 2>&1 || true
+    ip=$(ip neigh | awk -v m="$MAC" 'tolower($5)==m {print $1; exit}')
+    [ -n "$ip" ] || die "Phone not found. Is it awake and on the same Wi-Fi (not mobile data)?"
+    log "Found phone at $ip"
+  fi
+
+  mkdir -p "$(dirname "$STATE")"
+  printf '%s\n' "$ip" > "$STATE"
+
+  log "Scanning for the adb port ..."
+  ports=$(nmap -Pn -T4 --min-rate 3000 -p 30000-65535 "$ip" 2>/dev/null \
+          | awk '/^[0-9]+\/tcp +open/ {split($1,a,"/"); print a[1]}')
+  [ -n "$ports" ] || die "No open ports on $ip -- turn on Developer options > Wireless debugging."
+
+  for p in $ports; do
+    if timeout 8 adb connect "$ip:$p" 2>/dev/null | grep -q '^connected to'; then
+      serial="$ip:$p"
+      log "Connected on port $p"
+      break
+    fi
+  done
+
+  [ -n "$serial" ] || die "Found open ports but none accepted adb.
+Re-pair: on the phone open Wireless debugging > Pair device with pairing code,
+then run:  adb pair $ip:<PORT> <CODE>"
+fi
+
+# Ports scanned before the right one is found linger as dead transports.
+adb devices | awk '/\toffline$/ {print $1}' | while read -r d; do
+  adb disconnect "$d" >/dev/null 2>&1 || true
+done
+
+log "Launching scrcpy ..."
+exec scrcpy -s "$serial" \
+  --video-codec=h265 \
+  --video-bit-rate=12M \
+  --max-fps=60 \
+  --stay-awake \
+  --window-title="Magic V6" \
+  "$@"

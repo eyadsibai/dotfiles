@@ -1,0 +1,25 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="a" group-title="News;Arabic",Comma, In Name
+http://e/1.m3u8
+#EXTINF:-1 tvg-name="Foo, Bar" group-title="Movies",Attr Comma
+http://e/2.m3u8
+#EXTINF:-1 group-title="Music",Quote "Live" HD
+http://e/3.m3u8
+#EXTINF:-1 group-title="Kids",CRLF Channel
+http://e/4.m3u8
+#EXTINF:-1 group-title="",No Group
+http://e/5.m3u8
+#EXTINF:-1 group-title=" Spaced ",  Spaced Name  
+  http://e/6.m3u8  
+#EXTINF:-1 group-title="Sports" http-referrer="https://r/",With Opts
+#EXTVLCOPT:http-user-agent=Mozilla/5.0 (X11, Linux)
+http://e/7.m3u8
+
+#EXTINF:-1 group-title="Other stuff",After Comment
+# a comment between EXTINF and URL
+http://e/8.m3u8
+http://e/9-bare.m3u8
+#EXTINF:-1 group-title="Unicode",قناة عربية
+http://e/10.m3u8
+#EXTINF:-1 group-title="News",
+http://e/11.m3u8

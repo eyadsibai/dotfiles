@@ -1,0 +1,152 @@
+#!/bin/bash
+
+# A spoken conversation with Claude Code. Hold F10, speak, release: Claude runs
+# headless (no window, and -p skips the workspace trust dialog) and Piper reads
+# the answer aloud. Talking again within 10 minutes of the last answer continues
+# the same conversation; `reset` starts a new one.
+#
+#   voice-agent start|stop   push-to-talk, bound to F10 press/release
+#   voice-agent ask <text>   same turn without the microphone
+#   voice-agent reset        forget the current conversation
+#   voice-agent hush         stop speaking
+
+set -euo pipefail
+
+state="${XDG_STATE_HOME:-$HOME/.local/state}/voice-agent"
+runtime="${XDG_RUNTIME_DIR:-/tmp}/voice-agent"
+transcript="$runtime/transcript.txt"
+session_file="$state/session"
+log="$state/log"
+voice="$HOME/.local/share/piper-voices/en_US-lessac-medium.onnx"
+idle_reset_secs=600
+
+voice_prompt="You are a hands-free voice assistant on the user's Omarchy desktop. \
+They spoke this request into a push-to-talk key and it was transcribed by \
+speech-to-text, so words may be misheard; interpret generously. There is no \
+window: your final reply is read aloud by text-to-speech and nothing else is \
+shown. Keep replies short and conversational, one to three sentences unless \
+they ask for detail, with no markdown, lists, code, tables, URLs or long file \
+paths. Do the work they ask for with your tools, then say what you did. To show \
+them something, open it on their screen, for example with xdg-open. You cannot \
+use interactive question prompts; if you need a decision, ask it in your reply \
+and they will answer on their next turn."
+
+mkdir -p "$state" "$runtime"
+
+hush() {
+  local pid
+  [[ -f $runtime/speech.pid ]] || return 0
+  pid=$(<"$runtime/speech.pid")
+  kill -- -"$pid" 2>/dev/null || true
+  rm -f "$runtime/speech.pid"
+}
+
+speak() {
+  local rate
+  rate=$(jq -r .audio.sample_rate "$voice.json")
+  hush
+  # Its own process group, so the next F10 press can cut the whole pipeline off.
+  setsid bash -c 'piper -m "$1" --output-raw 2>/dev/null <<<"$2" |
+    pw-cat --playback --raw --rate "$3" --channels 1 --format s16 -' _ "$voice" "$1" "$rate" &
+  echo $! >"$runtime/speech.pid"
+}
+
+# Whatever markdown slips past the prompt would otherwise be read out as symbols.
+plain() {
+  sed -E 's/\[([^]]*)\]\([^)]*\)/\1/g; s/[*_`#>|]+//g; s/^[[:space:]]*[-•][[:space:]]+//' <<<"$1"
+}
+
+notify() {
+  omarchy-notification-send --app-name voice-agent -g 󰍬 "$@"
+}
+
+ask() {
+  local prompt=$1 output answer session_id notification
+  local resume=()
+
+  # One turn at a time, so a request spoken while Claude is busy waits its turn
+  # and resumes the conversation after it instead of forking it.
+  exec 9>"$runtime/lock"
+  flock 9
+
+  if [[ -s $session_file ]] && (($(date +%s) - $(stat -c %Y "$session_file") < idle_reset_secs)); then
+    resume=(--resume "$(<"$session_file")")
+  fi
+
+  notification=$(notify -p "Claude is working…" "$prompt")
+  printf '\n[%(%F %T)T] you: %s\n' -1 "$prompt" >>"$log"
+
+  # Home, so Claude has the same memory it has in a terminal there.
+  cd "$HOME"
+  if ! output=$(claude -p --output-format json --permission-mode auto \
+    --append-system-prompt "$voice_prompt" "${resume[@]}" -- "$prompt" 2>>"$log"); then
+    notify -r "$notification" -u critical "Claude failed" "See $log"
+    speak "Sorry, Claude ran into an error."
+    return 1
+  fi
+
+  answer=$(jq -r '.result // empty' <<<"$output")
+  session_id=$(jq -r '.session_id // empty' <<<"$output")
+  [[ -n $session_id ]] && printf '%s\n' "$session_id" >"$session_file"
+  printf '[%(%F %T)T] claude (%s): %s\n' -1 "$session_id" "$answer" >>"$log"
+
+  if [[ $(jq -r '.is_error' <<<"$output") == true || -z $answer ]]; then
+    notify -r "$notification" -u critical "Claude failed" "${answer:-No answer}"
+    speak "Sorry, Claude ran into an error."
+    return 1
+  fi
+
+  notify -r "$notification" "Claude" "$answer"
+  speak "$(plain "$answer")"
+}
+
+case "${1:-}" in
+start)
+  hush
+  # Voxtype appends to the file, so start each recording from an empty one.
+  : >"$transcript"
+  exec voxtype record start --file="$transcript"
+  ;;
+stop)
+  voxtype record stop
+
+  # Wait for the transcript to land. An idle daemon with an empty file means
+  # nothing was heard; give it a moment first so the stop signal is seen.
+  for ((i = 0; i < 240; i++)); do
+    [[ -s $transcript ]] && break
+    if ((i > 4)) && [[ $(voxtype status) == idle ]]; then
+      break
+    fi
+    sleep 0.25
+  done
+
+  prompt=$(<"$transcript")
+  prompt="${prompt#"${prompt%%[![:space:]]*}"}"
+  prompt="${prompt%"${prompt##*[![:space:]]}"}"
+
+  # Whisper renders silence as a bracketed tag such as [BLANK_AUDIO].
+  if [[ -z $prompt || $prompt =~ ^\[.*\]$ ]]; then
+    notify "Voice agent" "Nothing heard"
+    exit 0
+  fi
+
+  ask "$prompt"
+  ;;
+ask)
+  shift
+  (($#)) || { echo "Usage: voice-agent ask <text>" >&2; exit 1; }
+  ask "$*"
+  ;;
+reset)
+  hush
+  rm -f "$session_file"
+  notify "Voice agent" "New conversation"
+  ;;
+hush)
+  hush
+  ;;
+*)
+  echo "Usage: voice-agent start|stop|ask <text>|reset|hush" >&2
+  exit 1
+  ;;
+esac

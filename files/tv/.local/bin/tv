@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+# tv — live TV in mpv.
+#
+#   tv                  resume the last-watched channel (or start at channel 1)
+#   tv <N>              start on channel number N
+#   tv <name>           start on the first channel whose name contains <name>
+#   tv -l|--list [q]    list channels (number, group, name), optionally filtered
+#   tv --dump           list channels tab-separated: number, group, name, url
+#   tv --check [args]   run tv-check (probe the playlist; --prune / --revive channels)
+#   tv -h|--help
+#
+# Anything after "--" is passed to mpv, e.g.  tv mbc1 -- --fullscreen
+# Playlist: $TV_M3U (default ~/.config/tv/tv.m3u), which nothing here writes to. mpv plays
+# tv-check's copy of it without the pruned channels (~/.local/state/tv/playing.m3u),
+# rebuilt on every start. Player behaviour is the [tv] profile in
+# ~/.config/mpv/tv/tv.conf plus ~/.config/mpv/tv/tv.lua.
+# The grouped channel menu needs uosc (Arch: mpv-uosc). When the mpv config doesn't
+# autoload it, tv loads $TV_UOSC (default /usr/share/mpv/scripts/uosc) for TV only.
+#
+# Keys while watching:
+#   ENTER / c   channel menu (grouped, type to search)     0-9  jump to channel
+#   PGUP/PGDN   previous / next channel                    r    reload channel
+#   / or S-ENTER  flat playlist search                     q    quit
+#   - / + =     volume down / up                           m/M  mute
+
+set -euo pipefail
+
+PLAYLIST="${TV_M3U:-${XDG_CONFIG_HOME:-$HOME/.config}/tv/tv.m3u}"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/tv"
+LAST_FILE="$STATE_DIR/last"
+
+usage() { sed -n '2,/^$/p' "$0" | sed -e 's/^# \{0,1\}//' -e '/^$/d'; }
+
+die() { printf 'tv: %s\n' "$1" >&2; exit 1; }
+
+# Prints one line per channel of $PLAYING: N<TAB>group<TAB>name<TAB>url, numbered the way mpv
+# numbers playlist entries (every non-comment, non-blank line is one entry).
+list_channels() {
+  awk '
+    function trim(s) { sub(/^[[:space:]]+/, "", s); sub(/[[:space:]]+$/, "", s); return s }
+    { sub(/\r$/, "") }
+    /^#EXTINF/ {
+      # name = text after the first comma outside a quoted attribute value (a
+      # plain first-comma split breaks on values containing commas). tv.lua and
+      # tv-check use the same rule; tests/parsers.sh checks they agree.
+      title = ""; quoted = 0
+      for (i = 1; i <= length($0); i++) {
+        ch = substr($0, i, 1)
+        if (ch == "\"") quoted = !quoted
+        else if (ch == "," && !quoted) { title = trim(substr($0, i + 1)); break }
+      }
+      # iptv-org uses "A;B" for multi-category channels; file them under the first
+      group = ""
+      if (match($0, /group-title="[^"]*"/)) group = substr($0, RSTART + 13, RLENGTH - 14)
+      sub(/;.*/, "", group); group = trim(group)
+      next
+    }
+    /^[[:space:]]*$/ || /^#/ { next }
+    { n++; url = trim($0)
+      printf "%d\t%s\t%s\t%s\n", n, (group == "" ? "Other" : group), (title == "" ? url : title), url
+      title = ""; group = "" }
+  ' "$PLAYING"
+}
+
+# 1-based channel number for a URL, or nothing. The awk never exits early: closing
+# the pipe while list_channels is still writing raises SIGPIPE, which `set -o pipefail`
+# turns into a silent non-zero exit of the whole launcher.
+index_of_url() {
+  list_channels | awk -F'\t' -v u="$1" '!n && $4 == u { n = $1 } END { if (n) print n }'
+}
+
+# 1-based channel number of the first name containing the query (case-insensitive).
+index_of_name() {
+  list_channels | awk -F'\t' -v q="$1" \
+    'BEGIN { q = tolower(q) } !n && index(tolower($3), q) { n = $1 } END { if (n) print n }'
+}
+
+[ -r "$PLAYLIST" ] || die "playlist not found: $PLAYLIST"
+
+TV_CHECK="$(dirname "$0")/tv-check"
+case "${1:-}" in
+  -h|--help|--check) ;;
+  *) PLAYING="$("$TV_CHECK" --sync -p "$PLAYLIST")" || die "could not build the channel list from $PLAYLIST" ;;
+esac
+
+start_index=""   # 0-based, for --playlist-start
+case "${1:-}" in
+  -h|--help)
+    usage; exit 0 ;;
+  -l|--list)
+    shift
+    if [ $# -gt 0 ]; then
+      list_channels | awk -F'\t' -v q="$*" 'BEGIN { q = tolower(q) } index(tolower($3), q) || index(tolower($2), q)'
+    else
+      list_channels
+    fi | awk -F'\t' '{ printf "%4d  %-26s  %s\n", $1, $2, $3 }'
+    exit 0 ;;
+  --dump)
+    list_channels; exit 0 ;;
+  --check)
+    shift; exec "$TV_CHECK" "$@" ;;
+  --)
+    shift ;;
+  '')
+    if [ -r "$LAST_FILE" ]; then
+      idx="$(index_of_url "$(head -n1 "$LAST_FILE")")"
+      # A remembered channel that has since been pruned just means "start at 1".
+      if [ -n "$idx" ]; then start_index=$((idx - 1)); fi
+    fi ;;
+  -*)
+    die "unknown option $1 (use -- before mpv options)" ;;
+  *)
+    query="$1"; shift
+    if [[ "$query" =~ ^[0-9]+$ ]]; then
+      count="$(list_channels | wc -l)"
+      [ "$query" -ge 1 ] && [ "$query" -le "$count" ] || die "channel $query is out of range (1-$count)"
+      start_index=$((10#$query - 1))
+    else
+      idx="$(index_of_name "$query")"
+      [ -n "$idx" ] || die "no channel name contains '$query' (try: tv --list $query)"
+      start_index=$((idx - 1))
+    fi
+    if [ "${1:-}" = "--" ]; then shift; fi ;;
+esac
+
+# Load the [tv] profile here rather than from mpv.conf, so installing is just `stow tv`.
+args=("--include=~~/tv/tv.conf" --profile=tv "--playlist=$PLAYING")
+[ -n "$start_index" ] && args+=("--playlist-start=$start_index")
+
+# uosc draws the grouped channel menu; without it tv.lua falls back to mpv's flat
+# playlist picker. Use the mpv config's uosc when it autoloads one, else load the
+# installed copy, replacing mpv's OSC and OSD bar as uosc expects. Either way its
+# icon font has to be in mpv's fonts dir, or every icon is drawn as its name.
+MPV_DIR="${MPV_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/mpv}"
+UOSC="${TV_UOSC:-/usr/share/mpv/scripts/uosc}"
+uosc_fonts="${UOSC%/scripts/*}/fonts"
+autoloaded=""
+for dir in "$MPV_DIR" /etc/mpv; do
+  if [ -e "$dir/scripts/uosc.lua" ] || [ -e "$dir/scripts/uosc/main.lua" ]; then autoloaded=1; fi
+done
+if [ -z "$autoloaded" ] && [ -r "$UOSC/main.lua" ]; then
+  args+=("--script=$UOSC" --osc=no --osd-bar=no)
+fi
+if [ ! -e "$MPV_DIR/fonts/uosc_icons.otf" ] && [ -e "$uosc_fonts/uosc_icons.otf" ]; then
+  args+=("--osd-fonts-dir=$uosc_fonts")
+fi
+
+exec mpv "${args[@]}" "$@"

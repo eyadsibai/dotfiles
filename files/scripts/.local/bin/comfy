@@ -1,0 +1,3 @@
+#!/bin/bash
+source ~/comfyui-venv/bin/activate
+exec comfy "$@"

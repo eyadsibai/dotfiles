@@ -1,4 +1,9 @@
-{ lib, pkgs, ... }:
+{
+  lib,
+  pkgs,
+  isArch,
+  ...
+}:
 {
   # Helpers carried over from the old fish setup, as scripts so every shell has them
   home.packages = [
@@ -38,7 +43,43 @@
     cp = "cp -i";
   };
 
-  programs.bash.enable = true;
+  # pip only inside a virtualenv (the guard below says what to run instead), and
+  # bytecode in one cache folder rather than __pycache__ beside the code
+  home.sessionVariables = {
+    PIP_REQUIRE_VIRTUALENV = "true";
+    PYTHONPYCACHEPREFIX = "$HOME/.cache/pycache";
+  };
+
+  programs.bash = {
+    enable = true;
+    # On Arch, ~/.bashrc is this file, so it has to load Omarchy itself (on NixOS,
+    # nixarchy does it from /etc); the environment part runs for scripts as well
+    bashrcExtra = lib.optionalString isArch ''
+      [[ -r /usr/share/omarchy/default/bash/env-bootstrap ]] && source /usr/share/omarchy/default/bash/env-bootstrap
+    '';
+    initExtra = lib.mkMerge [
+      (lib.mkBefore (lib.optionalString isArch ''source "$OMARCHY_PATH/default/bash/rc"''))
+      ''
+        pip() {
+          if [[ -n ''${VIRTUAL_ENV:-} ]]; then
+            command pip "$@"
+          else
+            echo 'pip is blocked outside a virtualenv. Use: uv venv .venv && source .venv/bin/activate && uv sync' >&2
+            return 1
+          fi
+        }
+        pip3() { pip "$@"; }
+
+        # kitty can copy files over its own SSH connection (dl/ul in ~/.local/bin)
+        if [[ $TERM == xterm-kitty || -n ''${KITTY_WINDOW_ID:-} ]]; then
+          alias ssh='kitten ssh'
+        fi
+
+        # Tokens and keys stay out of the repo (mode 600, untracked)
+        [[ -r ~/.config/secrets/env ]] && source ~/.config/secrets/env
+      ''
+    ];
+  };
 
   programs.zsh = {
     enable = true;

@@ -1,0 +1,6 @@
+# tv-check is a uv script with no .py extension; tests use the same Python floor.
+line-length = 140
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "B", "UP", "PLW1510"]

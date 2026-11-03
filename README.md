@@ -4,8 +4,8 @@
 
 **Every machine I own, in one flake.**
 
-NixOS on the desk and the laptop, nix-darwin on the Macs, Home Manager underneath all of
-them. About 2,200 lines of Nix, and every setting lives in exactly one place.
+NixOS on the desk, Omarchy on Arch on the laptop I carry, nix-darwin on the Macs, Home
+Manager underneath all of them. About 2,200 lines of Nix, and every setting lives in exactly one place.
 
 [![check](https://github.com/eyadsibai/dotfiles/actions/workflows/check.yml/badge.svg)](https://github.com/eyadsibai/dotfiles/actions/workflows/check.yml)
 [![NixOS unstable](https://img.shields.io/badge/NixOS-unstable-5277C3?logo=nixos&logoColor=white)](https://nixos.org)
@@ -32,11 +32,11 @@ commented with the reason.
 | `workstation` | NixOS · Intel, 128 GB, RTX 4090 | The machine for all the dirty work: builds, Docker and libvirt, Ollama and LM Studio on the GPU, anything that needs cores or VRAM. Logs in at boot and locks itself, never sleeps, streams to the Macs over Sunshine. Used over Tailscale as much as at the desk. |
 | `eyad-nixos` | NixOS · AMD ThinkPad | Same Omarchy desktop, plus the laptop quirks (kernel params this ThinkPad needed, power-profiles-daemon, trackpoint). |
 | `eyad-m3`, `eyad-mac` | macOS · Apple Silicon | One configuration, two names. macOS defaults, Homebrew casks managed declaratively, a Linux builder VM, Rosetta. |
+| `vector` | Omarchy on Arch · Dell XPS 14 (2026) | The laptop I carry. Arch and Omarchy own the system; Home Manager on its own adds the shell, CLI, git and the files in `files/`. |
+| `cachy` | Omarchy on Arch · desktop | Reached remotely for development. Same as `vector`, with fish as the interactive shell. |
 | `home-server` | NixOS | A skeleton with placeholder hardware. It will replace the Unraid box: backups and data, Plex, and the long list of homelab services that go with them. |
 
-Two more machines run Omarchy on Arch and aren't managed here: `vector`, a Dell XPS 14
-(2026) and the laptop I actually carry, and `cachy`, a desktop I reach remotely for
-development. A DGX Spark is on its way and will take the large models off the workstation.
+A DGX Spark is on its way and will take the large models off the workstation.
 
 ## How it's put together
 
@@ -77,8 +77,31 @@ modules/nixos/     every NixOS host gets default.nix; desktop, sunshine, ai and
 modules/darwin/    macOS defaults, Homebrew, Mac-only apps
 modules/home/      Home Manager for every machine: shells, CLI, git, ssh, 1Password,
                    newsboat, herdr, mpv; firefox and the GUI apps only on Linux desktops
+files/<package>/   plain config files mirroring ~, linked one by one (like stow); a host
+                   lists the packages it wants, host-<name> last
+omarchy-defaults/  the Omarchy default each file in files/ was last merged against
+arch/<host>.packages  what an Arch machine has installed beyond Omarchy's own lists
 secrets/           sops-encrypted, recipients in .sops.yaml
 ```
+
+## Omarchy on Arch
+
+`vector` and `cachy` are `homeConfigurations` (`eyad@vector`, `eyad@cachy`): Home Manager
+without NixOS. Pacman installs the system, Omarchy and the GUI apps; Nix installs the CLI
+tools, so they're the same versions as on every other machine. mpv has one configuration
+everywhere, but on Arch the binary and uosc come from pacman: Nix's mpv can't reach the GPU
+there.
+
+The files in `files/` are linked to the checkout, not copied into the store, so editing
+`~/.config/hypr/bindings.lua` edits the repo. Where one of them replaces an Omarchy default,
+Omarchy updates can't silently overwrite it or leave it behind:
+
+- Anything Omarchy writes into a linked file lands in the repo and shows up in `git diff`.
+- `omarchy-defaults/` keeps the default each file was last merged against. After
+  `omarchy update`, the post-update hook says when one of those defaults changed;
+  `just omarchy-merge` applies only Omarchy's change to my version (a 3-way merge,
+  conflicts marked), and refuses to run on a machine with an older Omarchy than the
+  recorded one.
 
 The one rule: **a setting has one home.** Anything needing root, hardware or a daemon goes
 in `modules/nixos` or `modules/darwin`; everything else goes in Home Manager so every
@@ -159,9 +182,12 @@ once for the dev shell, then:
 | `just check` | `nix flake check`: evaluates every host, checks formatting |
 | `just clean` | drop old generations, GC the store |
 | `just secret <name>` | edit `secrets/<name>.yaml` |
+| `just arch-sync` / `arch-save` | Arch: install what `arch/<host>.packages` lists / rewrite it from the machine |
+| `just omarchy-check` / `omarchy-merge` | see which overridden Omarchy defaults changed upstream / merge them in |
 
-`host` defaults to the current machine. CI runs the same evaluation for all five hosts on
-every push.
+`host` defaults to the current machine; on Arch, `switch` and `build` act on the Home Manager
+configuration, and `switch` moves files it would replace aside as `*.hm-backup`. CI
+evaluates every host on every push and runs `files/tv`'s tests when they change.
 
 Small things in `modules/home/` I'd miss if they were gone:
 

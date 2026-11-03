@@ -1,0 +1,7 @@
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta --paging=never --side-by-side --line-numbers
+gui:
+  showFileTree: true
+  nerdFontsVersion: "3"

@@ -1,0 +1,52 @@
+#!/bin/bash
+# Upgrade all packages, preferring the newest version from any source.
+# For packages installed from the omarchy repo, checks if a newer version
+# exists in AUR, official repos, or any other sync database, and installs
+# from that source. Only upgrades when the installed version is actually older.
+
+set -uo pipefail
+
+REPO="omarchy"
+
+upgrades=()
+for pkg in $(pacman -Sl "$REPO" 2>/dev/null | awk '/\[installed/{print $2}'); do
+  installed_ver=$(pacman -Q "$pkg" | awk '{print $2}')
+
+  best_ver="$installed_ver"
+  best_src=""
+
+  # Check AUR
+  aur_ver=$(yay -Si "aur/$pkg" 2>/dev/null | awk '/^Version/{print $3}' || true)
+  if [ -n "$aur_ver" ] && [ "$(vercmp "$aur_ver" "$best_ver")" -gt 0 ]; then
+    best_ver="$aur_ver"
+    best_src="aur"
+  fi
+
+  # Check all sync databases (official repos, chaotic-aur, etc.) except omarchy
+  while IFS=' ' read -r db ver; do
+    if [ -n "$ver" ] && [ "$(vercmp "$ver" "$best_ver")" -gt 0 ]; then
+      best_ver="$ver"
+      best_src="$db"
+    fi
+  done < <(pacman -Sl 2>/dev/null | awk -v p="$pkg" -v skip="$REPO" '$1!=skip && $2==p {print $1, $3}')
+
+  # Check the omarchy repo itself (in case it's newer than installed)
+  repo_ver=$(pacman -Sl "$REPO" 2>/dev/null | awk -v p="$pkg" '$2==p{print $3}')
+  if [ -n "$repo_ver" ] && [ "$(vercmp "$repo_ver" "$best_ver")" -gt 0 ]; then
+    best_ver="$repo_ver"
+    best_src="$REPO"
+  fi
+
+  if [ -n "$best_src" ]; then
+    echo "  $pkg: installed=$installed_ver → $best_src=$best_ver"
+    upgrades+=("$best_src/$pkg")
+  fi
+done
+
+if [ ${#upgrades[@]} -gt 0 ]; then
+  echo ""
+  echo "Installing ${#upgrades[@]} package(s) from newer sources..."
+  yay -S "${upgrades[@]}"
+fi
+
+yay -Syu "$@"

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Runs after `omarchy update`. Kept deliberately small: `omarchy update` already
+# takes a snapper snapshot on its own, so this only covers the things that have
+# actually bitten this machine before.
+
+# Canary for dev-channel breakage. Hyprland silently ignores bad config and
+# keeps the last good state, so a broken update is easy to miss until reboot.
+if command -v hyprctl &>/dev/null && [[ -n $HYPRLAND_INSTANCE_SIGNATURE ]]; then
+  errors=$(hyprctl configerrors 2>/dev/null)
+  if [[ -n ${errors//[[:space:]]/} ]]; then
+    notify-send -u critical "Hyprland config errors after update" "$errors"
+  fi
+fi
+
+# The waybar checks that used to live here (version canary + pristine-snapshot
+# drift watcher) were dropped when waybar was replaced by the Omarchy shell.
+# With ~/.config/waybar/ gone every cmp failed, so the drift watcher fired a
+# critical "config reverted by update" on every single update. The snapshot in
+# ~/.local/state/waybar-custom/ is left in place as an archive of the old bar.
+
+# Omarchy defaults that changed under a file the dotfiles repo overrides. Nothing is
+# touched here: `just omarchy-merge` brings the changes in, for review with git diff.
+repo=$HOME/dev/dotfiles
+if [[ -x $repo/scripts/omarchy-defaults ]]; then
+  changed=$("$repo/scripts/omarchy-defaults" check 2>/dev/null | grep '^Omarchy changed')
+  [[ -n $changed ]] && notify-send "Omarchy changed defaults you override" "$changed
+
+Run: just omarchy-merge"
+fi

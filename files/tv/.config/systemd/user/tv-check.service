@@ -1,0 +1,11 @@
+[Unit]
+Description=Probe the TV channels, prune dead ones and revive ones that came back
+# Only ~/.local/state/tv changes: offline.m3u lists the pruned channels and
+# playing.m3u is what the player plays. ~/.config/tv/tv.m3u is never written.
+# Pruning waits for 2 failed runs in a row, reviving for 2 live ones, and
+# nothing is pruned when over half the channels are dead (network down).
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/tv-check --dead --prune --revive
+Nice=10

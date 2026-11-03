@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=TV
+Comment=Live TV channels in mpv
+Exec=tv
+Icon=tv
+Terminal=false
+StartupNotify=true
+StartupWMClass=mpv-tv
+Categories=AudioVideo;Video;TV;
+Keywords=tv;live;iptv;channels;mpv;

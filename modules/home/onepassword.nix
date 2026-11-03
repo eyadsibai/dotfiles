@@ -9,6 +9,7 @@
   lib,
   pkgs,
   useremail,
+  isArch,
   ...
 }:
 let
@@ -25,6 +26,8 @@ let
   opSshSign =
     if isDarwin then
       "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+    else if isArch then
+      "/opt/1Password/op-ssh-sign" # pacman's 1password
     else
       "${pkgs._1password-gui}/bin/op-ssh-sign";
   # op-ssh-sign asks this machine's 1Password app, whose prompt shows on this

@@ -1,0 +1,6 @@
+# Repo-only files that `stow tv` must not link into ~. This list replaces
+# stow's built-in one, so it also names itself.
+^/\.stow-local-ignore
+^/README\.md
+^/ruff\.toml
+^/tests

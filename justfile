@@ -1,7 +1,11 @@
 # Host to build: this machine's name unless given, e.g. `just build eyad-nixos`
 host := `hostname -s`
-# `nh os` on NixOS, `nh darwin` on macOS
-nh := if os() == "macos" { "nh darwin" } else { "nh os" }
+# Omarchy on Arch: Home Manager only (homeConfigurations.<user>@<host>)
+arch := path_exists("/etc/arch-release")
+# `nh os` on NixOS, `nh darwin` on macOS, `nh home` on Arch
+nh := if os() == "macos" { "nh darwin" } else if arch == "true" { "nh home" } else { "nh os" }
+# nh names a NixOS/macOS host with -H, a Home Manager configuration with -c
+target := if arch == "true" { "-c " + env("USER") + "@" } else { "-H " }
 
 # List recipes
 default:
@@ -9,11 +13,11 @@ default:
 
 # Build, show the package diff, then activate
 switch name=host:
-    {{nh}} switch . -H {{name}}
+    {{nh}} switch . {{target}}{{name}}{{ if arch == "true" { " -b hm-backup" } else { "" } }}
 
 # Build and show the diff without activating
 build name=host:
-    {{nh}} build . -H {{name}}
+    {{nh}} build . {{target}}{{name}}
 
 # Activate on next boot only (NixOS)
 boot name=host:
@@ -46,3 +50,28 @@ secret name:
 # List system generations (NixOS)
 generations:
     nixos-rebuild list-generations
+
+# Arch: install what arch/<host>.packages lists and is missing (never removes)
+[group('arch')]
+arch-sync name=host:
+    grep -v '^#' arch/{{name}}.packages | yay -S --needed -
+
+# Arch: rewrite arch/<host>.packages from what's installed, minus Omarchy's own lists
+[group('arch')]
+arch-save name=host:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    omarchy=$(cat "${OMARCHY_PATH:-/usr/share/omarchy}"/install/*.packages | sed 's/#.*//' | tr -s ' \t' '\n' | sort -u)
+    { echo "# Installed on {{name}} beyond Omarchy's own lists; \`just arch-save\` rewrites this"
+      comm -23 <(pacman -Qqe | sort -u) <(echo "$omarchy"); } > arch/{{name}}.packages
+    git diff --stat arch/{{name}}.packages
+
+# Show which files in files/ override an Omarchy default that changed upstream
+[group('omarchy')]
+omarchy-check:
+    @scripts/omarchy-defaults check
+
+# Bring upstream changes to those defaults into your versions (3-way merge, git diff to review)
+[group('omarchy')]
+omarchy-merge:
+    @scripts/omarchy-defaults merge

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# On a host reached via kitten ssh: dl <remote-files...> -> laptop ~/Downloads/from_<host>/
+# The ~ is quoted so kitten expands it on the laptop side, not the remote one.
+host=$(hostname -s)
+
+# herdr (and other multiplexers) emulate their own terminal and swallow kitty's
+# file-transfer escape (OSC 5113), so kitten transfer can't reach the laptop.
+# They do forward OSC 52, so put a laptop-side scp command on the clipboard instead.
+if [[ -n $HERDR_ENV || -n $TMUX || -n $ZELLIJ ]]; then
+  cmd="mkdir -p ~/Downloads/from_$host && scp -r"
+  for f in "$@"; do cmd+=" $host:$(printf '%q' "$(realpath -- "$f")")"; done
+  cmd+=" ~/Downloads/from_$host/"
+  printf '\e]52;c;%s\a' "$(printf '%s' "$cmd" | base64 -w0)"
+  echo "dl: kitten transfer doesn't work inside a multiplexer. Run this on the laptop (copied to clipboard):" >&2
+  echo "  $cmd" >&2
+  exit 1
+fi
+
+exec kitten transfer "$@" "~/Downloads/from_$host/"

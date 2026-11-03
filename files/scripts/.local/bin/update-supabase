@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# update-supabase — fetch the latest Supabase CLI release and install it into
+# ~/.local/share/supabase (both the `supabase` shim and its `supabase-go` companion).
+#
+# This replaces the manual install that lives outside any package manager.
+# Re-run any time to upgrade. Use --force to reinstall even if up to date.
+set -euo pipefail
+
+DEST="${SUPABASE_INSTALL_DIR:-$HOME/.local/share/supabase}"
+REPO="supabase/cli"
+FORCE=0
+[[ "${1:-}" == "--force" || "${1:-}" == "-f" ]] && FORCE=1
+
+# Map uname -m to the suffix Supabase uses in its release asset names.
+case "$(uname -m)" in
+  x86_64|amd64)  ARCH="amd64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  *) echo "update-supabase: unsupported arch '$(uname -m)'" >&2; exit 1 ;;
+esac
+OS="$(uname -s | tr '[:upper:]' '[:lower:]')"   # linux / darwin
+ASSET_GLOB="supabase_*_${OS}_${ARCH}.tar.gz"
+
+need() { command -v "$1" >/dev/null 2>&1 || { echo "update-supabase: '$1' is required" >&2; exit 1; }; }
+need curl
+need tar
+
+echo "==> Querying latest $REPO release..."
+# Pull the tag_name from the GitHub API without needing jq. Capture the full
+# response first — piping curl straight into `grep -m1` triggers a broken-pipe
+# failure under `set -o pipefail` when grep closes the pipe after one match.
+API_JSON="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest")"
+# No `grep -m1`/`head` here: closing the pipe early makes the upstream die with
+# SIGPIPE under pipefail. There is exactly one tag_name line, so read it all.
+LATEST_TAG="$(printf '%s' "$API_JSON" \
+  | grep '"tag_name"' | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
+if [[ -z "${LATEST_TAG:-}" ]]; then
+  echo "update-supabase: could not determine latest release tag" >&2
+  exit 1
+fi
+LATEST_VER="${LATEST_TAG#v}"
+
+CURRENT_VER=""
+if [[ -x "$DEST/supabase" ]]; then
+  CURRENT_VER="$("$DEST/supabase" --version 2>/dev/null | head -1 | tr -d '[:space:]' || true)"
+fi
+
+echo "    installed: ${CURRENT_VER:-<none>}"
+echo "    latest:    $LATEST_VER"
+
+if [[ "$FORCE" -eq 0 && -n "$CURRENT_VER" && "$CURRENT_VER" == "$LATEST_VER" ]]; then
+  echo "==> Already up to date. (use --force to reinstall)"
+  exit 0
+fi
+
+URL="https://github.com/$REPO/releases/download/$LATEST_TAG/supabase_${LATEST_VER}_${OS}_${ARCH}.tar.gz"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+echo "==> Downloading $URL"
+curl -fSL -o "$TMP/supabase.tar.gz" "$URL"
+
+echo "==> Verifying archive contents..."
+if ! tar -tzf "$TMP/supabase.tar.gz" | grep -qx "supabase-go"; then
+  echo "update-supabase: archive is missing 'supabase-go' — refusing to install a broken pair" >&2
+  exit 1
+fi
+
+mkdir -p "$DEST"
+echo "==> Extracting into $DEST"
+tar -xzf "$TMP/supabase.tar.gz" -C "$DEST"
+chmod +x "$DEST/supabase" "$DEST/supabase-go"
+
+NEW_VER="$("$DEST/supabase" --version 2>/dev/null | head -1 | tr -d '[:space:]' || true)"
+echo "==> Installed supabase $NEW_VER -> $DEST/supabase"
+
+case ":$PATH:" in
+  *":$DEST:"*) ;;
+  *) echo "    NOTE: $DEST is not on your PATH for this shell. Add it (already in ~/.bashrc)." ;;
+esac

@@ -66,6 +66,7 @@
           specialArgs = {
             inherit inputs username useremail;
             repoDir = "/home/${username}/dev/dotfiles";
+            isArch = false;
           };
         in
         nixpkgs.lib.nixosSystem {
@@ -92,6 +93,7 @@
               hostname
               ;
             repoDir = "/Users/${username}/dev/dotfiles";
+            isArch = false;
           };
         in
         nix-darwin.lib.darwinSystem {
@@ -101,6 +103,27 @@
             home-manager.darwinModules.home-manager
             (homeManagerDefaults specialArgs)
             nix-index-database.darwinModules.nix-index
+            { programs.nix-index-database.comma.enable = true; }
+          ];
+        };
+
+      # Omarchy on Arch: Home Manager on its own, the system stays pacman's
+      mkArch =
+        hostDir:
+        home-manager.lib.homeManagerConfiguration {
+          pkgs = import nixpkgs {
+            system = "x86_64-linux";
+            config.allowUnfree = true;
+          };
+          extraSpecialArgs = {
+            inherit inputs username useremail;
+            repoDir = "/home/${username}/dev/dotfiles";
+            isArch = true;
+          };
+          modules = [
+            ./modules/home/arch.nix
+            hostDir
+            nix-index-database.homeModules.nix-index
             { programs.nix-index-database.comma.enable = true; }
           ];
         };
@@ -115,6 +138,11 @@
         workstation = mkNixos ./hosts/workstation; # Intel + RTX 4090 desktop
         eyad-nixos = mkNixos ./hosts/eyad-nixos; # AMD ThinkPad
         home-server = mkNixos ./hosts/home-server; # future Unraid replacement (skeleton)
+      };
+
+      homeConfigurations = {
+        "${username}@vector" = mkArch ./hosts/vector; # Dell XPS 14, Omarchy on Arch
+        "${username}@cachy" = mkArch ./hosts/cachy; # desktop, Omarchy on Arch
       };
 
       darwinConfigurations = {
@@ -132,6 +160,8 @@
         {
           workstation = self.nixosConfigurations.workstation.config.system.build.toplevel;
           eyad-nixos = self.nixosConfigurations.eyad-nixos.config.system.build.toplevel;
+          vector = self.homeConfigurations."${username}@vector".activationPackage;
+          cachy = self.homeConfigurations."${username}@cachy".activationPackage;
           formatting = pkgs.runCommand "check-formatting" { } ''
             cp -r ${self} src && chmod -R +w src && cd src
             ${pkgs.lib.getExe pkgs.nixfmt-tree} --ci --tree-root .
