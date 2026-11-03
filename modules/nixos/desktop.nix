@@ -18,39 +18,6 @@ let
   # (which would otherwise be compiled locally, as its cache is not trusted here)
   omarchy = (pkgs.extend inputs.nixarchy.overlays.default).omarchy.override {
     inherit (pkgs) hyprland;
-    inherit chromium;
-  };
-
-  # Omarchy's Chromium flags (config/chromium-flags.conf) with its bundled extensions
-  # (copy URL, yt-dlp, WhatsApp). On Arch, Chromium's launcher reads that file and the
-  # extensions sit in /usr/share/omarchy; nixpkgs' launcher reads no flags file, so
-  # they are built in here, from the system profile's copy of the Omarchy tree.
-  # Fixed in nixarchy after v4.5.0-rc2-1 (#1491): drop this and nativeHosts with
-  # the next pin that includes it
-  omarchyExtensions = "/run/current-system/sw/share/omarchy/default/chromium/extensions";
-  chromium = pkgs.chromium.override {
-    commandLineArgs = [
-      "--password-store=gnome-libsecret"
-      # One --enable-features only: Chromium keeps the last, so repeat the Wayland one
-      # nixpkgs adds (NIXOS_OZONE_WL) instead of replacing it
-      "--enable-features=WaylandWindowDecorations,TouchpadOverscrollHistoryNavigation"
-      "--load-extension=${
-        lib.concatMapStringsSep "," (e: "${omarchyExtensions}/${e}") [
-          "copy-url"
-          "yt-dlp"
-          "whatsapp-slim"
-        ]
-      }"
-      "--no-default-browser-check"
-    ];
-  };
-
-  # Copy URL and yt-dlp talk to small host programs. Omarchy registers them once, by
-  # store path, which the next update removes; re-register them at every activation
-  # through the stable /run/current-system path instead
-  nativeHosts = {
-    "com.omarchy.copy_url" = "omarchy-chromium-copy-url-host";
-    "com.omarchy.ytdlp" = "omarchy-chromium-ytdlp-host";
   };
 
   # nixarchy's session launcher, read from its wayland-sessions entry at login
@@ -93,13 +60,6 @@ in
     programs.hyprland.package = lib.mkForce pkgs.hyprland;
     programs.hyprland.portalPackage = lib.mkForce pkgs.xdg-desktop-portal-hyprland;
 
-    # Unlock the login keyring with the password typed at the lock screen, as a
-    # greeter login already does (greetd includes the login PAM stack). With
-    # autologin there is no password at login, so the first unlock opens it. Omarchy
-    # on Arch avoids the prompt with an unencrypted keyring instead. nixarchy
-    # defaults to this after v4.5.0-rc2-1 (#1492); drop it with that pin.
-    security.pam.services.omarchy-lock-password.enableGnomeKeyring = true;
-
     services.greetd = {
       enable = true;
       settings = {
@@ -137,17 +97,6 @@ in
         home.activation.hyprchromaShell = lib.hm.dag.entryAfter [ "nixarchyThemeEngineShell" ] ''
           [[ -v DRY_RUN ]] || run ${config.programs.nixarchyThemeEngine.package}/bin/hyprchroma shell --quiet
         '';
-
-        home.activation.omarchyChromiumHosts = lib.hm.dag.entryAfter [ "writeBoundary" ] (
-          lib.concatStrings (
-            lib.mapAttrsToList (name: host: ''
-              run mkdir -p "$HOME/.config/chromium/NativeMessagingHosts"
-              [[ -v DRY_RUN ]] || ${lib.getExe pkgs.gnused} 's|__HOST_PATH__|/run/current-system/sw/bin/${host}|' \
-                ${omarchy}/share/omarchy/default/chromium/native-messaging-hosts/${name}.json \
-                > "$HOME/.config/chromium/NativeMessagingHosts/${name}.json"
-            '') nativeHosts
-          )
-        );
 
         # Lock the autologin session as soon as the shell can draw the lock screen.
         # Later logins went through the greeter and are left alone.
