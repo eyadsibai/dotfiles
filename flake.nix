@@ -179,6 +179,7 @@
             sops
             age
             ssh-to-age
+            jq # just update
           ];
         };
       });

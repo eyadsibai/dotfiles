@@ -121,8 +121,10 @@ volume, playback, scenes, a remote and casting.
 
 ## Decisions worth knowing
 
-- **nixarchy is pinned to a release tag.** It's one maintainer's project, so it's bumped on
-  purpose: after `just vm`, and after the Arch machines are on the same Omarchy version.
+- **nixarchy follows main, bumped on purpose.** Main runs ahead of the release tags and
+  carries fixes they don't have yet. It's one maintainer's project, so plain `just update`
+  leaves it alone; `just update nixarchy` moves it, after `just vm`, ideally once the Arch
+  machines are on the same Omarchy version.
 - **Only three binary caches are trusted:** `cache.nixos.org`, nix-community, and the
   community CUDA cache (through nixarchy's `cudaCache`, which only applies where the NVIDIA
   driver is on). Hyprland therefore comes from nixpkgs, not nixarchy's hyprwm input, and
@@ -169,12 +171,13 @@ secrets at activation, into RAM, never into the store.
 ## Where nixarchy needed help
 
 Fixed here, reported upstream. The workarounds live in `modules/nixos/desktop.nix` and
-`modules/home/omarchy-apps.nix`, and go when the fixes reach a nixarchy release.
+`modules/home/omarchy-apps.nix`, and go once nixarchy main has the fix.
 
 | Gap | Fix | Upstream |
 |---|---|---|
-| Chromium starts without Omarchy's bundled extensions (copy-url, yt-dlp, WhatsApp): Omarchy enables them through a flags file that Arch's launcher reads and nixpkgs' doesn't. | Flags built into the Chromium the Omarchy package installs; native-messaging hosts re-registered at every activation via a stable `/run/current-system` path. | [#1491](https://github.com/olafkfreund/nixarchy/issues/1491), fixed after v4.5.0-rc2-1 |
-| After an autologin boot the login keyring stays locked until some app asks for its password. | The lock screen's PAM service unlocks it, so the first unlock after boot opens the keyring. It stays encrypted. | [#1492](https://github.com/olafkfreund/nixarchy/issues/1492), fixed after v4.5.0-rc2-1 |
+| Chromium starts without Omarchy's bundled extensions (copy-url, yt-dlp, WhatsApp): Omarchy enables them through a flags file that Arch's launcher reads and nixpkgs' doesn't. | Flags built into the Chromium the Omarchy package installs; native-messaging hosts re-registered at every activation via a stable `/run/current-system` path. | [#1491](https://github.com/olafkfreund/nixarchy/issues/1491), fixed in main; workaround removed |
+| After an autologin boot the login keyring stays locked until some app asks for its password. | The lock screen's PAM service unlocks it, so the first unlock after boot opens the keyring. It stays encrypted. | [#1492](https://github.com/olafkfreund/nixarchy/issues/1492), fixed in main; workaround removed |
+| After a switch, a changed prompt stays stale until the next login or theme change: omatheme copies the new `starship.toml` but doesn't re-render from it. | An activation step runs `hyprchroma shell` after omatheme's own. | omatheme#60 |
 | Five Omarchy preinstalls aren't in nixarchy: Hype, Monologue, Signed, disktree, Superwhisper. | Packaged in `pkgs/` and installed for the user; Superwhisper also gets its user service and Omarchy bar panel. | not reported |
 
 ## Setting up an Arch machine
@@ -214,7 +217,7 @@ once for the dev shell, then:
 | `just build [host]` | build and show the diff only |
 | `just boot [host]` | NixOS: activate on next boot, for desktop or login changes |
 | `just vm [host]` | NixOS: boot the exact configuration in a throwaway QEMU VM (no NVIDIA) |
-| `just update [input]` | update all flake inputs, or one |
+| `just update [input...]` | update every flake input except nixarchy, or the ones named |
 | `just check` | `nix flake check`: evaluates every host, checks formatting |
 | `just clean` | drop old generations, GC the store |
 | `just secret <name>` | edit `secrets/<name>.yaml` |
