@@ -1,163 +1,112 @@
 onboarding = false
-
-[ui.sound]
-enabled = false
-
-[ui.toast]
-delivery = "system"
-
-[ui]
-
-# >>> herdr-radar tab-bar block
-tab_bar_right_separator = " · "
-tab_bar_right = [
-  { type = 'command', command = 'cat "/home/eyad/.local/state/herdr/plugins/hhdebb.herdr-radar/tabbar.txt"', interval_seconds = 6, timeout_seconds = 2 },
-]
-# <<< herdr-radar tab-bar block
-
-show_agent_labels_on_pane_borders = true
-
-agent_panel_sort = "priority"
-status_indicators = "symbols"
+# Mirrors the Omarchy tmux config in config/tmux/tmux.conf
+# tmux session -> herdr workspace, tmux window -> herdr tab, tmux pane -> herdr pane
 
 [theme]
-name = "catppuccin"
+# tmux ran on the terminal's own palette (bg=default, fg=default, ANSI blue accents)
+name = "terminal"
+
 auto_switch = false
-
-[experimental]
-kitty_graphics = true
-pane_history = true
-
-
-# >>> herdr-radar theme block
 [theme.custom]
-active_row_bg = "#414868"
-# <<< herdr-radar theme block
+# The active tab is drawn as panel_bg text on an accent background, so panel_bg
+# has to be dark for it to read - same colors as status-left's "#[fg=black,bg=blue]"
+panel_bg = "black"
 
-# >>> herdr-radar sidebar block
-[ui.sidebar.agents]
-# logo glyphs: font
-rows = [[{ token = "$group_parent", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$group", fg = "#a8abbd", bold = true, dim = false }, { token = "$group_stale", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$split_mark", fg = "#8b8e9c", bold = false, dim = false }, { token = "$logo", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_working", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_working", fg = "#c78a1f", bold = true, dim = false }, { token = "$title_done", fg = "#4c9a5a", bold = false, dim = false }, { token = "$title_blocked", fg = "#c04a4a", bold = false, dim = false }, { token = "$title_idle_fresh", fg = "#95bba2", bold = false, dim = false }, { token = "$title_idle", fg = "#a99e92", bold = false, dim = false }, { token = "$title_idle_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_unknown", fg = "#907aa9", bold = false, dim = false }], ["$gap"]]
+[terminal]
+# Matches -c "#{pane_current_path}" on every split, window, and session
+new_cwd = "follow"
 
-[ui.sidebar.agents.rows_by_agent]
-claude = [[{ token = "$group_parent", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$group", fg = "#a8abbd", bold = true, dim = false }, { token = "$group_stale", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$split_mark", fg = "#8b8e9c", bold = false, dim = false }, { token = "$logo", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_working", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_working", fg = "#d97757", bold = true, dim = false }, { token = "$title_done", fg = "#4c9a5a", bold = false, dim = false }, { token = "$title_blocked", fg = "#c04a4a", bold = false, dim = false }, { token = "$title_idle_fresh", fg = "#95bba2", bold = false, dim = false }, { token = "$title_idle", fg = "#a99e92", bold = false, dim = false }, { token = "$title_idle_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_unknown", fg = "#907aa9", bold = false, dim = false }], ["$gap"]]
-gemini = [[{ token = "$group_parent", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$group", fg = "#a8abbd", bold = true, dim = false }, { token = "$group_stale", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$split_mark", fg = "#8b8e9c", bold = false, dim = false }, { token = "$logo", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_working", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_working", fg = "#4285f4", bold = true, dim = false }, { token = "$title_done", fg = "#4c9a5a", bold = false, dim = false }, { token = "$title_blocked", fg = "#c04a4a", bold = false, dim = false }, { token = "$title_idle_fresh", fg = "#95bba2", bold = false, dim = false }, { token = "$title_idle", fg = "#a99e92", bold = false, dim = false }, { token = "$title_idle_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_unknown", fg = "#907aa9", bold = false, dim = false }], ["$gap"]]
-kimi = [[{ token = "$group_parent", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$group", fg = "#a8abbd", bold = true, dim = false }, { token = "$group_stale", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$split_mark", fg = "#8b8e9c", bold = false, dim = false }, { token = "$logo", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_working", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_working", fg = "#1783ff", bold = true, dim = false }, { token = "$title_done", fg = "#4c9a5a", bold = false, dim = false }, { token = "$title_blocked", fg = "#c04a4a", bold = false, dim = false }, { token = "$title_idle_fresh", fg = "#95bba2", bold = false, dim = false }, { token = "$title_idle", fg = "#a99e92", bold = false, dim = false }, { token = "$title_idle_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_unknown", fg = "#907aa9", bold = false, dim = false }], ["$gap"]]
-qwen = [[{ token = "$group_parent", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$group", fg = "#a8abbd", bold = true, dim = false }, { token = "$group_stale", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$split_mark", fg = "#8b8e9c", bold = false, dim = false }, { token = "$logo", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_working", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_working", fg = "#615ced", bold = true, dim = false }, { token = "$title_done", fg = "#4c9a5a", bold = false, dim = false }, { token = "$title_blocked", fg = "#c04a4a", bold = false, dim = false }, { token = "$title_idle_fresh", fg = "#95bba2", bold = false, dim = false }, { token = "$title_idle", fg = "#a99e92", bold = false, dim = false }, { token = "$title_idle_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_unknown", fg = "#907aa9", bold = false, dim = false }], ["$gap"]]
-kiro = [[{ token = "$group_parent", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$group", fg = "#a8abbd", bold = true, dim = false }, { token = "$group_stale", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$split_mark", fg = "#8b8e9c", bold = false, dim = false }, { token = "$logo", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_working", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_working", fg = "#9046ff", bold = true, dim = false }, { token = "$title_done", fg = "#4c9a5a", bold = false, dim = false }, { token = "$title_blocked", fg = "#c04a4a", bold = false, dim = false }, { token = "$title_idle_fresh", fg = "#95bba2", bold = false, dim = false }, { token = "$title_idle", fg = "#a99e92", bold = false, dim = false }, { token = "$title_idle_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_unknown", fg = "#907aa9", bold = false, dim = false }], ["$gap"]]
-cline = [[{ token = "$group_parent", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$group", fg = "#a8abbd", bold = true, dim = false }, { token = "$group_stale", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$split_mark", fg = "#8b8e9c", bold = false, dim = false }, { token = "$logo", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_working", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_working", fg = "#586876", bold = true, dim = false }, { token = "$title_done", fg = "#4c9a5a", bold = false, dim = false }, { token = "$title_blocked", fg = "#c04a4a", bold = false, dim = false }, { token = "$title_idle_fresh", fg = "#95bba2", bold = false, dim = false }, { token = "$title_idle", fg = "#a99e92", bold = false, dim = false }, { token = "$title_idle_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_unknown", fg = "#907aa9", bold = false, dim = false }], ["$gap"]]
-kilo = [[{ token = "$group_parent", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$group", fg = "#a8abbd", bold = true, dim = false }, { token = "$group_stale", fg = "#8b8e9c", bold = true, dim = false }], [{ token = "$split_mark", fg = "#8b8e9c", bold = false, dim = false }, { token = "$logo", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_working", fg = "#e9e9f0", bold = false, dim = false, rules = [{ contains = "", fg = "#d97757" }, { contains = "", fg = "#4285f4" }, { contains = "", fg = "#1783ff" }, { contains = "", fg = "#4d6bfe" }, { contains = "", fg = "#615ced" }, { contains = "", fg = "#9046ff" }, { contains = "", fg = "#586876" }, { contains = "", fg = "#9a9808" }] }, { token = "$logo_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_working", fg = "#9a9808", bold = true, dim = false }, { token = "$title_done", fg = "#4c9a5a", bold = false, dim = false }, { token = "$title_blocked", fg = "#c04a4a", bold = false, dim = false }, { token = "$title_idle_fresh", fg = "#95bba2", bold = false, dim = false }, { token = "$title_idle", fg = "#a99e92", bold = false, dim = false }, { token = "$title_idle_stale", fg = "#8b8e9c", bold = false, dim = false }, { token = "$title_unknown", fg = "#907aa9", bold = false, dim = false }], ["$gap"]]
+[keys]
+prefix = "ctrl+space"
+
+# Config and help
+reload_config = "prefix+q"
+help = "prefix+?"
+detach = "prefix+d"
+
+# Copy mode
+copy_mode = "prefix+["
+
+# Panes
+split_horizontal = ["prefix+h", "alt+enter"]
+split_vertical = ["prefix+v", "alt+shift+enter"]
+close_pane = ["prefix+x", "alt+esc"]
+zoom = "prefix+z"
+last_pane = "prefix+;"
+
+focus_pane_left = "ctrl+alt+left"
+focus_pane_down = "ctrl+alt+down"
+focus_pane_up = "ctrl+alt+up"
+focus_pane_right = "ctrl+alt+right"
+
+resize_mode = ["prefix+ctrl+left", "prefix+ctrl+down", "prefix+ctrl+up", "prefix+ctrl+right"]
+
+# Like resize-pane on C-M-S-arrows
+resize_pane_left = "ctrl+alt+shift+left"
+resize_pane_down = "ctrl+alt+shift+down"
+resize_pane_up = "ctrl+alt+shift+up"
+resize_pane_right = "ctrl+alt+shift+right"
+
+# No tmux equivalent; herdr's default prefix+shift+p is taken by previous session
+rename_pane = "prefix+shift+o"
+
+# Windows -> tabs
+new_tab = "prefix+c"
+rename_tab = "prefix+r"
+close_tab = "prefix+k"
+switch_tab = ["prefix+1..9", "alt+1..9"]
+previous_tab = ["prefix+p", "alt+left"]
+next_tab = [
+"prefix+n", "alt+right"]
+
+# Like swap-window -t -1/+1 on M-S-Left/Right
+move_tab_previous = "alt+shift+left"
+move_tab_next = "alt+shift+right"
+
+# Sessions -> workspaces 
+new_workspace = "prefix+shift+c"
+rename_workspace = "prefix+shift+r"
+close_workspace = "prefix+shift+k"
+previous_workspace = ["prefix+shift+p", "alt+up"]
+next_workspace = ["prefix+shift+n", "alt+down"]
+
+[ui]
+accent = "blue"
+
+# tmux drew single-line dividers between adjacent panes and no outer frame
+pane_gaps = false
+pane_outer_borders = false
+
+# tmux had no scrollbar column beside its panes
+pane_scrollbars = false
+
+# kill-window and kill-session never asked
+confirm_close = false
+
+# automatic-rename gave windows a name without prompting
+prompt_new_tab_name = false
+
+# set -g mouse on
+mouse_capture = true
+
+# status-right had the zoom flag followed by #h
+tab_bar_right = [{ type = "zoom" }, { type = "hostname" }]
+
+# set -g set-titles on / set -g set-titles-string '#h:#W', where tmux's #W was
+# the basename of the pane cwd. This is what Hyprland shows in the group bar,
+# and it resolves on the server so remote sessions name the remote host.
+window_title = "{hostname}: {workspace}"
+
+copy_on_select = true
 
 [ui.sidebar.spaces]
 row_gap = 0
 rows = [
-  [
-    { token = "$space_blocked", fg = "#c04a4a", bold = true, dim = false },
-    { token = "$space_working_claude", fg = "#d97757", bold = true, dim = false },
-    { token = "$space_working_gemini", fg = "#4285f4", bold = true, dim = false },
-    { token = "$space_working_kimi", fg = "#1783ff", bold = true, dim = false },
-    { token = "$space_working_deepseek", fg = "#4d6bfe", bold = true, dim = false },
-    { token = "$space_working_qwen", fg = "#615ced", bold = true, dim = false },
-    { token = "$space_working_kiro", fg = "#9046ff", bold = true, dim = false },
-    { token = "$space_working_cline", fg = "#586876", bold = true, dim = false },
-    { token = "$space_working_kilo", fg = "#9a9808", bold = true, dim = false },
-    { token = "$space_working_other", fg = "#c78a1f", bold = true, dim = false },
-    { token = "$space_done", fg = "#4c9a5a", bold = true, dim = false },
-    { token = "$space_idle", fg = "#8f95ab", bold = false, dim = false },
-    { token = "$space_unknown", fg = "#907aa9", bold = false, dim = false },
-    { token = "$space_none", fg = "#9a9eb3", bold = false, dim = false },
-    { token = "$space_label", fg = "#9a9eb3", bold = false, dim = false }
-  ],
-  [
-    { token = "$space_logo_claude", fg = "#d97757", bold = false, dim = false },
-    { token = "$space_logo_gemini", fg = "#4285f4", bold = false, dim = false },
-    { token = "$space_logo_kimi", fg = "#1783ff", bold = false, dim = false },
-    { token = "$space_logo_deepseek", fg = "#4d6bfe", bold = false, dim = false },
-    { token = "$space_logo_qwen", fg = "#615ced", bold = false, dim = false },
-    { token = "$space_logo_kiro", fg = "#9046ff", bold = false, dim = false },
-    { token = "$space_logo_cline", fg = "#586876", bold = false, dim = false },
-    { token = "$space_logo_kilo", fg = "#9a9808", bold = false, dim = false },
-    { token = "$space_logo_other", fg = "#e9e9f0", bold = false, dim = false }
-  ]
+  ["state_icon", "workspace", "branch", "git_status"]
 ]
-# <<< herdr-radar sidebar block
 
-# herdr-radar keys. These are ours, not a managed block: keep them OUTSIDE the
-# markers above, or `configure.js --rows-off` / `--uninstall` deletes them with
-# the block. prefix+a belongs to annotate.capture below, so the flip lives on f.
-[[keys.command]]
-key = "prefix+f"
-type = "plugin_action"
-command = "hhdebb.herdr-radar.view-flip"       # order: active <-> recent
-description = "Agents: active <-> recent"
+[ui.sound]
+enabled = false
 
-[[keys.command]]
-key = "prefix+comma"
-type = "plugin_action"
-command = "hhdebb.herdr-radar.settings"        # settings popup
-description = "herdr-radar settings"
-
-# >>> furkankly.zoetrope keys (managed: `setup-keys` writes this block, `remove-keys` deletes it)
-[[keys.command]]
-key = "prefix+shift+z"
-type = "plugin_action"
-command = "furkankly.zoetrope.open"
-description = "zoetrope: session graph (overlay)"
-
-# The graph opens over the focused pane and gives the layout back when
-# it closes. The same key closes it. Two other placements, if you would
-# rather keep the graph on screen: uncomment one, or point the binding
-# above at its action. Then: herdr server reload-config
-# [[keys.command]]
-# key = "prefix+shift+v"
-# type = "plugin_action"
-# command = "furkankly.zoetrope.open-split"
-# description = "zoetrope: session graph (split)"
-
-# [[keys.command]]
-# key = "prefix+shift+c"
-# type = "plugin_action"
-# command = "furkankly.zoetrope.open-tab"
-# description = "zoetrope: session graph (tab)"
-
-# <<< furkankly.zoetrope keys
-
-
-
-# Terminal annotations
-[[keys.command]]
-key = "prefix+a"
-type = "plugin_action"
-command = "annotate.capture"
-description = "annotate text"
-
-[[keys.command]]
-key = "prefix+shift+a"
-type = "plugin_action"
-command = "annotate.copy-context"
-description = "copy annotations as context"
-
-[[keys.command]]
-key = "prefix+ctrl+a"
-type = "plugin_action"
-command = "annotate.copy-archive"
-description = "copy annotations as context and archive them"
-
-[[keys.command]]
-key = "prefix+m"
-type = "plugin_action"
-command = "annotate.manage"
-description = "manage annotations"
-
-# Document review (plannotator-tui)
-[[keys.command]]
-key = "prefix+o"
-type = "plugin_action"
-command = "annotate.open"
-description = "review documents in this folder"
-
-[[keys.command]]
-key = "prefix+shift+o"
-type = "plugin_action"
-command = "annotate.last"
-description = "review the agent's last reply"
+[experimental]
+kitty_graphics = true
