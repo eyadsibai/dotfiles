@@ -25,6 +25,7 @@
     "kitty"
     "hypr"
     "lazygit"
+    "media"
     "omarchy"
     "scripts"
     "systemd"

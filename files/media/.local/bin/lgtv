@@ -1,0 +1,421 @@
+#!/usr/bin/env -S uv run -q --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["websockets>=13"]
+# ///
+"""lgtv — control the LG webOS TV from this machine.
+
+  lgtv status                 power state, foreground app, volume
+  lgtv on | off               power on (Wake-on-LAN) / off
+  lgtv screen off|on          blank the panel, keep sound (and back)
+  lgtv vol [N|up|down]        show or set volume
+  lgtv mute | unmute
+  lgtv play|pause|stop|ff|rew media controls
+  lgtv input [N|name]         list inputs, or switch (lgtv input 2 = HDMI 2)
+  lgtv apps                   list installed apps
+  lgtv app <name|id>          launch an app (e.g. lgtv app netflix)
+  lgtv open <url>             open a URL in the TV browser
+  lgtv youtube <url|id>       play a video in the YouTube app
+  lgtv notify <message>       show a toast on the TV
+  lgtv key <KEY>...           press remote keys (UP DOWN LEFT RIGHT ENTER BACK HOME ...)
+  lgtv remote                 interactive remote in this terminal
+  lgtv cast <file>            play a local video file on the TV (DLNA)
+  lgtv pair                   (re)pair; accept the prompt on the TV
+  lgtv host                   print the TV's address
+
+Config and pairing key live in ~/.config/lgtv/. LGTV_HOST overrides the TV address.
+"""
+import asyncio, json, os, re, socket, ssl, subprocess, sys, pathlib
+
+CONF_DIR = pathlib.Path(os.environ.get("XDG_CONFIG_HOME", pathlib.Path.home() / ".config")) / "lgtv"
+KEYFILE = CONF_DIR / "client-key"
+CONFFILE = CONF_DIR / "config.json"
+MDNS_NAME = "LGwebOSTV.local"
+
+PERMISSIONS = [
+    "LAUNCH", "LAUNCH_WEBAPP", "APP_TO_APP", "CLOSE", "TEST_OPEN", "TEST_PROTECTED",
+    "CONTROL_AUDIO", "CONTROL_DISPLAY", "CONTROL_INPUT_JOYSTICK", "CONTROL_INPUT_MEDIA_RECORDING",
+    "CONTROL_INPUT_MEDIA_PLAYBACK", "CONTROL_INPUT_TV", "CONTROL_POWER", "CONTROL_TV_SCREEN",
+    "CONTROL_TV_STANBY", "CONTROL_MOUSE_AND_KEYBOARD", "CONTROL_INPUT_TEXT",
+    "READ_APP_STATUS", "READ_CURRENT_CHANNEL", "READ_INPUT_DEVICE_LIST", "READ_NETWORK_STATE",
+    "READ_RUNNING_APPS", "READ_TV_CHANNEL_LIST", "READ_POWER_STATE", "READ_COUNTRY_INFO",
+    "READ_SETTINGS", "READ_INSTALLED_APPS", "READ_LGE_SDX", "READ_NOTIFICATIONS",
+    "READ_LGE_TV_INPUT_EVENTS", "READ_TV_CURRENT_TIME", "READ_UPDATE_INFO",
+    "WRITE_NOTIFICATION_TOAST", "WRITE_NOTIFICATION_ALERT", "WRITE_SETTINGS",
+    "SEARCH", "UPDATE_FROM_REMOTE_APP",
+]
+
+
+def die(msg):
+    sys.exit(f"lgtv: {msg}")
+
+
+def load_conf():
+    try:
+        return json.loads(CONFFILE.read_text())
+    except Exception:
+        return {}
+
+
+def save_conf(conf):
+    CONF_DIR.mkdir(parents=True, exist_ok=True)
+    CONFFILE.write_text(json.dumps(conf, indent=2) + "\n")
+
+
+def migrate_old_key():
+    old = pathlib.Path.home() / ".config" / "lgtv-client-key"
+    if old.exists() and not KEYFILE.exists():
+        CONF_DIR.mkdir(parents=True, exist_ok=True)
+        old.rename(KEYFILE)
+
+
+def tv_host():
+    if os.environ.get("LGTV_HOST"):
+        return os.environ["LGTV_HOST"]
+    try:
+        out = subprocess.run(["avahi-resolve", "-4", "-n", MDNS_NAME],
+                             capture_output=True, text=True, timeout=5).stdout.split()
+        if len(out) > 1:
+            return out[1]
+    except Exception:
+        pass
+    host = load_conf().get("host")
+    if not host:
+        die(f"can't find the TV ({MDNS_NAME}); set LGTV_HOST")
+    return host
+
+
+def remember(host):
+    """Store the TV's address and MAC (for Wake-on-LAN) after a successful connection."""
+    conf = load_conf()
+    conf["host"] = host
+    try:
+        m = re.search(r"lladdr ([0-9a-f:]{17})",
+                      subprocess.run(["ip", "neigh", "show", host], capture_output=True, text=True).stdout)
+        if m:
+            conf["mac"] = m.group(1)
+    except Exception:
+        pass
+    save_conf(conf)
+
+
+def no_verify_ssl():
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
+
+
+class TV:
+    def __init__(self, host=None, force_pair=False):
+        self.host = host or tv_host()
+        self.force_pair = force_pair
+        self.ws = None
+        self.n = 0
+
+    async def __aenter__(self):
+        import websockets
+        try:
+            self.ws = await websockets.connect(f"wss://{self.host}:3001", ssl=no_verify_ssl(),
+                                               open_timeout=8, max_size=None)
+        except (OSError, asyncio.TimeoutError) as e:
+            die(f"TV at {self.host} not reachable ({e}). Is it on? Try: lgtv on")
+        await self._register()
+        remember(self.host)
+        return self
+
+    async def __aexit__(self, *exc):
+        await self.ws.close()
+
+    async def _register(self):
+        payload = {"forcePairing": False, "pairingType": "PROMPT",
+                   "manifest": {"manifestVersion": 1, "appVersion": "1.1", "permissions": PERMISSIONS}}
+        if KEYFILE.exists() and not self.force_pair:
+            payload["client-key"] = KEYFILE.read_text().strip()
+        await self.ws.send(json.dumps({"type": "register", "id": "register", "payload": payload}))
+        while True:
+            try:
+                msg = json.loads(await asyncio.wait_for(self.ws.recv(), 120))
+            except asyncio.TimeoutError:
+                die("pairing prompt not accepted on the TV (timed out)")
+            if msg.get("type") == "registered":
+                CONF_DIR.mkdir(parents=True, exist_ok=True)
+                KEYFILE.write_text(msg["payload"]["client-key"])
+                return
+            if msg.get("type") == "error":
+                die(f"pairing refused: {msg.get('error')}")
+            if msg.get("payload", {}).get("pairingType") == "PROMPT":
+                print("Accept the pairing prompt on the TV...", file=sys.stderr)
+
+    async def call(self, uri, payload=None, check=True):
+        self.n += 1
+        mid = f"req{self.n}"
+        msg = {"type": "request", "id": mid, "uri": uri}
+        if payload is not None:
+            msg["payload"] = payload
+        await self.ws.send(json.dumps(msg))
+        while True:
+            resp = json.loads(await asyncio.wait_for(self.ws.recv(), 15))
+            if resp.get("id") != mid:
+                continue
+            if check and (resp.get("type") == "error" or resp.get("payload", {}).get("returnValue") is False):
+                raise RuntimeError(resp.get("error") or resp.get("payload", {}).get("errorText") or resp)
+            return resp.get("payload", {})
+
+    async def call_any(self, uris, payload=None):
+        """Try several URIs (they differ between webOS versions); return the first that works."""
+        err = None
+        for uri in uris:
+            try:
+                return await self.call(uri, payload)
+            except RuntimeError as e:
+                err = e
+        raise err
+
+    async def buttons(self):
+        """Open the pointer/button socket for remote-key presses."""
+        import websockets
+        path = (await self.call("ssap://com.webos.service.networkinput/getPointerInputSocket"))["socketPath"]
+        if path.startswith("ws://"):  # newer firmware only serves TLS on 3001
+            path = "wss://" + path[5:].replace(":3000/", ":3001/", 1)
+        return await websockets.connect(path, ssl=no_verify_ssl() if path.startswith("wss") else None)
+
+
+async def press(sock, name):
+    await sock.send(f"type:button\nname:{name}\n\n")
+
+
+# ---------- commands ----------
+
+async def cmd_status(tv, args):
+    try:
+        p = await tv.call("ssap://com.webos.service.tvpower/power/getPowerState")
+        print("power:  ", p.get("state", "?"))
+    except RuntimeError:
+        pass
+    app = await tv.call("ssap://com.webos.applicationManager/getForegroundAppInfo")
+    print("app:    ", app.get("appId") or "?")
+    await cmd_vol(tv, [])
+
+
+async def cmd_vol(tv, args):
+    if not args:
+        v = await tv.call("ssap://audio/getVolume")
+        st = v.get("volumeStatus", v)
+        muted = st.get("muteStatus", st.get("muted", False))
+        print("volume: ", st.get("volume", "?"), "(muted)" if muted else "")
+    elif args[0] in ("up", "+"):
+        await tv.call("ssap://audio/volumeUp")
+    elif args[0] in ("down", "-"):
+        await tv.call("ssap://audio/volumeDown")
+    elif args[0].isdigit():
+        await tv.call("ssap://audio/setVolume", {"volume": max(0, min(100, int(args[0])))})
+    else:
+        die("usage: lgtv vol [N|up|down]")
+
+
+async def cmd_mute(tv, args, on=True):
+    await tv.call("ssap://audio/setMute", {"mute": on})
+
+
+async def cmd_off(tv, args):
+    await tv.call("ssap://system/turnOff")
+
+
+async def cmd_screen(tv, args):
+    if not args or args[0] not in ("on", "off"):
+        die("usage: lgtv screen off|on")
+    verb = "turnOffScreen" if args[0] == "off" else "turnOnScreen"
+    await tv.call_any([f"ssap://com.webos.service.tvpower/power/{verb}",
+                       f"ssap://com.webos.service.tv.power/{verb}"], {"standbyMode": "active"})
+
+
+MEDIA = {"play": "play", "pause": "pause", "stop": "stop", "ff": "fastForward", "rew": "rewind"}
+
+
+async def cmd_media(tv, args, action):
+    await tv.call(f"ssap://media.controls/{MEDIA[action]}")
+
+
+async def cmd_input(tv, args):
+    devices = (await tv.call("ssap://tv/getExternalInputList")).get("devices", [])
+    if not args:
+        for d in devices:
+            mark = "" if d.get("connected") else "   (nothing connected)"
+            print(f"{d['id']:<12} {d.get('label', '')}{mark}")
+        return
+    q = args[0]
+    want = f"HDMI_{q}" if q.isdigit() else q
+    for d in devices:
+        if d["id"].lower() == want.lower() or q.lower() in d.get("label", "").lower():
+            await tv.call("ssap://tv/switchInput", {"inputId": d["id"]})
+            print(f"switched to {d['id']} ({d.get('label', '')})")
+            return
+    die(f"no input matching {q!r}; see: lgtv input")
+
+
+async def list_apps(tv):
+    lps = (await tv.call("ssap://com.webos.applicationManager/listLaunchPoints")).get("launchPoints", [])
+    return sorted(((lp["id"], lp.get("title", "")) for lp in lps), key=lambda a: a[1].lower())
+
+
+async def cmd_apps(tv, args):
+    for aid, title in await list_apps(tv):
+        print(f"{title:<28} {aid}")
+
+
+async def cmd_app(tv, args):
+    if not args:
+        return await cmd_apps(tv, args)
+    q = " ".join(args).lower()
+    apps = await list_apps(tv)
+    match = ([a for a in apps if a[0].lower() == q or a[1].lower() == q]
+             or [a for a in apps if q in a[1].lower() or q in a[0].lower()])
+    if not match:
+        die(f"no app matching {q!r}; see: lgtv apps")
+    await tv.call("ssap://system.launcher/launch", {"id": match[0][0]})
+    print(f"launched {match[0][1]}")
+
+
+async def cmd_open(tv, args):
+    if len(args) != 1:
+        die("usage: lgtv open <url>")
+    await tv.call("ssap://system.launcher/open", {"target": args[0]})
+
+
+def youtube_id(s):
+    m = re.search(r"(?:v=|youtu\.be/|/shorts/|/embed/|/live/)([\w-]{11})", s)
+    if m:
+        return m.group(1)
+    if re.fullmatch(r"[\w-]{11}", s):
+        return s
+    die(f"can't find a YouTube video id in {s!r}")
+
+
+async def cmd_youtube(tv, args):
+    if len(args) != 1:
+        die("usage: lgtv youtube <url|id>")
+    vid = youtube_id(args[0])
+    apps = dict(await list_apps(tv))
+    app_id = next((a for a in apps if a.startswith("youtube.leanback")), "youtube.leanback.v4")
+    await tv.call("ssap://system.launcher/launch", {"id": app_id, "contentId": vid})
+
+
+async def cmd_notify(tv, args):
+    if not args:
+        die("usage: lgtv notify <message>")
+    await tv.call("ssap://system.notifications/createToast", {"message": " ".join(args)})
+
+
+async def cmd_key(tv, args):
+    if not args:
+        die("usage: lgtv key UP|DOWN|LEFT|RIGHT|ENTER|BACK|HOME|EXIT|MENU|INFO|VOLUMEUP|... (several allowed)")
+    sock = await tv.buttons()
+    try:
+        for k in args:
+            await press(sock, k.upper())
+            await asyncio.sleep(0.15)
+    finally:
+        await sock.close()
+
+
+REMOTE_HELP = """remote: arrows move · Enter OK · Backspace back · h home · i info · s settings
+        + / - volume · m mute · space pause · p play · q quit"""
+REMOTE_KEYS = {"\x1b[A": "UP", "\x1b[B": "DOWN", "\x1b[C": "RIGHT", "\x1b[D": "LEFT",
+               "\r": "ENTER", "\n": "ENTER", "\x7f": "BACK", "\x08": "BACK", "h": "HOME",
+               "i": "INFO", "s": "MENU", "+": "VOLUMEUP", "=": "VOLUMEUP", "-": "VOLUMEDOWN",
+               "m": "MUTE", " ": "PAUSE", "p": "PLAY"}
+
+
+async def cmd_remote(tv, args):
+    import termios, tty
+    if not sys.stdin.isatty():
+        die("remote needs a terminal")
+    print(REMOTE_HELP)
+    sock = await tv.buttons()
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    loop = asyncio.get_running_loop()
+    try:
+        tty.setraw(fd)
+        while True:
+            ch = await loop.run_in_executor(None, os.read, fd, 8)
+            s = ch.decode(errors="ignore")
+            if s in ("q", "\x03", "\x04"):
+                break
+            name = REMOTE_KEYS.get(s)
+            if name:
+                await press(sock, name)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        await sock.close()
+        print()
+
+
+async def cmd_pair(tv, args):
+    print("paired.")
+
+
+# ---------- no websocket needed ----------
+
+def cmd_on(args):
+    mac = load_conf().get("mac")
+    if not mac:
+        die("no MAC address saved yet; run any lgtv command once while the TV is on")
+    packet = b"\xff" * 6 + bytes.fromhex(mac.replace(":", "")) * 16
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    host = load_conf().get("host", "")
+    targets = {"255.255.255.255"}
+    if host.count(".") == 3:
+        targets.add(host.rsplit(".", 1)[0] + ".255")
+    for t in targets:
+        for port in (9, 7):
+            s.sendto(packet, (t, port))
+    print("wake packet sent (needs TV setting: General > Devices > TV Management/Mobile TV On > Turn on via Wi-Fi)")
+
+
+def cmd_cast(args):
+    if len(args) != 1:
+        die("usage: lgtv cast <video file>")
+    os.execvp("dlna", ["dlna", "cast", tv_host(), args[0]])
+
+
+COMMANDS = {
+    "status": cmd_status, "vol": cmd_vol, "volume": cmd_vol,
+    "mute": lambda tv, a: cmd_mute(tv, a, True), "unmute": lambda tv, a: cmd_mute(tv, a, False),
+    "off": cmd_off, "screen": cmd_screen, "input": cmd_input, "hdmi": cmd_input,
+    "apps": cmd_apps, "app": cmd_app, "open": cmd_open, "youtube": cmd_youtube, "yt": cmd_youtube,
+    "notify": cmd_notify, "key": cmd_key, "remote": cmd_remote, "pair": cmd_pair,
+    **{m: (lambda m: lambda tv, a: cmd_media(tv, a, m))(m) for m in MEDIA},
+}
+
+
+async def run(cmd, args):
+    async with TV(force_pair=(cmd == "pair")) as tv:
+        try:
+            await COMMANDS[cmd](tv, args)
+        except RuntimeError as e:
+            die(f"{cmd} failed: {e}")
+
+
+def main():
+    migrate_old_key()
+    argv = sys.argv[1:]
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__.strip())
+        return
+    cmd, args = argv[0], argv[1:]
+    if cmd == "on":
+        return cmd_on(args)
+    if cmd == "cast":
+        return cmd_cast(args)
+    if cmd == "host":
+        return print(tv_host())
+    if cmd not in COMMANDS:
+        die(f"unknown command {cmd!r}; see: lgtv --help")
+    asyncio.run(run(cmd, args))
+
+
+if __name__ == "__main__":
+    main()

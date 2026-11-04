@@ -1,0 +1,334 @@
+#!/usr/bin/env -S uv run -q --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["samsungtvws>=3"]
+# ///
+"""samsungtv — control a Samsung Tizen TV (2016+) from this machine. Same commands as lgtv.
+
+  samsungtv find               look for Samsung TVs on the local network
+  samsungtv pair <ip>          pair; accept the prompt on the TV
+  samsungtv status             model, power state, volume
+  samsungtv on | off           power on (Wake-on-LAN) / off
+  samsungtv vol [N|up|down]    show or set volume
+  samsungtv mute | unmute
+  samsungtv play|pause|stop|ff|rew
+  samsungtv input [N]          open the source menu, or jump to HDMI N (not every model)
+  samsungtv apps               list apps (or common app IDs if the TV won't list them)
+  samsungtv app <name|id>      launch an app (e.g. samsungtv app netflix)
+  samsungtv open <url>         open a URL in the TV browser
+  samsungtv youtube <url|id>   play a video in the YouTube app
+  samsungtv key <KEY>...       press remote keys (UP DOWN LEFT RIGHT ENTER RETURN HOME ...)
+  samsungtv remote             interactive remote in this terminal
+  samsungtv cast <file>        play a local video file on the TV (DLNA)
+  samsungtv host               print the TV's address
+
+Not available on Samsung: notify, screen. Config and token live in ~/.config/samsungtv/.
+SAMSUNGTV_HOST overrides the TV address.
+"""
+import ipaddress, json, logging, os, pathlib, re, socket, subprocess, sys
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+
+CONF_DIR = pathlib.Path(os.environ.get("XDG_CONFIG_HOME", pathlib.Path.home() / ".config")) / "samsungtv"
+CONFFILE = CONF_DIR / "config.json"
+TOKEN = CONF_DIR / "token"
+
+# Used when the TV refuses to list its apps (common on 2020+ firmware). IDs can differ by model.
+KNOWN_APPS = {
+    "YouTube": "111299001912",
+    "Netflix": "3201907018807",
+    "Prime Video": "3201910019365",
+    "Disney+": "3201901017640",
+    "Apple TV": "3201807016597",
+    "Spotify": "3201606009684",
+    "Plex": "3201512006963",
+    "Internet (browser)": "org.tizen.browser",
+}
+YOUTUBE = KNOWN_APPS["YouTube"]
+MEDIA_KEYS = {"play": "KEY_PLAY", "pause": "KEY_PAUSE", "stop": "KEY_STOP", "ff": "KEY_FF", "rew": "KEY_REWIND"}
+
+
+def die(msg):
+    sys.exit(f"samsungtv: {msg}")
+
+
+def load_conf():
+    try:
+        return json.loads(CONFFILE.read_text())
+    except Exception:
+        return {}
+
+
+def save_conf(**kw):
+    conf = load_conf() | {k: v for k, v in kw.items() if v}
+    CONF_DIR.mkdir(parents=True, exist_ok=True)
+    CONFFILE.write_text(json.dumps(conf, indent=2) + "\n")
+
+
+def host():
+    h = os.environ.get("SAMSUNGTV_HOST") or load_conf().get("host")
+    if not h:
+        die("no TV set up yet. Run: samsungtv find, then samsungtv pair <ip>")
+    return h
+
+
+def device_info(h, timeout=3):
+    """The TV's unauthenticated REST info (port 8001); None if it doesn't answer."""
+    try:
+        with urllib.request.urlopen(f"http://{h}:8001/api/v2/", timeout=timeout) as r:
+            return json.load(r)
+    except Exception:
+        return None
+
+
+def connect():
+    from samsungtvws import SamsungTVWS
+    logging.disable(logging.WARNING)
+    CONF_DIR.mkdir(parents=True, exist_ok=True)
+    return SamsungTVWS(host=host(), port=8002, token_file=str(TOKEN), name="media",
+                       timeout=10, key_press_delay=0.2)
+
+
+def keys(*names):
+    tv = connect()
+    try:
+        for k in names:
+            k = k.upper()
+            tv.send_key(k if k.startswith("KEY_") else f"KEY_{k}")
+    except Exception as e:
+        die(f"TV at {host()} didn't take the key press ({e}). Is it on and paired?")
+    finally:
+        tv.close()
+
+
+def dlna(*args):
+    r = subprocess.run(["dlna", *args], text=True)
+    if r.returncode:
+        sys.exit(r.returncode)
+
+
+# ---------- commands ----------
+
+def cmd_find(args):
+    """Ask every address on our /24 for the Samsung REST info (outbound only, so no firewall changes)."""
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    probe.connect(("192.0.2.1", 9))
+    net = ipaddress.ip_network(probe.getsockname()[0] + "/24", strict=False)
+    with ThreadPoolExecutor(64) as pool:
+        found = [(str(ip), i) for ip, i in zip(net.hosts(), pool.map(lambda ip: device_info(str(ip), 1.5), net.hosts()))
+                 if i and "Samsung" in json.dumps(i)]
+    if not found:
+        print("no Samsung TV found (it must be on, and on the same network)")
+    for ip, i in found:
+        d = i.get("device", {})
+        print(f"{ip:<16} {d.get('name', i.get('name', '?'))}  {d.get('modelName', '')}  power={d.get('PowerState', '?')}")
+
+
+def cmd_pair(args):
+    if args:
+        save_conf(host=args[0])
+    info = device_info(host())
+    if not info:
+        die(f"{host()} doesn't look like a Samsung TV that's on")
+    TOKEN.unlink(missing_ok=True)
+    print("Accept the prompt on the TV...")
+    tv = connect()
+    try:
+        tv.open()
+    except Exception as e:
+        die(f"pairing failed: {e}")
+    finally:
+        tv.close()
+    remember(info)
+    print("paired." if TOKEN.exists() and TOKEN.read_text().strip() else "connected (this TV didn't issue a token).")
+
+
+def remember(info):
+    d = info.get("device", {})
+    save_conf(host=host(), mac=d.get("wifiMac"))
+
+
+def cmd_status(args):
+    info = device_info(host())
+    if not info:
+        die(f"TV at {host()} not reachable. Is it on? Try: samsungtv on")
+    remember(info)
+    d = info.get("device", {})
+    power = d.get("PowerState", "on")
+    print("tv:     ", d.get("name", "?"), d.get("modelName", ""))
+    print("power:  ", power)
+    if power != "on":
+        sys.exit(1)  # standby still answers REST; scripts waiting for the TV need "on"
+    print("volume: ", end="", flush=True)
+    dlna("volume", host())
+
+
+def cmd_on(args):
+    if (device_info(host(), 2) or {}).get("device", {}).get("PowerState") == "on":
+        return print("already on")
+    mac = load_conf().get("mac")
+    if not mac:
+        die("no MAC address saved yet; run samsungtv status once while the TV is on")
+    packet = b"\xff" * 6 + bytes.fromhex(mac.replace(":", "")) * 16
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    for t in {"255.255.255.255", host().rsplit(".", 1)[0] + ".255"}:
+        for port in (9, 7):
+            s.sendto(packet, (t, port))
+    print("wake packet sent (needs TV setting: General > Network > Expert Settings > Power On with Mobile)")
+
+
+def cmd_off(args):
+    info = device_info(host(), 2)
+    if not info or info.get("device", {}).get("PowerState", "on") != "on":
+        return print("already off")
+    keys("KEY_POWER")  # a toggle, so only send it when the TV is really on
+
+
+def cmd_vol(args):
+    if not args or args[0].isdigit():
+        dlna("volume", host(), *args[:1])
+    elif args[0] in ("up", "+"):
+        keys("KEY_VOLUP")
+    elif args[0] in ("down", "-"):
+        keys("KEY_VOLDOWN")
+    else:
+        die("usage: samsungtv vol [N|up|down]")
+
+
+def cmd_input(args):
+    if not args:
+        keys("KEY_SOURCE")
+    elif args[0].isdigit():
+        keys(f"KEY_HDMI{args[0]}")
+    else:
+        die("usage: samsungtv input [N]   (N = HDMI number)")
+
+
+def app_list():
+    tv = connect()
+    try:
+        apps = tv.app_list()
+    except Exception:
+        apps = None
+    finally:
+        tv.close()
+    if apps:
+        return sorted(((a["appId"], a.get("name", "")) for a in apps), key=lambda a: a[1].lower())
+    return [(i, n) for n, i in KNOWN_APPS.items()]
+
+
+def cmd_apps(args):
+    for aid, name in app_list():
+        print(f"{name:<28} {aid}")
+
+
+def cmd_app(args):
+    if not args:
+        return cmd_apps(args)
+    q = " ".join(args).lower()
+    apps = app_list()
+    match = ([a for a in apps if a[0].lower() == q or a[1].lower() == q]
+             or [a for a in apps if q in a[1].lower() or q in a[0].lower()])
+    aid, name = match[0] if match else (args[0], args[0])  # unknown: try it as a raw app id
+    tv = connect()
+    try:
+        tv.rest_app_run(aid)
+    except Exception as e:
+        die(f"couldn't launch {name}: {e}")
+    finally:
+        tv.close()
+    print(f"launched {name}")
+
+
+def youtube_id(s):
+    m = re.search(r"(?:v=|youtu\.be/|/shorts/|/embed/|/live/)([\w-]{11})", s)
+    if m:
+        return m.group(1)
+    if re.fullmatch(r"[\w-]{11}", s):
+        return s
+    die(f"can't find a YouTube video id in {s!r}")
+
+
+def run_app(app_id, kind, meta=""):
+    tv = connect()
+    try:
+        tv.run_app(app_id, kind, meta)
+    except Exception as e:
+        die(f"TV didn't accept it ({e}). Is it on and paired?")
+    finally:
+        tv.close()
+
+
+def cmd_open(args):
+    if len(args) != 1:
+        die("usage: samsungtv open <url>")
+    run_app("org.tizen.browser", "NATIVE_LAUNCH", args[0])
+
+
+def cmd_youtube(args):
+    if len(args) != 1:
+        die("usage: samsungtv youtube <url|id>")
+    run_app(YOUTUBE, "DEEP_LINK", f"v={youtube_id(args[0])}")
+
+
+REMOTE_HELP = """remote: arrows move · Enter OK · Backspace back · h home · s source · i info
+        + / - volume · m mute · space pause · p play · q quit"""
+REMOTE_KEYS = {"\x1b[A": "KEY_UP", "\x1b[B": "KEY_DOWN", "\x1b[C": "KEY_RIGHT", "\x1b[D": "KEY_LEFT",
+               "\r": "KEY_ENTER", "\n": "KEY_ENTER", "\x7f": "KEY_RETURN", "\x08": "KEY_RETURN",
+               "h": "KEY_HOME", "s": "KEY_SOURCE", "i": "KEY_INFO", "+": "KEY_VOLUP", "=": "KEY_VOLUP",
+               "-": "KEY_VOLDOWN", "m": "KEY_MUTE", " ": "KEY_PAUSE", "p": "KEY_PLAY"}
+
+
+def cmd_remote(args):
+    import termios, tty
+    if not sys.stdin.isatty():
+        die("remote needs a terminal")
+    print(REMOTE_HELP)
+    tv = connect()
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        while True:
+            s = os.read(fd, 8).decode(errors="ignore")
+            if s in ("q", "\x03", "\x04"):
+                break
+            if s in REMOTE_KEYS:
+                tv.send_key(REMOTE_KEYS[s])
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        tv.close()
+        print()
+
+
+def unsupported(name):
+    return lambda args: die(f"{name} isn't available on Samsung TVs")
+
+
+COMMANDS = {
+    "host": lambda a: print(host()),
+    "find": cmd_find, "pair": cmd_pair, "status": cmd_status, "on": cmd_on, "off": cmd_off,
+    "vol": cmd_vol, "volume": cmd_vol,
+    "mute": lambda a: dlna("mute", host(), "on"), "unmute": lambda a: dlna("mute", host(), "off"),
+    "input": cmd_input, "hdmi": cmd_input, "apps": cmd_apps, "app": cmd_app,
+    "open": cmd_open, "youtube": cmd_youtube, "yt": cmd_youtube,
+    "key": lambda a: keys(*a) if a else die("usage: samsungtv key UP|DOWN|ENTER|RETURN|HOME|... (several allowed)"),
+    "remote": cmd_remote,
+    "cast": lambda a: os.execvp("dlna", ["dlna", "cast", host(), a[0]]) if len(a) == 1 else die("usage: samsungtv cast <file>"),
+    "notify": unsupported("notify"), "screen": unsupported("screen on/off"),
+    **{m: (lambda k: lambda a: keys(k))(k) for m, k in MEDIA_KEYS.items()},
+}
+
+
+def main():
+    argv = sys.argv[1:]
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        return print(__doc__.strip())
+    if argv[0] not in COMMANDS:
+        die(f"unknown command {argv[0]!r}; see: samsungtv --help")
+    COMMANDS[argv[0]](argv[1:])
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,6 @@
+# Movie night: TV on, Sonos on TV sound, comfortable volume.
+tv on
+wait-tv
+sonos switch_to_tv
+sonos night_mode off
+vol 25

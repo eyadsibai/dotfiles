@@ -1,0 +1,4 @@
+# Late night: quiet, night mode and speech enhancement on.
+sonos night_mode on
+sonos dialog_mode on
+vol 15

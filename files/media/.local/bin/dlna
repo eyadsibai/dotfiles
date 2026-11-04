@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+"""dlna — talk to any DLNA/UPnP TV (LG, Samsung, ...). Used by lgtv and samsungtv.
+
+  dlna cast <host> <file>      serve a local video file and play it on the TV; Ctrl-C stops
+  dlna volume <host> [N]       show or set the volume (RenderingControl)
+  dlna mute <host> on|off
+
+The TV fetches the file from this machine on TCP port $DLNA_PORT (default 8765) and
+answers discovery on UDP to the same port, so a firewall must allow both:
+  sudo ufw allow from <tv-ip> to any port 8765      (or just: media firewall)
+"""
+import http.server, mimetypes, os, re, socket, sys, threading, time
+import urllib.error, urllib.parse, urllib.request
+from xml.sax.saxutils import escape
+
+PORT = int(os.environ.get("DLNA_PORT", "8765"))
+FETCHED = threading.Event()  # set when the TV requests the file
+AVT = "urn:schemas-upnp-org:service:AVTransport:1"
+RC = "urn:schemas-upnp-org:service:RenderingControl:1"
+
+
+def die(msg):
+    sys.exit(f"dlna: {msg}")
+
+
+def find_service(host, st):
+    """Unicast SSDP to the TV (a stateful firewall lets the reply in), then read its description."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(3)
+    try:  # TVs reply from a random port, so a firewall only lets the reply in on a known port
+        s.bind(("", PORT))
+    except OSError:
+        pass  # in use (e.g. another dlna run); a random port works when the firewall allows it
+    req = (f"M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: \"ssdp:discover\"\r\n"
+           f"MX: 2\r\nST: {st}\r\n\r\n").encode()
+    s.sendto(req, (host, 1900))
+    try:
+        data = s.recv(4096).decode(errors="ignore")
+    except socket.timeout:
+        die(f"{host} didn't answer DLNA discovery. Is the TV on? If it is, the firewall is\n"
+            f"probably dropping the reply. Fix it once with:  media firewall")
+    m = re.search(r"(?im)^location:\s*(\S+)", data)
+    if not m:
+        die("DLNA reply had no description URL")
+    loc = m.group(1)
+    xml = urllib.request.urlopen(loc, timeout=5).read().decode(errors="ignore")
+    for svc in re.findall(r"<service>(.*?)</service>", xml, re.S):
+        if st in svc:
+            ctrl = re.search(r"<controlURL>(.*?)</controlURL>", svc).group(1).strip()
+            return urllib.parse.urljoin(loc, ctrl)
+    die(f"the TV doesn't offer {st.split(':')[-2]}")
+
+
+def soap(ctrl, service, action, args, timeout=10, soft=False):
+    """Send one UPnP action. soft=True returns None on any failure instead of exiting."""
+    body = "".join(f"<{k}>{v}</{k}>" for k, v in args.items())
+    env = (f'<?xml version="1.0" encoding="utf-8"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
+           f's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body>'
+           f'<u:{action} xmlns:u="{service}">{body}</u:{action}></s:Body></s:Envelope>').encode()
+    req = urllib.request.Request(ctrl, data=env, headers={
+        "Content-Type": 'text/xml; charset="utf-8"', "SOAPAction": f'"{service}#{action}"'})
+    try:
+        return urllib.request.urlopen(req, timeout=timeout).read().decode(errors="ignore")
+    except urllib.error.HTTPError as e:
+        if soft:
+            return None
+        die(f"TV rejected {action}: {e.read().decode(errors='ignore')[:300]}")
+    except OSError as e:
+        if soft:
+            return None
+        die(f"TV didn't answer {action}: {e}")
+
+
+def transport_state(ctrl):
+    xml = soap(ctrl, AVT, "GetTransportInfo", {"InstanceID": 0}, timeout=5, soft=True) or ""
+    m = re.search(r"<CurrentTransportState>(\w+)</CurrentTransportState>", xml)
+    return m.group(1) if m else "?"
+
+
+def make_handler(path, mime):
+    """Serve exactly one file, with Range support (TVs seek with Range requests)."""
+    size = os.path.getsize(path)
+
+    class H(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def _send(self, body):
+            start, end = 0, size - 1
+            m = re.match(r"bytes=(\d*)-(\d*)", self.headers.get("Range") or "")
+            if m and (m.group(1) or m.group(2)):
+                if m.group(1):
+                    start = int(m.group(1))
+                    end = int(m.group(2)) if m.group(2) else size - 1
+                else:
+                    start = max(0, size - int(m.group(2)))
+                end = min(end, size - 1)
+                self.send_response(206)
+                self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+            else:
+                self.send_response(200)
+            self.send_header("Content-Type", mime)
+            self.send_header("Accept-Ranges", "bytes")
+            self.send_header("Content-Length", str(end - start + 1))
+            self.send_header("transferMode.dlna.org", "Streaming")
+            self.send_header("contentFeatures.dlna.org",
+                             "DLNA.ORG_OP=01;DLNA.ORG_FLAGS=01700000000000000000000000000000")
+            self.end_headers()
+            if not body:
+                return
+            with open(path, "rb") as f:
+                f.seek(start)
+                left = end - start + 1
+                try:
+                    while left > 0:
+                        chunk = f.read(min(1 << 20, left))
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+                        left -= len(chunk)
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+
+        def do_GET(self):
+            FETCHED.set()
+            self._send(True)
+
+        def do_HEAD(self):
+            self._send(False)
+
+    return H
+
+
+def cast(host, path):
+    if not os.path.isfile(path):
+        die(f"no such file: {path}")
+    path = os.path.abspath(path)
+    mime = mimetypes.guess_type(path)[0] or "video/mp4"
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    probe.connect((host, 9))
+    my_ip = probe.getsockname()[0]
+    try:
+        srv = http.server.ThreadingHTTPServer((my_ip, PORT), make_handler(path, mime))
+    except OSError as e:
+        die(f"can't listen on port {PORT}: {e}")
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    name = os.path.basename(path)
+    url = f"http://{my_ip}:{PORT}/{urllib.parse.quote(name)}"
+    didl = ('<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" '
+            'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">'
+            f'<item id="0" parentID="-1" restricted="1"><dc:title>{escape(name)}</dc:title>'
+            '<upnp:class>object.item.videoItem</upnp:class>'
+            f'<res protocolInfo="http-get:*:{mime}:*">{escape(url)}</res></item></DIDL-Lite>')
+    ctrl = find_service(host, AVT)
+    soap(ctrl, AVT, "Stop", {"InstanceID": 0}, soft=True)  # clear a session left stuck by an earlier run
+    soap(ctrl, AVT, "SetAVTransportURI",
+         {"InstanceID": 0, "CurrentURI": escape(url), "CurrentURIMetaData": escape(didl)})
+    # LG holds the Play request ~30s while its player opens, then answers 500 and plays anyway,
+    # so don't wait on the reply; watch the transport state instead.
+    threading.Thread(target=soap, args=(ctrl, AVT, "Play", {"InstanceID": 0, "Speed": 1}),
+                     kwargs={"timeout": 60, "soft": True}, daemon=True).start()
+    print(f"casting {name}. Ctrl-C to stop.")
+    try:
+        for _ in range(60):
+            if FETCHED.is_set() and transport_state(ctrl) == "PLAYING":
+                print("playing on the TV.")
+                break
+            time.sleep(1)
+        if not FETCHED.is_set():
+            print(f"\nThe TV hasn't fetched the file after 60s. The firewall is probably blocking it.\n"
+                  f"Fix it once with:  media firewall   (or: sudo ufw allow from {host} to any port {PORT})\n"
+                  f"Still waiting; Ctrl-C to stop.")
+        threading.Event().wait()
+    except KeyboardInterrupt:
+        try:
+            soap(ctrl, AVT, "Stop", {"InstanceID": 0})
+        except SystemExit:
+            pass
+        print("\nstopped.")
+
+
+def volume(host, level=None):
+    ctrl = find_service(host, RC)
+    if level is None:
+        xml = soap(ctrl, RC, "GetVolume", {"InstanceID": 0, "Channel": "Master"})
+        m = re.search(r"<CurrentVolume>(\d+)</CurrentVolume>", xml)
+        print(m.group(1) if m else "?")
+    else:
+        soap(ctrl, RC, "SetVolume", {"InstanceID": 0, "Channel": "Master",
+                                     "DesiredVolume": max(0, min(100, int(level)))})
+
+
+def mute(host, on):
+    soap(find_service(host, RC), RC, "SetMute",
+         {"InstanceID": 0, "Channel": "Master", "DesiredMute": 1 if on else 0})
+
+
+def main():
+    a = sys.argv[1:]
+    if len(a) == 3 and a[0] == "cast":
+        cast(a[1], a[2])
+    elif a[:1] == ["volume"] and len(a) in (2, 3) and (len(a) == 2 or a[2].isdigit()):
+        volume(a[1], a[2] if len(a) == 3 else None)
+    elif len(a) == 3 and a[0] == "mute" and a[2] in ("on", "off"):
+        mute(a[1], a[2] == "on")
+    else:
+        print(__doc__.strip())
+        sys.exit(0 if a[:1] in (["-h"], ["--help"]) else 2)
+
+
+if __name__ == "__main__":
+    main()

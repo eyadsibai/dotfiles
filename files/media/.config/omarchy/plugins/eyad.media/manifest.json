@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "id": "eyad.media",
+  "name": "Living room",
+  "version": "0.1.0",
+  "author": "Eyad Sibai",
+  "license": "MIT",
+  "description": "Control the living-room TV and Sonos through the media command: TV power, Sonos volume, playback, scenes, remote and casting.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Living room",
+    "description": "TV power, Sonos volume, playback and scenes. Scroll for Sonos volume, middle-click to mute, right-click to refresh.",
+    "category": "Audio",
+    "aliases": [
+      "tv",
+      "lgtv",
+      "sonos",
+      "media",
+      "cast"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "title": "Living room",
+      "refreshIntervalSec": 30,
+      "hideWhenUnreachable": false
+    },
+    "schema": [
+      {
+        "key": "title",
+        "type": "string",
+        "label": "Title",
+        "defaultValue": "Living room"
+      },
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Refresh interval (seconds)",
+        "min": 10,
+        "max": 600,
+        "step": 5,
+        "defaultValue": 30,
+        "description": "How often to ask the TV and Sonos for their state while the panel is closed. It refreshes every 5 seconds while open."
+      },
+      {
+        "key": "hideWhenUnreachable",
+        "type": "boolean",
+        "label": "Hide when away",
+        "defaultValue": false,
+        "description": "Hide the bar icon while neither the TV nor the Sonos answers, e.g. away from home."
+      }
+    ]
+  }
+}

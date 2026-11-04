@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# media — one command for the living-room TV (LG), Sonos and casting.
+#
+#   media status [--json]        TV power/app/volume + Sonos volume (--json: for the bar widget)
+#   media tv <args>              TV control         (see: lgtv --help / samsungtv --help)
+#   media sonos <soco-cli args>  Sonos control      e.g. media sonos volume 30
+#   media vol [N|up|down]        Sonos volume (the Arc does the sound)
+#   media mute | unmute          Sonos mute
+#   media cast <file>            play a local video file on the TV (DLNA)
+#   media gui                    open go2tv for casting with subtitles, playlists, ...
+#   media wait-tv [secs]         wait until the TV answers (default 40s)
+#   media firewall [remove]      let the TV reach this machine for casting (asks for sudo)
+#   media <scene>                run ~/.config/media/scenes/<scene> (one media command per line)
+#   media scenes                 list scenes
+#
+# Settings: ~/.config/media/config (shell syntax), or the same names in the environment:
+#   MEDIA_TV=lg|samsung   which TV backend (default lg; samsung needs: samsungtv pair <ip>)
+#   MEDIA_SONOS=<ip>      the speaker (default 192.168.8.182, the Arc Ultra; an IP skips
+#                         discovery, which the firewall would block)
+# TV addresses and pairing keys live in ~/.config/lgtv/ and ~/.config/samsungtv/.
+set -euo pipefail
+
+CONF="${XDG_CONFIG_HOME:-$HOME/.config}/media/config"
+env_tv="${MEDIA_TV:-}" env_sonos="${MEDIA_SONOS:-}"
+# shellcheck source=/dev/null
+[[ -f $CONF ]] && source "$CONF"
+MEDIA_TV="${env_tv:-${MEDIA_TV:-lg}}"
+SONOS="${env_sonos:-${MEDIA_SONOS:-192.168.8.182}}"
+case "$MEDIA_TV" in
+  lg|lgtv)              TV=lgtv ;;
+  samsung|samsungtv)    TV=samsungtv ;;
+  *) echo "media: MEDIA_TV must be lg or samsung, not '$MEDIA_TV'" >&2; exit 1 ;;
+esac
+SCENES="${XDG_CONFIG_HOME:-$HOME/.config}/media/scenes"
+
+die() { echo "media: $*" >&2; exit 1; }
+usage() { sed -n '2,/^set -euo/{/^set -euo/d;s/^# \{0,1\}//;p}' "$0"; }
+
+wait_tv() {
+  local secs="${1:-40}" end=$((SECONDS + ${1:-40}))
+  echo "waiting for the TV (up to ${secs}s)..."
+  until "$TV" status >/dev/null 2>&1; do
+    ((SECONDS < end)) || die "TV didn't come up within ${secs}s"
+    sleep 2
+  done
+}
+
+# Firewall rules casting needs. The TV fetches files from us over TCP and answers DLNA
+# discovery over UDP from a random port, which ufw's connection tracking doesn't match.
+# dlna listens on one port for both; go2tv uses random ports, so it needs all UDP from the TV.
+# Each entry: "<ufw rule spec>|<user.rules tuple>|<what>".
+fw_rules() {
+  local tv="$1" cast_port="${DLNA_PORT:-8765}"
+  echo "from $tv to any port $cast_port|allow any $cast_port 0.0.0.0/0 any $tv in|media cast (tcp+udp $cast_port)"
+  echo "from $tv to any port 3500:3510 proto tcp|allow tcp 3500:3510 0.0.0.0/0 any $tv in|go2tv file server"
+  echo "proto udp from $tv|allow udp any 0.0.0.0/0 any $tv in|go2tv discovery replies (udp)"
+}
+
+firewall() {
+  local action="${1:-add}" tv spec tuple what missing=0
+  command -v ufw >/dev/null && systemctl is-active -q ufw || { echo "ufw isn't running, so nothing is blocked."; return; }
+  tv="$("$TV" host)" || die "can't tell the TV's address"
+  [[ -r /etc/ufw/user.rules ]] || die "can't read /etc/ufw/user.rules to check the rules"
+  local rules; rules="$(grep '^### tuple' /etc/ufw/user.rules)"
+  if grep -qF "allow any any 0.0.0.0/0 any $tv in" <<<"$rules"; then
+    echo "the firewall already allows everything from $tv"; return
+  fi
+  while IFS='|' read -r spec tuple what; do
+    if grep -qF " $tuple" <<<"$rules"; then
+      if [[ $action == remove ]]; then
+        echo "removing: $what"; eval "sudo ufw delete allow $spec"
+      else
+        echo "ok:       $what"
+      fi
+    elif [[ $action != remove ]]; then
+      echo "adding:   $what"; eval "sudo ufw allow $spec comment \"media: $what\"" >/dev/null && missing=1
+    fi
+  done < <(fw_rules "$tv")
+  [[ $action == remove || $missing == 0 ]] || echo "done. $tv can now reach this machine for casting."
+}
+
+# "<scene>\t<its first comment>" per scene.
+scene_list() {
+  local f
+  for f in "$SCENES"/*; do
+    [[ -f $f ]] || continue
+    printf '%s\t%s\n' "${f##*/}" "$(sed -n 's/^# *//p' "$f" | head -1)"
+  done
+}
+
+# One JSON object for the Omarchy bar widget. The TV and Sonos are asked in parallel,
+# and an unreachable one is reported, not fatal.
+status_json() {
+  local tmp; tmp="$(mktemp -d)"
+  { "$TV" status >"$tmp/tv" 2>/dev/null; echo $? >"$tmp/tv.rc"; } &
+  { sonos "$SONOS" volume >"$tmp/vol" 2>/dev/null; } &
+  { sonos "$SONOS" mute >"$tmp/mute" 2>/dev/null; } &
+  { sonos "$SONOS" playback >"$tmp/play" 2>/dev/null; } &
+  wait
+  field() { sed -n "s/^$1: *//p" "$tmp/tv" | head -1 | sed 's/ *$//'; }
+  local tvvol; tvvol="$(field volume)"
+  jq -n \
+    --arg backend "$MEDIA_TV" --arg rc "$(cat "$tmp/tv.rc")" \
+    --arg power "$(field power)" --arg app "$(field app)" --arg name "$(field tv)" \
+    --arg tvvol "${tvvol%% *}" --arg tvmuted "$([[ $tvvol == *muted* ]] && echo 1)" \
+    --arg vol "$(tr -d '[:space:]' <"$tmp/vol")" --arg mute "$(tr -d '[:space:]' <"$tmp/mute")" \
+    --arg play "$(tr -d '[:space:]' <"$tmp/play")" --arg sonos "$SONOS" \
+    --arg scenes "$(scene_list)" '
+    def num: if test("^[0-9]+$") then tonumber else null end;
+    {
+      tv: {
+        backend: $backend, reachable: ($rc == "0"), power: $power, app: $app, name: $name,
+        on: ($rc == "0" and ($power | ascii_downcase | test("standby|suspend|off$") | not)),
+        volume: ($tvvol | num), muted: ($tvmuted == "1")
+      },
+      sonos: {
+        host: $sonos, reachable: ($vol | num) != null,
+        volume: ($vol | num), muted: ($mute == "on"), playback: $play
+      },
+      scenes: ($scenes | split("\n") | map(select(. != "") | split("\t") | {name: .[0], description: (.[1] // "")}))
+    }'
+  rm -rf "$tmp"
+}
+
+run_scene() {
+  local file="$SCENES/$1" line
+  while IFS= read -r line || [[ -n $line ]]; do
+    line="${line%%#*}"
+    [[ -z ${line// } ]] && continue
+    echo "> media $line"
+    eval "set -- $line"
+    main "$@"
+  done <"$file"
+}
+
+main() {
+  local cmd="${1:-}"
+  shift || true
+  case "$cmd" in
+    ""|-h|--help|help) usage ;;
+    status)  [[ ${1:-} == --json ]] && { status_json; return; }
+             "$TV" status || true; printf 'sonos:   volume %s, %s\n' "$(sonos "$SONOS" volume)" "$(sonos "$SONOS" playback 2>/dev/null || echo '?')" ;;
+    tv)      "$TV" "$@" ;;
+    sonos)   sonos "$SONOS" "$@" ;;
+    vol|volume)
+      case "${1:-}" in
+        "")   sonos "$SONOS" volume ;;
+        up)   sonos "$SONOS" relative_volume 5 ;;
+        down) sonos "$SONOS" relative_volume -5 ;;
+        *)    sonos "$SONOS" volume "$1" ;;
+      esac ;;
+    mute)    sonos "$SONOS" mute on ;;
+    unmute)  sonos "$SONOS" mute off ;;
+    cast)    "$TV" cast "$@" ;;
+    gui)     command -v go2tv >/dev/null || die "go2tv not installed: yay -S go2tv-bin"
+             setsid -f go2tv >/dev/null 2>&1 ;;
+    wait-tv) wait_tv "$@" ;;
+    firewall) [[ ${1:-add} == @(add|remove) ]] || die "usage: media firewall [remove]"; firewall "${1:-add}" ;;
+    scenes)  ls "$SCENES" 2>/dev/null ;;
+    *)       [[ -f $SCENES/$cmd ]] || die "unknown command or scene '$cmd' (media --help, media scenes)"
+             run_scene "$cmd" ;;
+  esac
+}
+
+main "$@"

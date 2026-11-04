@@ -109,6 +109,11 @@ machine gets it. A host file only says what makes that machine different. Option
 features are modules you import, and the few custom options live under `my.*`
 (currently just `my.desktop.autoLogin`).
 
+`files/media` is the living room: `media` drives the LG (`lgtv`) or Samsung (`samsungtv`) TV,
+the Sonos through `soco-cli`, DLNA casting (`dlna`) and scenes in `~/.config/media/scenes/`.
+The `eyad.media` Omarchy bar widget puts the same controls in the bar: TV power, Sonos
+volume, playback, scenes, a remote and casting.
+
 ## Decisions worth knowing
 
 - **nixarchy is pinned to a release tag.** It's one maintainer's project, so it's bumped on
