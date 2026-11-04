@@ -170,7 +170,7 @@
         };
 
       devShells = forAllSystems (system: {
-        default = nixpkgs.legacyPackages.${system}.mkShell {
+        default = nixpkgs.legacyPackages.${system}.mkShellNoCC {
           packages = with nixpkgs.legacyPackages.${system}; [
             nixfmt
             nixd
