@@ -183,12 +183,12 @@ Omarchy first, then Nix from pacman, then Home Manager:
 
 ```bash
 sudo pacman -S nix
-sudo systemctl enable --now nix-daemon.socket
-echo 'experimental-features = nix-command flakes' | sudo tee -a /etc/nix/nix.conf
-sudo systemctl restart nix-daemon
-
 git clone git@github.com:eyadsibai/dotfiles.git ~/dev/dotfiles
 cd ~/dev/dotfiles
+sudo cp arch/nix.conf /etc/nix/nix.conf    # flakes, plus the same caches as the Nix hosts
+sudo systemctl enable --now nix-daemon.socket
+sudo systemctl restart nix-daemon
+
 cp -r hosts/vector hosts/$(hostname -s)    # new machine only: also add it to homeConfigurations
                                            # in flake.nix and give it a files/host-<name>
 nix develop -c just switch                 # just and nh come from the dev shell until then
@@ -200,6 +200,8 @@ local user, so there's no group to join. The first `switch` moves any file it wo
 replace aside as `*.hm-backup`: go through them (`find ~ -name '*.hm-backup'`) and move
 anything worth keeping into the repo. Then open a new terminal for the Nix `PATH`,
 `direnv allow` in the repo, and `systemctl --user enable --now tv-check.timer`.
+Finally sign in to the 1Password app at the machine and turn on Settings → Developer →
+"Use the SSH agent", or commits made at its own keyboard can't be signed.
 
 ## Day to day
 
