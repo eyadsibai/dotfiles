@@ -42,13 +42,14 @@ A DGX Spark is on its way and will take the large models off the workstation.
 
 ```mermaid
 flowchart LR
-  flake["flake.nix<br/>mkNixos · mkDarwin"]
+  flake["flake.nix<br/>mkNixos · mkDarwin · mkArch"]
 
   subgraph hosts["hosts/"]
     ws[workstation]
     lap[eyad-nixos]
     srv[home-server]
     mac["mac<br/>(eyad-m3, eyad-mac)"]
+    arch["vector · cachy<br/>(Omarchy on Arch)"]
   end
 
   subgraph modules["modules/"]
@@ -59,6 +60,8 @@ flowchart LR
     home["home<br/>shells · CLI · git · ssh · 1Password<br/>newsboat · herdr · mpv"]
   end
 
+  files["files/<br/>Omarchy configs · tv · media · scripts"]
+
   flake --> hosts
   ws & lap & srv --> nixos
   ws --> optin
@@ -66,10 +69,12 @@ flowchart LR
   mac --> darwin
   nixos & darwin --> common
   nixos & darwin --> home
+  arch -->|Home Manager only| home
+  arch -->|my.files| files
 ```
 
 ```
-flake.nix          inputs, mkNixos / mkDarwin, the hosts, checks, dev shell
+flake.nix          inputs, mkNixos / mkDarwin / mkArch, the hosts, checks, dev shell
 hosts/<name>/      hardware and what that machine is for; nothing shared lives here
 modules/common/    Nix itself: caches, GC, nh, trusted users (both platforms)
 modules/nixos/     every NixOS host gets default.nix; desktop, sunshine, ai and
@@ -171,6 +176,30 @@ Fixed here, reported upstream. The workarounds live in `modules/nixos/desktop.ni
 | Chromium starts without Omarchy's bundled extensions (copy-url, yt-dlp, WhatsApp): Omarchy enables them through a flags file that Arch's launcher reads and nixpkgs' doesn't. | Flags built into the Chromium the Omarchy package installs; native-messaging hosts re-registered at every activation via a stable `/run/current-system` path. | [#1491](https://github.com/olafkfreund/nixarchy/issues/1491), fixed after v4.5.0-rc2-1 |
 | After an autologin boot the login keyring stays locked until some app asks for its password. | The lock screen's PAM service unlocks it, so the first unlock after boot opens the keyring. It stays encrypted. | [#1492](https://github.com/olafkfreund/nixarchy/issues/1492), fixed after v4.5.0-rc2-1 |
 | Five Omarchy preinstalls aren't in nixarchy: Hype, Monologue, Signed, disktree, Superwhisper. | Packaged in `pkgs/` and installed for the user; Superwhisper also gets its user service and Omarchy bar panel. | not reported |
+
+## Setting up an Arch machine
+
+Omarchy first, then Nix from pacman, then Home Manager:
+
+```bash
+sudo pacman -S nix
+sudo systemctl enable --now nix-daemon.socket
+echo 'experimental-features = nix-command flakes' | sudo tee -a /etc/nix/nix.conf
+sudo systemctl restart nix-daemon
+
+git clone git@github.com:eyadsibai/dotfiles.git ~/dev/dotfiles
+cd ~/dev/dotfiles
+cp -r hosts/vector hosts/$(hostname -s)    # new machine only: also add it to homeConfigurations
+                                           # in flake.nix and give it a files/host-<name>
+nix develop -c just switch                 # just and nh come from the dev shell until then
+just arch-sync                             # pacman/AUR packages from arch/<host>.packages
+```
+
+Arch's `nix` no longer has a `nix-users` group; the daemon socket is open to every
+local user, so there's no group to join. The first `switch` moves any file it would
+replace aside as `*.hm-backup`: go through them (`find ~ -name '*.hm-backup'`) and move
+anything worth keeping into the repo. Then open a new terminal for the Nix `PATH`,
+`direnv allow` in the repo, and `systemctl --user enable --now tv-check.timer`.
 
 ## Day to day
 
