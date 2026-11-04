@@ -121,10 +121,9 @@ volume, playback, scenes, a remote and casting.
 
 ## Decisions worth knowing
 
-- **nixarchy follows main, bumped on purpose.** Main runs ahead of the release tags and
-  carries fixes they don't have yet. It's one maintainer's project, so plain `just update`
-  leaves it alone; `just update nixarchy` moves it, after `just vm`, ideally once the Arch
-  machines are on the same Omarchy version.
+- **nixarchy follows main.** Main runs ahead of the release tags and carries fixes they
+  don't have yet, so `just update` moves it with everything else. It's one maintainer's
+  project: `just vm` before switching a NixOS machine to a big jump.
 - **Only three binary caches are trusted:** `cache.nixos.org`, nix-community, and the
   community CUDA cache (through nixarchy's `cudaCache`, which only applies where the NVIDIA
   driver is on). Hyprland therefore comes from nixpkgs, not nixarchy's hyprwm input, and
@@ -217,7 +216,7 @@ once for the dev shell, then:
 | `just build [host]` | build and show the diff only |
 | `just boot [host]` | NixOS: activate on next boot, for desktop or login changes |
 | `just vm [host]` | NixOS: boot the exact configuration in a throwaway QEMU VM (no NVIDIA) |
-| `just update [input...]` | update every flake input except nixarchy, or the ones named |
+| `just update [input...]` | update every flake input, or only the ones named |
 | `just check` | `nix flake check`: evaluates every host, checks formatting |
 | `just clean` | drop old generations, GC the store |
 | `just secret <name>` | edit `secrets/<name>.yaml` |

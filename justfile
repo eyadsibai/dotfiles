@@ -27,16 +27,9 @@ boot name=host:
 vm name=host:
     nix run .#nixosConfigurations.{{name}}.config.system.build.vm
 
-# Update every flake input except nixarchy (bumped on purpose: just update nixarchy),
-# or only the ones named: just update nixpkgs home-manager
+# Update all flake inputs, nixarchy included (or only some: just update nixpkgs home-manager)
 update *inputs:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    inputs="{{inputs}}"
-    if [ -z "$inputs" ]; then
-      inputs=$(nix flake metadata --json | jq -r '.locks.nodes.root.inputs | keys[] | select(. != "nixarchy")' | tr '\n' ' ')
-    fi
-    nix flake update $inputs
+    nix flake update {{inputs}}
 
 # Evaluate every host and run flake checks
 check:

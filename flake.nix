@@ -27,7 +27,7 @@
     };
 
     # Omarchy's desktop packaged for NixOS. Follows main, which runs ahead of the
-    # release tags; `nix flake update nixarchy` bumps it on purpose.
+    # release tags; `just update` moves it along with everything else.
     nixarchy = {
       url = "github:olafkfreund/nixarchy";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -179,7 +179,6 @@
             sops
             age
             ssh-to-age
-            jq # just update
           ];
         };
       });
