@@ -2,10 +2,15 @@
 # pacman own the system, the desktop and the GUI apps (arch/<host>.packages); this
 # adds what every machine shares: shells, CLI tools, git, ssh, and the files/ packages.
 {
+  config,
+  lib,
   pkgs,
   username,
   ...
 }:
+let
+  themedStarship = "${config.xdg.stateHome}/omarchy-theme-apps/starship.toml";
+in
 {
   imports = [
     ./default.nix
@@ -49,7 +54,24 @@
   home.sessionVariables = {
     LC_ALL = "en_US.UTF-8";
     BUN_INSTALL = "/mnt/scratch/bun"; # pacman's /usr/bin/bun stays first; only its data moves
+    # The prompt in the current theme's colours: the theme-set hook
+    # 60-omarchy-theme-apps.sh (from omarchy-eyad-theme) writes this copy of
+    # ~/.config/starship.toml with the theme's palette added. Home Manager's own
+    # value would otherwise win in every shell, SSH sessions included.
+    STARSHIP_CONFIG = lib.mkForce "${themedStarship}";
   };
+
+  # That copy is made at theme changes, so rebuild it whenever starship.toml may have
+  # changed. Without the hook, link the plain config so STARSHIP_CONFIG never dangles.
+  home.activation.themedStarship = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    hook="$HOME/.config/omarchy/hooks/theme-set.d/60-omarchy-theme-apps.sh"
+    if [ -x "$hook" ]; then
+      run "$hook"
+    else
+      run mkdir -p "$(dirname "${themedStarship}")"
+      run ln -sfn "$HOME/.config/starship.toml" "${themedStarship}"
+    fi
+  '';
 
   # Tools installed by their own installers, outside pacman and Nix
   home.sessionPath = [

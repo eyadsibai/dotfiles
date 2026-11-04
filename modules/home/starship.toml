@@ -6,8 +6,9 @@
 #   (REBASING 2/5)              commit and a rebase/merge in progress
 #   ❄️                          inside a nix or devenv shell
 #   🐍 3.12 (venv) ⬢ 22         language versions, only inside such a project
-#   🅰 profile  🅶 project      aws / gcloud context, only when set
-#   zsh / nu                    which shell, when it isn't bash
+#   🅰 profile  🅶 project      aws context when set; gcloud only when a shell picks a
+#                               configuration (CLOUDSDK_ACTIVE_CONFIG_NAME), not the default
+#   zsh / nu                    which shell, when it isn't bash or fish
 #   ✦ 2                         background jobs
 #   3.5s  1                     commands over 2 s, and non-zero exit codes
 #
@@ -122,6 +123,8 @@ style = "cyan"
 [gcloud]
 format = "[$symbol$active(\\($region\\)) ]($style)"
 symbol = "🅶 "
+# gcloud always has a default configuration, so without this it shows everywhere
+detect_env_vars = ["CLOUDSDK_ACTIVE_CONFIG_NAME"]
 style = "cyan"
 
 [container]
@@ -129,13 +132,15 @@ format = "[$symbol$name]($style) "
 symbol = "📦 "
 style = "cyan"
 
-# Nothing for bash (the login shell); the others name themselves
+# Nothing for bash (the login shell) or fish (cachy's everyday shell); the others
+# name themselves
 [shell]
 disabled = false
 format = "[$indicator]($style)"
 bash_indicator = ""
 zsh_indicator = "zsh "
 nu_indicator = "nu "
+fish_indicator = ""
 style = "italic cyan"
 
 [jobs]
