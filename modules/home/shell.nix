@@ -70,9 +70,19 @@
         }
         pip3() { pip "$@"; }
 
-        # kitty can copy files over its own SSH connection (dl/ul in ~/.local/bin)
+        # kitty can copy files over its own SSH connection (dl/ul in ~/.local/bin).
+        # kitten ssh only works interactively and needs a POSIX remote shell, so pipes,
+        # -f/-N-style options and the Windows desktop get plain ssh.
         if [[ $TERM == xterm-kitty || -n ''${KITTY_WINDOW_ID:-} ]]; then
-          alias ssh='kitten ssh'
+          ssh() {
+            local a
+            [[ -t 0 && -t 1 ]] || { command ssh "$@"; return; }
+            for a; do
+              case $a in -[fNOTW]* | -*[fN]*) command ssh "$@"; return ;; esac
+              case ''${a#*@} in desktop | desktop.*) command ssh "$@"; return ;; esac
+            done
+            kitten ssh "$@"
+          }
         fi
 
         # Tokens and keys stay out of the repo (mode 600, untracked)

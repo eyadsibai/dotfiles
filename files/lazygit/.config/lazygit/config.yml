@@ -1,3 +1,4 @@
+disableStartupPopups: true
 git:
   diffRenderers:
     - colorArg: always

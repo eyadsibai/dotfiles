@@ -34,6 +34,13 @@
 
   home.packages = [ pkgs.nh ];
 
+  # Omarchy's LazyVim owns ~/.config/nvim/init.lua; load Home Manager's provider
+  # settings through the wrapper instead of overwriting it.
+  programs.neovim.sideloadInitLua = true;
+
+  # Omarchy's theme-set links the current theme to ~/.config/btop/themes/current.theme
+  programs.btop.settings.color_theme = "current";
+
   home.shellAliases = {
     hx = "helix"; # Arch names the binary helix
     yayaur = "yay -Syu --config /etc/pacman-aur.conf";

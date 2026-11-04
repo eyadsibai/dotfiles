@@ -33,6 +33,11 @@ hl.unbind("SUPER + SHIFT + X")
 o.bind("SUPER + SHIFT + X", "X", "omarchy-launch-or-focus-webapp chrome-x.com https://x.com/")
 
 -- Use Strata instead of Nautilus for Omarchy's file-manager shortcuts.
+hl.unbind("SUPER + SHIFT + F")
+hl.unbind("SUPER + ALT + SHIFT + F")
+o.bind("SUPER + SHIFT + F", "File manager", { launch = "strata" })
+o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
+  "uwsm-app -- strata \"$(omarchy-cmd-terminal-cwd)\"")
 -- strata-installer: file-manager start
 hl.unbind("SUPER + SHIFT + F")
 hl.unbind("SUPER + ALT + SHIFT + F")
@@ -40,3 +45,7 @@ o.bind("SUPER + SHIFT + F", "File manager", { launch = "/usr/bin/strata" })
 o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
   "uwsm-app -- /usr/bin/strata \"$(omarchy-cmd-terminal-cwd)\"")
 -- strata-installer: file-manager end
+
+-- Meetings (omarchy-meetings): popup to record, and the latest meeting
+o.bind("SUPER + ALT + M", "Meetings", "omarchy-shell meetings popup")
+o.bind("SUPER + CTRL + M", "Latest meeting", "/home/eyad/.local/bin/meetings view last")

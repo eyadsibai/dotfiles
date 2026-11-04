@@ -150,6 +150,7 @@ in
       "Icon?"
       "*.swp"
       "*.swo"
+      "**/.claude/.cc-writes/"
     ];
   };
 

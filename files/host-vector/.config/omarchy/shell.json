@@ -66,38 +66,6 @@
               "zone": "Asia/Riyadh"
             },
             {
-              "home": false,
-              "label": "LON",
-              "pinned": true,
-              "shortLabel": "LON",
-              "workDays": [
-                1,
-                2,
-                3,
-                4,
-                5
-              ],
-              "workEnd": "17:00",
-              "workStart": "09:00",
-              "zone": "Europe/London"
-            },
-            {
-              "home": false,
-              "label": "NY",
-              "pinned": true,
-              "shortLabel": "NY",
-              "workDays": [
-                1,
-                2,
-                3,
-                4,
-                5
-              ],
-              "workEnd": "17:00",
-              "workStart": "09:00",
-              "zone": "America/New_York"
-            },
-            {
               "label": "SF",
               "shortLabel": "SF",
               "zone": "America/Los_Angeles"
@@ -130,19 +98,25 @@
           "id": "omarchy.tray"
         },
         {
-          "id": "jankeesvw.meeting-recorder"
+          "id": "eyad.media"
+        },
+        {
+          "id": "eyad.meetings"
         },
         {
           "id": "flux"
-        },
-        {
-          "id": "omarchy.tailscale"
         },
         {
           "id": "omarchy.agents"
         },
         {
           "id": "omarchy.bluetooth"
+        },
+        {
+          "id": "omarchy.tailscale"
+        },
+        {
+          "id": "omarchy.power"
         },
         {
           "id": "omarchy.network"
@@ -152,19 +126,20 @@
         },
         {
           "id": "omarchy.monitor"
-        },
-        {
-          "id": "omarchy.power"
         }
       ]
     },
     "position": "top",
-    "transparent": true
+    "transparent": false
   },
   "idle": {
     "lock": 300,
     "screensaver": 150
   },
-  "plugins": [],
+  "plugins": [
+    {
+      "id": "omakade.guide"
+    }
+  ],
   "version": 1
 }
