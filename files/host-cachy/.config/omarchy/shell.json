@@ -41,10 +41,10 @@
       ],
       "left": [
         {
-          "id": "omarchy.workspaces"
+          "id": "omarchy.menu"
         },
         {
-          "id": "omarchy.menu"
+          "id": "omarchy.workspaces"
         },
         {
           "id": "omarchy.media"
@@ -80,27 +80,13 @@
           "notify": true
         },
         {
-          "id": "eyad.meetings"
-        },
-        {
-          "id": "eyad.akiflow"
-        },
-        {
           "id": "io.github.haripako.teams"
-        },
-        {
-          "id": "io.github.elevate08.qs-bitwarden-cli",
-          "colorizeIcon": false,
-          "autoCopyTotpSec": 4
         },
         {
           "id": "io.github.fabean.herdr"
         },
         {
           "id": "omaconnect"
-        },
-        {
-          "id": "crmne.hyprmoncfg"
         },
         {
           "id": "omarchy.tailscale"
