@@ -151,6 +151,7 @@ in
       "*.swp"
       "*.swo"
       "**/.claude/.cc-writes/"
+      "**/.claude/settings.local.json"
     ];
   };
 
