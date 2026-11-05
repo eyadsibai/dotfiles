@@ -21,7 +21,6 @@ cowsay
 cursor-bin
 direnv
 dolt
-dua-cli
 efibootmgr
 fish
 freerdp
@@ -79,7 +78,6 @@ owe-lockfeed
 pam-u2f
 perl-file-mimeinfo
 pipewire-zeroconf
-power-profiles-daemon
 python-adblock
 python-soco
 qutebrowser
@@ -99,9 +97,7 @@ stow
 strata
 sublime-text-4
 sudo
-t3code-bin
 tailscale
-tensaku
 terminal-browser-bin
 thinkrail-bin
 timg

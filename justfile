@@ -55,7 +55,17 @@ generations:
 # Arch: install what arch/<host>.packages lists and is missing (never removes)
 [group('arch')]
 arch-sync name=host:
-    grep -v '^#' arch/{{name}}.packages | yay -S --needed -
+    #!/usr/bin/env bash
+    set -uo pipefail
+    mapfile -t wanted < <(grep -Ev '^(#|$)' arch/{{name}}.packages)
+    # pacman -T counts what an installed package provides; yay --needed goes by name,
+    # so it would offer power-profiles-daemon over omarchy-power-profiles-daemon.
+    mapfile -t missing < <(pacman -T "${wanted[@]}")
+    if ((${#missing[@]} == 0)); then
+      echo "Everything in arch/{{name}}.packages is installed."
+      exit 0
+    fi
+    yay -S --needed "${missing[@]}"
 
 # Arch: rewrite arch/<host>.packages from what's installed, minus Omarchy's own lists
 [group('arch')]
