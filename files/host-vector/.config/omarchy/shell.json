@@ -83,6 +83,7 @@
       ],
       "centerEnd": [
         {
+          "id": "omarchy.elsewhen",
           "cities": [
             {
               "name": "Riyadh",
@@ -90,10 +91,12 @@
             },
             {
               "name": "San Francisco",
-              "zone": "America/Los_Angeles"
+              "zone": "America/Los_Angeles",
+              "people": [
+                "Faisal Alnazer"
+              ]
             }
           ],
-          "id": "omarchy.elsewhen",
           "units": "C"
         },
         {
@@ -111,6 +114,9 @@
       "right": [
         {
           "id": "omarchy.tray"
+        },
+        {
+          "id": "37signals.hey"
         },
         {
           "id": "omarchy.dropbox"
