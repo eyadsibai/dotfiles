@@ -1,13 +1,68 @@
 {
   "bar": {
-    "centerAnchor": "omarchy.clock",
     "layout": {
       "center": [
         {
-          "id": "omarchy.indicators"
+          "id": "omarchy.clock",
+          "format": "dddd HH:mm",
+          "formatAlt": "d MMMM 'W'ww yyyy",
+          "verticalFormat": "HH\n—\nmm",
+          "birthYear": 1985,
+          "lifeExpectancy": 90
+        }
+      ],
+      "left": [
+        {
+          "id": "omarchy.menu"
+        },
+        {
+          "id": "omarchy.workspaces"
+        }
+      ],
+      "right": [
+        {
+          "id": "omarchy.tray"
+        },
+        {
+          "id": "omarchy.dropbox"
         },
         {
           "id": "omarchy.keyboard-layout"
+        },
+        {
+          "id": "eyad.media"
+        },
+        {
+          "id": "eyad.meetings"
+        },
+        {
+          "id": "flux"
+        },
+        {
+          "id": "omarchy.agents"
+        },
+        {
+          "id": "omarchy.bluetooth"
+        },
+        {
+          "id": "omarchy.tailscale"
+        },
+        {
+          "id": "omarchy.power"
+        },
+        {
+          "id": "omarchy.network"
+        },
+        {
+          "id": "omarchy.audio"
+        },
+        {
+          "id": "omarchy.monitor"
+        }
+      ],
+      "centerBegin": [
+        {
+          "id": "omarchy.indicators"
         },
         {
           "id": "omarchy.weather"
@@ -72,62 +127,31 @@
             }
           ],
           "meetingMinutes": 30
-        },
+        }
+      ],
+      "centerEnd": [
         {
-          "id": "omarchy.clock",
-          "format": "dddd HH:mm",
-          "formatAlt": "d MMMM 'W'ww yyyy",
-          "verticalFormat": "HH\n—\nmm",
-          "birthYear": 1985,
-          "lifeExpectancy": 90
+          "id": "omarchy.elsewhen",
+          "cities": [
+            {
+              "name": "Riyadh",
+              "zone": "Asia/Riyadh"
+            },
+            {
+              "name": "New York",
+              "zone": "America/New_York"
+            },
+            {
+              "name": "London",
+              "zone": "Europe/London"
+            }
+          ]
         },
         {
           "id": "local.prayer-times"
         }
       ],
-      "left": [
-        {
-          "id": "omarchy.menu"
-        },
-        {
-          "id": "omarchy.workspaces"
-        }
-      ],
-      "right": [
-        {
-          "id": "omarchy.tray"
-        },
-        {
-          "id": "eyad.media"
-        },
-        {
-          "id": "eyad.meetings"
-        },
-        {
-          "id": "flux"
-        },
-        {
-          "id": "omarchy.agents"
-        },
-        {
-          "id": "omarchy.bluetooth"
-        },
-        {
-          "id": "omarchy.tailscale"
-        },
-        {
-          "id": "omarchy.power"
-        },
-        {
-          "id": "omarchy.network"
-        },
-        {
-          "id": "omarchy.audio"
-        },
-        {
-          "id": "omarchy.monitor"
-        }
-      ]
+      "tray": []
     },
     "position": "top",
     "transparent": false
