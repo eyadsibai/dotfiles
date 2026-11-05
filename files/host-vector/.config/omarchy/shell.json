@@ -91,10 +91,7 @@
             },
             {
               "name": "San Francisco",
-              "zone": "America/Los_Angeles",
-              "people": [
-                "Faisal Alnazer"
-              ]
+              "zone": "America/Los_Angeles"
             }
           ],
           "units": "C"
