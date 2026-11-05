@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "eyad.background",
+  "name": "My Background",
+  "version": "1.0.0",
+  "author": "Omarchy",
+  "description": "Desktop background renderer with click handling, transitions, and live QML scenes (foo.png + foo.qml)",
+  "kinds": [
+    "service"
+  ],
+  "entryPoints": {
+    "service": "Background.qml"
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.background"
+  }
+}

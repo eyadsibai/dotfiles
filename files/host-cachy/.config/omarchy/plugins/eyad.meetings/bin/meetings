@@ -1,0 +1,331 @@
+#!/usr/bin/env bash
+# Helper behind the Meeting notes bar widget. Wraps `voxtype meeting` and
+# PipeWire queries in commands that print JSON for QML.
+#
+#   meetings list [limit]          past meetings, newest first
+#   meetings info <id>             one meeting's metadata
+#   meetings finish <id> [dir]     wait for the transcript, export notes
+#   meetings notes <id> [dir]      path of the notes file, exported on demand
+#   meetings copy <id>             transcript text to the clipboard
+#   meetings summarize <id> [dir]  summary and action items via Claude
+#   meetings delete <id>           delete the recording (notes files stay)
+#   meetings audio                 microphone, output and loopback check
+#   meetings unmute                unmute the default microphone
+#   meetings fix-loopback          record whatever output is the default
+#   meetings restart-daemon        (re)start the voxtype user service
+#   meetings open <default|editor> <path>  open a notes or summary file
+#   meetings notify [options]      notification with Open / Summarize actions
+set -euo pipefail
+
+data_home=${XDG_DATA_HOME:-$HOME/.local/share}
+config=${XDG_CONFIG_HOME:-$HOME/.config}/voxtype/config.toml
+
+die() { printf '%s\n' "$*" >&2; exit 1; }
+
+# `voxtype meeting status` exits 0 whether or not a meeting is running (1.0.1
+# prints "No meeting currently in progress." and returns success), so the
+# text is the only reliable signal.
+meeting_active() {
+  local out
+  out=$(voxtype meeting status 2>/dev/null) || return 1
+  [[ $out != *"No meeting"* ]]
+}
+
+# `voxtype config` prints the effective settings, defaults included.
+setting() {
+  local all
+  all=$(voxtype config 2>/dev/null) || return 0
+  awk -v section="[$1]" -v key="$2" '
+    /^\[/ { in_section = ($1 == section) }
+    in_section && $1 == key { sub(/^[^=]*=[ ]*/, ""); gsub(/^"|"$/, ""); print; exit }' <<<"$all"
+}
+
+storage() {
+  local path
+  path=$(setting meeting storage_path)
+  [[ -z $path || $path == auto ]] && path="$data_home/voxtype/meetings"
+  printf '%s\n' "${path/#\~/$HOME}"
+}
+
+meeting_dir() {
+  local id=$1 f
+  for f in "$(storage)"/*/metadata.json; do
+    [[ -f $f ]] || continue
+    if [[ $(jq -r .id "$f") == "$id" ]]; then
+      dirname "$f"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# One meeting as the widget sees it. With a notes directory, also where its
+# notes and summary files go and whether they exist yet.
+describe() {
+  local dir=$1 notes_dir=${2:-}
+  local transcript="$dir/transcript.json" notes="" summary="" has_notes=false has_summary=false
+  if [[ -n $notes_dir ]]; then
+    local base
+    base=$(notes_base "$dir/metadata.json" "$notes_dir")
+    notes="$base.md"
+    summary="$base.summary.md"
+    [[ -f $notes ]] && has_notes=true
+    [[ -f $summary ]] && has_summary=true
+  fi
+  # Read the transcript from the file: an hour of meeting is past the 128 KiB
+  # limit on a single command-line argument. /dev/null slurps to [], so null.
+  [[ -f $transcript ]] || transcript=/dev/null
+  jq -c -n --slurpfile meta "$dir/metadata.json" --slurpfile transcripts "$transcript" \
+    --arg dir "$dir" --arg notes "$notes" --arg summary "$summary" \
+    --argjson hasNotes "$has_notes" --argjson hasSummary "$has_summary" '
+    $meta[0] as $m
+    | $transcripts[0] as $transcript
+    | ($transcript.segments // []) as $segments
+    | {
+        id: $m.id,
+        title: ($m.title // "Untitled meeting"),
+        startedAt: $m.started_at,
+        endedAt: $m.ended_at,
+        durationSecs: $m.duration_secs,
+        status: $m.status,
+        dir: $dir,
+        transcribed: ($transcript != null),
+        segments: ($segments | length),
+        words: ([$segments[] | .text | [splits("\\s+")] | map(select(. != "")) | length] | add // 0),
+        speakers: ([$segments[] | .speaker_id] | unique),
+        notes: $notes,
+        summary: $summary,
+        hasNotes: $hasNotes,
+        hasSummary: $hasSummary
+      }'
+}
+
+# ~/Documents/Meetings/2026-09-14 15.43 Weekly sync
+notes_base() {
+  local meta=$1 dir=$2 started title stamp
+  started=$(jq -r .started_at "$meta")
+  # Characters Windows and sync clients reject become dashes.
+  title=$(jq -r '.title // "Meeting" | gsub("[/\\\\:*?\"<>|]"; "-") | gsub("\\s+"; " ")' "$meta" | sed 's/^[. ]*//; s/[ .]*$//')
+  stamp=$(date -d "$started" '+%Y-%m-%d %H.%M')
+  printf '%s/%s %s\n' "${dir/#\~/$HOME}" "$stamp" "${title:-Meeting}"
+}
+
+export_notes() {
+  local id=$1 dir=$2 base
+  base=$(notes_base "$(meeting_dir "$id")/metadata.json" "$dir")
+  mkdir -p "$(dirname "$base")"
+  voxtype meeting export "$id" --format markdown --speakers --timestamps --metadata --output "$base.md" >/dev/null
+  printf '%s.md\n' "$base"
+}
+
+cmd_list() {
+  local limit=${1:-8} notes_dir=${2:-} f
+  local dirs=()
+  for f in "$(storage)"/*/metadata.json; do
+    [[ -f $f ]] && dirs+=("$(dirname "$f")")
+  done
+  if ((${#dirs[@]} == 0)); then
+    echo '[]'
+    return
+  fi
+  for d in "${dirs[@]}"; do describe "$d" "$notes_dir"; done |
+    jq -c -s --argjson limit "$limit" 'sort_by(.startedAt) | reverse | .[:$limit]'
+}
+
+cmd_info() {
+  local dir
+  dir=$(meeting_dir "$1") || die "no meeting $1"
+  describe "$dir" "${2:-}"
+}
+
+# The daemon only writes transcript.json once every chunk is transcribed,
+# which can take minutes after a long meeting.
+cmd_finish() {
+  local id=$1 notes_dir=$2 dir
+  local waited=0
+  dir=$(meeting_dir "$id") || die "no meeting $id"
+  until [[ -f $dir/transcript.json ]]; do
+    ((waited < 1800)) || die "transcription did not finish within 30 minutes"
+    sleep 1
+    waited=$((waited + 1))
+  done
+  local words
+  words=$(describe "$dir" | jq .words)
+  if ((words > 0)); then
+    export_notes "$id" "$notes_dir" >/dev/null
+  fi
+  describe "$dir" "$notes_dir"
+}
+
+cmd_notes() {
+  local id=$1 notes_dir=$2 base
+  base=$(notes_base "$(meeting_dir "$id")/metadata.json" "$notes_dir")
+  [[ -f $base.md ]] || export_notes "$id" "$notes_dir" >/dev/null
+  printf '%s.md\n' "$base"
+}
+
+cmd_copy() {
+  voxtype meeting export "$1" --format text --speakers | wl-copy
+}
+
+summary_prompt="You are given the transcript of a meeting, transcribed automatically \
+from audio, so names and technical terms may be misspelled and some words may be \
+missing. Write meeting notes in Markdown with these sections: a one-paragraph \
+Summary; Decisions as bullets; Action items as a checklist (- [ ] owner: task, \
+due date if one was said); Open questions if any. Keep the speakers' language. \
+Do not invent anything that is not in the transcript. Output only the notes."
+
+cmd_summarize() {
+  local id=$1 notes_dir=$2 notes base
+  command -v claude >/dev/null || die "claude CLI not found"
+  notes=$(cmd_notes "$id" "$notes_dir")
+  base=${notes%.md}
+  local out
+  # No tools and no saved session: the transcript is the only input.
+  out=$(cd "$(dirname "$notes")" && claude -p --tools "" --no-session-persistence \
+    --system-prompt "$summary_prompt" <"$notes") || die "claude failed"
+  [[ -n $out ]] || die "claude returned nothing"
+  printf '%s\n' "$out" >"$base.summary.md"
+  printf '%s.summary.md\n' "$base"
+}
+
+cmd_delete() {
+  voxtype meeting delete "$1" --force >/dev/null
+}
+
+cmd_audio() {
+  local source sink sources sinks loopback daemon last
+  source=$(pactl get-default-source 2>/dev/null || true)
+  sink=$(pactl get-default-sink 2>/dev/null || true)
+  sources=$(pactl -f json list sources 2>/dev/null || echo '[]')
+  sinks=$(pactl -f json list sinks 2>/dev/null || echo '[]')
+  loopback=$(setting meeting.audio loopback_device)
+  if voxtype status >/dev/null 2>&1; then daemon=true; else daemon=false; fi
+  # A config edited after the daemon started is not in effect yet.
+  local pid stale=false
+  pid=$(cat "${XDG_RUNTIME_DIR:-/run/user/$UID}/voxtype/pid" 2>/dev/null || true)
+  if [[ -n $pid && -d /proc/$pid && -f $config ]] && (($(stat -c %Y "$config") > $(stat -c %Y "/proc/$pid"))); then
+    stale=true
+  fi
+  # What the daemon actually opened last time, since "auto" can pick an
+  # output that is not the one in use.
+  last=$(journalctl --user -u voxtype.service -o cat -n 500 --no-pager 2>/dev/null |
+    sed -n 's/.*Loopback capture started via parec: //p' | tail -1 || true)
+  jq -n --arg source "$source" --arg sink "$sink" --argjson sources "$sources" --argjson sinks "$sinks" \
+    --arg loopback "${loopback:-auto}" --arg last "$last" --argjson daemon "$daemon" --argjson stale "$stale" \
+    --arg enabled "$(setting meeting enabled)" '
+    ($sources | map(select(.name == $source)) | .[0]) as $mic
+    | ($sinks | map(select(.name == $sink)) | .[0]) as $out
+    | ($sources | map(select(.name == $last)) | .[0]) as $lastSource
+    | {
+        daemon: $daemon,
+        configPending: $stale,
+        meetingEnabled: ($enabled != "false"),
+        mic: (if $mic then { name: $mic.name, description: $mic.description, muted: $mic.mute,
+          volume: ($mic.volume | to_entries[0].value.value_percent // "") } else null end),
+        output: (if $out then { name: $out.name, description: $out.description } else null end),
+        loopback: $loopback,
+        lastLoopback: (if $last != "" then { name: $last, description: ($lastSource.description // $last) } else null end),
+        followsOutput: ($loopback == "@DEFAULT_MONITOR@" or ($out != null and $loopback == ($out.name + ".monitor")))
+      }'
+}
+
+cmd_unmute() {
+  pactl set-source-mute @DEFAULT_SOURCE@ 0
+}
+
+# Voxtype's "auto" loopback picks the first output monitor, not the default
+# output, so with a headset the other side of a call is never recorded.
+# PipeWire resolves @DEFAULT_MONITOR@ to the default output's monitor.
+cmd_fix_loopback() {
+  [[ -f $config ]] || die "$config not found"
+  ! meeting_active || die "stop the meeting first"
+  cp "$config" "$config.bak.$(date +%s)"
+  if grep -q '^\[meeting\.audio\]' "$config"; then
+    awk '
+      /^\[/ { in_section = ($0 == "[meeting.audio]") }
+      in_section && /^[[:space:]]*loopback_device[[:space:]]*=/ { next }
+      { print }
+      $0 == "[meeting.audio]" { print "loopback_device = \"@DEFAULT_MONITOR@\"" }' "$config" >"$config.new"
+  else
+    { cat "$config"; printf '\n[meeting.audio]\nloopback_device = "@DEFAULT_MONITOR@"\n'; } >"$config.new"
+  fi
+  mv "$config.new" "$config"
+  systemctl --user restart voxtype.service
+}
+
+# gio, not xdg-open: under Hyprland xdg-open takes its generic path, which
+# types .md files as text/plain by content and starts that handler's Exec
+# (nvim) with no terminal, so nothing appears. gio types by extension (the
+# text/markdown default) and runs Terminal=true apps through a terminal.
+open_path() {
+  if [[ $1 == editor ]]; then
+    omarchy-launch-editor "$2" >/dev/null 2>&1 &
+  else
+    gio open "$2" >/dev/null 2>&1 &
+  fi
+}
+
+# A notification with Open / Summarize buttons. notify-send blocks until one
+# is clicked or the notification closes, so the widget runs this detached.
+cmd_notify() {
+  local title="" body="" urgency=normal glyph="" open="" summarize="" notes_dir="" opener=default
+  while (($#)); do
+    case "$1" in
+    --title) title=$2; shift ;;
+    --body) body=$2; shift ;;
+    --urgency) urgency=$2; shift ;;
+    --glyph) glyph=$2; shift ;;
+    --open) open=$2; shift ;;
+    --summarize) summarize=$2; shift ;;
+    --notes-dir) notes_dir=$2; shift ;;
+    --opener) opener=$2; shift ;;
+    esac
+    shift
+  done
+  local args=(--app-name="Meeting notes" --urgency="$urgency")
+  [[ -n $glyph ]] && args+=(--hint="string:omarchy-glyph:$glyph")
+  [[ -n $open ]] && args+=(--action=open=Open)
+  if [[ -n $summarize && -n $notes_dir ]] && command -v claude >/dev/null; then
+    args+=(--action=summarize=Summarize)
+  fi
+
+  local choice
+  choice=$(notify-send "${args[@]}" -- "$title" "$body" 2>/dev/null || true)
+  case "$choice" in
+  open) open_path "$opener" "$open" ;;
+  summarize)
+    local path
+    if path=$(cmd_summarize "$summarize" "$notes_dir" 2>&1); then
+      cmd_notify --title "Meeting summary ready" --body "$(basename "$path" .summary.md)" --urgency low \
+        --glyph "$glyph" --open "$path" --opener "$opener"
+    else
+      notify-send --app-name="Meeting notes" "Summary failed" "$path"
+    fi
+    ;;
+  esac
+}
+
+cmd_restart_daemon() {
+  ! meeting_active || die "stop the meeting first"
+  systemctl --user restart voxtype.service
+}
+
+cmd=${1:-}
+shift || true
+case "$cmd" in
+list) cmd_list "$@" ;;
+info) cmd_info "$@" ;;
+finish) cmd_finish "$@" ;;
+notes) cmd_notes "$@" ;;
+copy) cmd_copy "$@" ;;
+summarize) cmd_summarize "$@" ;;
+delete) cmd_delete "$@" ;;
+audio) cmd_audio ;;
+unmute) cmd_unmute ;;
+fix-loopback) cmd_fix_loopback ;;
+restart-daemon) cmd_restart_daemon ;;
+open) open_path "$@" ;;
+notify) cmd_notify "$@" ;;
+*) sed -n '2,17p' "$0" >&2; exit 2 ;;
+esac

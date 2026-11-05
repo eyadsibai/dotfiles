@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+
+: "${OMARCHY_USAGE_CODEX:?The usage launcher must select the Codex executable}"
+
+# Omarchy's read-only probe uses an approval value unsupported by this Codex.
+if [[ $# -eq 5 && $1 == -s && $2 == read-only && $3 == -a && $4 == untrusted && $5 == app-server ]]; then
+  set -- -s read-only -a on-request app-server
+fi
+
+exec "$OMARCHY_USAGE_CODEX" "$@"

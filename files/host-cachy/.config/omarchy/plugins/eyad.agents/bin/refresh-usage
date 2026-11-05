@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+
+plugin_bin=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+OMARCHY_USAGE_CODEX=$(command -v codex)
+case "$(readlink -f -- "$OMARCHY_USAGE_CODEX")" in
+  */mise) OMARCHY_USAGE_CODEX=$(mise which codex) ;;
+esac
+export OMARCHY_USAGE_CODEX
+export PATH="$plugin_bin/compat:$PATH"
+exec omarchy-agent-usage-update "$@"

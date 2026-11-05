@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "eyad.meetings",
+  "name": "Meeting notes",
+  "version": "0.1.0",
+  "author": "Eyad SibAI",
+  "license": "MIT",
+  "description": "Record and transcribe meetings locally with Voxtype from the bar: name the meeting, watch the timer, pause or stop, then open the Markdown notes or summarize them with Claude.",
+  "kinds": ["bar-widget", "service"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml",
+    "service": "Service.qml"
+  },
+  "barWidget": {
+    "displayName": "Meeting notes",
+    "description": "Click to name and start a Voxtype meeting transcription. Shows the elapsed time while recording; middle-click stops, right-click starts or stops instantly.",
+    "category": "Productivity",
+    "aliases": ["meeting", "voxtype", "transcribe", "record", "notes"],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "notesDir": "~/Documents/Meetings",
+      "openWith": "default",
+      "useAkiflowTitle": true,
+      "autoSummarize": false,
+      "recentCount": 6
+    },
+    "schema": [
+      { "key": "notesDir", "type": "string", "label": "Notes folder", "defaultValue": "~/Documents/Meetings",
+        "description": "Each meeting is saved here as Markdown when it ends, named by date, time and title." },
+      { "key": "openWith", "type": "enum", "label": "Open notes with", "options": ["default", "editor"], "defaultValue": "default",
+        "description": "default: the app registered for Markdown files. editor: your Omarchy editor." },
+      { "key": "useAkiflowTitle", "type": "boolean", "label": "Title from Akiflow", "defaultValue": true,
+        "description": "When the Akiflow plugin is enabled, prefill the title with the meeting happening now or starting within 15 minutes." },
+      { "key": "autoSummarize", "type": "boolean", "label": "Summarize automatically", "defaultValue": false,
+        "description": "Send each transcript to Claude (claude CLI) when the meeting ends and save the summary next to the notes." },
+      { "key": "recentCount", "type": "integer", "label": "Recent meetings shown", "min": 0, "max": 20, "step": 1, "defaultValue": 6 }
+    ]
+  }
+}
