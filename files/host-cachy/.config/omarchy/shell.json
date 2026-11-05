@@ -1,11 +1,7 @@
 {
   "bar": {
-    "centerAnchor": "omarchy.clock",
     "layout": {
       "center": [
-        {
-          "id": "omarchy.indicators"
-        },
         {
           "id": "omarchy.clock",
           "format": "dddd HH:mm",
@@ -13,30 +9,6 @@
           "verticalFormat": "HH\n—\nmm",
           "birthYear": 1985,
           "lifeExpectancy": 90
-        },
-        {
-          "id": "omarchy.keyboard-layout"
-        },
-        {
-          "id": "omarchy.weather"
-        },
-        {
-          "id": "io.github.sonderbydk.omacaffeine"
-        },
-        {
-          "id": "eyad.water",
-          "bodyWeightKg": 168,
-          "climate": "Warm",
-          "wakeTime": "09:00",
-          "barDisplay": "Icon",
-          "dailyGoalMl": 5800
-        },
-        {
-          "id": "eyad.commute",
-          "provider": "mock"
-        },
-        {
-          "id": "omarchy.system-update"
         }
       ],
       "left": [
@@ -53,6 +25,9 @@
       "right": [
         {
           "id": "omarchy.tray"
+        },
+        {
+          "id": "omarchy.keyboard-layout"
         },
         {
           "id": "flux"
@@ -112,7 +87,61 @@
         {
           "id": "omarchy.power"
         }
-      ]
+      ],
+      "centerBegin": [
+        {
+          "id": "omarchy.indicators"
+        }
+      ],
+      "centerEnd": [
+        {
+          "id": "omarchy.elsewhen",
+          "cities": [
+            {
+              "name": "Riyadh",
+              "zone": "Asia/Riyadh"
+            },
+            {
+              "name": "Tokyo",
+              "zone": "Asia/Tokyo"
+            },
+            {
+              "name": "Los Angeles",
+              "zone": "America/Los_Angeles"
+            },
+            {
+              "name": "New York",
+              "zone": "America/New_York"
+            },
+            {
+              "name": "London",
+              "zone": "Europe/London"
+            }
+          ]
+        },
+        {
+          "id": "omarchy.weather"
+        },
+        {
+          "id": "io.github.sonderbydk.omacaffeine"
+        },
+        {
+          "id": "eyad.water",
+          "bodyWeightKg": 168,
+          "climate": "Warm",
+          "wakeTime": "09:00",
+          "barDisplay": "Icon",
+          "dailyGoalMl": 5800
+        },
+        {
+          "id": "eyad.commute",
+          "provider": "mock"
+        },
+        {
+          "id": "omarchy.system-update"
+        }
+      ],
+      "tray": []
     },
     "position": "top",
     "transparent": false
@@ -124,16 +153,7 @@
   "plugins": [
     {
       "id": "next-key"
-    },
-    {
-      "id": "eyad.background"
     }
   ],
-  "version": 1,
-  "disabledPlugins": [
-    "omarchy.background"
-  ],
-  "cloneSourceRestores": [
-    "eyad.background"
-  ]
+  "version": 1
 }
