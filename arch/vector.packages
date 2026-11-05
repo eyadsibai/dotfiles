@@ -3,6 +3,7 @@
 1password-cli
 7zip
 amp
+amp-desktop-bin
 android-tools
 aria2
 aws-cli-v2
@@ -21,6 +22,8 @@ cowsay
 cursor-bin
 direnv
 dolt
+dropbox
+dropbox-cli
 efibootmgr
 fish
 freerdp
@@ -31,6 +34,7 @@ github-cli
 github-copilot-cli
 git-lfs
 glow
+go2tv-bin
 go-yq
 grok-bot
 helium-browser-bin
@@ -52,9 +56,11 @@ micro
 microsoft-edge-stable-bin
 mkinitcpio
 mpv-uosc
+nautilus-dropbox
 ncdu
 neovim
 newsboat
+nix
 nmap
 nnn
 nushell
@@ -79,7 +85,7 @@ pam-u2f
 perl-file-mimeinfo
 pipewire-zeroconf
 python-adblock
-python-soco
+python-gpgme
 qutebrowser
 qwen-code
 rawmakase-bin
@@ -107,6 +113,7 @@ urlscan
 uv
 vim
 visual-studio-code-bin
+voicestudio-bin
 voxtype-bin
 wechat-bin
 wget
