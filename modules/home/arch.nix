@@ -5,6 +5,7 @@
   config,
   lib,
   pkgs,
+  repoDir,
   username,
   ...
 }:
@@ -83,6 +84,25 @@ in
     "$HOME/.grok/bin"
     "/mnt/scratch/bun/bin"
   ];
+
+  # The Omarchy shell saves shell.json by writing a new file and moving it over the
+  # old one, which turns the link into a plain file every time the bar is changed in
+  # Settings. This puts the file back in the repo and relinks it each time, so the
+  # change lands in git diff instead of waiting for `just omarchy-adopt`. It watches
+  # the directory: a watch on the file itself dies with the first file replaced.
+  # Other writes there trigger it too, and relink does nothing when all is linked.
+  systemd.user.paths.omarchy-shell-json-sync = {
+    Unit.Description = "Keep ~/.config/omarchy/shell.json linked to the dotfiles repo";
+    Path.PathChanged = "%h/.config/omarchy";
+    Install.WantedBy = [ "default.target" ];
+  };
+  systemd.user.services.omarchy-shell-json-sync = {
+    Unit.Description = "Copy a detached shell.json into the dotfiles repo and relink it";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${repoDir}/scripts/omarchy-links relink";
+    };
+  };
 
   programs.bash.initExtra = ''
     bwunlock() { export BW_SESSION=$(bw unlock --raw); }

@@ -1,14 +1,103 @@
 {
   "bar": {
+    "background": "glassy",
     "layout": {
       "center": [
         {
-          "id": "omarchy.clock",
+          "birthYear": 1985,
           "format": "dddd HH:mm",
           "formatAlt": "d MMMM 'W'ww yyyy",
-          "verticalFormat": "HH\n—\nmm",
-          "birthYear": 1985,
-          "lifeExpectancy": 90
+          "id": "omarchy.clock",
+          "lifeExpectancy": 90,
+          "verticalFormat": "HH\n—\nmm"
+        }
+      ],
+      "centerBegin": [
+        {
+          "id": "omarchy.indicators"
+        },
+        {
+          "id": "omarchy.weather"
+        },
+        {
+          "id": "omarchy.system-update"
+        },
+        {
+          "activeProfile": "default",
+          "id": "io.github.sspaeti.timezones",
+          "meetingMinutes": 30,
+          "profiles": [
+            {
+              "barMode": "hover",
+              "homeZones": [],
+              "hourFormat": "12h",
+              "id": "default",
+              "meetingMinutes": 30,
+              "name": "Work",
+              "zones": [
+                {
+                  "home": true,
+                  "label": "Riyadh",
+                  "pinned": false,
+                  "shortLabel": "RYD",
+                  "workDays": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4
+                  ],
+                  "workEnd": "17:00",
+                  "workStart": "09:00",
+                  "zone": "Asia/Riyadh"
+                },
+                {
+                  "home": false,
+                  "label": "SF",
+                  "shortLabel": "SF",
+                  "zone": "America/Los_Angeles"
+                },
+                {
+                  "home": false,
+                  "label": "NY",
+                  "shortLabel": "NY",
+                  "zone": "America/New_York"
+                }
+              ]
+            }
+          ],
+          "zones": [
+            {
+              "home": true,
+              "label": "Home",
+              "shortLabel": "HOME",
+              "zone": "Asia/Riyadh"
+            },
+            {
+              "label": "SF",
+              "shortLabel": "SF",
+              "zone": "America/Los_Angeles"
+            }
+          ]
+        }
+      ],
+      "centerEnd": [
+        {
+          "cities": [
+            {
+              "name": "Riyadh",
+              "zone": "Asia/Riyadh"
+            },
+            {
+              "name": "San Francisco",
+              "zone": "America/Los_Angeles"
+            }
+          ],
+          "id": "omarchy.elsewhen",
+          "units": "C"
+        },
+        {
+          "id": "local.prayer-times"
         }
       ],
       "left": [
@@ -60,98 +149,9 @@
           "id": "omarchy.monitor"
         }
       ],
-      "centerBegin": [
-        {
-          "id": "omarchy.indicators"
-        },
-        {
-          "id": "omarchy.weather"
-        },
-        {
-          "id": "omarchy.system-update"
-        },
-        {
-          "id": "io.github.sspaeti.timezones",
-          "activeProfile": "default",
-          "profiles": [
-            {
-              "id": "default",
-              "name": "Work",
-              "zones": [
-                {
-                  "zone": "Asia/Riyadh",
-                  "label": "Riyadh",
-                  "shortLabel": "RYD",
-                  "home": true,
-                  "pinned": false,
-                  "workDays": [
-                    0,
-                    1,
-                    2,
-                    3,
-                    4
-                  ],
-                  "workStart": "09:00",
-                  "workEnd": "17:00"
-                },
-                {
-                  "label": "SF",
-                  "shortLabel": "SF",
-                  "zone": "America/Los_Angeles",
-                  "home": false
-                },
-                {
-                  "label": "NY",
-                  "shortLabel": "NY",
-                  "zone": "America/New_York",
-                  "home": false
-                }
-              ],
-              "homeZones": [],
-              "barMode": "hover",
-              "meetingMinutes": 30,
-              "hourFormat": "12h"
-            }
-          ],
-          "zones": [
-            {
-              "home": true,
-              "label": "Home",
-              "shortLabel": "HOME",
-              "zone": "Asia/Riyadh"
-            },
-            {
-              "label": "SF",
-              "shortLabel": "SF",
-              "zone": "America/Los_Angeles"
-            }
-          ],
-          "meetingMinutes": 30
-        }
-      ],
-      "centerEnd": [
-        {
-          "id": "omarchy.elsewhen",
-          "cities": [
-            {
-              "name": "Riyadh",
-              "zone": "Asia/Riyadh"
-            },
-            {
-              "name": "San Francisco",
-              "zone": "America/Los_Angeles"
-            }
-          ],
-          "units": "C"
-        },
-        {
-          "id": "local.prayer-times"
-        }
-      ],
       "tray": []
     },
-    "position": "top",
-    "transparent": false
+    "position": "top"
   },
   "idle": {
     "lock": 300,
