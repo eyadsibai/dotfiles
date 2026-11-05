@@ -171,16 +171,16 @@
     "gliff": {
       "flake": false,
       "locked": {
-        "lastModified": 1792862656,
-        "narHash": "sha256-v2EhlYP1hjp9bdoFIKbYyTWdOjx8sjjCAq66s3I5iZA=",
+        "lastModified": 1793847061,
+        "narHash": "sha256-SUvnAxmXyBqPrtgBfEp06/KHlO0m2OtaP+lVaFgK04M=",
         "owner": "omacom",
         "repo": "gliff",
-        "rev": "58c742452ded3f10a2ce61f60eb4845f18205e29",
+        "rev": "32bb0622cf2feef69515bf8f75a836f657f06083",
         "type": "github"
       },
       "original": {
         "owner": "omacom",
-        "ref": "v0.4.1",
+        "ref": "v0.4.2",
         "repo": "gliff",
         "type": "github"
       }
@@ -865,11 +865,11 @@
         "zen-browser": "zen-browser"
       },
       "locked": {
-        "lastModified": 1793819099,
-        "narHash": "sha256-p0Bdse5g4BDFGJyvqdG41Bm0MjPpM8bWPdMaaarSZlA=",
+        "lastModified": 1793912091,
+        "narHash": "sha256-ftc9Es1kfZzzhGsBN6ofC3gE24MIQlgd/xgVrpdpsys=",
         "owner": "olafkfreund",
         "repo": "nixarchy",
-        "rev": "b33210918f20ea635fdf6a8dad62967bf2d99935",
+        "rev": "d6969ea11707e55af66d132de4a2e0d94f0079b4",
         "type": "github"
       },
       "original": {
@@ -1273,11 +1273,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1793355509,
-        "narHash": "sha256-/Zs18x+IW4LuVH0rKxra0WPRgsk0DQsi0Bwkf8sOC5c=",
+        "lastModified": 1793871777,
+        "narHash": "sha256-DbFyxXHjP4SJDWVVIILkgrUZxj29cDusi8ULXoQGuZ8=",
         "owner": "NixOS",
         "repo": "nixos-hardware",
-        "rev": "04c6b94fa104bc23650983a4513aea196794d321",
+        "rev": "d645c71a58dbae3eb17ff551a07aea13a541cb1a",
         "type": "github"
       },
       "original": {
@@ -1396,16 +1396,16 @@
     "omarchy": {
       "flake": false,
       "locked": {
-        "lastModified": 1793559985,
-        "narHash": "sha256-qZQhH8r4YNLXmyeE3RS3bhgSFQNhJo6MW0cdvCvYvX8=",
+        "lastModified": 1793846910,
+        "narHash": "sha256-uuihai61/LOa2CTrf6bIIBH5EqBatKHyv1wvJSbeA4w=",
         "owner": "basecamp",
         "repo": "omarchy",
-        "rev": "8d19ad75ace59af8b6ded52f8b2bec1b15adda7c",
+        "rev": "ac2690cd7be4f47e4a255f5e2e78d904d436b068",
         "type": "github"
       },
       "original": {
         "owner": "basecamp",
-        "ref": "v4.5.0-rc3",
+        "ref": "v4.5.0",
         "repo": "omarchy",
         "type": "github"
       }
