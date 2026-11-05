@@ -1,0 +1,12 @@
+[Unit]
+Description=Mirror Sonos Living Room volume onto its PipeWire AirPlay sink
+After=pipewire.service wireplumber.service
+Wants=pipewire.service
+
+[Service]
+ExecStart=%h/.local/bin/sonos-volume-sync
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

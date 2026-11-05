@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# Helper behind the Meeting notes bar widget. A thin shim over the `meetings`
+# engine (omarchy-meetings), printing JSON for QML.
+#
+#   meetings start <title>         start recording
+#   meetings stop | pause | resume control the running recording
+#   meetings list [limit] [dir]    past meetings, newest first
+#   meetings info <id> [dir]       one meeting
+#   meetings finish <id> [dir]     wait for the transcript, export notes
+#   meetings notes <id> [dir]      path of the notes file, exported on demand
+#   meetings view [id]             open the meeting in the Meetings app (web viewer)
+#   meetings levels                microphone / computer audio levels as JSON lines
+#   meetings note <text>           save the notes of the running recording
+#   meetings copy <id>             transcript text to the clipboard
+#   meetings summarize <id> [dir]  summary and action items via configured AI provider
+#   meetings delete <id>           move the recording to the trash (notes files stay)
+#   meetings audio                 microphone and output check
+#   meetings unmute                unmute the default microphone
+#   meetings fix-loopback          record whatever output is the default
+#   meetings restart-daemon        nothing to restart: the recorder starts on demand
+#   meetings open <default|editor> <path>  open a notes or summary file
+#   meetings notify [options]      notification with Open / Summarize actions
+set -euo pipefail
+
+engine=${MEETINGS_BIN:-meetings}
+# The shell may not have ~/.local/bin (where `uv tool install` puts it) on PATH.
+command -v "$engine" >/dev/null || engine=$HOME/.local/bin/meetings
+config=${XDG_CONFIG_HOME:-$HOME/.config}/meetings/config.toml
+
+die() { printf '%s\n' "$*" >&2; exit 1; }
+
+meeting_active() {
+  [[ $("$engine" status --json 2>/dev/null | jq -r .state) =~ ^(recording|paused|finalising)$ ]]
+}
+
+cmd_list() { "$engine" widget list --limit "${1:-8}" --notes-dir "${2:-}"; }
+cmd_info() { "$engine" widget info "$1" --notes-dir "${2:-}"; }
+cmd_finish() { "$engine" widget wait "$1" --notes-dir "${2:-}"; }
+cmd_notes() { "$engine" widget notes "$1" --notes-dir "$2"; }
+cmd_copy() { "$engine" export "$1" --format txt | wl-copy; }
+cmd_delete() { "$engine" delete "$1" >/dev/null; }
+cmd_audio() { "$engine" widget audio; }
+
+cmd_summarize() {
+  local path notes_dir folder
+  path=$("$engine" ai "$1" --kind summary) || return
+  if [[ -n ${2:-} ]]; then
+    notes_dir=${2/#\~/$HOME}
+    folder=$(basename "$(dirname "$path")")
+    mkdir -p -- "$notes_dir"
+    cp -- "$path" "$notes_dir/$folder.summary.md" || return
+  fi
+  # Keep the canonical recording path for the viewer and notification title.
+  printf '%s\n' "$path"
+}
+
+cmd_unmute() {
+  pactl set-source-mute @DEFAULT_SOURCE@ 0
+}
+
+# gio, not xdg-open: under Hyprland xdg-open takes its generic path, which
+# types .md files as text/plain by content and starts that handler's Exec
+# (nvim) with no terminal, so nothing appears. gio types by extension (the
+# text/markdown default) and runs Terminal=true apps through a terminal.
+open_path() {
+  if [[ $2 == view:* ]]; then
+    "$engine" open "${2#view:}" >/dev/null 2>&1 &
+  elif [[ $1 == editor ]]; then
+    omarchy-launch-editor "$2" >/dev/null 2>&1 &
+  else
+    gio open "$2" >/dev/null 2>&1 &
+  fi
+}
+
+# A notification with Open / Summarize buttons. notify-send blocks until one
+# is clicked or the notification closes, so the widget runs this detached.
+cmd_notify() {
+  local title="" body="" urgency=normal glyph="" open="" summarize="" notes_dir="" opener=default
+  while (($#)); do
+    case "$1" in
+    --title) title=$2; shift ;;
+    --body) body=$2; shift ;;
+    --urgency) urgency=$2; shift ;;
+    --glyph) glyph=$2; shift ;;
+    --open) open=$2; shift ;;
+    --summarize) summarize=$2; shift ;;
+    --notes-dir) notes_dir=$2; shift ;;
+    --opener) opener=$2; shift ;;
+    esac
+    shift
+  done
+  local args=(--app-name="Meeting notes" --urgency="$urgency")
+  [[ -n $glyph ]] && args+=(--hint="string:omarchy-glyph:$glyph")
+  [[ -n $open ]] && args+=(--action=open=Open)
+  if [[ -n $summarize ]]; then
+    args+=(--action=summarize=Summarize)
+  fi
+
+  local choice
+  choice=$(notify-send "${args[@]}" -- "$title" "$body" 2>/dev/null || true)
+  case "$choice" in
+  open) open_path "$opener" "$open" ;;
+  summarize)
+    local path
+    if path=$(cmd_summarize "$summarize" "$notes_dir" 2>&1); then
+      cmd_notify --title "Meeting summary ready" --body "$(basename "$(dirname "$path")")" --urgency low \
+        --glyph "$glyph" --open "$path" --opener "$opener"
+    else
+      notify-send --app-name="Meeting notes" "Summary failed" "$path"
+    fi
+    ;;
+  esac
+}
+
+# The engine follows the default output unless config.toml pins a device;
+# "Fix" removes the pin.
+cmd_fix_loopback() {
+  ! meeting_active || die "stop the meeting first"
+  [[ -f $config ]] || return 0
+  cp "$config" "$config.bak.$(date +%s)"
+  sed -i '/^[[:space:]]*system_device[[:space:]]*=/d' "$config"
+}
+
+cmd_restart_daemon() { :; }
+
+cmd=${1:-}
+shift || true
+case "$cmd" in
+start) "$engine" record --title "${1:-}" ;;
+view) "$engine" open "${1:-last}" ;;
+live-window) "$engine" open --live ;;
+recorder-window) "$engine" open ;;
+levels) exec "$engine" levels ;;
+transcript) "$engine" widget transcript "$1" ;;
+edit) "$engine" widget edit "$1" "$2" ;;
+undo) "$engine" widget undo "$1" ;;
+speaker) "$engine" widget speaker "$1" "$2" "$3" ;;
+rename) "$engine" widget rename "$1" "$2" ;;
+note) "$engine" note --text "${1:-}" ;;
+stop) "$engine" stop ;;
+pause) "$engine" pause ;;
+resume) "$engine" resume ;;
+list) cmd_list "$@" ;;
+info) cmd_info "$@" ;;
+finish) cmd_finish "$@" ;;
+notes) cmd_notes "$@" ;;
+copy) cmd_copy "$@" ;;
+summarize) cmd_summarize "$@" ;;
+delete) cmd_delete "$@" ;;
+audio) cmd_audio ;;
+unmute) cmd_unmute ;;
+fix-loopback) cmd_fix_loopback ;;
+restart-daemon) cmd_restart_daemon ;;
+open) open_path "$@" ;;
+notify) cmd_notify "$@" ;;
+*) sed -n '2,21p' "$0" >&2; exit 2 ;;
+esac

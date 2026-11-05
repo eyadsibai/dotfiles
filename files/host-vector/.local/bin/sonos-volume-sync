@@ -1,0 +1,98 @@
+#!/usr/bin/python3
+"""Mirror the Sonos speaker's volume onto its PipeWire AirPlay (RAOP) sink.
+
+PipeWire already pushes sink volume -> speaker. This covers the other direction:
+changes made on the Sonos app, the speaker buttons or the TV remote are copied
+onto the sink so the top bar shows the real volume.
+
+Only the RAOP sink for this speaker is ever touched.
+"""
+import json
+import subprocess
+import sys
+import time
+
+import soco
+from soco.discovery import by_name
+
+ROOM = "Living Room"
+SINK_PREFIX = "raop_sink.Sonos-C438751174F3"  # node.name of the AirPlay sink
+POLL = 1.0          # seconds between checks
+LOCAL_GRACE = 2.0   # ignore the speaker briefly after a local (bar) change
+
+
+def log(*a):
+    print(*a, file=sys.stderr, flush=True)
+
+
+def find_sink():
+    """Return (node id, volume 0..1) of the RAOP sink, or None if it isn't there."""
+    try:
+        out = subprocess.run(["pw-dump"], capture_output=True, text=True, timeout=5).stdout
+        for obj in json.loads(out):
+            if obj.get("type") != "PipeWire:Interface:Node":
+                continue
+            props = obj.get("info", {}).get("props", {})
+            if props.get("node.name", "").startswith(SINK_PREFIX):
+                nid = obj["id"]
+                vol = subprocess.run(["wpctl", "get-volume", str(nid)],
+                                     capture_output=True, text=True, timeout=5).stdout
+                # "Volume: 0.50" or "Volume: 0.50 [MUTED]"
+                return nid, float(vol.split()[1])
+    except Exception as e:
+        log("sink lookup failed:", e)
+    return None
+
+
+def get_speaker():
+    while True:
+        try:
+            sp = by_name(ROOM)
+            if sp:
+                log(f"found {ROOM} at {sp.ip_address}")
+                return sp
+        except Exception as e:
+            log("discovery failed:", e)
+        time.sleep(10)
+
+
+def main():
+    speaker = get_speaker()
+    last_speaker = None   # last volume read from the speaker (0..100)
+    last_sink = None      # last sink volume seen (0..1)
+    last_local = 0.0      # when the sink last changed on its own
+
+    while True:
+        time.sleep(POLL)
+        sink = find_sink()
+        if sink is None:              # not streaming to the Sonos right now
+            last_speaker = last_sink = None
+            continue
+        nid, sink_vol = sink
+
+        try:
+            spk = speaker.volume
+        except Exception as e:
+            log("speaker unreachable, rediscovering:", e)
+            speaker = get_speaker()
+            continue
+
+        now = time.monotonic()
+        if last_sink is not None and abs(sink_vol - last_sink) > 0.005:
+            last_local = now          # user moved the bar; PipeWire is pushing it
+        last_sink = sink_vol
+
+        changed_on_speaker = last_speaker is not None and spk != last_speaker
+        last_speaker = spk
+
+        if not changed_on_speaker or now - last_local < LOCAL_GRACE:
+            continue
+        target = spk / 100
+        if abs(target - sink_vol) > 0.005:
+            subprocess.run(["wpctl", "set-volume", str(nid), f"{target:.2f}"], timeout=5)
+            last_sink = target
+            log(f"speaker -> {spk}, sink updated")
+
+
+if __name__ == "__main__":
+    main()

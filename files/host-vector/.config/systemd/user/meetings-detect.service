@@ -1,0 +1,12 @@
+[Unit]
+Description=Offer to record calls when an app starts using the microphone (omarchy-meetings)
+After=pipewire-pulse.service
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/meetings detect
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=CrispASR server (Cohere Transcribe Arabic) for voxtype
+After=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/opt/crispasr/crispasr-linux-x86_64-vulkan/crispasr --server --host 127.0.0.1 --port 8178 --backend cohere -m %h/.local/share/crispasr/models/cohere-transcribe-arabic-q8_0.gguf -l ar
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
