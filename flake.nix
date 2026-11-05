@@ -78,6 +78,26 @@
             nix-index-database.nixosModules.nix-index
             { programs.nix-index-database.comma.enable = true; }
             sops-nix.nixosModules.sops
+            # TEMPORARY: nixos-unstable's opencode 2.2.5 has a wrong Linux node_modules
+            # hash (fixed in nixpkgs master c399e1b7fb). Inert once the fix lands;
+            # delete then.
+            {
+              nixpkgs.overlays = [
+                (final: prev: {
+                  opencode =
+                    if
+                      prev.opencode.node_modules.outputHash == "sha256-xfOVcw1+waLVNhFDwzOtzxrUSQEogvn88YomydOlhwc="
+                    then
+                      prev.opencode.overrideAttrs (old: {
+                        node_modules = old.node_modules.overrideAttrs {
+                          outputHash = "sha256-prx9dX7kUvs/E3zopkaPk5LXh3xJAy5sZeum/W8L7cA=";
+                        };
+                      })
+                    else
+                      prev.opencode;
+                })
+              ];
+            }
           ];
         };
 

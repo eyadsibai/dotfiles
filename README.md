@@ -222,6 +222,7 @@ once for the dev shell, then:
 | `just check` | `nix flake check`: evaluates every host, checks formatting |
 | `just clean` | drop old generations, GC the store |
 | `just secret <name>` | edit `secrets/<name>.yaml` |
+| `just arch-preview` / `arch-backup` | Arch: list every file in `~` a switch would replace or add, with diffs / and archive the existing ones first |
 | `just arch-sync` / `arch-save` | Arch: install what `arch/<host>.packages` lists / rewrite it from the machine |
 | `just omarchy-check` / `omarchy-merge` | see which overridden Omarchy defaults changed upstream / merge them in |
 

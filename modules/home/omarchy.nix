@@ -5,4 +5,5 @@
   imports = [ inputs.nixarchy.homeManagerModules.nixarchy ];
 
   programs.nixarchy.enable = true;
+  programs.neovim.enable = false; # Omarchy's Neovim and LazyVim (see dev.nix)
 }

@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# What `just switch` would do to ~ on an Arch machine, without doing it: builds the
+# host's Home Manager configuration and compares every file it manages with what's
+# in ~ now. With --backup, also archives each of those files that exists today
+# (stow links resolved to their contents) into ~/hm-before-<date>.tar.gz.
+#
+# usage: arch-preview <host> [--backup]
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+host=${1:?usage: arch-preview <host> [--backup]}
+backup=${2:-}
+
+echo "Building $USER@$host ..."
+out=$(nix build --no-link --print-out-paths ".#homeConfigurations.\"$USER@$host\".activationPackage")
+files=$(readlink -f "$out/home-files")
+
+new=() same=() changed=() existing=()
+while IFS= read -r rel; do
+  rel=${rel#./}
+  want=$(readlink -m "$files/$rel")
+  have=$HOME/$rel
+  if [[ ! -e $have && ! -L $have ]]; then
+    new+=("$rel")
+    continue
+  fi
+  existing+=("$rel")
+  if [[ $(readlink -f "$have") == "$want" ]] || cmp -s "$have" "$want" 2>/dev/null; then
+    same+=("$rel")
+  else
+    changed+=("$rel")
+  fi
+done < <(cd "$files" && find . \( -type f -o -type l \) | sort)
+
+# Where an existing file comes from today
+origin() {
+  local p=$HOME/$1
+  if [[ -L $p ]]; then
+    case $(readlink -f "$p") in
+      "$HOME"/dotfiles/*) echo "stow link" ;;
+      *) echo "link -> $(readlink "$p")" ;;
+    esac
+  else
+    echo "file"
+  fi
+}
+
+echo
+echo "== Changes content (${#changed[@]}); the current version is kept as <name>.hm-backup"
+for rel in "${changed[@]}"; do printf '  %-60s %s\n' "~/$rel" "$(origin "$rel")"; done
+echo
+echo "== Same content, becomes a Home Manager link (${#same[@]})"
+for rel in "${same[@]}"; do printf '  %-60s %s\n' "~/$rel" "$(origin "$rel")"; done
+echo
+echo "== New (${#new[@]})"
+for rel in "${new[@]}"; do echo "  ~/$rel"; done
+
+echo
+echo "== Nix packages added to PATH"
+ls "$(readlink -f "$out/home-path")/bin" | column -c "${COLUMNS:-100}"
+
+if ((${#changed[@]})); then
+  echo
+  echo "== Differences (current → new)"
+  for rel in "${changed[@]}"; do
+    git --no-pager diff --no-index --color=auto -- "$HOME/$rel" "$(readlink -m "$files/$rel")" || true
+  done
+fi
+
+if [[ $backup == --backup ]] && ((${#existing[@]})); then
+  archive=$HOME/hm-before-$(date +%Y%m%d-%H%M%S).tar.gz
+  # --dereference: store what a stow link points at, not the link
+  (cd "$HOME" && tar --dereference -czf "$archive" "${existing[@]}")
+  echo
+  echo "Saved the ${#existing[@]} existing files to $archive"
+  echo "Restore one with: tar -xzf $archive -C ~ <path>"
+fi

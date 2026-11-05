@@ -52,6 +52,16 @@ secret name:
 generations:
     nixos-rebuild list-generations
 
+# Arch: show every file in ~ that `just switch` would replace or add, with diffs
+[group('arch')]
+arch-preview name=host:
+    @scripts/arch-preview {{name}}
+
+# Arch: the same, and archive the files it would touch to ~/hm-before-<date>.tar.gz
+[group('arch')]
+arch-backup name=host:
+    @scripts/arch-preview {{name}} --backup
+
 # Arch: install what arch/<host>.packages lists and is missing (never removes)
 [group('arch')]
 arch-sync name=host:

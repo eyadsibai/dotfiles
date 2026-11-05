@@ -43,7 +43,7 @@ in
   home.sessionVariables.EDITOR = lib.mkIf isArch "nvim";
   home.shellAliases.vim = lib.mkIf isArch "nvim";
   programs.neovim = {
-    enable = !isArch;
+    enable = lib.mkDefault (!isArch); # omarchy.nix turns it off for Omarchy on NixOS
     defaultEditor = true;
     vimAlias = true;
     # keep pre-26.05 behaviour
