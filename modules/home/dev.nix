@@ -1,27 +1,36 @@
+# On Arch, pacman owns the programs (arch/<host>.packages) and this sets only their
+# config; Nix still installs its own tooling there (nil, nixd, devenv) and Claude Code.
 {
+  config,
   lib,
   pkgs,
   useremail,
+  isArch,
   ...
 }:
 let
   coderabbit = pkgs.callPackage ../../pkgs/coderabbit.nix { };
+  pacmanBin = import ./pacman-bin.nix pkgs;
   prettyLog = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
 in
 {
   home.packages =
     with pkgs;
     [
-      gnumake
       nil
       nixd
       devenv # per-project environments: devenv.nix + `use devenv` in .envrc
+    ]
+    # On Arch: make from base-devel, coderabbit from its own installer (~/.local/bin),
+    # codex from mise, and the rest from pacman
+    ++ lib.optionals (!isArch) [
+      gnumake
       coderabbit # `coderabbit`/`cr`: AI review of local changes
     ]
     # JetBrains' JDK is built for Linux only
-    ++ lib.optional stdenv.hostPlatform.isLinux jetbrains.jdk
+    ++ lib.optional (stdenv.hostPlatform.isLinux && !isArch) jetbrains.jdk
     # The Macs get codex from Homebrew and uv from modules/darwin/apps.nix
-    ++ lib.optionals stdenv.hostPlatform.isLinux [
+    ++ lib.optionals (stdenv.hostPlatform.isLinux && !isArch) [
       codex # replaces Omarchy's "codex is not installed" stub
       uv
       beads # `bd`: git-backed issue tracker for agents
@@ -29,8 +38,12 @@ in
       trash-cli # `trash`: delete to the freedesktop trash instead of rm
     ];
 
+  # The module wraps its own Neovim; on Arch, Omarchy's LazyVim runs pacman's nvim,
+  # and the editor variable and alias are set by hand below
+  home.sessionVariables.EDITOR = lib.mkIf isArch "nvim";
+  home.shellAliases.vim = lib.mkIf isArch "nvim";
   programs.neovim = {
-    enable = true;
+    enable = !isArch;
     defaultEditor = true;
     vimAlias = true;
     # keep pre-26.05 behaviour
@@ -40,12 +53,20 @@ in
 
   programs.direnv = {
     enable = true;
+    package = lib.mkIf isArch (pacmanBin {
+      bin = "direnv";
+      from = pkgs.direnv;
+    });
     nix-direnv.enable = true;
   };
 
   # Pager for diff, log, show and `git add -p`
   programs.delta = {
     enable = true;
+    package = lib.mkIf isArch (pacmanBin {
+      bin = "delta";
+      from = pkgs.delta;
+    });
     enableGitIntegration = true;
     options = {
       navigate = true;
@@ -57,7 +78,11 @@ in
 
   programs.git = {
     enable = true;
-    lfs.enable = true;
+    package = lib.mkIf isArch null;
+    lfs = {
+      enable = true;
+      package = lib.mkIf isArch null;
+    };
     settings = {
       user.name = "eyadsibai";
       user.email = useremail;
@@ -161,6 +186,10 @@ in
 
   programs.gh = {
     enable = true;
+    package = lib.mkIf isArch (pacmanBin {
+      bin = "gh";
+      from = pkgs.gh;
+    });
     gitCredentialHelper.enable = true;
     settings = {
       git_protocol = "ssh";
@@ -169,6 +198,12 @@ in
         pv = "pr view";
       };
     };
-    extensions = [ pkgs.gh-dash ]; # `gh dash`: PRs and issues dashboard
+    # `gh dash`: PRs and issues dashboard (on Arch, pacman's gh-dash-bin, linked below)
+    extensions = lib.optional (!isArch) pkgs.gh-dash;
+  };
+
+  # gh runs an extension from ~/.local/share/gh/extensions/gh-<name>/gh-<name>
+  xdg.dataFile."gh/extensions/gh-dash/gh-dash" = lib.mkIf isArch {
+    source = config.lib.file.mkOutOfStoreSymlink "/usr/bin/gh-dash";
   };
 }

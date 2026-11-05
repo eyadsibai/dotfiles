@@ -1,89 +1,127 @@
-{ pkgs, ... }:
+# On Arch these come from pacman (arch/<host>.packages) and only the config is set
+# here; everywhere else Nix installs them too.
 {
-  home.packages = with pkgs; [
-    micro
-    tmux
-    just
-    gum
-    timg # images in the terminal
-    cachix
+  lib,
+  pkgs,
+  isArch,
+  ...
+}:
+let
+  nnn = {
+    bookmarks = {
+      D = "~/Downloads";
+      p = "~/dev";
+      c = "~/.config";
+    };
+    src =
+      (pkgs.fetchFromGitHub {
+        owner = "jarun";
+        repo = "nnn";
+        rev = "v4.9";
+        sha256 = "sha256-g19uI36HyzTF2YUQKFP4DE2ZBsArGryVHhX79Y0XzhU=";
+      })
+      + "/plugins";
+    mappings = {
+      p = "preview-tui";
+      o = "fzopen";
+    };
+  };
+  # NNN_BMS / NNN_PLUG format, as the nnn module writes it: key:value;key:value
+  nnnList = attrs: lib.concatStringsSep ";" (lib.mapAttrsToList (k: v: "${k}:${v}") attrs);
+in
+{
+  # cachix isn't packaged for Arch, so Nix installs it everywhere
+  home.packages = [
+    pkgs.cachix
+  ]
+  ++ lib.optionals (!isArch) (
+    with pkgs;
+    [
+      micro
+      tmux
+      just
+      gum
+      timg # images in the terminal
 
-    # archives
-    zip
-    xz
-    unzip
-    p7zip
-    zstd
+      # archives
+      zip
+      xz
+      unzip
+      p7zip
+      zstd
 
-    # search & data
-    ripgrep
-    jq
-    yq-go
+      # search & data
+      ripgrep
+      jq
+      yq-go
 
-    # storage & cloud
-    rclone
-    ncdu
-    awscli2
+      # storage & cloud
+      rclone
+      ncdu
+      awscli2
 
-    # network
-    socat
-    nmap
-    caddy
+      # network
+      socat
+      nmap
+      caddy
 
-    # misc
-    cowsay
-    file
-    which
-    tree
-    gnused
-    gnutar
-    gawk
-    glow # markdown viewer
-  ];
+      # misc
+      cowsay
+      file
+      which
+      tree
+      gnused
+      gnutar
+      gawk
+      glow # markdown viewer
+    ]
+  );
 
-  programs.fzf.enable = true;
+  # Omarchy's own shell init already loads pacman's fzf key bindings on Arch
+  programs.fzf.enable = !isArch;
 
   programs.eza = {
     enable = true;
+    package = lib.mkIf isArch null;
     git = true;
     icons = "auto";
   };
 
   programs.btop = {
     enable = true;
+    package = lib.mkIf isArch null;
     settings.proc_sorting = "cpu direct";
   };
 
+  # The module reads skim's key bindings from its own package; on Arch they're
+  # sourced from pacman's skim instead (below)
   programs.skim = {
-    enable = true;
+    enable = !isArch;
     enableBashIntegration = true;
   };
 
+  # The module wraps its own nnn; on Arch the same settings are set up by hand below
   programs.nnn = {
-    enable = true;
-    bookmarks = {
-      D = "~/Downloads";
-      p = "~/dev";
-      c = "~/.config";
-    };
+    enable = !isArch;
+    inherit (nnn) bookmarks;
     plugins = {
-      src =
-        (pkgs.fetchFromGitHub {
-          owner = "jarun";
-          repo = "nnn";
-          rev = "v4.9";
-          sha256 = "sha256-g19uI36HyzTF2YUQKFP4DE2ZBsArGryVHhX79Y0XzhU=";
-        })
-        + "/plugins";
-      mappings = {
-        p = "preview-tui";
-        o = "fzopen";
-      };
+      inherit (nnn) src mappings;
     };
   };
 
+  # On Arch: pacman's skim and nnn, with the settings the modules above would apply
+  programs.bash.initExtra = lib.mkIf isArch ''
+    [[ -r /usr/share/skim/key-bindings.bash ]] && source /usr/share/skim/key-bindings.bash
+  '';
+  home.sessionVariables = lib.mkIf isArch {
+    NNN_BMS = nnnList nnn.bookmarks;
+    NNN_PLUG = nnnList nnn.mappings;
+  };
+  xdg.configFile."nnn/plugins" = lib.mkIf isArch { source = nnn.src; };
+
   programs.aria2 = {
     enable = true;
+    package = lib.mkIf isArch null;
     settings = {
       max-connection-per-server = 4;
       split = 4;

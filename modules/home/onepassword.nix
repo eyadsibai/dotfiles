@@ -71,8 +71,11 @@ in
   };
   xdg.configFile."git/allowed_signers".text = "${useremail} ${signingKey}\n";
 
-  # Start the app hidden at login so the agent is always there (a login item on macOS)
-  xdg.configFile."autostart/1password.desktop" = lib.mkIf isLinux {
+  # Start the app hidden at login so the agent is always there (a login item on macOS).
+  # Not on Arch: pacman's 1Password adds its own entry when Settings → General →
+  # "Start at login" is on (autostart/com.onepassword.OnePassword.desktop), and with
+  # both, two copies ran.
+  xdg.configFile."autostart/1password.desktop" = lib.mkIf (isLinux && !isArch) {
     text = ''
       [Desktop Entry]
       Type=Application

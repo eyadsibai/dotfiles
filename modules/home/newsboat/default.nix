@@ -6,6 +6,7 @@
   lib,
   pkgs,
   repoDir,
+  isArch,
   ...
 }:
 let
@@ -13,6 +14,9 @@ let
   here = "${repoDir}/modules/home/newsboat";
   opener = if isDarwin then "open" else "xdg-open";
   copy = if isDarwin then "pbcopy" else "${pkgs.wl-clipboard}/bin/wl-copy";
+  # On Arch, newsboat, urlscan, mpv and yt-dlp come from pacman (and Nix's mpv can't
+  # reach the GPU there); elsewhere from nixpkgs
+  exe = pkg: name: if isArch then name else lib.getExe pkg;
 
   # Videos to mpv, audio downloaded, everything else to the default browser/viewer
   linkhandler = pkgs.writeShellApplication {
@@ -66,6 +70,7 @@ in
 {
   programs.newsboat = {
     enable = true;
+    package = lib.mkIf isArch null;
     autoReload = true;
     maxItems = 0;
     reloadThreads = 5;
@@ -76,7 +81,7 @@ in
       prepopulate-query-feeds yes
 
       browser ${lib.getExe linkhandler}
-      external-url-viewer "${lib.getExe pkgs.urlscan} -dc -r '${lib.getExe linkhandler} {}'"
+      external-url-viewer "${exe pkgs.urlscan "urlscan"} -dc -r '${lib.getExe linkhandler} {}'"
 
       feed-sort-order unreadarticlecount-asc
       show-read-feeds no
@@ -84,7 +89,7 @@ in
 
       podcast-auto-enqueue yes
       download-path "~/Downloads/podcasts/%h/%n"
-      player "${lib.getExe pkgs.mpv}"
+      player "${exe pkgs.mpv "mpv"}"
 
       # --- navigation ---
       bind-key j down
@@ -136,9 +141,11 @@ in
 
   home.packages = [
     rssadd
-    pkgs.yt-dlp
+  ]
+  ++ lib.optional (!isArch) pkgs.yt-dlp
+  ++ [
     (pkgs.writeShellScriptBin "newsboat-yt" ''
-      exec ${lib.getExe pkgs.newsboat} -C ${config.xdg.configHome}/newsboat/ytconfig -u ${config.xdg.configHome}/newsboat/yturls "$@"
+      exec ${exe pkgs.newsboat "newsboat"} -C ${config.xdg.configHome}/newsboat/ytconfig -u ${config.xdg.configHome}/newsboat/yturls "$@"
     '')
   ];
 }

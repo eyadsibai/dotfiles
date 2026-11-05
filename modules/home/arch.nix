@@ -1,6 +1,9 @@
 # Home Manager on its own, on the machines that run Omarchy on Arch. Omarchy and
-# pacman own the system, the desktop and the GUI apps (arch/<host>.packages); this
-# adds what every machine shares: shells, CLI tools, git, ssh, and the files/ packages.
+# pacman own the system and every program, CLI tools included (arch/<host>.packages);
+# this adds only the config every machine shares: shells, CLI tools, git, ssh, and the
+# files/ packages. The shared modules check `isArch` to leave the programs out (or
+# point Home Manager at pacman's copy, see pacman-bin.nix). Nix still installs its own
+# tooling (nh, nil, nixd, devenv) and Claude Code.
 {
   config,
   lib,
@@ -39,10 +42,7 @@ in
   ];
 
   home.packages = [ pkgs.nh ];
-
-  # Omarchy's LazyVim owns ~/.config/nvim/init.lua; load Home Manager's provider
-  # settings through the wrapper instead of overwriting it.
-  programs.neovim.sideloadInitLua = true;
+  programs.man.package = null; # pacman's man-db
 
   # Omarchy's theme-set links the current theme to ~/.config/btop/themes/current.theme
   programs.btop.settings.color_theme = "current";

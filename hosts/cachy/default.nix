@@ -1,8 +1,18 @@
 # Desktop running Omarchy on Arch, used remotely for development. Home Manager only.
 # Interactive shells here are fish; bash stays the login shell and hands over to it.
-{ lib, ... }:
+{ lib, pkgs, ... }:
 {
   my.files = [ "host-cachy" ];
+
+  # pacman's fish. The module formats the config files it writes with fish_indent at
+  # build time, where /usr/bin isn't reachable, so Nix's fish_indent stays for that;
+  # pacman's fish ships its own completions, so the man-page ones aren't generated.
+  programs.fish.package = import ../../modules/home/pacman-bin.nix pkgs {
+    bin = "fish";
+    from = pkgs.fish;
+    extra = "ln -s ${pkgs.fish}/bin/fish_indent $out/bin/fish_indent";
+  };
+  programs.fish.generateCompletions = false;
   home.stateVersion = "26.05";
 
   programs.bash.initExtra = lib.mkOrder 400 ''

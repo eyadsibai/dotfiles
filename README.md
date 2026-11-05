@@ -92,10 +92,12 @@ secrets/           sops-encrypted, recipients in .sops.yaml
 ## Omarchy on Arch
 
 `vector` and `cachy` are `homeConfigurations` (`eyad@vector`, `eyad@cachy`): Home Manager
-without NixOS. Pacman installs the system, Omarchy and the GUI apps; Nix installs the CLI
-tools, so they're the same versions as on every other machine. mpv has one configuration
-everywhere, but on Arch the binary and uosc come from pacman: Nix's mpv can't reach the GPU
-there.
+without NixOS. Pacman installs the system, Omarchy and every program, the CLI tools and
+shells included (`arch/<host>.packages`, `just arch-sync`); Home Manager writes only their
+config. Where a module can't be told to skip its program, it gets a link to pacman's copy
+(`modules/home/pacman-bin.nix`). Nix still installs its own tooling (nh, nil, nixd,
+devenv) and Claude Code. mpv has one configuration everywhere; on Arch its binary and uosc
+come from pacman, as Nix's mpv can't reach the GPU there.
 
 The files in `files/` are linked to the checkout, not copied into the store, so editing
 `~/.config/hypr/bindings.lua` edits the repo. Where one of them replaces an Omarchy default,

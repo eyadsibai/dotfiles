@@ -4,6 +4,9 @@
   isArch,
   ...
 }:
+let
+  pacmanBin = import ./pacman-bin.nix pkgs;
+in
 {
   # Helpers carried over from the old fish setup, as scripts so every shell has them
   home.packages = [
@@ -50,8 +53,10 @@
     PYTHONPYCACHEPREFIX = "$HOME/.cache/pycache";
   };
 
+  # On Arch the shells and tools come from pacman; Home Manager writes their config
   programs.bash = {
     enable = true;
+    package = lib.mkIf isArch null;
     # On Arch, ~/.bashrc is this file, so it has to load Omarchy itself (on NixOS,
     # nixarchy does it from /etc); the environment part runs for scripts as well
     bashrcExtra = lib.optionalString isArch ''
@@ -93,28 +98,41 @@
 
   programs.zsh = {
     enable = true;
+    package = lib.mkIf isArch null;
     enableCompletion = true;
   };
 
   programs.nushell = {
     enable = true;
+    package = lib.mkIf isArch null;
     loadSessionVariables = false; # keep pre-26.11 behaviour
   };
 
+  # The nushell hooks for carapace and starship are made by running the program at
+  # build time, which pacman's copy can't do from inside the build; on Arch, nushell
+  # goes without them
   programs.carapace = {
     enable = true;
+    package = lib.mkIf isArch (pacmanBin {
+      bin = "carapace";
+      from = pkgs.carapace;
+    });
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableNushellIntegration = true;
+    enableNushellIntegration = !isArch;
   };
 
   # Omarchy's prompt plus context that shows only when it applies (see starship.toml),
   # the same on every host; nushell is the only shell Omarchy's own init doesn't cover
   programs.starship = {
     enable = true;
+    package = lib.mkIf isArch (pacmanBin {
+      bin = "starship";
+      from = pkgs.starship;
+    });
     enableBashIntegration = true;
     enableZshIntegration = true;
-    enableNushellIntegration = true;
+    enableNushellIntegration = !isArch;
     settings = lib.importTOML ./starship.toml;
   };
 }
