@@ -37,3 +37,14 @@ if [[ -x $repo/scripts/omarchy-links ]]; then
 
 Run: just omarchy-links, then just omarchy-adopt"
 fi
+
+# Arch from anywhere but Omarchy's snapshot runs ahead of the packages Omarchy
+# builds against: on cachy a reflector timer rewrote the mirrorlist, Hyprland went
+# to 0.57 and omarchy-hyprland-titlebars (built for exactly 0.56.2) stopped the
+# update. omarchy-refresh-pacman puts the snapshot back and downgrades to it.
+if ! grep -q '^Server *= *https://stable-mirror\.omarchy\.org/' /etc/pacman.d/mirrorlist 2>/dev/null; then
+  notify-send -u critical "Arch mirrors are not Omarchy's" \
+    "/etc/pacman.d/mirrorlist no longer points at stable-mirror.omarchy.org, so packages can run ahead of Omarchy.
+
+Run: omarchy-refresh-pacman"
+fi
