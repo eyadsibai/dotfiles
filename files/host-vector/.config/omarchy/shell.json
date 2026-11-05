@@ -138,14 +138,11 @@
               "zone": "Asia/Riyadh"
             },
             {
-              "name": "New York",
-              "zone": "America/New_York"
-            },
-            {
-              "name": "London",
-              "zone": "Europe/London"
+              "name": "San Francisco",
+              "zone": "America/Los_Angeles"
             }
-          ]
+          ],
+          "units": "C"
         },
         {
           "id": "local.prayer-times"
