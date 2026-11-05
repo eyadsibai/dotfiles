@@ -35,6 +35,7 @@ in
     "hypr"
     "lazygit"
     "media"
+    "nvim"
     "omarchy"
     "scripts"
     "systemd"
