@@ -13,6 +13,7 @@ default:
 
 # Build, show the package diff, then activate
 switch name=host:
+    {{ if arch == "true" { "scripts/omarchy-links guard" } else { "true" } }}
     {{nh}} switch . {{target}}{{name}}{{ if arch == "true" { " -b hm-backup" } else { "" } }}
 
 # Build and show the diff without activating
@@ -70,6 +71,16 @@ arch-save name=host:
 [group('omarchy')]
 omarchy-check:
     @scripts/omarchy-defaults check
+
+# Show linked files an Omarchy update detached, and migrations that touched linked files
+[group('omarchy')]
+omarchy-links:
+    @scripts/omarchy-links check
+
+# Copy detached files into the repo, relink them, and mark migrations reviewed
+[group('omarchy')]
+omarchy-adopt:
+    @scripts/omarchy-links adopt
 
 # Bring upstream changes to those defaults into your versions (3-way merge, git diff to review)
 [group('omarchy')]

@@ -28,3 +28,12 @@ if [[ -x $repo/scripts/omarchy-defaults ]]; then
 
 Run: just omarchy-merge"
 fi
+
+# Linked files a migration replaced with a plain file (the next switch would revert
+# them), and migrations that touched linked files and may have skipped them.
+if [[ -x $repo/scripts/omarchy-links ]]; then
+  links=$("$repo/scripts/omarchy-links" check 2>/dev/null | grep -E '^(detached|migration)')
+  [[ -n $links ]] && notify-send -u critical "Omarchy update touched your dotfiles" "$links
+
+Run: just omarchy-links, then just omarchy-adopt"
+fi
