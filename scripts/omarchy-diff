@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# My setup against stock Omarchy: every file Omarchy ships as a user template
+# ($OMARCHY_PATH/config/<path>, copied to ~/.config/<path> on install) compared
+# with what ~/.config holds now, whether this repo links it or Omarchy copied it.
+#
+#   omarchy-diff              summary, then every diff (paged)
+#   omarchy-diff --stat       summary only
+#   omarchy-diff hypr kitty   only paths containing one of these words
+#
+# Each diff reads Omarchy -> mine: "-" lines are Omarchy's, "+" lines are yours.
+set -uo pipefail
+
+defaults=${OMARCHY_PATH:-/usr/share/omarchy}/config
+config=${XDG_CONFIG_HOME:-$HOME/.config}
+repo=$(cd "$(dirname "$0")/.." && pwd)
+
+stat_only=false
+filters=()
+for arg in "$@"; do
+  case $arg in
+    --stat) stat_only=true ;;
+    *) filters+=("$arg") ;;
+  esac
+done
+
+wanted() {
+  ((${#filters[@]})) || return 0
+  local f
+  for f in "${filters[@]}"; do [[ $1 == *"$f"* ]] && return 0; done
+  return 1
+}
+
+# Where the live file comes from: this repo (and which package), or local
+origin() {
+  local target
+  target=$(readlink -f -- "$1" 2>/dev/null) || target=""
+  if [[ $target == "$repo"/files/* ]]; then
+    target=${target#"$repo"/files/}
+    echo "repo:${target%%/*}"
+  elif [[ $target == /nix/store/* ]]; then
+    echo "nix (Home Manager module)"
+  else
+    echo "local"
+  fi
+}
+
+summary="" diffs="" same=0 differ=0 missing=0
+while IFS= read -r rel; do
+  wanted "$rel" || continue
+  ours=$config/$rel
+  if [[ ! -e $ours ]]; then
+    summary+=$(printf '  %-10s %-48s %s' "missing" "$rel" "(you don't have it)")$'\n'
+    ((missing++))
+    continue
+  fi
+  if cmp -s -- "$defaults/$rel" "$ours"; then
+    ((same++))
+    continue
+  fi
+  ((differ++))
+  read -r added removed < <(diff -- "$defaults/$rel" "$ours" | awk '/^>/{a++} /^</{r++} END{print a+0, r+0}')
+  summary+=$(printf '  %-10s %-48s %s' "+$added -$removed" "$rel" "$(origin "$ours")")$'\n'
+  $stat_only || diffs+=$(diff -u --label "omarchy/$rel" --label "mine/$rel" -- "$defaults/$rel" "$ours")$'\n\n'
+done < <(cd "$defaults" && find . -type f ! -name '*.sample' ! -path './chromium/Default/*' -printf '%P\n' | sort)
+
+report() {
+  echo "Omarchy $(omarchy-version 2>/dev/null) defaults vs ~/.config: $differ differ, $same match, $missing not present"
+  echo
+  printf '%s' "$summary"
+  if [[ -n $diffs ]]; then
+    echo
+    printf '%s' "$diffs"
+  fi
+}
+
+if $stat_only || [[ ! -t 1 ]]; then
+  report
+elif command -v bat >/dev/null; then
+  report | bat --language=diff --style=plain --paging=always
+else
+  report | less -R
+fi

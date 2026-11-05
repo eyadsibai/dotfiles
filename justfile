@@ -72,6 +72,11 @@ arch-save name=host:
 omarchy-check:
     @scripts/omarchy-defaults check
 
+# Diff my setup against stock Omarchy, every template (--stat for the summary, or name paths: hypr kitty)
+[group('omarchy')]
+omarchy-diff *args:
+    @scripts/omarchy-diff {{args}}
+
 # Show linked files an Omarchy update detached, and migrations that touched linked files
 [group('omarchy')]
 omarchy-links:
