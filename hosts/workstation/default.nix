@@ -32,6 +32,11 @@
 
   networking.hostName = "workstation";
 
+  # drover on cachy sends jobs here; set on this host only, unlike ./authorized-keys
+  users.users.${username}.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDNAozUFBcNsBtpix+4MDs4DOal2M6iGWIAKe3vpmuCm drover@cachy -> workstation"
+  ];
+
   # Stay on the default LTS kernel (nixarchy would default to the newest one):
   # fewer surprises with the NVIDIA driver on a machine that is often used remotely
   boot.kernelPackages = pkgs.linuxPackages;

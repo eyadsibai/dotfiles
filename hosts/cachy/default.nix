@@ -50,6 +50,15 @@
         HostName = "100.115.116.117";
         HostKeyAlias = "workstation.local";
       };
+      # drover's own key, so unattended jobs never wait on a 1Password prompt
+      "Host workstation-drover" = {
+        HostName = "100.115.116.117";
+        HostKeyAlias = "workstation.local";
+        User = "eyad";
+        IdentityFile = "~/.ssh/drover_workstation";
+        IdentitiesOnly = "yes";
+        IdentityAgent = "none";
+      };
     };
   };
 
