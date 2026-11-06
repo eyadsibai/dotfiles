@@ -25,6 +25,10 @@ in
   home.homeDirectory = "/home/${username}";
   programs.home-manager.enable = true;
   targets.genericLinux.enable = true; # desktop entries and XDG paths for Nix's apps
+  # pacman owns the MIME database. Nix's copy sits ahead of it on XDG_DATA_DIRS and
+  # keeps *.png claimed by image/apng, so gvfs sftp drops content-type and Strata
+  # cannot open PNGs.
+  xdg.mime.enable = false;
 
   # Shared Omarchy tweaks; each host adds its own host-<name> package last
   my.files = [
