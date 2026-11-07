@@ -22,6 +22,18 @@ Panel {
   readonly property string title: String(setting("title", "Living room"))
   readonly property bool hideWhenUnreachable: setting("hideWhenUnreachable", false) === true
   readonly property string tvGlyph: "󰔂"
+  readonly property int videoLimit: 6
+  // Videos matching the search box, newest first. Every word must appear in the name or folder.
+  readonly property var videoMatches: {
+    var words = videoSearch.text.toLowerCase().split(/\s+/).filter(function(w) { return w !== "" })
+    var out = []
+    for (var i = 0; i < media.videos.length && out.length < videoLimit; i++) {
+      var v = media.videos[i]
+      var hay = (String(v.name) + " " + String(v.folder)).toLowerCase()
+      if (words.every(function(w) { return hay.indexOf(w) >= 0 })) out.push(v)
+    }
+    return out
+  }
   readonly property string volumeGlyph: media.sonosMuted ? "󰝟" : (media.volume < 34 ? "󰕿" : (media.volume < 67 ? "󰖀" : "󰕾"))
 
   visible: !(hideWhenUnreachable && media.loaded && !media.anyReachable)
@@ -30,8 +42,11 @@ Panel {
 
   onOpenedChanged: {
     media.fastPolling = opened
+    media.watchCast = opened
     if (opened) {
       media.refresh()
+      media.refreshVideos()
+      videoSearch.text = ""
       Qt.callLater(function() { keyCatcher.forceActiveFocus() })
     }
   }
@@ -39,6 +54,21 @@ Panel {
   Service {
     id: media
     settings: root.settings
+  }
+
+  // The caster window (CastWindow.qml): library, links, now playing and the queue.
+  function openCaster() {
+    root.close()
+    casterLoader.active = true
+  }
+
+  LazyLoader {
+    id: casterLoader
+    active: false
+    CastWindow {
+      visible: true
+      onCloseRequested: casterLoader.active = false
+    }
   }
 
   IpcHandler {
@@ -55,6 +85,7 @@ Panel {
     function volumeDown(): void { media.nudgeVolume(-5) }
     function toggleMute(): void { media.toggleMute() }
     function togglePower(): void { media.toggleTvPower() }
+    function caster(): void { root.openCaster() }
   }
 
   BarIconButton {
@@ -86,6 +117,7 @@ Panel {
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
+      blocked: videoSearch.activeFocus
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
       onMoveRequested: function(dx, dy) {
@@ -98,6 +130,7 @@ Panel {
         else if (k === "p") media.toggleTvPower()
         else if (k === "+" || k === "=") media.nudgeVolume(5)
         else if (k === "-") media.nudgeVolume(-5)
+        else if (k === "/" || k === "c") videoSearch.forceActiveFocus()
       }
 
       Flickable {
@@ -281,12 +314,195 @@ Panel {
 
           PanelSeparator { foreground: root.foreground }
 
+          PanelSectionHeader {
+            text: "CAST"
+            foreground: root.foreground
+            fontFamily: root.fontFamily
+          }
+
+          // What's playing: name, progress (drag to seek) and stop.
+          Column {
+            visible: media.casting || media.castState === "failed"
+            width: parent.width
+            spacing: Style.space(6)
+
+            RowLayout {
+              width: parent.width
+              spacing: Style.space(8)
+
+              Text {
+                textFormat: Text.PlainText
+                text: media.castState === "paused" ? "󰏤" : (media.castState === "starting" ? "󰑓" : "󰐊")
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.icon
+                Layout.alignment: Qt.AlignVCenter
+              }
+
+              ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Style.space(1)
+
+                Text {
+                  textFormat: Text.PlainText
+                  Layout.fillWidth: true
+                  text: media.castName
+                  color: root.foreground
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.body
+                  elide: Text.ElideMiddle
+                }
+
+                Text {
+                  textFormat: Text.PlainText
+                  Layout.fillWidth: true
+                  text: {
+                    var st = media.castState === "starting" ? (media.castMessage || "Starting on the TV…")
+                      : media.castState === "paused" ? "Paused"
+                      : media.castState === "failed" ? (media.castMessage || "Didn't play")
+                      : "Playing on the TV"
+                    if (media.queueLength > 1) st += " · " + (media.cs.index + 1) + " of " + media.queueLength
+                    return media.castSubtitles ? st + " · subtitles" : st
+                  }
+                  color: root.dim
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.caption
+                  elide: Text.ElideRight
+                }
+              }
+
+              PanelActionButton {
+                visible: media.casting
+                iconText: media.castState === "playing" ? "󰏤" : "󰐊"
+                tooltipText: media.castState === "playing" ? "Pause" : "Play"
+                foreground: root.foreground
+                fontFamily: root.fontFamily
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: media.toggleCast()
+              }
+
+              PanelActionButton {
+                visible: media.casting && media.hasNext
+                iconText: "󰒭"
+                tooltipText: "Next in the queue"
+                foreground: root.foreground
+                fontFamily: root.fontFamily
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: media.nextCast()
+              }
+
+              PanelActionButton {
+                visible: media.casting
+                iconText: "󰓛"
+                tooltipText: "Stop casting"
+                foreground: root.foreground
+                fontFamily: root.fontFamily
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: media.stopCast()
+              }
+            }
+
+            RowLayout {
+              visible: media.casting && media.castDuration > 0
+              width: parent.width
+              spacing: Style.space(8)
+
+              Text {
+                textFormat: Text.PlainText
+                text: media.formatTime(media.castPosition)
+                color: root.dim
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                Layout.alignment: Qt.AlignVCenter
+              }
+
+              PanelSlider {
+                bar: root.bar
+                Layout.fillWidth: true
+                minimum: 0
+                maximum: Math.max(1, media.castDuration)
+                step: 5
+                integer: true
+                value: Math.max(0, media.castPosition)
+                onReleased: function(v) { media.seekCast(v) }
+              }
+
+              Text {
+                textFormat: Text.PlainText
+                text: media.formatTime(media.castDuration)
+                color: root.dim
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                Layout.alignment: Qt.AlignVCenter
+              }
+            }
+          }
+
+          TextField {
+            id: videoSearch
+            width: parent.width
+            foreground: root.foreground
+            font.family: root.fontFamily
+            placeholderText: media.videos.length > 0
+              ? "Search " + media.videos.length + " videos (/)"
+              : "No videos in ~/Videos, ~/Downloads or ~/Movies"
+            Keys.onPressed: function(event) {
+              if (event.key === Qt.Key_Escape) {
+                if (text !== "") text = ""
+                else keyCatcher.forceActiveFocus()
+                event.accepted = true
+              } else if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
+                keyCatcher.forceActiveFocus()
+                event.accepted = true
+              }
+            }
+            onAccepted: if (root.videoMatches.length > 0) media.cast(root.videoMatches[0].path)
+          }
+
+          Column {
+            width: parent.width
+            spacing: Style.space(4)
+
+            Repeater {
+              model: root.videoMatches
+              ActionRow {
+                required property var modelData
+                required property int index
+                width: parent.width
+                glyph: modelData.path === media.castPath && media.casting ? "󰐊" : "󰕧"
+                label: modelData.name
+                detail: modelData.folder + " · " + media.formatSize(modelData.size)
+                  + (modelData.subtitles ? " · subtitles" : "")
+                  + (index === 0 && videoSearch.activeFocus && videoSearch.text !== "" ? " · Enter" : "")
+                onActivated: media.cast(modelData.path)
+              }
+            }
+          }
+
+          Text {
+            textFormat: Text.PlainText
+            visible: videoSearch.text !== "" && root.videoMatches.length === 0
+            width: parent.width
+            text: "No video matches"
+            color: root.dim
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.bodySmall
+          }
+
           ActionRow {
             width: parent.width
             glyph: "󰐾"
-            label: "Cast a video…"
-            detail: "Open go2tv, with subtitles and playlists"
-            onActivated: { root.close(); media.openCaster() }
+            label: "Open the caster…"
+            detail: "Queue, whole folders, links, continue where you left off"
+            onActivated: root.openCaster()
+          }
+
+          ActionRow {
+            width: parent.width
+            glyph: "󰉋"
+            label: "Browse for a video…"
+            detail: "Anywhere on this machine"
+            onActivated: media.browseVideo()
           }
         }
       }

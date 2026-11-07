@@ -315,7 +315,7 @@ COMMANDS = {
     "open": cmd_open, "youtube": cmd_youtube, "yt": cmd_youtube,
     "key": lambda a: keys(*a) if a else die("usage: samsungtv key UP|DOWN|ENTER|RETURN|HOME|... (several allowed)"),
     "remote": cmd_remote,
-    "cast": lambda a: os.execvp("dlna", ["dlna", "cast", host(), a[0]]) if len(a) == 1 else die("usage: samsungtv cast <file>"),
+    "cast": lambda a: os.execvp("cast", ["cast", "play", *a]) if a else die("usage: samsungtv cast <file|url>..."),
     "notify": unsupported("notify"), "screen": unsupported("screen on/off"),
     **{m: (lambda k: lambda a: keys(k))(k) for m, k in MEDIA_KEYS.items()},
 }

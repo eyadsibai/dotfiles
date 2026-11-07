@@ -18,8 +18,10 @@
   lgtv youtube <url|id>       play a video in the YouTube app
   lgtv notify <message>       show a toast on the TV
   lgtv key <KEY>...           press remote keys (UP DOWN LEFT RIGHT ENTER BACK HOME ...)
-  lgtv remote                 interactive remote in this terminal
-  lgtv cast <file>            play a local video file on the TV (DLNA)
+  lgtv type [--enter] <text>  type into the TV's on-screen keyboard (e.g. a search box)
+  lgtv remote                 interactive remote in this terminal; typing goes to the
+                              TV when its keyboard is open
+  lgtv cast <file|url>...     play videos on the TV (the cast service, DLNA)
   lgtv pair                   (re)pair; accept the prompt on the TV
   lgtv host                   print the TV's address
 
@@ -319,12 +321,26 @@ async def cmd_key(tv, args):
         await sock.close()
 
 
+async def cmd_type(tv, args):
+    enter = "--enter" in args
+    text = " ".join(a for a in args if a != "--enter")
+    if not text and not enter:
+        die("usage: lgtv type [--enter] <text>   (with the TV's keyboard open)")
+    if text:
+        await tv.call("ssap://com.webos.service.ime/insertText", {"text": text, "replace": 0})
+    if enter:
+        await tv.call("ssap://com.webos.service.ime/sendEnterKey")
+
+
 REMOTE_HELP = """remote: arrows move · Enter OK · Backspace back · h home · i info · s settings
-        + / - volume · m mute · space pause · p play · q quit"""
+        + / - volume · m mute · space pause · p play · Tab typing mode · q quit
+        When the TV shows its keyboard (a search box), typing goes to it; Esc or Tab
+        returns to remote keys, Ctrl-C quits."""
 REMOTE_KEYS = {"\x1b[A": "UP", "\x1b[B": "DOWN", "\x1b[C": "RIGHT", "\x1b[D": "LEFT",
                "\r": "ENTER", "\n": "ENTER", "\x7f": "BACK", "\x08": "BACK", "h": "HOME",
                "i": "INFO", "s": "MENU", "+": "VOLUMEUP", "=": "VOLUMEUP", "-": "VOLUMEDOWN",
                "m": "MUTE", " ": "PAUSE", "p": "PLAY"}
+ARROWS = {k: v for k, v in REMOTE_KEYS.items() if k.startswith("\x1b[")}
 
 
 async def cmd_remote(tv, args):
@@ -336,18 +352,75 @@ async def cmd_remote(tv, args):
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     loop = asyncio.get_running_loop()
+    state = {"typing": False, "tv_keyboard": False}
+
+    def show(msg):
+        sys.stdout.write(f"\r\x1b[K{msg}")
+        sys.stdout.flush()
+
+    def mode_line():
+        show("⌨  typing on the TV  (Esc/Tab: remote keys)" if state["typing"] else "🎮 remote keys")
+
+    # From here on only reader() reads the main socket; requests are sent without waiting.
+    n = 0
+
+    async def send(uri, payload=None):
+        nonlocal n
+        n += 1
+        msg = {"type": "request", "id": f"rk{n}", "uri": uri}
+        if payload is not None:
+            msg["payload"] = payload
+        await tv.ws.send(json.dumps(msg))
+
+    async def reader():
+        """Follow the TV's keyboard: typing mode switches on when it opens, off when it closes."""
+        async for raw in tv.ws:
+            try:
+                msg = json.loads(raw)
+            except ValueError:
+                continue
+            if msg.get("id") != "kbd":
+                continue
+            widget = msg.get("payload", {}).get("currentWidget")
+            if not isinstance(widget, dict) or "focus" not in widget:
+                continue
+            focus = bool(widget["focus"])
+            if focus != state["tv_keyboard"]:
+                state["tv_keyboard"] = state["typing"] = focus
+                mode_line()
+
+    await tv.ws.send(json.dumps({"type": "subscribe", "id": "kbd",
+                                 "uri": "ssap://com.webos.service.ime/registerRemoteKeyboard"}))
+    watch = asyncio.create_task(reader())
     try:
         tty.setraw(fd)
+        mode_line()
         while True:
-            ch = await loop.run_in_executor(None, os.read, fd, 8)
-            s = ch.decode(errors="ignore")
-            if s in ("q", "\x03", "\x04"):
+            s = (await loop.run_in_executor(None, os.read, fd, 1024)).decode(errors="ignore")
+            if not s or s in ("\x03", "\x04"):
                 break
-            name = REMOTE_KEYS.get(s)
-            if name:
-                await press(sock, name)
+            if s == "\t":
+                state["typing"] = not state["typing"]
+                mode_line()
+            elif state["typing"]:
+                if s == "\x1b":
+                    state["typing"] = False
+                    mode_line()
+                elif s in ARROWS:
+                    await press(sock, ARROWS[s])
+                elif s in ("\r", "\n"):
+                    await send("ssap://com.webos.service.ime/sendEnterKey")
+                elif s in ("\x7f", "\x08"):
+                    await send("ssap://com.webos.service.ime/deleteCharacters", {"count": 1})
+                elif s.isprintable():  # one key, or a whole pasted string
+                    await send("ssap://com.webos.service.ime/insertText", {"text": s, "replace": 0})
+            elif s == "q":
+                break
+            elif s in REMOTE_KEYS:
+                await press(sock, REMOTE_KEYS[s])
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        watch.cancel()
         await sock.close()
         print()
 
@@ -376,9 +449,9 @@ def cmd_on(args):
 
 
 def cmd_cast(args):
-    if len(args) != 1:
-        die("usage: lgtv cast <video file>")
-    os.execvp("dlna", ["dlna", "cast", tv_host(), args[0]])
+    if not args:
+        die("usage: lgtv cast <file|dir|url>...   (see: cast --help)")
+    os.execvp("cast", ["cast", "play", *args])
 
 
 COMMANDS = {
@@ -386,7 +459,7 @@ COMMANDS = {
     "mute": lambda tv, a: cmd_mute(tv, a, True), "unmute": lambda tv, a: cmd_mute(tv, a, False),
     "off": cmd_off, "screen": cmd_screen, "input": cmd_input, "hdmi": cmd_input,
     "apps": cmd_apps, "app": cmd_app, "open": cmd_open, "youtube": cmd_youtube, "yt": cmd_youtube,
-    "notify": cmd_notify, "key": cmd_key, "remote": cmd_remote, "pair": cmd_pair,
+    "notify": cmd_notify, "key": cmd_key, "type": cmd_type, "remote": cmd_remote, "pair": cmd_pair,
     **{m: (lambda m: lambda tv, a: cmd_media(tv, a, m))(m) for m in MEDIA},
 }
 

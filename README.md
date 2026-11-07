@@ -121,6 +121,13 @@ the Sonos through `soco-cli`, DLNA casting (`dlna`) and scenes in `~/.config/med
 The `eyad.media` Omarchy bar widget puts the same controls in the bar: TV power, Sonos
 volume, playback, scenes, a remote and casting.
 
+Casting is our own: `cast` is a small background service that owns the TV over DLNA.
+It keeps a queue (or plays a whole folder in order), remembers where each video stopped,
+plays links through yt-dlp, converts what the TV can't play with ffmpeg on the fly, and
+sends subtitles (a `.srt`/`.ass`/`.vtt` next to the video, or a text track inside it).
+The caster window (`media gui`, or "Open the caster…" in the panel) is the UI for it:
+search `~/Videos`, `~/Downloads` and `~/Movies`, paste a link, and manage the queue.
+
 ## Decisions worth knowing
 
 - **nixarchy follows main.** Main runs ahead of the release tags and carries fixes they

@@ -1,0 +1,1055 @@
+#!/usr/bin/env python3
+"""cast — our own caster for the living-room TV: a queue, resume, links, transcoding.
+
+  cast play <file|dir|url>...     replace the queue with these and start playing
+  cast play --folder <file>       play a file, then the rest of its folder in order
+  cast add <file|dir|url>...      add to the end of the queue (starts it when idle)
+  cast pause | resume | toggle
+  cast seek <secs|H:MM:SS|+N|-N>  jump to a point, or N seconds forward/back
+  cast next | prev | jump <n>     move through the queue (n counts from 1)
+  cast restart                    play the current video from the start
+  cast remove <n> | move <n> <m> | clear
+  cast stop                       stop the TV, keep the queue
+  cast status [--json]            what's playing
+  cast watch                      the state as JSON, one line per change (for the window)
+  cast videos                     local videos with saved positions, as JSON
+  cast quit                       stop playback and the background service
+
+Options for play/add: --transcode always converts with ffmpeg; --no-subs skips subtitles.
+
+Files the TV plays as they are go to it directly, so it can seek in them. Others are
+converted on the fly with ffmpeg (H.264/AAC in MPEG-TS). Links go through yt-dlp. A
+subtitle file next to a video (movie.srt, movie.en.srt, .ass, .vtt), or a text subtitle
+track inside it, is sent along. The position of every video is remembered, and playing it
+again continues from there.
+
+A background service (`cast daemon`) owns the TV; any command starts it. It listens on
+TCP $DLNA_PORT (default 8765), the port `media firewall` opens for the TV.
+Settings: CAST_HOST (the TV's address; default: `media tv host`).
+"""
+import json, os, queue, re, select, shutil, signal, socket, socketserver, subprocess, sys
+import threading, time, urllib.parse
+import http.server
+from importlib.machinery import SourceFileLoader
+from xml.sax.saxutils import escape
+
+HERE = os.path.dirname(os.path.realpath(__file__))
+sys.dont_write_bytecode = True  # no __pycache__ next to the scripts
+dlna = SourceFileLoader("dlna", os.path.join(HERE, "dlna")).load_module()
+AVT = dlna.AVT
+
+PORT = int(os.environ.get("DLNA_PORT", "8765"))
+RUNTIME = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or f"/tmp/cast-{os.getuid()}", "cast")
+SOCK = os.path.join(RUNTIME, "control.sock")
+STATE_DIR = os.path.join(os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"), "cast")
+POSITIONS = os.path.join(STATE_DIR, "positions.json")
+QUEUE_FILE = os.path.join(STATE_DIR, "queue.json")
+LOG = os.path.join(STATE_DIR, "daemon.log")
+
+VIDEO_EXTS = {".mp4", ".mkv", ".webm", ".mov", ".m4v", ".avi", ".ts", ".mpg", ".mpeg", ".wmv", ".flv"}
+SUB_EXTS = (".srt", ".ass", ".ssa", ".vtt")
+# What an LG webOS TV plays without help. Anything else is converted.
+DIRECT_CONTAINERS = ("mov,mp4", "matroska", "mpegts")
+DIRECT_VIDEO = {"h264", "hevc", "vp9"}
+DIRECT_AUDIO = {"aac", "ac3", "eac3", "mp3", "opus", "vorbis", "mp2"}
+TS_AUDIO = {"aac", "ac3", "eac3", "mp3", "mp2"}  # audio that can be copied into MPEG-TS
+TEXT_SUBS = {"subrip", "ass", "ssa", "webvtt", "mov_text", "text"}
+RESUME_MIN, RESUME_TAIL = 30, 60  # resume only past 30s and more than 60s before the end
+
+
+def die(msg):
+    sys.exit(f"cast: {msg}")
+
+
+def log(*a):
+    print(time.strftime("%H:%M:%S"), *a, file=sys.stderr, flush=True)
+
+
+def natural(s):
+    return [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", s)]
+
+
+def is_url(s):
+    return re.match(r"(?i)^https?://", s or "") is not None
+
+
+def is_video(path):
+    return os.path.splitext(path)[1].lower() in VIDEO_EXTS
+
+
+def folder_videos(d):
+    try:
+        names = [n for n in os.listdir(d) if not n.startswith(".") and is_video(n)]
+    except OSError:
+        return []
+    return [os.path.join(d, n) for n in sorted(names, key=natural) if os.path.isfile(os.path.join(d, n))]
+
+
+def hms(secs):
+    return dlna.hms(max(0, int(secs)))
+
+
+def fmt_time(secs):
+    secs = int(secs or 0)
+    h, m, s = secs // 3600, secs // 60 % 60, secs % 60
+    return f"{h}:{m:02}:{s:02}" if h else f"{m}:{s:02}"
+
+
+# ---------- remembered positions ----------
+
+_pos_lock = threading.Lock()
+
+
+def load_json(path, default):
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return default
+
+
+def save_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f)
+    os.replace(tmp, path)
+
+
+def saved_position(src):
+    with _pos_lock:
+        p = load_json(POSITIONS, {}).get(src)
+    if not p:
+        return 0
+    pos, dur = p.get("pos", 0), p.get("dur", 0)
+    return pos if pos >= RESUME_MIN and (not dur or pos < dur - RESUME_TAIL) else 0
+
+
+def remember_position(src, pos, dur):
+    with _pos_lock:
+        data = load_json(POSITIONS, {})
+        if pos is None:
+            data.pop(src, None)
+        else:
+            data[src] = {"pos": int(pos), "dur": int(dur or 0), "t": int(time.time())}
+        if len(data) > 1000:  # keep the most recent
+            data = dict(sorted(data.items(), key=lambda kv: kv[1].get("t", 0))[-1000:])
+        save_json(POSITIONS, data)
+
+
+# ---------- preparing an item: probe, subtitles, links ----------
+
+def run(cmd, timeout=60):
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+
+
+def probe(path):
+    r = run(["ffprobe", "-v", "error", "-show_entries",
+             "format=duration,format_name:stream=index,codec_type,codec_name,pix_fmt:stream_tags=language,title"
+             ":stream_disposition=default", "-of", "json", path])
+    if r.returncode:
+        raise RuntimeError(f"can't read {os.path.basename(path)}: {r.stderr.strip()[:200]}")
+    return json.loads(r.stdout)
+
+
+def direct_ok(info):
+    fmt = info.get("format", {}).get("format_name", "")
+    streams = info.get("streams", [])
+    v = next((s for s in streams if s.get("codec_type") == "video"), None)
+    a = next((s for s in streams if s.get("codec_type") == "audio"), None)
+    video_ok = v is not None and v.get("codec_name") in DIRECT_VIDEO and \
+        not (v.get("codec_name") == "h264" and "10" in (v.get("pix_fmt") or ""))
+    audio_ok = a is None or a.get("codec_name") in DIRECT_AUDIO
+    return any(fmt.startswith(c) for c in DIRECT_CONTAINERS) and video_ok and audio_ok, v, a
+
+
+def video_args(v, force=False):
+    """ffmpeg video options for MPEG-TS: copy H.264/HEVC as is, convert the rest."""
+    codec, pix = (v or {}).get("codec_name"), (v or {}).get("pix_fmt") or ""
+    if not force and (codec == "hevc" or codec == "h264" and "10" not in pix):
+        return ["-c:v", "copy"]
+    return ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-maxrate", "20M", "-bufsize", "40M",
+            "-pix_fmt", "yuv420p", "-profile:v", "high", "-vf", "scale='min(1920,iw)':-2"]
+
+
+def audio_args(a, force=False):
+    if a and not force and a.get("codec_name") in TS_AUDIO:
+        return ["-c:a", "copy"]
+    return ["-c:a", "aac", "-b:a", "320k"]
+
+
+def find_subs(path, info, tmpdir):
+    """A subtitle file for the TV (SRT), or None: a file next to the video, else a text track inside."""
+    base = os.path.splitext(path)[0]
+    d = os.path.dirname(path) or "."
+    stem = os.path.basename(base)
+    try:
+        side = sorted((n for n in os.listdir(d) if n.startswith(stem + ".") and n.lower().endswith(SUB_EXTS)),
+                      key=lambda n: (len(n), n))
+    except OSError:
+        side = []
+    out = os.path.join(tmpdir, "subs.srt")
+    for n in side:
+        src = os.path.join(d, n)
+        if n.lower().endswith(".srt"):
+            return src
+        if run(["ffmpeg", "-v", "error", "-y", "-i", src, out], timeout=30).returncode == 0:
+            return out
+    tracks = [s for s in info.get("streams", []) if s.get("codec_type") == "subtitle" and s.get("codec_name") in TEXT_SUBS]
+    if not tracks:
+        return None
+    pick = next((s for s in tracks if s.get("disposition", {}).get("default")), tracks[0])
+    r = run(["ffmpeg", "-v", "error", "-y", "-i", path, "-map", f"0:{pick['index']}", "-f", "srt", out], timeout=120)
+    return out if r.returncode == 0 and os.path.getsize(out) > 0 else None
+
+
+def resolve_link(url):
+    """yt-dlp -> title, duration and ffmpeg inputs (url, headers) for the best H.264/AAC streams."""
+    sel = ("bv*[vcodec^=avc1][height<=1080]+ba[acodec^=mp4a]/b[vcodec^=avc1][height<=1080]"
+           "/bv*[height<=1080]+ba/b")
+    r = run(["yt-dlp", "-j", "--no-playlist", "--no-warnings", "-f", sel, url], timeout=90)
+    if r.returncode:
+        err = (r.stderr.strip().splitlines() or ["yt-dlp failed"])[-1]
+        raise RuntimeError(err.replace("ERROR: ", "")[:200])
+    j = json.loads(r.stdout.splitlines()[-1])
+    fmts = j.get("requested_formats") or [j]
+    inputs = [(f["url"], f.get("http_headers") or j.get("http_headers") or {}) for f in fmts]
+    vcodec = next((f.get("vcodec") for f in fmts if f.get("vcodec") not in (None, "none")), "")
+    acodec = next((f.get("acodec") for f in fmts if f.get("acodec") not in (None, "none")), "")
+    v = {"codec_name": "h264" if vcodec.startswith("avc1") else vcodec}
+    a = {"codec_name": "aac" if acodec.startswith("mp4a") else acodec} if acodec else None
+    return {"title": j.get("title") or url, "duration": j.get("duration") or 0,
+            "live": bool(j.get("is_live")), "inputs": inputs, "v": v, "a": a}
+
+
+# ---------- the HTTP side: what the TV fetches ----------
+
+class Media:
+    """What the server hands out: the current file, a converted stream, and subtitles."""
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.file = None          # path served directly
+        self.stream = None        # dict(inputs, vargs, aargs) for ffmpeg
+        self.subs = None
+        self.token = ""
+        self.procs = []
+        self.stream_done = False
+
+    def kill_streams(self):
+        with self.lock:
+            procs, self.procs = self.procs, []
+        for p in procs:
+            if p.poll() is None:
+                p.kill()
+
+    def set(self, token, file=None, stream=None, subs=None):
+        self.kill_streams()
+        with self.lock:
+            self.token, self.file, self.stream, self.subs, self.stream_done = token, file, stream, subs, False
+
+    def ffmpeg(self, offset):
+        s = self.stream
+        cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin"]
+        for src, headers in s["inputs"]:
+            if is_url(src):
+                cmd += ["-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5"]
+                if headers:
+                    cmd += ["-headers", "".join(f"{k}: {v}\r\n" for k, v in headers.items())]
+            if offset and not s.get("live"):
+                cmd += ["-ss", str(offset)]
+            cmd += ["-i", src]
+        cmd += ["-map", "0:v:0", "-map", ("1" if len(s["inputs"]) > 1 else "0") + ":a:0?"]
+        cmd += s["vargs"] + s["aargs"] + ["-f", "mpegts", "-muxdelay", "0", "pipe:1"]
+        return cmd
+
+
+MEDIA = Media()
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
+    def log_message(self, *a):
+        pass
+
+    def route(self):
+        u = urllib.parse.urlsplit(self.path)
+        parts = u.path.strip("/").split("/")
+        if len(parts) < 2 or parts[1] != MEDIA.token:
+            return None, None
+        return parts[0], urllib.parse.parse_qs(u.query)
+
+    def do_HEAD(self):
+        self.serve(body=False)
+
+    def do_GET(self):
+        self.serve(body=True)
+
+    def serve(self, body):
+        kind, q = self.route()
+        if kind == "file" and MEDIA.file:
+            return self.serve_file(MEDIA.file, body)
+        if kind == "subs" and MEDIA.subs:
+            data = open(MEDIA.subs, "rb").read()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/srt")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            if body:
+                self.wfile.write(data)
+            return
+        if kind == "stream" and MEDIA.stream:
+            return self.serve_stream(float((q.get("t") or ["0"])[0]), body)
+        self.send_error(404)
+
+    def common_headers(self, mime, op):
+        self.send_header("Content-Type", mime)
+        self.send_header("transferMode.dlna.org", "Streaming")
+        self.send_header("contentFeatures.dlna.org", f"DLNA.ORG_OP={op};DLNA.ORG_FLAGS=01700000000000000000000000000000")
+        if MEDIA.subs:
+            self.send_header("CaptionInfo.sec", f"http://{self.headers.get('Host')}/subs/{MEDIA.token}/subtitles.srt")
+
+    def serve_file(self, path, body):
+        size = os.path.getsize(path)
+        start, end = 0, size - 1
+        m = re.match(r"bytes=(\d*)-(\d*)", self.headers.get("Range") or "")
+        if m and (m.group(1) or m.group(2)):
+            if m.group(1):
+                start = int(m.group(1))
+                end = int(m.group(2)) if m.group(2) else size - 1
+            else:
+                start = max(0, size - int(m.group(2)))
+            end = min(end, size - 1)
+            self.send_response(206)
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        else:
+            self.send_response(200)
+        self.common_headers(MEDIA_MIME.get(os.path.splitext(path)[1].lower(), "video/mp4"), "01")
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Content-Length", str(end - start + 1))
+        self.end_headers()
+        if not body:
+            return
+        with open(path, "rb") as f:
+            f.seek(start)
+            left = end - start + 1
+            try:
+                while left > 0:
+                    chunk = f.read(min(1 << 20, left))
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+                    left -= len(chunk)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+
+    def serve_stream(self, offset, body):
+        self.send_response(200)
+        self.common_headers("video/mp2t", "00")
+        self.send_header("Connection", "close")
+        self.end_headers()
+        self.close_connection = True
+        if not body:
+            return
+        token = MEDIA.token
+        p = subprocess.Popen(MEDIA.ffmpeg(offset), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        with MEDIA.lock:
+            MEDIA.procs.append(p)
+        complete = False
+        try:
+            while True:
+                chunk = p.stdout.read(1 << 16)
+                if not chunk:
+                    complete = p.wait() == 0
+                    break
+                self.wfile.write(chunk)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        finally:
+            if p.poll() is None:
+                p.kill()
+            if p.returncode not in (0, None, -9):
+                err = p.stderr.read().decode(errors="ignore").strip().splitlines()
+                if err:
+                    log("ffmpeg:", err[-1])
+            if complete and token == MEDIA.token:
+                MEDIA.stream_done = True
+
+
+MEDIA_MIME = {".mp4": "video/mp4", ".m4v": "video/mp4", ".mov": "video/quicktime", ".mkv": "video/x-matroska",
+              ".webm": "video/webm", ".ts": "video/mp2t", ".avi": "video/x-msvideo"}
+
+
+# ---------- the player ----------
+
+class Player:
+    def __init__(self):
+        self.lock = threading.RLock()
+        self.actions = queue.Queue()
+        self.watchers = []
+        self.items = []           # {src, kind, title, transcode, subs}
+        self.index = -1
+        self.state = "idle"       # idle preparing starting playing paused stopped error
+        self.message = ""
+        self.position = 0
+        self.duration = 0
+        self.mode = ""            # direct | stream
+        self.offset = 0           # stream start offset
+        self.resumed_from = 0
+        self.has_subs = False
+        self.gen = 0
+        self.host = None
+        self.ctrl = None
+        self.my_ip = None
+        self.deadline = 0
+        self.pending_seek = 0
+        self.seen_playing = False
+        self.idle_polls = 0
+        self.unknown_polls = 0
+        self.grace_until = 0
+        self.last_save = 0
+        self.last_broadcast = None
+        self.idle_since = time.time()
+        saved = load_json(QUEUE_FILE, {})
+        self.items = [i for i in saved.get("items", []) if isinstance(i, dict) and i.get("src")]
+        self.index = min(saved.get("index", -1), len(self.items) - 1)
+
+    # ----- state out -----
+
+    def snapshot(self):
+        with self.lock:
+            cur = self.items[self.index] if 0 <= self.index < len(self.items) else None
+            return {
+                "state": self.state, "message": self.message, "index": self.index,
+                "title": (cur or {}).get("title", ""), "src": (cur or {}).get("src", ""),
+                "kind": (cur or {}).get("kind", ""),
+                "position": int(self.position), "duration": int(self.duration or 0),
+                "mode": self.mode, "subtitles": self.has_subs, "resumed_from": int(self.resumed_from),
+                "queue": [{"title": i.get("title", ""), "src": i["src"], "kind": i.get("kind", "file"),
+                           "duration": int(i.get("duration") or 0)} for i in self.items],
+            }
+
+    def broadcast(self, force=False):
+        snap = self.snapshot()
+        line = (json.dumps(snap) + "\n").encode()
+        if not force and line == self.last_broadcast:
+            return
+        self.last_broadcast = line
+        for w in list(self.watchers):
+            try:
+                w.sendall(line)
+            except OSError:
+                self.watchers.remove(w)
+
+    def save_queue(self):
+        save_json(QUEUE_FILE, {"items": [{k: i.get(k) for k in ("src", "kind", "title", "transcode", "subs", "duration")}
+                                         for i in self.items], "index": self.index})
+
+    def set_state(self, state, message=""):
+        self.state, self.message = state, message
+        if state in ("idle", "stopped", "error"):
+            self.idle_since = time.time()
+
+    # ----- commands (run on the player thread) -----
+
+    def do(self, cmd, args, opts):
+        if cmd in ("play", "add"):
+            items = [self.make_item(a, opts) for a in args]
+            if cmd == "play" or not self.items:
+                start = opts.get("start", 0)
+                self.items, self.index = items, -1
+                self.start(start)
+            else:
+                self.items += items
+                if self.state in ("idle", "stopped", "error"):
+                    self.start(len(self.items) - len(items))
+            self.save_queue()
+        elif cmd == "pause":
+            if self.state == "playing" and self.ctrl:
+                dlna.soap(self.ctrl, AVT, "Pause", {"InstanceID": 0}, soft=True)
+                self.set_state("paused")
+        elif cmd == "resume":
+            if self.state == "paused" and self.ctrl:
+                threading.Thread(target=dlna.soap, args=(self.ctrl, AVT, "Play", {"InstanceID": 0, "Speed": 1}),
+                                 kwargs={"timeout": 30, "soft": True}, daemon=True).start()
+                self.set_state("playing")
+            elif self.state in ("idle", "stopped", "error") and self.items:
+                self.start(max(0, self.index))
+        elif cmd == "toggle":
+            self.do("pause" if self.state == "playing" else "resume", [], {})
+        elif cmd == "seek":
+            self.seek(args[0])
+        elif cmd == "next":
+            if self.index + 1 < len(self.items):
+                self.save_position()
+                self.start(self.index + 1)
+        elif cmd == "prev":
+            if self.state in ("playing", "paused") and self.position > 10:
+                self.seek("0")
+            elif self.index > 0:
+                self.save_position()
+                self.start(self.index - 1)
+        elif cmd == "jump":
+            n = int(args[0]) - 1
+            if 0 <= n < len(self.items):
+                self.save_position()
+                self.start(n)
+        elif cmd == "restart":
+            if 0 <= self.index < len(self.items):
+                remember_position(self.items[self.index]["src"], None, 0)
+                self.start(self.index, from_start=True)
+        elif cmd == "remove":
+            n = int(args[0]) - 1
+            if 0 <= n < len(self.items):
+                current = n == self.index
+                del self.items[n]
+                if n < self.index:
+                    self.index -= 1
+                elif current:
+                    was_active = self.state in ("playing", "paused", "starting", "preparing")
+                    self.halt()
+                    if was_active and n < len(self.items):
+                        self.start(n)
+                    else:
+                        self.index = min(n, len(self.items) - 1)
+                        self.set_state("idle")
+                self.save_queue()
+        elif cmd == "move":
+            a, b = int(args[0]) - 1, int(args[1]) - 1
+            if 0 <= a < len(self.items) and 0 <= b < len(self.items):
+                cur = self.items[self.index] if self.index >= 0 else None
+                self.items.insert(b, self.items.pop(a))
+                if cur is not None:
+                    self.index = self.items.index(cur)
+                self.save_queue()
+        elif cmd == "clear":
+            self.save_position()
+            self.halt()
+            self.items, self.index = [], -1
+            self.set_state("idle")
+            self.save_queue()
+        elif cmd == "stop":
+            self.save_position()
+            self.halt()
+            self.set_state("stopped" if self.items else "idle")
+        elif cmd == "quit":
+            self.save_position()
+            self.halt()
+            os._exit(0)
+        else:
+            raise ValueError(f"unknown command {cmd!r}")
+
+    def make_item(self, src, opts):
+        if is_url(src):
+            return {"src": src, "kind": "url", "title": src, "transcode": opts.get("transcode", False),
+                    "subs": not opts.get("no_subs")}
+        return {"src": src, "kind": "file", "title": os.path.basename(src), "transcode": opts.get("transcode", False),
+                "subs": not opts.get("no_subs")}
+
+    def halt(self):
+        """Stop the TV and whatever we're preparing or streaming."""
+        self.gen += 1
+        if self.ctrl and self.state in ("starting", "playing", "paused"):
+            dlna.soap(self.ctrl, AVT, "Stop", {"InstanceID": 0}, timeout=5, soft=True)
+        MEDIA.kill_streams()
+
+    def start(self, i, from_start=False):
+        self.halt()
+        self.index = i
+        self.position, self.duration, self.mode, self.offset = 0, 0, "", 0
+        self.resumed_from, self.has_subs, self.seen_playing = 0, False, False
+        self.idle_polls = self.unknown_polls = 0
+        self.set_state("preparing", "Getting ready…")
+        item = dict(self.items[i])
+        gen = self.gen
+        threading.Thread(target=self.prepare, args=(gen, item, from_start), daemon=True).start()
+        self.save_queue()
+
+    def note(self, gen, message):
+        """Progress messages from the prepare thread."""
+        def apply():
+            if gen == self.gen and self.state == "preparing":
+                self.message = message
+        self.actions.put(("_call", apply, None))
+
+    def prepare(self, gen, item, from_start):
+        try:
+            self.ensure_tv(gen)
+            tmpdir = os.path.join(RUNTIME, f"item{gen}")
+            os.makedirs(tmpdir, exist_ok=True)
+            resume = 0 if from_start else saved_position(item["src"])
+            if item["kind"] == "url":
+                self.note(gen, "Looking up the link…")
+                link = resolve_link(item["src"])
+                stream = {"inputs": link["inputs"], "live": link["live"],
+                          "vargs": video_args(link["v"], item.get("transcode")),
+                          "aargs": audio_args(link["a"], item.get("transcode"))}
+                prep = {"mode": "stream", "stream": stream, "duration": link["duration"], "title": link["title"],
+                        "subs": None, "resume": 0 if link["live"] else resume}
+            else:
+                if not os.path.isfile(item["src"]):
+                    raise RuntimeError(f"file is gone: {item['src']}")
+                info = probe(item["src"])
+                ok, v, a = direct_ok(info)
+                dur = float(info.get("format", {}).get("duration") or 0)
+                subs = None
+                if item.get("subs", True):
+                    self.note(gen, "Looking for subtitles…")
+                    subs = find_subs(item["src"], info, tmpdir)
+                if ok and not item.get("transcode"):
+                    prep = {"mode": "direct", "duration": dur, "subs": subs, "resume": resume}
+                else:
+                    stream = {"inputs": [(item["src"], {})], "live": False,
+                              "vargs": video_args(v, item.get("transcode")), "aargs": audio_args(a, item.get("transcode"))}
+                    prep = {"mode": "stream", "stream": stream, "duration": dur, "subs": subs, "resume": resume}
+            self.actions.put(("_prepared", gen, prep))
+        except Exception as e:  # noqa: BLE001 - reported to the user
+            msg = str(e) if not isinstance(e, subprocess.TimeoutExpired) else "timed out"
+            self.actions.put(("_failed", gen, msg))
+        except SystemExit as e:  # dlna's die()
+            self.actions.put(("_failed", gen, str(e.code).replace("dlna: ", "")))
+
+    def ensure_tv(self, gen):
+        if not self.host:
+            self.host = os.environ.get("CAST_HOST") or run(["media", "tv", "host"], timeout=15).stdout.strip()
+            if not self.host:
+                raise RuntimeError("can't find the TV; set CAST_HOST")
+        if self.ctrl and dlna.soap(self.ctrl, AVT, "GetTransportInfo", {"InstanceID": 0}, timeout=4, soft=True):
+            return
+        self.note(gen, "Finding the TV…")
+        try:
+            self.ctrl = dlna.find_service(self.host, AVT)
+        except SystemExit:
+            self.note(gen, "Waking the TV…")
+            run(["media", "tv", "on"], timeout=15)
+            run(["media", "wait-tv", "45"], timeout=60)
+            time.sleep(3)
+            self.ctrl = dlna.find_service(self.host, AVT)
+        probe_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        probe_sock.connect((self.host, 9))
+        self.my_ip = probe_sock.getsockname()[0]
+        probe_sock.close()
+
+    def prepared(self, gen, prep):
+        if gen != self.gen:
+            return
+        item = self.items[self.index]
+        if prep.get("title"):
+            item["title"] = prep["title"]
+        item["duration"] = int(prep["duration"] or 0)
+        self.duration = prep["duration"]
+        self.mode = prep["mode"]
+        self.has_subs = bool(prep["subs"])
+        token = f"{gen}x{int(time.time()) % 100000}"
+        MEDIA.set(token, file=item["src"] if self.mode == "direct" else None,
+                  stream=prep.get("stream"), subs=prep["subs"])
+        resume = prep["resume"]
+        self.resumed_from = resume
+        if self.mode == "stream":
+            self.offset, self.pending_seek = resume, 0
+        else:
+            self.offset, self.pending_seek = 0, resume
+        self.position = resume
+        if self.set_uri(item):
+            self.set_state("starting", "Starting on the TV…")
+            self.deadline = time.time() + 60
+        self.save_queue()
+
+    def media_url(self, item):
+        base = f"http://{self.my_ip}:{PORT}"
+        if self.mode == "direct":
+            return f"{base}/file/{MEDIA.token}/{urllib.parse.quote(os.path.basename(item['src']))}", \
+                MEDIA_MIME.get(os.path.splitext(item["src"])[1].lower(), "video/mp4")
+        return f"{base}/stream/{MEDIA.token}/video.ts?t={int(self.offset)}&n={time.time_ns() % 10**9}", "video/mp2t"
+
+    def set_uri(self, item):
+        url, mime = self.media_url(item)
+        subs_url = f"http://{self.my_ip}:{PORT}/subs/{MEDIA.token}/subtitles.srt" if MEDIA.subs else None
+        sub_res = (f'<res protocolInfo="http-get:*:text/srt:*">{escape(subs_url)}</res>'
+                   f'<sec:CaptionInfoEx sec:type="srt">{escape(subs_url)}</sec:CaptionInfoEx>') if subs_url else ""
+        pinfo = f"http-get:*:{mime}:DLNA.ORG_OP={'01' if self.mode == 'direct' else '00'};DLNA.ORG_CI=" + \
+                ("0" if self.mode == "direct" else "1") + ";DLNA.ORG_FLAGS=01700000000000000000000000000000"
+        didl = ('<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" '
+                'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
+                'xmlns:sec="http://www.sec.co.kr/">'
+                f'<item id="0" parentID="-1" restricted="1"><dc:title>{escape(item["title"])}</dc:title>'
+                '<upnp:class>object.item.videoItem</upnp:class>'
+                f'<res protocolInfo="{pinfo}">{escape(url)}</res>{sub_res}</item></DIDL-Lite>')
+        dlna.soap(self.ctrl, AVT, "Stop", {"InstanceID": 0}, timeout=5, soft=True)
+        if dlna.soap(self.ctrl, AVT, "SetAVTransportURI",
+                     {"InstanceID": 0, "CurrentURI": escape(url), "CurrentURIMetaData": escape(didl)},
+                     soft=True) is None:
+            MEDIA.kill_streams()
+            self.set_state("error", "The TV refused the video")
+            return False
+        # LG holds Play ~30s while its player opens, then answers 500 and plays anyway.
+        threading.Thread(target=dlna.soap, args=(self.ctrl, AVT, "Play", {"InstanceID": 0, "Speed": 1}),
+                         kwargs={"timeout": 60, "soft": True}, daemon=True).start()
+        self.grace_until = time.time() + 8
+        return True
+
+    def seek(self, arg):
+        if self.state not in ("playing", "paused", "starting"):
+            return
+        rel = re.fullmatch(r"([+-])(\d+)", arg)
+        if rel:
+            t = self.position + (int(rel[2]) if rel[1] == "+" else -int(rel[2]))
+        else:
+            t = dlna.secs(arg)
+            if t is None:
+                raise ValueError(f"can't read {arg!r} as a time")
+        t = max(0, min(t, (self.duration or t + 1) - 3))
+        self.position = t
+        if self.mode == "direct":
+            dlna.soap(self.ctrl, AVT, "Seek", {"InstanceID": 0, "Unit": "REL_TIME", "Target": hms(t)}, soft=True)
+            self.grace_until = time.time() + 4
+        else:  # a converted stream starts over from the new point
+            MEDIA.kill_streams()
+            self.offset = t
+            if self.set_uri(self.items[self.index]):
+                self.set_state("starting", "Jumping…")
+                self.deadline = time.time() + 45
+
+    def save_position(self):
+        if 0 <= self.index < len(self.items) and self.state in ("playing", "paused") and self.seen_playing:
+            if self.duration and self.position > self.duration - RESUME_TAIL:
+                remember_position(self.items[self.index]["src"], None, 0)
+            else:
+                remember_position(self.items[self.index]["src"], self.position, self.duration)
+
+    # ----- following the TV -----
+
+    def poll(self):
+        if self.state not in ("starting", "playing", "paused") or not self.ctrl:
+            return
+        now = time.time()
+        ts = dlna.transport_state(self.ctrl)
+        if ts == "?":
+            self.unknown_polls += 1
+            if self.unknown_polls > 30:
+                self.save_position()
+                self.halt()
+                self.set_state("stopped", "Lost the TV")
+            return
+        self.unknown_polls = 0
+        if self.state == "starting":
+            if ts == "PLAYING":
+                self.set_state("playing")
+                self.seen_playing = True
+                if self.pending_seek:
+                    t, self.pending_seek = self.pending_seek, 0
+                    for _ in range(3):
+                        if dlna.soap(self.ctrl, AVT, "Seek", {"InstanceID": 0, "Unit": "REL_TIME", "Target": hms(t)},
+                                     soft=True) is not None:
+                            break
+                        time.sleep(1)
+                    self.position = t
+                    self.grace_until = now + 4
+            elif now > self.deadline:
+                self.halt()
+                self.set_state("error", "The TV didn't start playing. If it never fetched the video, run: media firewall")
+            return
+        if ts in ("PLAYING", "PAUSED_PLAYBACK", "TRANSITIONING"):
+            self.idle_polls = 0
+            if ts == "PLAYING" and self.state == "paused" and now > self.grace_until:
+                self.set_state("playing")
+            elif ts == "PAUSED_PLAYBACK" and self.state == "playing" and now > self.grace_until:
+                self.set_state("paused")
+            if now > self.grace_until:
+                pos, total = dlna.position(self.ctrl)
+                if pos is not None:
+                    self.position = self.offset + pos
+                if total and self.mode == "direct":
+                    self.duration = total
+            if now - self.last_save > 10:
+                self.last_save = now
+                self.save_position()
+            return
+        if ts in ("STOPPED", "NO_MEDIA_PRESENT") and now > self.grace_until:
+            self.idle_polls += 1
+            if self.idle_polls < 3:
+                return
+            near_end = self.duration and self.position >= self.duration - 30
+            if near_end or (self.mode == "stream" and MEDIA.stream_done):
+                remember_position(self.items[self.index]["src"], None, 0)
+                if self.index + 1 < len(self.items):
+                    self.start(self.index + 1)
+                else:
+                    MEDIA.kill_streams()
+                    self.set_state("idle", "Finished")
+            else:  # stopped from the TV remote, or another app took over
+                self.save_position()
+                MEDIA.kill_streams()
+                self.set_state("stopped", "Stopped on the TV")
+
+    def loop(self):
+        while True:
+            try:
+                kind, a, b = self.actions.get(timeout=1)
+            except queue.Empty:
+                with self.lock:
+                    try:
+                        self.poll()
+                    except Exception as e:  # noqa: BLE001
+                        log("poll:", repr(e))
+                self.broadcast()
+                if self.state in ("idle", "stopped", "error") and not self.watchers \
+                        and time.time() - self.idle_since > 3600:
+                    log("idle for an hour; exiting")
+                    os._exit(0)
+                continue
+            with self.lock:
+                try:
+                    if kind == "_prepared":
+                        self.prepared(a, b)
+                    elif kind == "_failed":
+                        if a == self.gen:
+                            self.set_state("error", b)
+                    elif kind == "_call":
+                        a()
+                    else:  # a client command: (cmd, (args, opts, reply))
+                        args, opts, reply = a, b[0], b[1]
+                        try:
+                            self.do(kind, args, opts)
+                            reply["ok"] = True
+                        except (ValueError, IndexError) as e:
+                            reply["error"] = str(e)
+                        reply["done"].set()
+                except Exception as e:  # noqa: BLE001
+                    log(kind, repr(e))
+                    if kind not in ("_prepared", "_failed", "_call"):
+                        b[1]["error"] = str(e)
+                        b[1]["done"].set()
+            self.broadcast()
+
+
+PLAYER = None
+
+
+class Control(socketserver.StreamRequestHandler):
+    def handle(self):
+        line = self.rfile.readline()
+        try:
+            req = json.loads(line)
+            cmd, args, opts = req["cmd"], req.get("args", []), req.get("opts", {})
+        except (ValueError, KeyError):
+            return self.reply({"error": "bad request"})
+        if cmd == "status":
+            return self.reply({"ok": True, "state": PLAYER.snapshot()})
+        if cmd == "watch":
+            self.connection.sendall((json.dumps(PLAYER.snapshot()) + "\n").encode())
+            PLAYER.watchers.append(self.connection)
+            try:
+                while self.connection.recv(1):
+                    pass
+            except OSError:
+                pass
+            if self.connection in PLAYER.watchers:
+                PLAYER.watchers.remove(self.connection)
+            return
+        reply = {"done": threading.Event()}
+        PLAYER.actions.put((cmd, args, (opts, reply)))
+        reply["done"].wait(20)
+        reply.pop("done")
+        reply["state"] = PLAYER.snapshot()
+        self.reply(reply)
+
+    def reply(self, obj):
+        try:
+            self.wfile.write((json.dumps(obj) + "\n").encode())
+        except OSError:
+            pass
+
+
+class UnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
+    daemon_threads = True
+
+
+class HTTPServer(http.server.ThreadingHTTPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+
+    def server_bind(self):  # skip the reverse DNS lookup http.server does, which can hang
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = "cast", self.server_address[1]
+
+
+def daemon():
+    global PLAYER
+    os.makedirs(RUNTIME, exist_ok=True)
+    os.makedirs(STATE_DIR, exist_ok=True)
+    try:
+        httpd = HTTPServer(("0.0.0.0", PORT), Handler)
+    except OSError as e:
+        die(f"can't listen on port {PORT} ({e}); is `dlna cast` running?")
+    if os.path.exists(SOCK):
+        os.unlink(SOCK)
+    ctl = UnixServer(SOCK, Control)
+    os.chmod(SOCK, 0o600)
+    PLAYER = Player()
+
+    def bye(*_):
+        PLAYER.actions.put(("quit", [], ({}, {"done": threading.Event()})))
+    signal.signal(signal.SIGTERM, bye)
+    signal.signal(signal.SIGINT, bye)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    threading.Thread(target=ctl.serve_forever, daemon=True).start()
+    log(f"cast daemon on :{PORT}, control {SOCK}")
+    PLAYER.loop()
+
+
+# ---------- the client ----------
+
+def connect(start=True):
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        s.connect(SOCK)
+        return s
+    except OSError:
+        s.close()
+        if not start:
+            return None
+    os.makedirs(STATE_DIR, exist_ok=True)
+    with open(LOG, "a") as logf:
+        subprocess.Popen([sys.executable, os.path.realpath(__file__), "daemon"], stdin=subprocess.DEVNULL,
+                         stdout=logf, stderr=logf, start_new_session=True)
+    for _ in range(50):
+        time.sleep(0.1)
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            s.connect(SOCK)
+            return s
+        except OSError:
+            s.close()
+    die(f"the background service didn't start; see {LOG}")
+
+
+def request(cmd, args=(), opts=None):
+    s = connect(start=cmd not in ("quit", "status"))
+    if s is None:
+        return {"ok": True, "state": {"state": "idle", "message": "", "index": -1, "title": "", "queue": [],
+                                      "position": 0, "duration": 0}}
+    s.sendall((json.dumps({"cmd": cmd, "args": list(args), "opts": opts or {}}) + "\n").encode())
+    data = b""
+    while not data.endswith(b"\n"):
+        chunk = s.recv(65536)
+        if not chunk:
+            break
+        data += chunk
+    s.close()
+    try:
+        return json.loads(data or b"{}")
+    except ValueError:
+        return {"ok": True}
+
+
+def expand(targets, folder=False):
+    """Files, folders and links -> a flat list; --folder adds the rest of the file's folder after it."""
+    out, start = [], 0
+    for t in targets:
+        if is_url(t):
+            out.append(t)
+            continue
+        p = os.path.abspath(os.path.expanduser(t))
+        if os.path.isdir(p):
+            vids = folder_videos(p)
+            if not vids:
+                die(f"no videos in {t}")
+            out += vids
+        elif os.path.isfile(p):
+            if folder:
+                vids = folder_videos(os.path.dirname(p))
+                if p in vids:
+                    start = len(out) + vids.index(p)
+                    out += vids
+                    continue
+            out.append(p)
+        else:
+            die(f"no such file: {t}")
+    if not out:
+        die("nothing to play")
+    return out, start
+
+
+def print_status(st):
+    if not st.get("queue"):
+        print("nothing queued")
+        return
+    head = st["state"]
+    if st["state"] in ("playing", "paused") and st.get("duration"):
+        head += f"  {fmt_time(st['position'])} / {fmt_time(st['duration'])}"
+    if st.get("message"):
+        head += f"  ({st['message']})"
+    print(head)
+    for i, q in enumerate(st["queue"]):
+        mark = "▶" if i == st["index"] else " "
+        print(f"{mark} {i + 1:>2}. {q['title']}")
+
+
+def videos():
+    r = run(["media", "videos"], timeout=30)
+    rows = json.loads(r.stdout or "[]")
+    pos = load_json(POSITIONS, {})
+    for v in rows:
+        p = pos.get(v["path"])
+        v["position"] = p["pos"] if p and p.get("pos", 0) >= RESUME_MIN and \
+            (not p.get("dur") or p["pos"] < p["dur"] - RESUME_TAIL) else 0
+        v["duration"] = p.get("dur", 0) if p else 0
+    print(json.dumps(rows))
+
+
+def main():
+    argv = sys.argv[1:]
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__.strip())
+        return
+    cmd, args = argv[0], argv[1:]
+    if cmd == "daemon":
+        return daemon()
+    if cmd == "videos":
+        return videos()
+    if cmd == "watch":
+        s = connect()
+        s.sendall(b'{"cmd": "watch"}\n')
+        f = s.makefile("rb")
+        try:
+            for line in f:
+                sys.stdout.write(line.decode())
+                sys.stdout.flush()
+        except (KeyboardInterrupt, BrokenPipeError):
+            pass
+        return
+    opts = {}
+    if cmd in ("play", "add"):
+        flags = {a for a in args if a.startswith("--")}
+        unknown = flags - {"--folder", "--transcode", "--no-subs"}
+        if unknown:
+            die(f"unknown option {sorted(unknown)[0]}")
+        targets = [a for a in args if not a.startswith("--")]
+        if not targets:
+            die(f"usage: cast {cmd} <file|dir|url>...")
+        args, start = expand(targets, folder="--folder" in flags)
+        opts = {"transcode": "--transcode" in flags, "no_subs": "--no-subs" in flags, "start": start}
+    elif cmd in ("seek", "jump", "remove") and len(args) != 1 or cmd == "move" and len(args) != 2:
+        die(f"usage: see cast --help")
+    elif cmd not in ("pause", "resume", "toggle", "seek", "next", "prev", "jump", "restart", "remove", "move",
+                     "clear", "stop", "status", "quit"):
+        die(f"unknown command {cmd!r}; see: cast --help")
+    as_json = "--json" in args
+    if cmd == "status":
+        args = []
+    r = request(cmd, args, opts)
+    if r.get("error"):
+        die(r["error"])
+    if cmd == "status":
+        if as_json:
+            print(json.dumps(r.get("state", {})))
+        else:
+            print_status(r.get("state", {}))
+    elif cmd in ("play", "add") and sys.stdout.isatty():
+        print_status(r.get("state", {}))
+
+
+if __name__ == "__main__":
+    main()

@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "author": "Eyad Sibai",
   "license": "MIT",
-  "description": "Control the living-room TV and Sonos through the media command: TV power, Sonos volume, playback, scenes, remote and casting.",
+  "description": "Control the living-room TV and Sonos through the media command: TV power, Sonos volume, playback, scenes, remote, and casting local videos with subtitles and seeking.",
   "kinds": [
     "bar-widget"
   ],

@@ -33,6 +33,22 @@ Item {
   readonly property bool playing: String(sonos.playback || "") === "PLAYING"
   property string runningLabel: ""
 
+  // Casting goes through the cast service (~/.local/bin/cast), which keeps playing
+  // when the panel closes. `cast watch` streams its state while the panel is open.
+  property var videos: []
+  property var cs: ({ state: "idle", queue: [], index: -1, position: 0, duration: 0 })
+  property bool watchCast: false
+  readonly property bool casting: ["preparing", "starting", "playing", "paused"].indexOf(cs.state) >= 0
+  readonly property string castPath: String(cs.src || "")
+  readonly property string castName: String(cs.title || "")
+  readonly property string castState: cs.state === "error" ? "failed" : (cs.state === "playing" || cs.state === "paused" ? cs.state : "starting")
+  readonly property string castMessage: String(cs.message || "")
+  readonly property int castPosition: cs.position || 0
+  readonly property int castDuration: cs.duration || 0
+  readonly property bool castSubtitles: cs.subtitles === true
+  readonly property int queueLength: cs.queue ? cs.queue.length : 0
+  readonly property bool hasNext: cs.index + 1 < queueLength
+
   readonly property int refreshIntervalSec: {
     var n = parseInt(String(settings && settings.refreshIntervalSec !== undefined ? settings.refreshIntervalSec : 30), 10)
     return isFinite(n) ? Math.max(10, Math.min(600, n)) : 30
@@ -134,11 +150,38 @@ Item {
   }
   property var _pendingVolume: null
 
+  function refreshVideos() {
+    if (!videosProcess.running) videosProcess.running = true
+  }
+
+  function castCmd(args) { Quickshell.execDetached(["cast"].concat(args)) }
+  function cast(path) { if (path) castCmd(["play", path]) }
+  function stopCast() { castCmd(["stop"]) }
+  function seekCast(secs) { castCmd(["seek", String(Math.max(0, Math.round(secs)))]) }
+  function toggleCast() { castCmd(["toggle"]) }
+  function nextCast() { castCmd(["next"]) }
+
+  function browseVideo() {
+    if (!browseProcess.running) browseProcess.running = true
+  }
+
+  function formatTime(secs) {
+    if (secs < 0) return "–:––"
+    var h = Math.floor(secs / 3600), m = Math.floor(secs / 60) % 60, s = secs % 60
+    var mm = h > 0 && m < 10 ? "0" + m : String(m)
+    return (h > 0 ? h + ":" : "") + mm + ":" + (s < 10 ? "0" : "") + s
+  }
+
+  function formatSize(bytes) {
+    if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + " GB"
+    if (bytes >= 1048576) return Math.round(bytes / 1048576) + " MB"
+    return Math.max(1, Math.round(bytes / 1024)) + " KB"
+  }
+
   function openRemote() {
     Quickshell.execDetached(["setsid", "uwsm-app", "--", "xdg-terminal-exec",
       "--app-id=org.omarchy.terminal", "--title=TV remote", "-e", "media", "tv", "remote"])
   }
-  function openCaster() { run(["gui"], "Opening go2tv") }
 
   Timer {
     interval: (root.fastPolling ? 5 : root.refreshIntervalSec) * 1000
@@ -159,6 +202,45 @@ Item {
     id: powerSettle
     interval: 45000
     onTriggered: { root._tvPower = -1; root.refresh() }
+  }
+
+  Process {
+    id: videosProcess
+    command: ["cast", "videos"]
+    stdout: StdioCollector { id: videosOut; waitForEnd: true }
+    onExited: function(code) {
+      if (code !== 0) return
+      try {
+        var rows = JSON.parse(videosOut.text)
+        root.videos = Array.isArray(rows) ? rows.slice(0, 500) : []
+      } catch (e) {
+        root.videos = []
+      }
+    }
+  }
+
+  Process {
+    id: castWatch
+    command: ["cast", "watch"]
+    running: root.watchCast
+    stdout: SplitParser {
+      onRead: function(line) {
+        try { root.cs = JSON.parse(line) } catch (e) {}
+      }
+    }
+  }
+
+  // GTK file chooser for videos outside the usual folders.
+  Process {
+    id: browseProcess
+    command: ["zenity", "--file-selection", "--title=Cast a video",
+      "--file-filter=Videos | *.mp4 *.mkv *.webm *.mov *.m4v *.avi *.ts *.MP4 *.MKV *.MOV",
+      "--file-filter=All files | *"]
+    stdout: StdioCollector { id: browseOut; waitForEnd: true }
+    onExited: function(code) {
+      var path = String(browseOut.text || "").trim()
+      if (code === 0 && path !== "") root.cast(path)
+    }
   }
 
   Timer { id: statusClear; interval: 3000; onTriggered: root.actionStatus = "" }

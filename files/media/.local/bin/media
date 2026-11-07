@@ -6,8 +6,10 @@
 #   media sonos <soco-cli args>  Sonos control      e.g. media sonos volume 30
 #   media vol [N|up|down]        Sonos volume (the Arc does the sound)
 #   media mute | unmute          Sonos mute
-#   media cast <file>            play a local video file on the TV (DLNA)
-#   media gui                    open go2tv for casting with subtitles, playlists, ...
+#   media cast <file|dir|url>... play videos on the TV (see: cast --help for the queue, seeking, ...)
+#   media seek <secs|H:MM:SS>    jump to a point in what's being cast
+#   media videos                 recent videos to cast, as JSON (for the bar widget)
+#   media gui                    open the caster window (library, queue, links)
 #   media wait-tv [secs]         wait until the TV answers (default 40s)
 #   media firewall [remove]      let the TV reach this machine for casting (asks for sudo)
 #   media <scene>                run ~/.config/media/scenes/<scene> (one media command per line)
@@ -15,6 +17,7 @@
 #
 # Settings: ~/.config/media/config (shell syntax), or the same names in the environment:
 #   MEDIA_TV=lg|samsung   which TV backend (default lg; samsung needs: samsungtv pair <ip>)
+#   MEDIA_VIDEO_DIRS=a:b  where `media videos` looks (default ~/Videos:~/Downloads:~/Movies)
 #   MEDIA_SONOS=<ip>      the speaker (default 192.168.8.182, the Arc Ultra; an IP skips
 #                         discovery, which the firewall would block)
 # TV addresses and pairing keys live in ~/.config/lgtv/ and ~/.config/samsungtv/.
@@ -47,13 +50,11 @@ wait_tv() {
 
 # Firewall rules casting needs. The TV fetches files from us over TCP and answers DLNA
 # discovery over UDP from a random port, which ufw's connection tracking doesn't match.
-# dlna listens on one port for both; go2tv uses random ports, so it needs all UDP from the TV.
+# dlna and cast listen on one port for both.
 # Each entry: "<ufw rule spec>|<user.rules tuple>|<what>".
 fw_rules() {
   local tv="$1" cast_port="${DLNA_PORT:-8765}"
   echo "from $tv to any port $cast_port|allow any $cast_port 0.0.0.0/0 any $tv in|media cast (tcp+udp $cast_port)"
-  echo "from $tv to any port 3500:3510 proto tcp|allow tcp 3500:3510 0.0.0.0/0 any $tv in|go2tv file server"
-  echo "proto udp from $tv|allow udp any 0.0.0.0/0 any $tv in|go2tv discovery replies (udp)"
 }
 
 firewall() {
@@ -122,6 +123,31 @@ status_json() {
   rm -rf "$tmp"
 }
 
+# Videos under MEDIA_VIDEO_DIRS, newest first, as JSON rows for the bar widget.
+videos_json() {
+  local -a dirs=()
+  local d mtime size path
+  IFS=: read -ra want <<<"${MEDIA_VIDEO_DIRS:-$HOME/Videos:$HOME/Downloads:$HOME/Movies}"
+  for d in "${want[@]}"; do [[ -d $d ]] && dirs+=("$d"); done
+  ((${#dirs[@]})) || { echo '[]'; return; }
+  find "${dirs[@]}" -maxdepth 4 -name '.*' -prune -o -type f \( -iname '*.mp4' -o -iname '*.mkv' \
+      -o -iname '*.webm' -o -iname '*.mov' -o -iname '*.m4v' -o -iname '*.avi' -o -iname '*.ts' \) \
+      -printf '%T@\t%s\t%p\n' 2>/dev/null |
+    sort -rn | head -500 |
+    while IFS=$'\t' read -r mtime size path; do
+      local base="${path%.*}" subs=0
+      local -a langs=("$base".*.srt)  # stays the literal pattern when nothing matches
+      [[ -f $base.srt || -f ${langs[0]} ]] && subs=1
+      printf '%s\t%s\t%s\t%s\n' "${mtime%.*}" "$size" "$subs" "$path"
+    done |
+    jq -R -s --arg home "$HOME" '
+      split("\n") | map(select(. != "") | split("\t") | {
+        mtime: (.[0] | tonumber), size: (.[1] | tonumber), subtitles: (.[2] == "1"),
+        path: .[3], name: (.[3] | split("/") | last),
+        folder: (.[3] | split("/") | .[:-1] | join("/") | sub("^" + ($home | gsub("[.]"; "[.]")); "~"))
+      })'
+}
+
 run_scene() {
   local file="$SCENES/$1" line
   while IFS= read -r line || [[ -n $line ]]; do
@@ -151,9 +177,12 @@ main() {
       esac ;;
     mute)    sonos "$SONOS" mute on ;;
     unmute)  sonos "$SONOS" mute off ;;
-    cast)    "$TV" cast "$@" ;;
-    gui)     command -v go2tv >/dev/null || die "go2tv not installed: yay -S go2tv-bin"
-             setsid -f go2tv >/dev/null 2>&1 ;;
+    cast)    [[ $# -ge 1 ]] || die "usage: media cast <file|dir|url>..."
+             exec cast play "$@" ;;
+    seek)    [[ $# -eq 1 ]] || die "usage: media seek <secs|H:MM:SS>"
+             exec cast seek "$1" ;;
+    videos)  videos_json ;;
+    gui)     omarchy-shell eyad.media caster ;;
     wait-tv) wait_tv "$@" ;;
     firewall) [[ ${1:-add} == @(add|remove) ]] || die "usage: media firewall [remove]"; firewall "${1:-add}" ;;
     scenes)  ls "$SCENES" 2>/dev/null ;;

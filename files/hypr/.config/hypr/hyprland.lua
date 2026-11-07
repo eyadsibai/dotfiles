@@ -43,6 +43,9 @@ o.window("^(mpv-tv)$", { tag = "-default-opacity", opacity = "1 1" })
 -- Omarchy Meeting Recorder: centered floating window.
 o.window("^com\\.jankeesvw\\.OmarchyMeetingRecorder$", { float = true, size = { 480, 700 }, center = true })
 
+-- The caster (eyad.media's CastWindow, a window of the Omarchy shell): centered and floating.
+o.window({ class = "^org\\.quickshell$", title = "^Cast$" }, { float = true, size = { 1000, 660 }, center = true })
+
 -- Zoom desktop app (class "Zoom" on native Wayland, "zoom" under XWayland).
 -- Float its popups/dialogs; keep the main and meeting windows tiled.
 o.window({ class = "^(Zoom|zoom)$", title = "negative:^(Zoom Workplace|Zoom Meeting|Meeting|Zoom)$" }, { float = true })

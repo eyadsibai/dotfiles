@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """dlna — talk to any DLNA/UPnP TV (LG, Samsung, ...). Used by lgtv and samsungtv.
 
-  dlna cast <host> <file>      serve a local video file and play it on the TV; Ctrl-C stops
+  dlna cast <host> <file> [subs.srt]
+                               serve a local video file and play it on the TV; Ctrl-C stops.
+                               A subtitle file next to the video (same name, .srt) is found
+                               on its own. Prints "position <secs> <total>" while it plays
+                               and exits when the TV stops playing it.
+  dlna seek <host> <secs|H:MM:SS>  jump to a point in what the TV is playing
   dlna volume <host> [N]       show or set the volume (RenderingControl)
   dlna mute <host> on|off
 
@@ -9,7 +14,7 @@ The TV fetches the file from this machine on TCP port $DLNA_PORT (default 8765) 
 answers discovery on UDP to the same port, so a firewall must allow both:
   sudo ufw allow from <tv-ip> to any port 8765      (or just: media firewall)
 """
-import http.server, mimetypes, os, re, socket, sys, threading, time
+import glob, http.server, mimetypes, os, re, signal, socket, sys, threading, time
 import urllib.error, urllib.parse, urllib.request
 from xml.sax.saxutils import escape
 
@@ -37,8 +42,10 @@ def find_service(host, st):
     try:
         data = s.recv(4096).decode(errors="ignore")
     except socket.timeout:
+        s.close()
         die(f"{host} didn't answer DLNA discovery. Is the TV on? If it is, the firewall is\n"
             f"probably dropping the reply. Fix it once with:  media firewall")
+    s.close()
     m = re.search(r"(?im)^location:\s*(\S+)", data)
     if not m:
         die("DLNA reply had no description URL")
@@ -77,8 +84,38 @@ def transport_state(ctrl):
     return m.group(1) if m else "?"
 
 
-def make_handler(path, mime):
-    """Serve exactly one file, with Range support (TVs seek with Range requests)."""
+def hms(secs):
+    secs = int(secs)
+    return f"{secs // 3600}:{secs // 60 % 60:02}:{secs % 60:02}"
+
+
+def secs(t):
+    """'1:02:03' or '62' -> seconds; None when the TV says NOT_IMPLEMENTED or similar."""
+    if re.fullmatch(r"\d+(\.\d+)?", t or ""):
+        return int(float(t))
+    m = re.fullmatch(r"(\d+):(\d\d):(\d\d)(\.\d+)?", (t or "").strip())
+    return int(m[1]) * 3600 + int(m[2]) * 60 + int(m[3]) if m else None
+
+
+def position(ctrl):
+    """(elapsed, total) in seconds, either None when unknown."""
+    xml = soap(ctrl, AVT, "GetPositionInfo", {"InstanceID": 0}, timeout=5, soft=True) or ""
+    get = lambda tag: (re.search(f"<{tag}>([^<]*)</{tag}>", xml) or [None, ""])[1]
+    return secs(get("RelTime")), secs(get("TrackDuration"))
+
+
+def find_subs(path):
+    """movie.mkv -> movie.srt, movie.en.srt, ... (the plain one first)."""
+    base = os.path.splitext(path)[0]
+    exact = base + ".srt"
+    if os.path.isfile(exact):
+        return exact
+    found = sorted(glob.glob(glob.escape(base) + ".*.srt"))
+    return found[0] if found else None
+
+
+def make_handler(path, mime, subs=None, subs_url=None):
+    """Serve the video (with Range support: TVs seek with Range requests) and its subtitles."""
     size = os.path.getsize(path)
 
     class H(http.server.BaseHTTPRequestHandler):
@@ -105,6 +142,8 @@ def make_handler(path, mime):
             self.send_header("transferMode.dlna.org", "Streaming")
             self.send_header("contentFeatures.dlna.org",
                              "DLNA.ORG_OP=01;DLNA.ORG_FLAGS=01700000000000000000000000000000")
+            if subs_url:
+                self.send_header("CaptionInfo.sec", subs_url)  # how LG and Samsung find subtitles
             self.end_headers()
             if not body:
                 return
@@ -121,36 +160,61 @@ def make_handler(path, mime):
                 except (BrokenPipeError, ConnectionResetError):
                     pass
 
+        def _subs(self, body):
+            data = open(subs, "rb").read()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/srt")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            if body:
+                self.wfile.write(data)
+
         def do_GET(self):
+            if subs and self.path.endswith(".srt"):
+                return self._subs(True)
             FETCHED.set()
             self._send(True)
 
         def do_HEAD(self):
+            if subs and self.path.endswith(".srt"):
+                return self._subs(False)
             self._send(False)
 
     return H
 
 
-def cast(host, path):
+def interrupt(*_):
+    raise KeyboardInterrupt
+
+
+def cast(host, path, subs=None):
     if not os.path.isfile(path):
         die(f"no such file: {path}")
+    if subs and not os.path.isfile(subs):
+        die(f"no such subtitle file: {subs}")
     path = os.path.abspath(path)
+    subs = subs or find_subs(path)
+    signal.signal(signal.SIGTERM, interrupt)  # the bar widget stops a cast with SIGTERM
     mime = mimetypes.guess_type(path)[0] or "video/mp4"
     probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     probe.connect((host, 9))
     my_ip = probe.getsockname()[0]
+    name = os.path.basename(path)
+    url = f"http://{my_ip}:{PORT}/{urllib.parse.quote(name)}"
+    subs_url = f"http://{my_ip}:{PORT}/subtitles.srt" if subs else None
     try:
-        srv = http.server.ThreadingHTTPServer((my_ip, PORT), make_handler(path, mime))
+        srv = http.server.ThreadingHTTPServer((my_ip, PORT), make_handler(path, mime, subs, subs_url))
     except OSError as e:
         die(f"can't listen on port {PORT}: {e}")
     threading.Thread(target=srv.serve_forever, daemon=True).start()
-    name = os.path.basename(path)
-    url = f"http://{my_ip}:{PORT}/{urllib.parse.quote(name)}"
+    sub_res = (f'<res protocolInfo="http-get:*:text/srt:*">{escape(subs_url)}</res>'
+               f'<sec:CaptionInfoEx sec:type="srt">{escape(subs_url)}</sec:CaptionInfoEx>') if subs else ""
     didl = ('<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" '
-            'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">'
+            'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
+            'xmlns:sec="http://www.sec.co.kr/">'
             f'<item id="0" parentID="-1" restricted="1"><dc:title>{escape(name)}</dc:title>'
             '<upnp:class>object.item.videoItem</upnp:class>'
-            f'<res protocolInfo="http-get:*:{mime}:*">{escape(url)}</res></item></DIDL-Lite>')
+            f'<res protocolInfo="http-get:*:{mime}:*">{escape(url)}</res>{sub_res}</item></DIDL-Lite>')
     ctrl = find_service(host, AVT)
     soap(ctrl, AVT, "Stop", {"InstanceID": 0}, soft=True)  # clear a session left stuck by an earlier run
     soap(ctrl, AVT, "SetAVTransportURI",
@@ -159,24 +223,54 @@ def cast(host, path):
     # so don't wait on the reply; watch the transport state instead.
     threading.Thread(target=soap, args=(ctrl, AVT, "Play", {"InstanceID": 0, "Speed": 1}),
                      kwargs={"timeout": 60, "soft": True}, daemon=True).start()
-    print(f"casting {name}. Ctrl-C to stop.")
+    print(f"casting {name}" + (f" with subtitles {os.path.basename(subs)}" if subs else "") + ". Ctrl-C to stop.",
+          flush=True)
+    tty = sys.stdout.isatty()
     try:
+        playing = False
         for _ in range(60):
             if FETCHED.is_set() and transport_state(ctrl) == "PLAYING":
-                print("playing on the TV.")
+                print("playing on the TV.", flush=True)
+                playing = True
                 break
             time.sleep(1)
         if not FETCHED.is_set():
             print(f"\nThe TV hasn't fetched the file after 60s. The firewall is probably blocking it.\n"
                   f"Fix it once with:  media firewall   (or: sudo ufw allow from {host} to any port {PORT})\n"
-                  f"Still waiting; Ctrl-C to stop.")
-        threading.Event().wait()
+                  f"Still waiting; Ctrl-C to stop.", flush=True)
+        # Follow playback; once the TV has stopped (the video ended, or another app took over)
+        # for a few seconds in a row, we're done.
+        idle = 0
+        while True:
+            state = transport_state(ctrl)
+            if state in ("PLAYING", "PAUSED_PLAYBACK", "TRANSITIONING"):
+                playing, idle = True, 0
+                pos, total = position(ctrl)
+                if pos is not None:
+                    if tty:
+                        print(f"\r{hms(pos)} / {hms(total) if total else '?'}  {state.lower().replace('_playback', '')}  ",
+                              end="", flush=True)
+                    else:
+                        print(f"position {pos} {total or 0} {state}", flush=True)
+            elif playing and state in ("STOPPED", "NO_MEDIA_PRESENT"):
+                idle += 1
+                if idle >= 3:
+                    print("\nfinished." if tty else "finished.", flush=True)
+                    return
+            time.sleep(2)
     except KeyboardInterrupt:
         try:
             soap(ctrl, AVT, "Stop", {"InstanceID": 0})
         except SystemExit:
             pass
         print("\nstopped.")
+
+
+def seek(host, to):
+    t = secs(to)
+    if t is None:
+        die(f"can't read {to!r} as a time; use seconds or H:MM:SS")
+    soap(find_service(host, AVT), AVT, "Seek", {"InstanceID": 0, "Unit": "REL_TIME", "Target": hms(t)})
 
 
 def volume(host, level=None):
@@ -197,8 +291,10 @@ def mute(host, on):
 
 def main():
     a = sys.argv[1:]
-    if len(a) == 3 and a[0] == "cast":
-        cast(a[1], a[2])
+    if len(a) in (3, 4) and a[0] == "cast":
+        cast(a[1], a[2], a[3] if len(a) == 4 else None)
+    elif len(a) == 3 and a[0] == "seek":
+        seek(a[1], a[2])
     elif a[:1] == ["volume"] and len(a) in (2, 3) and (len(a) == 2 or a[2].isdigit()):
         volume(a[1], a[2] if len(a) == 3 else None)
     elif len(a) == 3 and a[0] == "mute" and a[2] in ("on", "off"):
