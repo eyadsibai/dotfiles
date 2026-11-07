@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# One interactive pass through an Omarchy update and everything that follows it:
+#
+#   mirrors   put Omarchy's mirror back first if it's gone (else packages run ahead)
+#   update    omarchy update
+#   links     adopt files a migration detached, mark migrations reviewed
+#   defaults  3-way merge Omarchy's changes to defaults you override
+#   review    git diff of what landed in the repo
+#   switch    just switch (refused while anything is still detached)
+#   commit    commit the repo changes
+#   reboot    if the running kernel was replaced
+#
+# Each step asks first; a step with nothing to do is skipped without asking.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+step() { printf '\n\e[1;34m==> %s\e[0m\n' "$*"; }
+ask() { gum confirm "$1" ${2:+--default="$2"}; }
+ok() { printf '\e[32m%s\e[0m\n' "$*"; }
+
+start_head=$(git rev-parse HEAD)
+if [[ -n $(git status --porcelain) ]]; then
+  step "The repo already has uncommitted changes"
+  git status --short
+  echo "Whatever the update writes will be mixed in with these."
+  ask "Carry on anyway?" || exit 0
+fi
+
+# 1. Mirrors: a reflector-rewritten mirrorlist lets Arch run ahead of what Omarchy built against
+if ! grep -q '^Server *= *https://stable-mirror\.omarchy\.org/' /etc/pacman.d/mirrorlist 2>/dev/null; then
+  step "/etc/pacman.d/mirrorlist doesn't point at Omarchy's mirror"
+  ask "Run omarchy-refresh-pacman first?" && omarchy-refresh-pacman
+fi
+
+# 2. The update itself
+step "omarchy update"
+if ask "Run omarchy update now?"; then
+  echo "If it offers a reboot at the end, say no: this script offers one when it's done."
+  omarchy update || { ask "omarchy update failed. Continue with the follow-up steps?" false || exit 1; }
+fi
+
+# 3. Detached links and migrations that touched linked files
+step "Linked files and migrations"
+links=$(scripts/omarchy-links check)
+echo "$links"
+if grep -qE '^(detached|migration)' <<<"$links"; then
+  ask "Adopt them (copy into the repo, relink, mark migrations reviewed)?" && scripts/omarchy-links adopt
+fi
+
+# 4. Upstream changes to defaults we override
+step "Omarchy defaults you override"
+defaults=$(scripts/omarchy-defaults check)
+echo "$defaults"
+if grep -q '^Omarchy changed' <<<"$defaults" && ask "Merge Omarchy's changes in?"; then
+  if ! scripts/omarchy-defaults merge; then
+    mapfile -t conflicted < <(git diff --name-only | xargs -r grep -l '^<<<<<<< ' --)
+    while ((${#conflicted[@]})); do
+      ask "Open the ${#conflicted[@]} conflicted file(s) in ${EDITOR:-nvim}?" || break
+      "${EDITOR:-nvim}" "${conflicted[@]}"
+      mapfile -t conflicted < <(printf '%s\n' "${conflicted[@]}" | xargs -r grep -l '^<<<<<<< ' --)
+    done
+    if ((${#conflicted[@]})); then
+      echo "Still conflicted: ${conflicted[*]}"
+      echo "Hyprland and the bar won't read a file with markers; fix these before switching or logging in again."
+    fi
+  fi
+fi
+
+# 5. Review what landed in the repo
+if [[ -n $(git status --porcelain) ]]; then
+  step "Changes in the repo"
+  git status --short
+  ask "Show the full diff?" && git -c core.pager='less -R' diff
+fi
+
+# 6. Switch
+step "just switch"
+if ask "Build and activate Home Manager now?"; then
+  if scripts/omarchy-links guard; then
+    just switch || echo "The switch failed; see above."
+  fi
+fi
+
+# 7. Commit
+if [[ -n $(git status --porcelain) ]]; then
+  step "Commit"
+  git status --short
+  if ask "Commit all of these?" false; then
+    version=$(omarchy-version)
+    msg=$(gum input --width 80 --value "omarchy: follow the $version update" --placeholder "commit message")
+    [[ -n $msg ]] && git add -A && git commit -m "$msg"
+  fi
+elif [[ $(git rev-parse HEAD) == "$start_head" ]]; then
+  ok "Nothing changed in the repo."
+fi
+
+# 8. Reboot when the running kernel's modules are gone (the kernel was upgraded)
+if [[ ! -d /usr/lib/modules/$(uname -r) ]]; then
+  step "The running kernel was replaced"
+  ask "Reboot now?" false && systemctl reboot
+fi
+
+ok "Done."

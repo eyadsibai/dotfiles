@@ -87,6 +87,11 @@ arch-save name=host:
       comm -23 <(pacman -Qqe | sort -u) <(echo "$omarchy"); } > arch/{{name}}.packages
     git diff --stat arch/{{name}}.packages
 
+# Update Omarchy, then walk through links, defaults, diff, switch, commit and reboot, asking at each step
+[group('omarchy')]
+omarchy-upgrade:
+    @scripts/omarchy-upgrade
+
 # Show which files in files/ override an Omarchy default that changed upstream
 [group('omarchy')]
 omarchy-check:

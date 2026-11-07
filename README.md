@@ -231,6 +231,7 @@ once for the dev shell, then:
 | `just secret <name>` | edit `secrets/<name>.yaml` |
 | `just arch-preview` / `arch-backup` | Arch: list every file in `~` a switch would replace or add, with diffs / and archive the existing ones first |
 | `just arch-sync` / `arch-save` | Arch: install what `arch/<host>.packages` lists / rewrite it from the machine |
+| `just omarchy-upgrade` | Arch: `omarchy update`, then adopt detached links, merge changed defaults, review the diff, switch, commit and reboot, asking before each |
 | `just omarchy-check` / `omarchy-merge` | see which overridden Omarchy defaults changed upstream / merge them in |
 
 `host` defaults to the current machine; on Arch, `switch` and `build` act on the Home Manager
