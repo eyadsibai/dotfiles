@@ -21,6 +21,9 @@
   lgtv type [--enter] <text>  type into the TV's on-screen keyboard (e.g. a search box)
   lgtv remote                 interactive remote in this terminal; typing goes to the
                               TV when its keyboard is open, c toggles a mouse pointer
+  lgtv pipe                   one connection driven from stdin, for the bar widget:
+                              key NAME · move DX DY · click · scroll DY · text STR ·
+                              enter · del [N]; prints {"keyboard": bool} as it changes
   lgtv cast <file|url>...     play videos on the TV (the cast service, DLNA)
   lgtv pair                   (re)pair; accept the prompt on the TV
   lgtv host                   print the TV's address
@@ -507,6 +510,74 @@ async def cmd_remote(tv, args):
         print()
 
 
+async def cmd_pipe(tv, args):
+    """Read commands from stdin, one per line; report the TV keyboard on stdout as JSON."""
+    sock = await tv.buttons()
+    loop = asyncio.get_running_loop()
+    reader = asyncio.StreamReader()
+    await loop.connect_read_pipe(lambda: asyncio.StreamReaderProtocol(reader), sys.stdin)
+    n = 0
+
+    def emit(**kw):
+        print(json.dumps(kw), flush=True)
+
+    async def send(uri, payload=None):
+        nonlocal n
+        n += 1
+        msg = {"type": "request", "id": f"p{n}", "uri": uri}
+        if payload is not None:
+            msg["payload"] = payload
+        await tv.ws.send(json.dumps(msg))
+
+    async def watch():
+        last = None
+        async for raw in tv.ws:
+            try:
+                msg = json.loads(raw)
+            except ValueError:
+                continue
+            if msg.get("id") != "kbd":
+                continue
+            widget = msg.get("payload", {}).get("currentWidget")
+            if isinstance(widget, dict) and "focus" in widget and bool(widget["focus"]) != last:
+                last = bool(widget["focus"])
+                emit(keyboard=last)
+
+    await tv.ws.send(json.dumps({"type": "subscribe", "id": "kbd",
+                                 "uri": "ssap://com.webos.service.ime/registerRemoteKeyboard"}))
+    watcher = asyncio.create_task(watch())
+    emit(ready=True, keyboard=False)
+    try:
+        while True:
+            line = await reader.readline()
+            if not line:
+                break
+            cmd, _, rest = line.decode(errors="ignore").rstrip("\n").partition(" ")
+            try:
+                if cmd == "key" and rest:
+                    await press(sock, rest.strip().upper())
+                elif cmd == "move":
+                    dx, dy = (int(float(v)) for v in rest.split()[:2])
+                    await move(sock, dx, dy)
+                elif cmd == "click":
+                    await click(sock)
+                elif cmd == "scroll":
+                    await scroll(sock, int(float(rest or 0)))
+                elif cmd == "text" and rest:
+                    await send("ssap://com.webos.service.ime/insertText", {"text": rest, "replace": 0})
+                elif cmd == "enter":
+                    await send("ssap://com.webos.service.ime/sendEnterKey")
+                elif cmd == "del":
+                    await send("ssap://com.webos.service.ime/deleteCharacters", {"count": int(rest or 1)})
+            except ValueError:
+                pass
+            if watcher.done():
+                break  # the TV went away
+    finally:
+        watcher.cancel()
+        await sock.close()
+
+
 async def cmd_pair(tv, args):
     print("paired.")
 
@@ -541,7 +612,7 @@ COMMANDS = {
     "mute": lambda tv, a: cmd_mute(tv, a, True), "unmute": lambda tv, a: cmd_mute(tv, a, False),
     "off": cmd_off, "screen": cmd_screen, "input": cmd_input, "hdmi": cmd_input,
     "apps": cmd_apps, "app": cmd_app, "open": cmd_open, "youtube": cmd_youtube, "yt": cmd_youtube,
-    "notify": cmd_notify, "key": cmd_key, "type": cmd_type, "remote": cmd_remote, "pair": cmd_pair,
+    "notify": cmd_notify, "key": cmd_key, "type": cmd_type, "remote": cmd_remote, "pipe": cmd_pipe, "pair": cmd_pair,
     **{m: (lambda m: lambda tv, a: cmd_media(tv, a, m))(m) for m in MEDIA},
 }
 

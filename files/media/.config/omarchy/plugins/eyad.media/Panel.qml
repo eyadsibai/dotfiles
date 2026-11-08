@@ -71,6 +71,21 @@ Panel {
     }
   }
 
+  // The remote window (RemoteWindow.qml): touchpad, buttons, typing on the TV.
+  function openRemote() {
+    root.close()
+    remoteLoader.active = true
+  }
+
+  LazyLoader {
+    id: remoteLoader
+    active: false
+    RemoteWindow {
+      visible: true
+      onCloseRequested: remoteLoader.active = false
+    }
+  }
+
   IpcHandler {
     target: root.ipcTarget
     function open(): void { root.open() }
@@ -78,6 +93,7 @@ Panel {
     function show(): void { root.open() }
     function hide(): void { root.close() }
     function toggle(): void { root.toggle() }
+    function remote(): void { root.openRemote() }
     function refresh(): string { media.refresh(); return "ok" }
     function status(): string { return media.summary }
     function scene(name: string): string { media.runScene(name); return "ok" }
@@ -275,10 +291,10 @@ Panel {
 
             PanelActionButton {
               iconText: "󰑔"
-              tooltipText: "Remote in a terminal"
+              tooltipText: "Remote: touchpad, buttons, typing"
               foreground: root.foreground
               fontFamily: root.fontFamily
-              onClicked: { root.close(); media.openRemote() }
+              onClicked: root.openRemote()
             }
           }
 
