@@ -33,10 +33,25 @@ FloatingWindow {
   property string error: ""
   property string sentText: ""   // what the text box has already typed on the TV
 
-  // Pointer moves are summed and flushed every 30 ms.
+  // Pointer moves are summed and flushed every 30 ms. Slow drags move the
+  // pointer about 1:1 for small targets; fast flicks cross the screen.
   property real pendingX: 0
   property real pendingY: 0
-  readonly property real pointerSpeed: 1.6
+  function pointerGain(pxPerMs) { return 0.9 + 2.4 * Math.min(pxPerMs, 1.5) }
+
+  // A pasted link plays on the TV instead of being typed into it.
+  readonly property string typed: typeBox.text.trim()
+  readonly property bool typedIsLink: /^https?:\/\/\S+$/i.test(typed)
+  readonly property bool typedIsYouTube: typedIsLink && /(youtube\.com|youtu\.be)\//i.test(typed)
+
+  function run(args) { Quickshell.execDetached(args) }
+  function playLink(add) {
+    if (!typedIsLink) return
+    if (typedIsYouTube && !add) run(["media", "tv", "youtube", typed])
+    else run(["cast", add ? "add" : "play", typed])
+    sentText = ""
+    typeBox.text = ""
+  }
 
   function send(line) {
     if (pipe.running) pipe.write(line + "\n")
@@ -45,6 +60,7 @@ FloatingWindow {
 
   // Type the difference between what the TV has and what the box holds now.
   function syncText(now) {
+    if (/^https?:\/\/\S+$/i.test(now.trim())) now = ""  // a link: take back anything typed
     var common = 0
     while (common < now.length && common < sentText.length && now[common] === sentText[common]) common++
     var removed = sentText.length - common
@@ -167,9 +183,10 @@ FloatingWindow {
         foreground: win.foreground
         font.family: win.fontFamily
         font.pixelSize: Style.font.body
-        placeholderText: "Type on the TV"
+        placeholderText: "Type on the TV, or paste a link to play"
         onTextChanged: win.syncText(text)
         onAccepted: {
+          if (win.typedIsLink) { win.playLink(false); return }
           win.send("enter")
           win.sentText = ""
           text = ""
@@ -183,7 +200,39 @@ FloatingWindow {
           }
         }
       }
+      RowLayout {
+        visible: win.typedIsLink
+        Layout.fillWidth: true
+        spacing: Style.space(8)
+        Text {
+          textFormat: Text.PlainText
+          Layout.fillWidth: true
+          elide: Text.ElideRight
+          text: win.typedIsYouTube ? "󰗃  A YouTube link: open it in the TV's YouTube app" : "󰌹  A link: play it on the TV (via yt-dlp)"
+          color: win.foreground
+          font.family: win.fontFamily
+          font.pixelSize: Style.font.caption
+        }
+        Button {
+          text: "Play on TV"
+          iconText: "󰐊"
+          bordered: true
+          foreground: win.foreground
+          fontFamily: win.fontFamily
+          onClicked: win.playLink(false)
+        }
+        Button {
+          visible: !win.typedIsYouTube
+          text: "Queue"
+          iconText: "󰐕"
+          bordered: true
+          foreground: win.foreground
+          fontFamily: win.fontFamily
+          onClicked: win.playLink(true)
+        }
+      }
       Text {
+        visible: !win.typedIsLink
         textFormat: Text.PlainText
         Layout.fillWidth: true
         wrapMode: Text.Wrap
@@ -226,19 +275,23 @@ FloatingWindow {
           cursorShape: Qt.CrossCursor
           property real lastX: 0
           property real lastY: 0
+          property real lastT: 0
           property real travelled: 0
 
           onPressed: function(mouse) {
             scope.forceActiveFocus()
-            lastX = mouse.x; lastY = mouse.y; travelled = 0
+            lastX = mouse.x; lastY = mouse.y; lastT = Date.now(); travelled = 0
           }
           onPositionChanged: function(mouse) {
             if (!pressed) return
+            var now = Date.now()
             var dx = mouse.x - lastX, dy = mouse.y - lastY
-            lastX = mouse.x; lastY = mouse.y
+            var dt = Math.max(1, now - lastT)
+            lastX = mouse.x; lastY = mouse.y; lastT = now
             travelled += Math.abs(dx) + Math.abs(dy)
-            win.pendingX += dx * win.pointerSpeed
-            win.pendingY += dy * win.pointerSpeed
+            var gain = win.pointerGain(Math.sqrt(dx * dx + dy * dy) / dt)
+            win.pendingX += dx * gain
+            win.pendingY += dy * gain
           }
           onReleased: function(mouse) {
             if (travelled > 6) return
@@ -248,6 +301,30 @@ FloatingWindow {
           onWheel: function(wheel) {
             var steps = Math.round(-wheel.angleDelta.y / 120) || (wheel.angleDelta.y > 0 ? -1 : 1)
             win.send("scroll " + steps)
+          }
+        }
+      }
+
+      // ---- apps ----
+      RowLayout {
+        Layout.alignment: Qt.AlignHCenter
+        spacing: Style.space(4)
+        Repeater {
+          model: [
+            { label: "Plex", glyph: "󰚺", app: "plex" },
+            { label: "YouTube", glyph: "󰗃", app: "youtube" },
+            { label: "Netflix", glyph: "󰝆", app: "netflix" },
+            { label: "Shahid", glyph: "󰕼", app: "shahid" }
+          ]
+          Button {
+            required property var modelData
+            text: modelData.label
+            iconText: modelData.glyph
+            tooltipText: "Open " + modelData.label + " on the TV"
+            bordered: true
+            foreground: win.foreground
+            fontFamily: win.fontFamily
+            onClicked: win.run(["media", "tv", "app", modelData.app])
           }
         }
       }

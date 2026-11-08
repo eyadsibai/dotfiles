@@ -42,6 +42,9 @@ o.rebind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
 o.bind("SUPER + ALT + M", "Meetings", "omarchy-shell meetings popup")
 o.bind("SUPER + CTRL + M", "Latest meeting", "/home/eyad/.local/bin/meetings view last")
 
+-- TV remote (eyad.media): touchpad, buttons and typing for the living-room TV
+o.bind("SUPER + SHIFT + R", "TV remote", "omarchy-shell eyad.media remote")
+
 -- Dictation keys from before Alt + Space and Right Alt became the defaults.
 -- Remove these lines to give the keys back to applications.
 if o.dictation_installed and o.dictation_installed() then
