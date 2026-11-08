@@ -289,13 +289,17 @@ FloatingWindow {
               width: libList.width
               implicitHeight: libLayout.implicitHeight + Style.spacing.rowPaddingX
               foreground: win.foreground
-              hasCursor: libMouse.containsMouse || (index === win.libIndex && !search.activeFocus)
+              hasCursor: libHover.hovered || (index === win.libIndex && !search.activeFocus)
               readonly property bool nowPlaying: win.active && modelData.path === win.cs.src
+
+              // Hover comes from a HoverHandler, not the MouseArea: the action buttons
+              // have mouse areas of their own that would take the hover, hide
+              // themselves, hand it back, and so on (a flickering cursor).
+              HoverHandler { id: libHover; cursorShape: Qt.PointingHandCursor }
 
               MouseArea {
                 id: libMouse
                 anchors.fill: parent
-                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: { win.libIndex = libRow.index; win.playVideo(libRow.modelData, false) }
               }
@@ -567,12 +571,13 @@ FloatingWindow {
               implicitHeight: qLayout.implicitHeight + Style.spacing.rowPaddingX
               foreground: win.foreground
               current: index === win.cs.index
-              hasCursor: qMouse.containsMouse
+              hasCursor: qHover.hovered
+
+              HoverHandler { id: qHover; cursorShape: Qt.PointingHandCursor }
 
               MouseArea {
                 id: qMouse
                 anchors.fill: parent
-                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: win.cast(["jump", String(qRow.index + 1)])
               }

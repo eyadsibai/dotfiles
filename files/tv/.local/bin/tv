@@ -20,7 +20,7 @@
 # Keys while watching:
 #   ENTER / c   channel menu (grouped, type to search)     0-9  jump to channel
 #   PGUP/PGDN   previous / next channel                    r    reload channel
-#   / or S-ENTER  flat playlist search                     q    quit
+#   / or S-ENTER  all channels, search                     q    quit
 #   - / + =     volume down / up                           m/M  mute
 
 set -euo pipefail

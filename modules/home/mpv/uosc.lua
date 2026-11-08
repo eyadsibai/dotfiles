@@ -66,10 +66,14 @@ end
 local orig_update_dims = Menu.update_dimensions
 function Menu:update_dimensions()
     orig_update_dims(self)
-    -- Force top position for all menus
+    -- Anchor every menu to the top. uosc draws a menu's title and search box above
+    -- `top`, so leave room for them (the same allowance uosc's own clamp makes);
+    -- the height uosc computed already subtracts it, so the list still fits below.
     local margin = round(self.item_height / 2)
     for _, menu in ipairs(self.all) do
-        menu.top = margin + self.padding
+        local title_height = (menu.is_root and menu.title or menu.search)
+            and self.scroll_step + self.separator_size + 1 or 0
+        menu.top = title_height + margin + self.padding
     end
     self:update_coordinates()
 end

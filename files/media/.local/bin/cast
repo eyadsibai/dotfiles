@@ -665,6 +665,11 @@ class Player:
 
     def set_uri(self, item):
         url, mime = self.media_url(item)
+        # LG's player silently never starts a video whose title is over ~128 bytes of
+        # UTF-8; an 83-letter Arabic name is 144. Cut it short, on a character boundary.
+        title = item["title"]
+        if len(title.encode()) > 110:
+            title = title.encode()[:107].decode(errors="ignore").rstrip() + "…"
         subs_url = f"http://{self.my_ip}:{PORT}/subs/{MEDIA.token}/subtitles.srt" if MEDIA.subs else None
         sub_res = (f'<res protocolInfo="http-get:*:text/srt:*">{escape(subs_url)}</res>'
                    f'<sec:CaptionInfoEx sec:type="srt">{escape(subs_url)}</sec:CaptionInfoEx>') if subs_url else ""
@@ -673,7 +678,7 @@ class Player:
         didl = ('<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" '
                 'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
                 'xmlns:sec="http://www.sec.co.kr/">'
-                f'<item id="0" parentID="-1" restricted="1"><dc:title>{escape(item["title"])}</dc:title>'
+                f'<item id="0" parentID="-1" restricted="1"><dc:title>{escape(title)}</dc:title>'
                 '<upnp:class>object.item.videoItem</upnp:class>'
                 f'<res protocolInfo="{pinfo}">{escape(url)}</res>{sub_res}</item></DIDL-Lite>')
         dlna.soap(self.ctrl, AVT, "Stop", {"InstanceID": 0}, timeout=5, soft=True)

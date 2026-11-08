@@ -9,7 +9,7 @@ tv --list [query]   list channels
 tv --check          probe the channels; --prune hides dead ones, --revive brings them back
 ```
 
-While watching: `ENTER`/`c` opens the grouped channel menu (type to search), `0-9` jumps to a channel, `PGUP`/`PGDN` changes channel, `/` or `Shift+ENTER` searches the flat playlist, `-`/`+` changes volume, `m`/`M` mutes, and `r` reloads it. These keys are bound in `tv.lua`, so they only apply inside TV and need no `input.conf`.
+While watching: `ENTER`/`c` opens the grouped channel menu (type to search), `0-9` jumps to a channel, `PGUP`/`PGDN` changes channel, `/` or `Shift+ENTER` lists every channel with the search open, `-`/`+` changes volume, `m`/`M` mutes, and `r` reloads it. These keys are bound in `tv.lua`, so they only apply inside TV and need no `input.conf`.
 
 ## Files
 

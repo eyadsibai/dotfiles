@@ -8,11 +8,12 @@
 --     reads them from the .m3u and applies them per file in an on_load hook.
 --   * Signed URLs (tv-resolve="…" EXTINF attribute): a fresh tokenized link is
 --     fetched each time the channel opens or reconnects.
---   * Channel menu grouped by group-title (uosc menu, type-to-search across
---     all groups). Keys: ENTER or c.  Falls back to mpv's built-in select.lua.
+--   * Channel menus (uosc): ENTER or c groups channels by group-title, / lists
+--     them all with the search open. Both show the same names and numbers.
+--     Falls back to mpv's built-in select.lua.
 --   * Remote-style channel numbers: type digits (0-9 / keypad), ENTER or a
 --     short pause jumps to that channel.  r reloads the current channel.
---     PGUP/PGDN change channel, / or Shift+ENTER searches the flat playlist,
+--     PGUP/PGDN change channel, / or Shift+ENTER searches all channels,
 --     -/+ change the volume and M mutes.
 --   * Auto-reconnect when a live stream drops (EOF on a stream that should
 --     never end), a few times per channel before stopping (r tries again).
@@ -409,54 +410,90 @@ local function select_playlist()
     mp.commandv('script-binding', 'select/select-playlist')
 end
 
-local function open_channel_menu()
+-- Every channel as a uosc menu item, with its group. Both menus are built from
+-- this, so they show the same names, numbers and dead-channel marks.
+local function channel_list()
     refresh_meta()
     refresh_health()
     local playlist = mp.get_property_native('playlist') or {}
-    if #playlist == 0 then
-        osd('Playlist is empty')
-        return
-    end
-    local by_group, order = {}, {}
+    local channels = {}
     for i, item in ipairs(playlist) do
         local e = entry_for(item.filename)
-        local group = e and e.group or 'Other'
-        if not by_group[group] then
-            by_group[group] = {}
-            order[#order + 1] = group
-        end
         local title = (e and e.title and e.title ~= '') and e.title
             or ((item.title and item.title ~= '') and item.title or item.filename)
         local dead = known_state(item.filename) == false
-        table.insert(by_group[group], {
+        channels[#channels + 1] = {
+            group = e and e.group or 'Other',
             title = title,
             hint = dead and (tostring(i) .. '  ✗') or tostring(i),
             value = { 'playlist-play-index', tostring(i - 1) },
             active = item.current or false,
             muted = dead,
-        })
+        }
     end
-    local items = {}
-    for _, group in ipairs(order) do
-        local channels = by_group[group]
-        local active = false
-        for _, c in ipairs(channels) do
+    return channels
+end
+
+local function open_menu(menu)
+    -- One value only: older mpv (0.37) also returns a nil error, which commandv rejects.
+    if not mp.commandv('script-message-to', 'uosc', 'open-menu', utils.format_json(menu)) then
+        select_playlist()
+    end
+end
+
+-- ENTER / c: channels grouped by group-title, starting on the current channel's group.
+local function open_channel_menu()
+    local channels = channel_list()
+    if #channels == 0 then
+        osd('Playlist is empty')
+        return
+    end
+    local by_group, order = {}, {}
+    for _, c in ipairs(channels) do
+        if not by_group[c.group] then
+            by_group[c.group] = {}
+            order[#order + 1] = c.group
+        end
+        table.insert(by_group[c.group], c)
+    end
+    local items, selected = {}, 1
+    for i, group in ipairs(order) do
+        local list, active = by_group[group], false
+        for _, c in ipairs(list) do
             if c.active then active = true break end
         end
-        items[#items + 1] = { title = group, hint = tostring(#channels), items = channels, active = active }
+        if active then selected = i end
+        items[i] = { title = group, hint = tostring(#list), items = list, active = active }
     end
-    local menu = {
+    open_menu({
         type = 'tv-channels',
         title = 'Channels',
         items = items,
+        selected_index = selected,
         search_submenus = true,
-        footnote = 'type to search all channels · ENTER to switch',
-    }
-    -- One value only: older mpv (0.37) also returns a nil error, which commandv rejects.
-    local json = utils.format_json(menu)
-    if not mp.commandv('script-message-to', 'uosc', 'open-menu', json) then
-        select_playlist()
+        footnote = 'type to search · / all channels · ENTER switches',
+    })
+end
+
+-- / and Shift+ENTER: every channel in one list, search box open.
+local function open_all_channels()
+    local channels = channel_list()
+    if #channels == 0 then
+        osd('Playlist is empty')
+        return
     end
+    local selected = 1
+    for i, c in ipairs(channels) do
+        if c.active then selected = i break end
+    end
+    open_menu({
+        type = 'tv-all-channels',
+        title = 'All channels',
+        items = channels,
+        selected_index = selected,
+        search_style = 'palette',
+        footnote = 'type to search · ENTER switches · c by group',
+    })
 end
 
 -- ---------------------------------------------------------------------------
@@ -520,11 +557,8 @@ mp.add_key_binding('c', 'tv-channels', open_channel_menu)
 -- normal playback (mpv's default PGUP/PGDWN seek chapters).
 mp.add_key_binding('PGUP', 'tv-prev', function() mp.command('playlist-prev') end)
 mp.add_key_binding('PGDWN', 'tv-next', function() mp.command('playlist-next') end)
-local function search()
-    if not mp.commandv('script-binding', 'uosc/playlist') then select_playlist() end
-end
-mp.add_key_binding('/', 'tv-search', search)
-mp.add_key_binding('Shift+ENTER', 'tv-search-alt', search)
+mp.add_key_binding('/', 'tv-search', open_all_channels)
+mp.add_key_binding('Shift+ENTER', 'tv-search-alt', open_all_channels)
 -- The digits and / above take over mpv's default volume keys (9/0, / and *).
 local function volume(step)
     return function() mp.command('osd-msg-bar add volume ' .. step) end
