@@ -32,6 +32,10 @@ FloatingWindow {
   property bool tvKeyboard: false
   property string error: ""
   property string sentText: ""   // what the text box has already typed on the TV
+  // With the touchpad on (c), plain mouse movement over it moves the TV's
+  // pointer; no button needs holding. Off, it moves only while dragging.
+  property bool padOn: false
+  onPadOnChanged: pad.primed = false
 
   // Pointer moves are summed and flushed every 30 ms. Slow drags move the
   // pointer about 1:1 for small targets; fast flicks cross the screen.
@@ -58,6 +62,11 @@ FloatingWindow {
   }
   function key(name) { send("key " + name) }
 
+  // One play/pause button. The TV doesn't report what's playing, so this
+  // remembers the last one sent; if it guesses wrong, a second press fixes it.
+  property bool paused: false
+  function playPause() { key(paused ? "PLAY" : "PAUSE"); paused = !paused }
+
   // Type the difference between what the TV has and what the box holds now.
   function syncText(now) {
     if (/^https?:\/\/\S+$/i.test(now.trim())) now = ""  // a link: take back anything typed
@@ -72,7 +81,7 @@ FloatingWindow {
 
   onVisibleChanged: {
     if (visible) Qt.callLater(function() { scope.forceActiveFocus() })
-    else closeRequested()
+    else { padOn = false; closeRequested() }
   }
 
   Process {
@@ -127,8 +136,10 @@ FloatingWindow {
       var map = {}
       map[Qt.Key_Up] = "UP"; map[Qt.Key_Down] = "DOWN"; map[Qt.Key_Left] = "LEFT"; map[Qt.Key_Right] = "RIGHT"
       map[Qt.Key_Return] = "ENTER"; map[Qt.Key_Enter] = "ENTER"; map[Qt.Key_Backspace] = "BACK"
-      map[Qt.Key_Space] = "PAUSE"; map[Qt.Key_Home] = "HOME"
-      if (k === Qt.Key_Escape) { win.closeRequested(); event.accepted = true }
+      map[Qt.Key_Home] = "HOME"
+      if (k === Qt.Key_Escape) { if (win.padOn) win.padOn = false; else win.closeRequested(); event.accepted = true }
+      else if (k === Qt.Key_Space) { win.playPause(); event.accepted = true }
+      else if (event.text === "c") { win.padOn = !win.padOn; event.accepted = true }
       else if (map[k] !== undefined) { win.key(map[k]); event.accepted = true }
       else if (event.text === "/" || event.text === "t") { typeBox.forceActiveFocus(); event.accepted = true }
       else if (event.text === "+" || event.text === "=") { win.key("VOLUMEUP"); event.accepted = true }
@@ -249,10 +260,10 @@ FloatingWindow {
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.minimumHeight: Style.space(160)
-        color: pad.pressed ? Qt.rgba(win.foreground.r, win.foreground.g, win.foreground.b, 0.08)
+        color: pad.pressed || win.padOn ? Qt.rgba(win.foreground.r, win.foreground.g, win.foreground.b, 0.08)
                            : Qt.rgba(win.foreground.r, win.foreground.g, win.foreground.b, 0.04)
-        border.width: 1
-        border.color: pad.containsMouse ? win.accent : win.faint
+        border.width: win.padOn ? 2 : 1
+        border.color: win.padOn || pad.containsMouse ? win.accent : win.faint
         radius: Style.cornerRadius
 
         Text {
@@ -261,8 +272,10 @@ FloatingWindow {
           horizontalAlignment: Text.AlignHCenter
           wrapMode: Text.Wrap
           textFormat: Text.PlainText
-          text: "Touchpad\ndrag to move the pointer · click to click · scroll to scroll"
-          color: win.dim
+          text: win.padOn
+            ? "Touchpad on\nmove to move the pointer · click to click · c or Esc to stop"
+            : "Touchpad\ndrag to move the pointer · click to click · scroll to scroll\nc: move without holding"
+          color: win.padOn ? win.accent : win.dim
           font.family: win.fontFamily
           font.pixelSize: Style.font.caption
         }
@@ -277,14 +290,18 @@ FloatingWindow {
           property real lastY: 0
           property real lastT: 0
           property real travelled: 0
+          property bool primed: false   // lastX/lastY hold a real position
+
+          onExited: primed = false
 
           onPressed: function(mouse) {
             scope.forceActiveFocus()
-            lastX = mouse.x; lastY = mouse.y; lastT = Date.now(); travelled = 0
+            lastX = mouse.x; lastY = mouse.y; lastT = Date.now(); travelled = 0; primed = true
           }
           onPositionChanged: function(mouse) {
-            if (!pressed) return
+            if (!pressed && !win.padOn) return
             var now = Date.now()
+            if (!primed) { lastX = mouse.x; lastY = mouse.y; lastT = now; primed = true; return }
             var dx = mouse.x - lastX, dy = mouse.y - lastY
             var dt = Math.max(1, now - lastT)
             lastX = mouse.x; lastY = mouse.y; lastT = now
@@ -369,9 +386,7 @@ FloatingWindow {
           model: [
             { glyph: "󰝞", key: "VOLUMEDOWN", tip: "Volume down (-)" },
             { glyph: "󰝟", key: "MUTE", tip: "Mute (m)" },
-            { glyph: "󰝝", key: "VOLUMEUP", tip: "Volume up (+)" },
-            { glyph: "󰐊", key: "PLAY", tip: "Play" },
-            { glyph: "󰏤", key: "PAUSE", tip: "Pause (space)" }
+            { glyph: "󰝝", key: "VOLUMEUP", tip: "Volume up (+)" }
           ]
           Button {
             required property var modelData
@@ -382,13 +397,21 @@ FloatingWindow {
             onClicked: win.key(modelData.key)
           }
         }
+        Button {
+          iconText: win.paused ? "󰐊" : "󰏤"
+          tooltipText: (win.paused ? "Play" : "Pause") + " (space)"
+          foreground: win.foreground
+          fontFamily: win.fontFamily
+          onClicked: win.playPause()
+        }
       }
 
       Text {
         textFormat: Text.PlainText
         Layout.fillWidth: true
         horizontalAlignment: Text.AlignHCenter
-        text: "arrows · ⏎ OK · ⌫ back · / type · +/- volume · Esc close"
+        wrapMode: Text.Wrap
+        text: "arrows · ⏎ OK · ⌫ back · c touchpad · / type · space play/pause · +/- volume · Esc close"
         color: win.dim
         font.family: win.fontFamily
         font.pixelSize: Style.font.caption
