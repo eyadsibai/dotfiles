@@ -20,7 +20,7 @@
   lgtv key <KEY>...           press remote keys (UP DOWN LEFT RIGHT ENTER BACK HOME ...)
   lgtv type [--enter] <text>  type into the TV's on-screen keyboard (e.g. a search box)
   lgtv remote                 interactive remote in this terminal; typing goes to the
-                              TV when its keyboard is open
+                              TV when its keyboard is open, c toggles a mouse pointer
   lgtv cast <file|url>...     play videos on the TV (the cast service, DLNA)
   lgtv pair                   (re)pair; accept the prompt on the TV
   lgtv host                   print the TV's address
@@ -187,6 +187,37 @@ async def press(sock, name):
     await sock.send(f"type:button\nname:{name}\n\n")
 
 
+async def move(sock, dx, dy):
+    await sock.send(f"type:move\ndx:{dx}\ndy:{dy}\ndown:0\n\n")
+
+
+async def click(sock):
+    await sock.send("type:click\n\n")
+
+
+async def scroll(sock, dy):
+    await sock.send(f"type:scroll\ndx:0\ndy:{dy}\n\n")
+
+
+NO_KEYBOARD = ("the TV's system keyboard isn't open. Apps like Plex, YouTube and Netflix draw "
+               "their own letter grid, which only takes arrow keys; typing reaches the grey "
+               "webOS keyboard (Web Browser, home search, some apps).")
+
+
+async def tv_keyboard_open(tv):
+    """True if the webOS system keyboard has focus right now."""
+    await tv.ws.send(json.dumps({"type": "subscribe", "id": "kbdcheck",
+                                 "uri": "ssap://com.webos.service.ime/registerRemoteKeyboard"}))
+    try:
+        while True:
+            msg = json.loads(await asyncio.wait_for(tv.ws.recv(), 0.8))
+            widget = msg.get("payload", {}).get("currentWidget") if msg.get("id") == "kbdcheck" else None
+            if isinstance(widget, dict) and "focus" in widget:
+                return bool(widget["focus"])
+    except asyncio.TimeoutError:
+        return False
+
+
 # ---------- commands ----------
 
 async def cmd_status(tv, args):
@@ -326,6 +357,8 @@ async def cmd_type(tv, args):
     text = " ".join(a for a in args if a != "--enter")
     if not text and not enter:
         die("usage: lgtv type [--enter] <text>   (with the TV's keyboard open)")
+    if not await tv_keyboard_open(tv):
+        print(f"lgtv: warning: {NO_KEYBOARD}", file=sys.stderr)
     if text:
         await tv.call("ssap://com.webos.service.ime/insertText", {"text": text, "replace": 0})
     if enter:
@@ -333,14 +366,20 @@ async def cmd_type(tv, args):
 
 
 REMOTE_HELP = """remote: arrows move · Enter OK · Backspace back · h home · i info · s settings
-        + / - volume · m mute · space pause · p play · Tab typing mode · q quit
-        When the TV shows its keyboard (a search box), typing goes to it; Esc or Tab
-        returns to remote keys, Ctrl-C quits."""
+        + / - volume · m mute · space pause · p play · Tab typing · c mouse · q quit
+        Typing: when the TV shows its system keyboard, typing goes to it; Esc or Tab
+        returns to remote keys. (Plex/YouTube/Netflix grids take arrow keys only.)
+        Mouse: arrows move the pointer (Shift = faster), Enter/space click,
+        PgUp/PgDn scroll, Backspace back, Esc or c returns. Ctrl-C quits."""
 REMOTE_KEYS = {"\x1b[A": "UP", "\x1b[B": "DOWN", "\x1b[C": "RIGHT", "\x1b[D": "LEFT",
                "\r": "ENTER", "\n": "ENTER", "\x7f": "BACK", "\x08": "BACK", "h": "HOME",
                "i": "INFO", "s": "MENU", "+": "VOLUMEUP", "=": "VOLUMEUP", "-": "VOLUMEDOWN",
                "m": "MUTE", " ": "PAUSE", "p": "PLAY"}
 ARROWS = {k: v for k, v in REMOTE_KEYS.items() if k.startswith("\x1b[")}
+# Mouse mode: escape sequences -> (dx, dy). Shift+arrow (\x1b[1;2X) moves further.
+MOUSE_STEP, MOUSE_FAST = 30, 120
+MOUSE_DIRS = {"A": (0, -1), "B": (0, 1), "C": (1, 0), "D": (-1, 0)}
+MOUSE_TOKENS = re.compile(r"\x1b\[1;2([ABCD])|\x1b\[([ABCD])|\x1b\[([56])~|\x1b|.", re.S)
 
 
 async def cmd_remote(tv, args):
@@ -352,14 +391,50 @@ async def cmd_remote(tv, args):
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     loop = asyncio.get_running_loop()
-    state = {"typing": False, "tv_keyboard": False}
+    state = {"typing": False, "tv_keyboard": False, "mouse": False}
 
     def show(msg):
         sys.stdout.write(f"\r\x1b[K{msg}")
         sys.stdout.flush()
 
     def mode_line():
-        show("⌨  typing on the TV  (Esc/Tab: remote keys)" if state["typing"] else "🎮 remote keys")
+        if state["mouse"]:
+            show("🖱  mouse  (arrows move, Shift faster, Enter click, PgUp/PgDn scroll, Esc/c: remote keys)")
+        elif state["typing"] and state["tv_keyboard"]:
+            show("⌨  typing on the TV  (Esc/Tab: remote keys)")
+        elif state["typing"]:
+            show("⌨  typing, but no TV system keyboard is open (Plex/YouTube grids: use arrows)")
+        else:
+            show("🎮 remote keys")
+
+    async def mouse_input(s):
+        """Handle a chunk of input in mouse mode; held keys arrive as several sequences."""
+        dx = dy = 0
+        for m in MOUSE_TOKENS.finditer(s):
+            fast, arrow, page = m.group(1), m.group(2), m.group(3)
+            tok = m.group(0)
+            if fast or arrow:
+                ux, uy = MOUSE_DIRS[fast or arrow]
+                step = MOUSE_FAST if fast else MOUSE_STEP
+                dx, dy = dx + ux * step, dy + uy * step
+                continue
+            if dx or dy:
+                await move(sock, dx, dy)
+                dx = dy = 0
+            if page:
+                await scroll(sock, -3 if page == "5" else 3)
+            elif tok in ("\r", "\n", " "):
+                await click(sock)
+            elif tok in ("\x7f", "\x08"):
+                await press(sock, "BACK")
+            elif tok in ("\x1b", "c"):
+                state["mouse"] = False
+                mode_line()
+                return
+            elif tok == "h":
+                await press(sock, "HOME")
+        if dx or dy:
+            await move(sock, dx, dy)
 
     # From here on only reader() reads the main socket; requests are sent without waiting.
     n = 0
@@ -387,7 +462,8 @@ async def cmd_remote(tv, args):
             focus = bool(widget["focus"])
             if focus != state["tv_keyboard"]:
                 state["tv_keyboard"] = state["typing"] = focus
-                mode_line()
+                if not state["mouse"]:
+                    mode_line()
 
     await tv.ws.send(json.dumps({"type": "subscribe", "id": "kbd",
                                  "uri": "ssap://com.webos.service.ime/registerRemoteKeyboard"}))
@@ -399,7 +475,9 @@ async def cmd_remote(tv, args):
             s = (await loop.run_in_executor(None, os.read, fd, 1024)).decode(errors="ignore")
             if not s or s in ("\x03", "\x04"):
                 break
-            if s == "\t":
+            if state["mouse"]:
+                await mouse_input(s)
+            elif s == "\t":
                 state["typing"] = not state["typing"]
                 mode_line()
             elif state["typing"]:
@@ -416,6 +494,10 @@ async def cmd_remote(tv, args):
                     await send("ssap://com.webos.service.ime/insertText", {"text": s, "replace": 0})
             elif s == "q":
                 break
+            elif s == "c":
+                state["mouse"] = True
+                mode_line()
+                await move(sock, 0, 0)  # wakes the pointer so it shows up
             elif s in REMOTE_KEYS:
                 await press(sock, REMOTE_KEYS[s])
     finally:
