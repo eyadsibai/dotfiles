@@ -1,0 +1,23 @@
+# cava for the bar's visualizer (the eyad.cava plugin): a few bars as numbers
+# 0-100 on stdout, one frame per line. The plugin draws them in the theme's
+# accent and only runs this while something plays.
+[general]
+framerate = 30
+bars = 10
+autosens = 1
+
+[input]
+method = pulse
+source = auto
+
+[output]
+method = raw
+channels = mono
+raw_target = /dev/stdout
+data_format = ascii
+ascii_max_range = 100
+bar_delimiter = 59
+frame_delimiter = 10
+
+[smoothing]
+noise_reduction = 60

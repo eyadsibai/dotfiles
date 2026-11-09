@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "eyad.cava",
+  "name": "Visualizer",
+  "version": "0.1.0",
+  "author": "Eyad Sibai",
+  "license": "MIT",
+  "description": "A small audio visualizer (cava) in the theme's accent, shown only while something plays.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Visualizer.qml"
+  },
+  "barWidget": {
+    "displayName": "Visualizer",
+    "description": "Audio bars while music or video plays; click opens cava in a terminal.",
+    "category": "Media",
+    "aliases": [
+      "cava",
+      "visualizer",
+      "spectrum"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "center"
+  }
+}
