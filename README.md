@@ -34,8 +34,8 @@ commented with the reason.
 | `eyad-m3`, `eyad-mac` | macOS · Apple Silicon | One configuration, two names. macOS defaults, Homebrew casks managed declaratively, a Linux builder VM, Rosetta. |
 | `vector` | Omarchy on Arch · Dell XPS 14 (2026) | The laptop I carry. Arch and Omarchy own the system; Home Manager on its own adds the shell, CLI, git and the files in `files/`. |
 | `cachy` | Omarchy on Arch · desktop | Reached remotely for development. Same as `vector`, with fish as the interactive shell. |
-| `vm-fusion`, `vm-utm` | NixOS · aarch64 VM on the Macs | A full GNOME desktop that runs full screen on a Mac, for dev work in Linux while the Mac keeps its apps ([Mitchell Hashimoto's setup](https://github.com/mitchellh/nixos-config)). One for VMware Fusion, one for UTM; see [A NixOS VM on the Mac](#a-nixos-vm-on-the-mac). |
-| `home-server` | NixOS | A skeleton with placeholder hardware. It will replace the Unraid box: backups and data, Plex, and the long list of homelab services that go with them. |
+| `vm-fusion`, `vm-utm` | NixOS · aarch64 VM on the Macs | A full GNOME desktop that runs full screen on a Mac, for dev work in Linux while the Mac keeps its apps ([Mitchell Hashimoto's setup](https://github.com/mitchellh/nixos-config)). One for VMware Fusion, one for UTM; see [A NixOS VM on the Mac](docs/mac-vm.md). |
+| `home-server` | NixOS | Not installed yet. It will replace the Unraid box: backups and data, Plex, and the long list of homelab services that go with them. Encrypted and unlocked by the TPM, a root wiped on every boot, upgrades itself nightly ([docs/home-server.md](docs/home-server.md)). |
 
 A DGX Spark is on its way and will take the large models off the workstation.
 
@@ -75,16 +75,19 @@ flowchart LR
 ```
 
 ```
-flake.nix          inputs, mkNixos / mkDarwin / mkArch, the hosts, checks, dev shell
+flake.nix          inputs, mkNixos / mkDarwin / mkArch / mkArchSystem, hosts, packages, checks
 hosts/<name>/      hardware and what that machine is for; nothing shared lives here
 modules/common/    Nix itself: caches, GC, nh, trusted users (both platforms)
 modules/nixos/     every NixOS host gets default.nix; desktop, sunshine, ai and
                    virtualisation are opt-in by import
 modules/darwin/    macOS defaults, Homebrew, Mac-only apps
+modules/arch-system/  the Arch machines' root-owned files, through system-manager
 modules/home/      Home Manager for every machine: shells, CLI, git, ssh, 1Password,
                    newsboat, herdr, mpv; firefox and the GUI apps only on Linux desktops
 files/<package>/   plain config files mirroring ~, linked one by one (like stow); a host
                    lists the packages it wants, host-<name> last
+pkgs/, overlays/   packages not in nixpkgs (pkgs.<name> everywhere), fixes to nixpkgs
+docs/              longer procedures: the Mac VMs, installing home-server, CI
 omarchy-defaults/  the Omarchy default each file in files/ was last merged against
 arch/<host>.packages  what an Arch machine has installed beyond Omarchy's own lists
 secrets/           sops-encrypted, recipients in .sops.yaml
@@ -93,7 +96,13 @@ secrets/           sops-encrypted, recipients in .sops.yaml
 ## Omarchy on Arch
 
 `vector` and `cachy` are `homeConfigurations` (`eyad@vector`, `eyad@cachy`): Home Manager
-without NixOS. Pacman installs the system, Omarchy and every program, the CLI tools and
+without NixOS. The few root-owned files they need (`/etc/nix/nix.conf` with the same caches
+as every other machine, the pacman hook that keeps Spotify patchable) come from
+`modules/arch-system` through [system-manager](https://github.com/numtide/system-manager),
+which `just switch` applies first, asking for sudo only when that part changed.
+Spotify follows the Omarchy theme through spicetify, and stays themed: a theme change, a
+new Spotify from pacman, and a fresh machine's first switch all apply it (the theme-set
+hook `10-spotify.sh`, re-run by the `spotify-theme` user service). Pacman installs the system, Omarchy and every program, the CLI tools and
 shells included (`arch/<host>.packages`, `just arch-sync`); Home Manager writes only their
 config. Where a module can't be told to skip its program, it gets a link to pacman's copy
 (`modules/home/pacman-bin.nix`). Nix still installs its own tooling (nh, nil, nixd,
@@ -115,7 +124,7 @@ The one rule: **a setting has one home.** Anything needing root, hardware or a d
 in `modules/nixos` or `modules/darwin`; everything else goes in Home Manager so every
 machine gets it. A host file only says what makes that machine different. Optional
 features are modules you import, and the few custom options live under `my.*`
-(currently just `my.desktop.autoLogin`).
+(`my.desktop.autoLogin`, `my.autoUpgrade`, `my.secureBoot`, `my.ci`).
 
 `files/media` is the living room: `media` drives the LG (`lgtv`) or Samsung (`samsungtv`) TV,
 the Sonos through `soco-cli`, DLNA casting (`dlna`) and scenes in `~/.config/media/scenes/`.
@@ -201,16 +210,16 @@ Omarchy first, then Nix from pacman, then Home Manager:
 sudo pacman -S nix
 git clone git@github.com:eyadsibai/dotfiles.git ~/dev/dotfiles
 cd ~/dev/dotfiles
-sudo cp arch/nix.conf /etc/nix/nix.conf    # flakes, plus the same caches as the Nix hosts
+sudo cp arch/nix.conf /etc/nix/nix.conf    # bootstrap: flakes and the caches until system-manager
+                                           # takes the file over at the first switch
 sudo systemctl enable --now nix-daemon.socket
 sudo systemctl restart nix-daemon
 
 cp -r hosts/vector hosts/$(hostname -s)    # new machine only: also add it to homeConfigurations
                                            # in flake.nix and give it a files/host-<name>
 nix develop -c just switch                 # just and nh come from the dev shell until then
-                                           # (switch also runs scripts/arch-system: the other
-                                           # root-owned bits, like Spotify's spicetify hook;
-                                           # it asks for sudo only when one is missing)
+                                           # (switch first applies modules/arch-system through
+                                           # system-manager, with sudo, then Home Manager)
 just arch-sync                             # pacman/AUR packages from arch/<host>.packages
 ```
 
@@ -222,25 +231,16 @@ anything worth keeping into the repo. Then open a new terminal for the Nix `PATH
 Finally sign in to the 1Password app at the machine and turn on Settings → Developer →
 "Use the SSH agent", or commits made at its own keyboard can't be signed.
 
-## A NixOS VM on the Mac
+## More
 
-`vm-fusion` (VMware Fusion) and `vm-utm` (UTM) are the same aarch64 NixOS with GNOME,
-logged in automatically, with this repo's shell, CLI, git and 1Password setup. The Mac's
-shared folders appear at `/host`, and x86_64 binaries run through QEMU.
-
-1. Create the VM: UEFI, the aarch64 NixOS ISO, most of the cores and RAM. Fusion: a SATA
-   disk (`/dev/sda`) and 3D acceleration on. UTM: the QEMU backend (not "Use Apple
-   Virtualization") and a VirtIO disk (`/dev/vda`).
-2. In the VM's console: `sudo passwd root`, and note its address (`ip a`).
-3. On the Mac, in this repo: `ssh-copy-id root@<ip>`, then `just vm-install vm-utm <ip>`
-   (or `vm-fusion`). nixos-anywhere partitions the disk with the layout in
-   `modules/nixos/vm-guest.nix`, builds the system on the Mac's Linux builder, installs
-   it and reboots.
-4. In the VM: sign in to 1Password, clone this repo to `~/dev/dotfiles`, and from then on
-   `just switch` there like on any other host.
-
-A new Mac can be set up the same way from an existing one: `just mac-copy <name> <user>@<ip>`
-builds that Mac's system here and copies it over, so its first switch downloads nothing.
+- [docs/mac-vm.md](docs/mac-vm.md): `vm-fusion`/`vm-utm`, a NixOS desktop VM on the Macs,
+  and setting up a new Mac from an existing one.
+- [docs/home-server.md](docs/home-server.md): installing home-server (encrypted, TPM-unlocked,
+  a root wiped on every boot, self-upgrading).
+- [docs/ci.md](docs/ci.md): GitHub Actions, and the self-hosted nixbot on the workstation
+  (off until needed).
+- [CLAUDE.md](CLAUDE.md) (also `AGENTS.md`): how to check a change and write commits, for
+  coding agents and for me.
 
 ## Day to day
 
@@ -253,6 +253,7 @@ once for the dev shell, then:
 | `just build [host]` | build and show the diff only |
 | `just boot [host]` | NixOS: activate on next boot, for desktop or login changes |
 | `just vm [host]` | NixOS: boot the exact configuration in a throwaway QEMU VM (no NVIDIA) |
+| `just deploy <host> [addr]` | NixOS: build a host here and switch it over SSH (Tailscale name by default) |
 | `just vm-install <host> <ip>` | Mac: install `vm-fusion` or `vm-utm` on a VM booted from the NixOS ISO |
 | `just mac-copy <name> <user@ip>` | Mac: copy a Mac's built system to a new Mac before its first switch |
 | `just update [input...]` | update every flake input, or only the ones named |

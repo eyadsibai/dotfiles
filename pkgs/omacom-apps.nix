@@ -13,7 +13,7 @@
   libpulseaudio,
   libwebp,
   qpdf,
-  sourceHighlight,
+  source-highlight,
   zlib,
 }:
 let
@@ -93,7 +93,7 @@ in
     # Video export and probing, and code-block highlighting
     runtimePath = [
       ffmpeg
-      sourceHighlight
+      source-highlight
     ];
   };
 

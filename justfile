@@ -17,7 +17,7 @@ switch name=host:
     {{ if arch == "true" { "scripts/arch-system" } else { "true" } }}
     {{nh}} switch . {{target}}{{name}}{{ if arch == "true" { " -b hm-backup" } else { "" } }}
 
-# Arch root-owned setup (nix.conf, Spotify's spicetify hook); switch runs it, sudo only if needed
+# Arch: the root-owned setup (modules/arch-system) through system-manager; sudo only if it changed
 arch-system *args:
     @scripts/arch-system {{args}}
 
@@ -44,6 +44,10 @@ check:
 # Format all Nix files
 fmt:
     nix fmt
+
+# Build a NixOS host here and switch it over SSH (addr defaults to its Tailscale name)
+deploy name addr=name:
+    NIX_SSHOPTS="-A" nix run --inputs-from . nixpkgs#nixos-rebuild-ng -- switch --flake .#{{name}} --target-host {{addr}} --sudo --ask-sudo-password
 
 # Delete old generations and garbage-collect the store
 clean:

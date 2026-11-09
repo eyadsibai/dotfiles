@@ -1,16 +1,11 @@
 # Omarchy preinstalls that nixarchy doesn't carry: Hype, Monologue, Signed,
 # disktree and Superwhisper, packaged in pkgs/. Imported by modules/nixos/desktop.nix.
 { lib, pkgs, ... }:
-let
-  omacom = pkgs.callPackage ../../pkgs/omacom-apps.nix { };
-  disktree = pkgs.callPackage ../../pkgs/disktree.nix { };
-  superwhisper = pkgs.callPackage ../../pkgs/superwhisper { };
-in
 {
-  home.packages = [
-    omacom.hype
-    omacom.monologue
-    omacom.signed
+  home.packages = with pkgs; [
+    hype
+    monologue
+    signed
     disktree
     superwhisper
   ];
@@ -30,8 +25,8 @@ in
     };
     Service = {
       Type = "simple";
-      ExecStart = "${lib.getExe superwhisper} daemon";
-      ExecStopPost = "${lib.getExe superwhisper} playback-restore";
+      ExecStart = "${lib.getExe pkgs.superwhisper} daemon";
+      ExecStopPost = "${lib.getExe pkgs.superwhisper} playback-restore";
       Restart = "on-failure";
       RestartSec = 2;
       KillMode = "control-group";
@@ -43,8 +38,8 @@ in
   # The rest of Omarchy's setup-user: its bar panel, and the payload where the
   # portable install keeps it
   xdg.configFile."omarchy/plugins/superwhisper-panel".source =
-    "${superwhisper}/opt/superwhisper/assets/omarchy-plugin/superwhisper-panel";
-  xdg.dataFile."superwhisper/app/current".source = "${superwhisper}/opt/superwhisper";
+    "${pkgs.superwhisper}/opt/superwhisper/assets/omarchy-plugin/superwhisper-panel";
+  xdg.dataFile."superwhisper/app/current".source = "${pkgs.superwhisper}/opt/superwhisper";
 
   # A fresh profile records with Alt+Space: upstream's Right Alt hold conflicts
   # with Omarchy's bindings. Seeded once; the settings app owns it afterwards.

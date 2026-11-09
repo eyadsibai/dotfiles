@@ -1,44 +1,25 @@
 #!/usr/bin/env bash
-# The root-owned bits this repo needs on an Arch (Omarchy) machine, which Home
-# Manager, running as you, can't write. Run by `just switch` before it builds:
-# when everything is in place it does nothing and asks for nothing; otherwise it
-# fixes what's missing with sudo, once.
+# The root-owned side of an Arch (Omarchy) machine: /etc/nix/nix.conf, the pacman hook
+# that keeps Spotify patchable, and so on, declared in modules/arch-system and applied
+# with system-manager. Run by `just switch` before Home Manager. Builds as you, and asks
+# for sudo only when the result differs from what's active.
 #
-#   - /etc/nix/nix.conf from arch/nix.conf (flakes, the binary caches)
-#   - /etc/pacman.d/hooks/spicetify.hook, so Spotify updates stay patchable
-#   - /opt/spotify writable, for spicetify (the hook keeps it so afterwards)
-#
-#   scripts/arch-system           fix what's missing (sudo only if something is)
-#   scripts/arch-system --check   list what's missing; exit 1 if anything is
+#   scripts/arch-system [host]           build, and switch if it changed
+#   scripts/arch-system --check [host]   exit 1 if a switch is due
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-missing=()
-need() { missing+=("$1"); }
+check=""
+if [[ ${1:-} == --check ]]; then check=1; shift; fi
+host="${1:-$(hostname -s)}"
 
-cmp -s arch/nix.conf /etc/nix/nix.conf || need nix
-if pacman -Q spotify &>/dev/null; then
-  cmp -s arch/spicetify.hook /etc/pacman.d/hooks/spicetify.hook || need spicetify-hook
-  [[ -w /opt/spotify && -w /opt/spotify/Apps ]] || need spotify-writable
+new="$(nix build --no-link --print-out-paths ".#systemConfigs.$host")"
+active="$(readlink -f /nix/var/nix/profiles/system-manager-profiles/system-manager 2>/dev/null || true)"
+[[ $new == "$active" ]] && exit 0
+
+if [[ -n $check ]]; then
+  echo "system-manager: a switch is due for $host"
+  exit 1
 fi
-
-if [[ ${1:-} == --check ]]; then
-  for m in "${missing[@]}"; do echo "missing: $m"; done
-  [[ ${#missing[@]} -eq 0 ]]
-  exit
-fi
-[[ ${#missing[@]} -eq 0 ]] && exit 0
-
-echo "System setup needs sudo once for: ${missing[*]}"
-for m in "${missing[@]}"; do
-  case $m in
-    nix)
-      sudo install -Dm644 arch/nix.conf /etc/nix/nix.conf
-      sudo systemctl restart nix-daemon ;;
-    spicetify-hook)
-      sudo install -Dm644 arch/spicetify.hook /etc/pacman.d/hooks/spicetify.hook ;;
-    spotify-writable)
-      sudo chmod a+wr /opt/spotify
-      sudo chmod -R a+wr /opt/spotify/Apps ;;
-  esac
-done
+echo "System setup changed (modules/arch-system); switching needs sudo"
+nix run --inputs-from . system-manager -- switch --store-path "$new" --sudo

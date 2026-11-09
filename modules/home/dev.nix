@@ -10,7 +10,6 @@
   ...
 }:
 let
-  coderabbit = pkgs.callPackage ../../pkgs/coderabbit.nix { };
   pacmanBin = import ./pacman-bin.nix pkgs;
   prettyLog = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
 in
@@ -28,7 +27,7 @@ in
     # codex from mise, and the rest from pacman
     ++ lib.optionals (!isArch) [
       gnumake
-      coderabbit # `coderabbit`/`cr`: AI review of local changes
+      pkgs.coderabbit # `coderabbit`/`cr`: AI review of local changes
     ]
     # JetBrains' JDK is built for Linux only
     ++ lib.optional (stdenv.hostPlatform.isLinux && !isArch) jetbrains.jdk

@@ -38,6 +38,29 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # The root-owned files on the Arch machines (/etc/nix/nix.conf, pacman hooks)
+    system-manager = {
+      url = "github:numtide/system-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # home-server: a root that starts empty on every boot, and Secure Boot
+    impermanence = {
+      url = "github:nix-community/impermanence";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Self-hosted CI on the workstation, off unless my.ci.nixbot.enable (modules/nixos/ci)
+    nixbot = {
+      url = "github:Mic92/nixbot";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Omarchy's desktop packaged for NixOS. Follows main, which runs ahead of the
     # release tags; `just update` moves it along with everything else.
     nixarchy = {
@@ -58,11 +81,16 @@
       nix-darwin,
       nix-index-database,
       sops-nix,
+      system-manager,
       ...
     }@inputs:
     let
+      inherit (nixpkgs) lib;
       username = "eyad";
       useremail = "eyad.alsibai@gmail.com";
+
+      # pkgs/ as pkgs.<name>, plus fixes to nixpkgs (overlays/default.nix)
+      overlays = builtins.attrValues self.overlays;
 
       # Settings every host's Home Manager shares
       homeManagerDefaults = specialArgs: {
@@ -90,26 +118,7 @@
             nix-index-database.nixosModules.nix-index
             { programs.nix-index-database.comma.enable = true; }
             sops-nix.nixosModules.sops
-            # TEMPORARY: nixos-unstable's opencode 2.2.5 has a wrong Linux node_modules
-            # hash (fixed in nixpkgs master c399e1b7fb). Inert once the fix lands;
-            # delete then.
-            {
-              nixpkgs.overlays = [
-                (final: prev: {
-                  opencode =
-                    if
-                      prev.opencode.node_modules.outputHash == "sha256-xfOVcw1+waLVNhFDwzOtzxrUSQEogvn88YomydOlhwc="
-                    then
-                      prev.opencode.overrideAttrs (old: {
-                        node_modules = old.node_modules.overrideAttrs {
-                          outputHash = "sha256-prx9dX7kUvs/E3zopkaPk5LXh3xJAy5sZeum/W8L7cA=";
-                        };
-                      })
-                    else
-                      prev.opencode;
-                })
-              ];
-            }
+            { nixpkgs.overlays = overlays; }
           ];
         };
 
@@ -136,6 +145,7 @@
             (homeManagerDefaults specialArgs)
             nix-index-database.darwinModules.nix-index
             { programs.nix-index-database.comma.enable = true; }
+            { nixpkgs.overlays = overlays; }
           ];
         };
 
@@ -146,6 +156,7 @@
           pkgs = import nixpkgs {
             system = "x86_64-linux";
             config.allowUnfree = true;
+            inherit overlays;
           };
           extraSpecialArgs = {
             inherit inputs username useremail;
@@ -160,12 +171,34 @@
           ];
         };
 
-      forAllSystems = nixpkgs.lib.genAttrs [
+      # Omarchy on Arch, the system side: what scripts/arch-system puts in place as
+      # root (modules/arch-system), applied by `just switch` through system-manager
+      mkArchSystem = system-manager.lib.makeSystemConfig {
+        modules = [ ./modules/arch-system ];
+        inherit overlays;
+      };
+
+      forAllSystems = lib.genAttrs [
         "x86_64-linux"
+        "aarch64-linux"
         "aarch64-darwin"
       ];
     in
     {
+      overlays = import ./overlays;
+
+      # pkgs/, for each system it builds on: `nix build .#coderabbit`; CI builds them
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system overlays;
+            config.allowUnfree = true;
+          };
+        in
+        lib.filterAttrs (_: lib.meta.availableOn pkgs.stdenv.hostPlatform) (import ./pkgs pkgs)
+      );
+
       nixosConfigurations = {
         workstation = mkNixos ./hosts/workstation; # Intel + RTX 4090 desktop
         eyad-nixos = mkNixos ./hosts/eyad-nixos; # AMD ThinkPad
@@ -179,9 +212,22 @@
         "${username}@cachy" = mkArch ./hosts/cachy; # desktop, Omarchy on Arch
       };
 
+      systemConfigs = {
+        vector = mkArchSystem;
+        cachy = mkArchSystem;
+      };
+
       darwinConfigurations = {
         eyad-m3 = mkDarwin "eyad-m3";
         eyad-mac = mkDarwin "eyad-mac";
+      };
+
+      # What the self-hosted CI builds (nixbot.toml; modules/nixos/ci/nixbot.nix)
+      ciJobs = {
+        hosts = lib.mapAttrs (_: c: c.config.system.build.toplevel) self.nixosConfigurations;
+        homes = lib.mapAttrs (_: c: c.activationPackage) self.homeConfigurations;
+        arch-systems = self.systemConfigs;
+        pkgs = self.packages.x86_64-linux;
       };
 
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);

@@ -12,5 +12,9 @@
     ./base.nix
     ./fonts.nix
     ./ssh.nix
+    # Off unless a host turns them on: my.autoUpgrade, my.secureBoot, my.ci
+    ./auto-upgrade.nix
+    ./secure-boot.nix
+    ./ci/nixbot.nix
   ];
 }

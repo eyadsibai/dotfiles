@@ -34,6 +34,9 @@ jobs:
           # The Omarchy (Arch) machines: Home Manager only
           - homeConfigurations."eyad@vector".activationPackage
           - homeConfigurations."eyad@cachy".activationPackage
+          # Their root-owned side (system-manager)
+          - systemConfigs.vector
+          - systemConfigs.cachy
     name: eval ${{ matrix.attr }}
     steps:
       - uses: actions/checkout@v7
@@ -41,6 +44,22 @@ jobs:
           persist-credentials: false
       - uses: cachix/install-nix-action@v31
       - run: nix eval --raw '.#${{ matrix.attr }}.drvPath'
+
+  # The packages in pkgs/ (download hashes go stale when upstream re-releases)
+  packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+      - name: Build pkgs/
+        run: |
+          for p in $(nix eval --json .#packages.x86_64-linux --apply builtins.attrNames | jq -r '.[]'); do
+            echo "::group::$p"
+            nix build --no-link -L ".#packages.x86_64-linux.$p"
+            echo "::endgroup::"
+          done
 
   format:
     runs-on: ubuntu-latest
