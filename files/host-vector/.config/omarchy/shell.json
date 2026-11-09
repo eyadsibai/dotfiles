@@ -95,6 +95,10 @@
             {
               "name": "UTC",
               "zone": "Etc/UTC"
+            },
+            {
+              "name": "Istanbul",
+              "zone": "Asia/Istanbul"
             }
           ],
           "hour24": true,
