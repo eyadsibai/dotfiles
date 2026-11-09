@@ -240,7 +240,7 @@ evaluates every host on every push and runs `files/tv`'s tests when they change.
 
 Small things in `modules/home/` I'd miss if they were gone:
 
-- **newsboat** with 323 feeds and 495 YouTube channels (`newsboat-yt`), vim keys, and macros
+- **newsboat** with 269 feeds and 475 YouTube channels (`newsboat-yt`), vim keys, and macros; `rssadd` and `ytadd` subscribe
   to send a link to mpv, yt-dlp or `download_arxiv`. The feed lists are plain files linked
   into `~/.config`, so `rssadd <url>` edits the repo.
 - **herdr**, a tmux-style workspace manager for coding agents, with keys mirroring Omarchy's
