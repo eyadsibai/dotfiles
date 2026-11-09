@@ -197,13 +197,15 @@ sudo pacman -S nix
 git clone git@github.com:eyadsibai/dotfiles.git ~/dev/dotfiles
 cd ~/dev/dotfiles
 sudo cp arch/nix.conf /etc/nix/nix.conf    # flakes, plus the same caches as the Nix hosts
-sudo cp arch/spicetify.hook /etc/pacman.d/hooks/    # Spotify themed from Omarchy (spicetify)
 sudo systemctl enable --now nix-daemon.socket
 sudo systemctl restart nix-daemon
 
 cp -r hosts/vector hosts/$(hostname -s)    # new machine only: also add it to homeConfigurations
                                            # in flake.nix and give it a files/host-<name>
 nix develop -c just switch                 # just and nh come from the dev shell until then
+                                           # (switch also runs scripts/arch-system: the other
+                                           # root-owned bits, like Spotify's spicetify hook;
+                                           # it asks for sudo only when one is missing)
 just arch-sync                             # pacman/AUR packages from arch/<host>.packages
 ```
 

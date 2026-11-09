@@ -14,7 +14,12 @@ default:
 # Build, show the package diff, then activate
 switch name=host:
     {{ if arch == "true" { "scripts/omarchy-links guard" } else { "true" } }}
+    {{ if arch == "true" { "scripts/arch-system" } else { "true" } }}
     {{nh}} switch . {{target}}{{name}}{{ if arch == "true" { " -b hm-backup" } else { "" } }}
+
+# Arch root-owned setup (nix.conf, Spotify's spicetify hook); switch runs it, sudo only if needed
+arch-system *args:
+    @scripts/arch-system {{args}}
 
 # Build and show the diff without activating
 build name=host:
