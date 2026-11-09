@@ -891,7 +891,7 @@ PanelWindow {
             }
           }
 
-          // Playback: one big play/pause between rewind and fast-forward; TV
+          // Playback: a big play/pause icon between rewind and fast-forward; TV
           // volume and stop either side. Equal widths, play/pause double.
           RowLayout {
             Layout.fillWidth: true
@@ -912,7 +912,6 @@ PanelWindow {
                 Layout.preferredWidth: modelData.play ? 2 : 1
                 iconText: modelData.play ? (win.paused ? "󰐊" : "󰏤") : modelData.glyph
                 iconSize: modelData.play ? Style.font.display : Style.font.icon
-                text: modelData.play ? (win.paused ? "Play" : "Pause") : ""
                 tooltipText: modelData.play ? (win.paused ? "Play" : "Pause") + " (space)" : modelData.tip
                 bordered: true
                 selected: modelData.play === true
