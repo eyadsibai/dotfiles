@@ -19,4 +19,17 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       # mpv lets files/tv/tests/parsers.sh check tv.lua too
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends mpv
+      # Hook environments (shellcheck-py downloads its binary on install) are cached,
+      # and installing is retried, so a flaky download doesn't fail the run
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Install hooks
+        run: |
+          for try in 1 2 3; do
+            uvx pre-commit install-hooks && exit 0
+            echo "::warning::hook install failed (try $try), retrying"; sleep $((try * 15))
+          done
+          exit 1
       - run: uvx pre-commit run --all-files --show-diff-on-failure

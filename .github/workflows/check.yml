@@ -5,30 +5,46 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+# A newer push to the same branch supersedes a running check
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   eval:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        host:
-          - nixosConfigurations.workstation
-          - nixosConfigurations.eyad-nixos
-          - nixosConfigurations.home-server
-          - darwinConfigurations.eyad-m3
-          - darwinConfigurations.eyad-mac
+        # Each attribute's derivation; evaluating it catches option/package breakage
+        # without building anything (CUDA-heavy derivations and macOS systems can't
+        # be built on this runner)
+        attr:
+          - nixosConfigurations.workstation.config.system.build.toplevel
+          - nixosConfigurations.eyad-nixos.config.system.build.toplevel
+          - nixosConfigurations.home-server.config.system.build.toplevel
+          - darwinConfigurations.eyad-m3.config.system.build.toplevel
+          - darwinConfigurations.eyad-mac.config.system.build.toplevel
+          # The Omarchy (Arch) machines: Home Manager only
+          - homeConfigurations."eyad@vector".activationPackage
+          - homeConfigurations."eyad@cachy".activationPackage
+    name: eval ${{ matrix.attr }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: cachix/install-nix-action@v31
-      # Evaluating catches option/package breakage without building anything
-      # (CUDA-heavy derivations and macOS systems can't be built on this runner)
-      - name: Evaluate ${{ matrix.host }}
-        run: nix eval --raw .#${{ matrix.host }}.config.system.build.toplevel.drvPath
+      - run: nix eval --raw '.#${{ matrix.attr }}.drvPath'
 
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: cachix/install-nix-action@v31
       - name: Check formatting
         run: nix fmt -- --ci
