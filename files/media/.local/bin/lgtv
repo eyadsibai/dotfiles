@@ -13,7 +13,7 @@
   lgtv play|pause|stop|ff|rew media controls
   lgtv input [N|name]         list inputs, or switch (lgtv input 2 = HDMI 2)
   lgtv apps                   list installed apps
-  lgtv app <name|id>          launch an app (e.g. lgtv app netflix)
+  lgtv app <name|id>          launch an app (e.g. lgtv app shahid)
   lgtv open <url>             open a URL in the TV browser
   lgtv youtube <url|id>       play a video in the YouTube app (as the phone's cast button does)
   lgtv ytsearch <query>       search YouTube; one JSON line per video (id, title, channel, ...)
@@ -204,7 +204,7 @@ async def scroll(sock, dy):
     await sock.send(f"type:scroll\ndx:0\ndy:{dy}\n\n")
 
 
-NO_KEYBOARD = ("the TV's system keyboard isn't open. Apps like Plex, YouTube and Netflix draw "
+NO_KEYBOARD = ("the TV's system keyboard isn't open. Apps like Plex, YouTube, Prime Video and Shahid draw "
                "their own letter grid, which only takes arrow keys; typing reaches the grey "
                "webOS keyboard (Web Browser, home search, some apps).")
 
@@ -441,7 +441,7 @@ async def cmd_type(tv, args):
 REMOTE_HELP = """remote: arrows move · Enter OK · Backspace back · h home · i info · s settings
         + / - volume · m mute · space pause · p play · Tab typing · c mouse · q quit
         Typing: when the TV shows its system keyboard, typing goes to it; Esc or Tab
-        returns to remote keys. (Plex/YouTube/Netflix grids take arrow keys only.)
+        returns to remote keys. (Plex/YouTube/Prime/Shahid grids take arrow keys only.)
         Mouse: arrows move the pointer (Shift = faster), Enter/space click,
         PgUp/PgDn scroll, Backspace back, Esc or c returns. Ctrl-C quits."""
 REMOTE_KEYS = {"\x1b[A": "UP", "\x1b[B": "DOWN", "\x1b[C": "RIGHT", "\x1b[D": "LEFT",

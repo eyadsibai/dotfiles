@@ -343,7 +343,7 @@ FloatingWindow {
         wrapMode: Text.Wrap
         text: win.tvKeyboard
           ? "󰌌  The TV keyboard is open: what you type goes straight in, Enter submits."
-          : "Enter searches YouTube; pick a video to play it on the TV. Plex and Netflix: click their letters with the touchpad."
+          : "Enter searches YouTube; pick a video to play it on the TV. Plex, Prime and Shahid: click their letters with the touchpad."
         color: win.tvKeyboard ? win.accent : win.dim
         font.family: win.fontFamily
         font.pixelSize: Style.font.caption
@@ -542,7 +542,7 @@ FloatingWindow {
           model: [
             { label: "Plex", glyph: "󰚺", app: "plex" },
             { label: "YouTube", glyph: "󰗃", app: "youtube" },
-            { label: "Netflix", glyph: "󰝆", app: "netflix" },
+            { label: "Prime", glyph: "", app: "prime video" },
             { label: "Shahid", glyph: "󰕼", app: "shahid" }
           ]
           Button {
