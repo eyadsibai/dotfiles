@@ -7,8 +7,9 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 
-// Bar icon + popup for the living room. Click opens the panel, scroll changes
-// the Sonos volume, middle-click mutes it, right-click refreshes.
+// Bar icon + popup for the living room: TV power, Sonos volume and the way into
+// the remote, which holds the rest. Click opens the panel, scroll changes the
+// Sonos volume, middle-click mutes it, right-click refreshes.
 Panel {
   id: root
   moduleName: "eyad.media"
@@ -22,112 +23,20 @@ Panel {
   readonly property string title: String(setting("title", "Living room"))
   readonly property bool hideWhenUnreachable: setting("hideWhenUnreachable", false) === true
   readonly property string tvGlyph: "󰔂"
-  readonly property int videoLimit: 6
-  // Videos matching the search box, newest first. Every word must appear in the name or folder.
-  readonly property var videoMatches: {
-    var words = videoSearch.text.toLowerCase().split(/\s+/).filter(function(w) { return w !== "" })
-    var out = []
-    for (var i = 0; i < media.videos.length && out.length < videoLimit; i++) {
-      var v = media.videos[i]
-      var hay = (String(v.name) + " " + String(v.folder)).toLowerCase()
-      if (words.every(function(w) { return hay.indexOf(w) >= 0 })) out.push(v)
-    }
-    return out
-  }
-  // Search on the TV: typed into the app's own search when it draws a letter grid
-  // lgtv can walk (lgtv gridtype), otherwise a YouTube search listed here.
-  readonly property var gridApps: ({ "cdp-30": "Plex", "amazon": "Prime Video", "net.mbc.shahid-lgapp": "Shahid" })
-  readonly property string tvGridApp: gridApps[String(media.tv.app || "")] || ""
-  property var ytResults: []
-  property string tvSearchStatus: ""
-  property bool tvSearchFailed: false
-
-  function tvSearchGo(q) {
-    if (q === "") return
-    ytResults = []
-    tvSearchFailed = false
-    var proc = tvGridApp !== "" ? tvTypeProc : ytSearchProc
-    tvTypeProc.running = false
-    ytSearchProc.running = false
-    if (tvGridApp !== "") {
-      tvSearchStatus = "Typing into " + tvGridApp + "'s search on the TV…"
-      tvTypeProc.command = ["media", "tv", "gridtype", "--replace", q]
-    } else {
-      tvSearchStatus = "Searching YouTube…"
-      ytSearchProc.command = ["media", "tv", "ytsearch", q]
-    }
-    proc.running = true
-  }
-  function playYouTube(v) {
-    tvSearchFailed = false
-    tvSearchStatus = "Starting “" + v.title + "” on the TV…"
-    ytPlayProc.command = ["media", "tv", "youtube", v.id]
-    ytPlayProc.running = true
-  }
-  function lastLine(t, fallback) {
-    var lines = String(t || "").trim().split("\n")
-    return (lines[lines.length - 1] || fallback).replace(/^lgtv: /, "")
-  }
-  function formatDuration(sec) {
-    if (!sec) return ""
-    sec = Math.round(sec)
-    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60
-    return (h > 0 ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s
-  }
-
-  Process {
-    id: tvTypeProc
-    stderr: StdioCollector { id: tvTypeErr; waitForEnd: true }
-    onExited: function(code) {
-      root.tvSearchFailed = code !== 0
-      root.tvSearchStatus = code !== 0 ? root.lastLine(tvTypeErr.text, "Couldn't type on the TV") : ""
-      if (code === 0) tvSearch.text = ""
-    }
-  }
-  Process {
-    id: ytSearchProc
-    stdout: SplitParser {
-      onRead: function(line) {
-        try { root.ytResults = root.ytResults.concat([JSON.parse(line)]) } catch (e) {}
-      }
-    }
-    stderr: StdioCollector { id: ytSearchErr; waitForEnd: true }
-    onExited: function(code) {
-      root.tvSearchFailed = code !== 0
-      root.tvSearchStatus = code !== 0 ? root.lastLine(ytSearchErr.text, "YouTube search failed")
-                          : root.ytResults.length === 0 ? "Nothing found" : ""
-    }
-  }
-  Process {
-    id: ytPlayProc
-    stderr: StdioCollector { id: ytPlayErr; waitForEnd: true }
-    onExited: function(code) {
-      root.tvSearchFailed = code !== 0
-      root.tvSearchStatus = code !== 0 ? root.lastLine(ytPlayErr.text, "Couldn't start the video") : "Playing on the TV"
-    }
-  }
-
   readonly property string volumeGlyph: media.sonosMuted ? "󰝟" : (media.volume < 34 ? "󰕿" : (media.volume < 67 ? "󰖀" : "󰕾"))
 
   visible: !(hideWhenUnreachable && media.loaded && !media.anyReachable)
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  onOpenedChanged: {
-    media.fastPolling = opened
-    media.watchCast = opened
-    if (opened) {
-      media.refresh()
-      media.refreshVideos()
-      videoSearch.text = ""
-      if (!ytSearchProc.running && !ytPlayProc.running && !tvTypeProc.running) {
-        tvSearch.text = ""
-        ytResults = []
-        tvSearchStatus = ""
-      }
-      Qt.callLater(function() { keyCatcher.forceActiveFocus() })
-    }
+  // Poll fast and follow casting while the panel or the remote is showing.
+  readonly property bool watching: opened || remoteLoader.active
+  onWatchingChanged: {
+    media.fastPolling = watching
+    media.watchCast = watching
+    if (watching) media.refresh()
   }
+  onOpenedChanged: if (opened) Qt.callLater(function() { keyCatcher.forceActiveFocus() })
 
   Service {
     id: media
@@ -149,11 +58,30 @@ Panel {
     }
   }
 
-  // The remote window (RemoteWindow.qml): touchpad, buttons, typing on the TV.
-  property real remoteSpeed: 1   // the touchpad speed, kept between openings
+  // The remote (RemoteWindow.qml), an overlay holding everything but power and
+  // volume: touchpad, buttons, typing and YouTube search, scenes, casting. Its
+  // spot on screen and touchpad speed are kept in a small state file.
+  FileView {
+    id: remoteState
+    path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/eyad-media-remote.json"
+    blockLoading: true
+    printErrors: false
+  }
+  property var remoteSaved: {
+    try { return JSON.parse(remoteState.text()) } catch (e) { return {} }
+  }
+  function saveRemote(changes) {
+    var next = Object.assign({}, remoteSaved, changes)
+    remoteSaved = next
+    remoteState.setText(JSON.stringify(next) + "\n")
+  }
   function openRemote() {
     root.close()
     remoteLoader.active = true
+  }
+  function toggleRemote() {
+    if (remoteLoader.active) remoteLoader.active = false
+    else openRemote()
   }
 
   LazyLoader {
@@ -161,8 +89,13 @@ Panel {
     active: false
     RemoteWindow {
       visible: true
-      speed: root.remoteSpeed
-      onSpeedChanged: root.remoteSpeed = speed
+      svc: media
+      posX: root.remoteSaved.x === undefined ? -1 : root.remoteSaved.x
+      posY: root.remoteSaved.y === undefined ? -1 : root.remoteSaved.y
+      speed: root.remoteSaved.speed || 1
+      onSpeedChanged: if (speed !== (root.remoteSaved.speed || 1)) root.saveRemote({ speed: speed })
+      onMoved: function(x, y) { root.saveRemote({ x: x, y: y }) }
+      onOpenCasterRequested: root.openCaster()
       onCloseRequested: remoteLoader.active = false
     }
   }
@@ -174,7 +107,7 @@ Panel {
     function show(): void { root.open() }
     function hide(): void { root.close() }
     function toggle(): void { root.toggle() }
-    function remote(): void { root.openRemote() }
+    function remote(): void { root.toggleRemote() }
     function refresh(): string { media.refresh(); return "ok" }
     function status(): string { return media.summary }
     function scene(name: string): string { media.runScene(name); return "ok" }
@@ -214,8 +147,9 @@ Panel {
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
-      blocked: videoSearch.activeFocus || tvSearch.activeFocus
       onCloseRequested: root.close()
+      onReturnRequested: root.openRemote()
+      onActivateRequested: root.openRemote()
       onTabRequested: function(direction) { root.switchPanel(direction) }
       onMoveRequested: function(dx, dy) {
         if (dx !== 0) media.nudgeVolume(dx * 5)
@@ -227,8 +161,7 @@ Panel {
         else if (k === "p") media.toggleTvPower()
         else if (k === "+" || k === "=") media.nudgeVolume(5)
         else if (k === "-") media.nudgeVolume(-5)
-        else if (k === "/" || k === "c") videoSearch.forceActiveFocus()
-        else if (k === "s" || k === "y") tvSearch.forceActiveFocus()
+        else if (k === "o") root.openRemote()
       }
 
       Flickable {
@@ -339,321 +272,14 @@ Panel {
             }
           }
 
-          PanelSectionHeader {
-            text: "TV"
-            foreground: root.foreground
-            fontFamily: root.fontFamily
-          }
-
-          RowLayout {
-            width: parent.width
-            spacing: Style.space(6)
-            enabled: media.tvOn
-            opacity: enabled ? 1.0 : 0.5
-
-            Repeater {
-              model: [
-                { glyph: "󰑟", action: "rew", tip: "Rewind" },
-                { glyph: "󰐊", action: "play", tip: "Play" },
-                { glyph: "󰏤", action: "pause", tip: "Pause" },
-                { glyph: "󰓛", action: "stop", tip: "Stop" },
-                { glyph: "󰈑", action: "ff", tip: "Fast forward" }
-              ]
-              PanelActionButton {
-                required property var modelData
-                iconText: modelData.glyph
-                tooltipText: modelData.tip
-                foreground: root.foreground
-                fontFamily: root.fontFamily
-                onClicked: media.tvKey(modelData.action)
-              }
-            }
-
-            Item { Layout.fillWidth: true; height: 1 }
-
-            PanelActionButton {
-              iconText: "󰑔"
-              tooltipText: "Remote: touchpad, buttons, typing"
-              foreground: root.foreground
-              fontFamily: root.fontFamily
-              onClicked: root.openRemote()
-            }
-          }
-
-          TextField {
-            id: tvSearch
-            width: parent.width
-            enabled: media.tvOn
-            opacity: enabled ? 1.0 : 0.5
-            foreground: root.foreground
-            font.family: root.fontFamily
-            placeholderText: root.tvGridApp !== ""
-              ? "Type into " + root.tvGridApp + "'s search (s)"
-              : "Search YouTube, play on the TV (s)"
-            Keys.onPressed: function(event) {
-              if (event.key === Qt.Key_Escape) {
-                if (text !== "" || root.ytResults.length > 0) { text = ""; root.ytResults = []; root.tvSearchStatus = "" }
-                else keyCatcher.forceActiveFocus()
-                event.accepted = true
-              }
-            }
-            onAccepted: root.tvSearchGo(text.trim())
-          }
-
-          Text {
-            textFormat: Text.PlainText
-            visible: text !== ""
-            width: parent.width
-            wrapMode: Text.Wrap
-            text: root.tvSearchStatus !== "" ? root.tvSearchStatus
-              : root.tvGridApp !== "" && tvSearch.activeFocus
-                ? "Have " + root.tvGridApp + "'s search open on the TV; Enter types it there."
-                : ""
-            color: root.tvSearchFailed ? root.urgent : root.dim
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
-          }
-
-          Column {
-            width: parent.width
-            spacing: Style.space(4)
-            visible: root.ytResults.length > 0
-
-            Repeater {
-              model: root.ytResults.slice(0, 8)
-              ActionRow {
-                required property var modelData
-                width: parent.width
-                glyph: "󰗃"
-                label: modelData.title
-                detail: [modelData.channel, modelData.live ? "LIVE" : root.formatDuration(modelData.duration)]
-                  .filter(function(b) { return b }).join(" · ")
-                onActivated: root.playYouTube(modelData)
-              }
-            }
-          }
-
-          PanelSeparator {
-            visible: media.scenes.length > 0
-            foreground: root.foreground
-          }
-
-          PanelSectionHeader {
-            visible: media.scenes.length > 0
-            text: "SCENES"
-            foreground: root.foreground
-            fontFamily: root.fontFamily
-          }
-
-          Column {
-            visible: media.scenes.length > 0
-            width: parent.width
-            spacing: Style.space(4)
-
-            Repeater {
-              model: media.scenes
-              ActionRow {
-                required property var modelData
-                width: parent.width
-                glyph: modelData.name === "off" ? "󰐥" : (modelData.name === "night" ? "󰖔" : (modelData.name === "movie" ? "󰿎" : "󰐊"))
-                label: modelData.name.charAt(0).toUpperCase() + modelData.name.slice(1)
-                detail: modelData.description || ""
-                onActivated: media.runScene(modelData.name)
-              }
-            }
-          }
-
           PanelSeparator { foreground: root.foreground }
 
-          PanelSectionHeader {
-            text: "CAST"
-            foreground: root.foreground
-            fontFamily: root.fontFamily
-          }
-
-          // What's playing: name, progress (drag to seek) and stop.
-          Column {
-            visible: media.casting || media.castState === "failed"
-            width: parent.width
-            spacing: Style.space(6)
-
-            RowLayout {
-              width: parent.width
-              spacing: Style.space(8)
-
-              Text {
-                textFormat: Text.PlainText
-                text: media.castState === "paused" ? "󰏤" : (media.castState === "starting" ? "󰑓" : "󰐊")
-                color: root.foreground
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.icon
-                Layout.alignment: Qt.AlignVCenter
-              }
-
-              ColumnLayout {
-                Layout.fillWidth: true
-                spacing: Style.space(1)
-
-                Text {
-                  textFormat: Text.PlainText
-                  Layout.fillWidth: true
-                  text: media.castName
-                  color: root.foreground
-                  font.family: root.fontFamily
-                  font.pixelSize: Style.font.body
-                  elide: Text.ElideMiddle
-                }
-
-                Text {
-                  textFormat: Text.PlainText
-                  Layout.fillWidth: true
-                  text: {
-                    var st = media.castState === "starting" ? (media.castMessage || "Starting on the TV…")
-                      : media.castState === "paused" ? "Paused"
-                      : media.castState === "failed" ? (media.castMessage || "Didn't play")
-                      : "Playing on the TV"
-                    if (media.queueLength > 1) st += " · " + (media.cs.index + 1) + " of " + media.queueLength
-                    return media.castSubtitles ? st + " · subtitles" : st
-                  }
-                  color: root.dim
-                  font.family: root.fontFamily
-                  font.pixelSize: Style.font.caption
-                  elide: Text.ElideRight
-                }
-              }
-
-              PanelActionButton {
-                visible: media.casting
-                iconText: media.castState === "playing" ? "󰏤" : "󰐊"
-                tooltipText: media.castState === "playing" ? "Pause" : "Play"
-                foreground: root.foreground
-                fontFamily: root.fontFamily
-                Layout.alignment: Qt.AlignVCenter
-                onClicked: media.toggleCast()
-              }
-
-              PanelActionButton {
-                visible: media.casting && media.hasNext
-                iconText: "󰒭"
-                tooltipText: "Next in the queue"
-                foreground: root.foreground
-                fontFamily: root.fontFamily
-                Layout.alignment: Qt.AlignVCenter
-                onClicked: media.nextCast()
-              }
-
-              PanelActionButton {
-                visible: media.casting
-                iconText: "󰓛"
-                tooltipText: "Stop casting"
-                foreground: root.foreground
-                fontFamily: root.fontFamily
-                Layout.alignment: Qt.AlignVCenter
-                onClicked: media.stopCast()
-              }
-            }
-
-            RowLayout {
-              visible: media.casting && media.castDuration > 0
-              width: parent.width
-              spacing: Style.space(8)
-
-              Text {
-                textFormat: Text.PlainText
-                text: media.formatTime(media.castPosition)
-                color: root.dim
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.caption
-                Layout.alignment: Qt.AlignVCenter
-              }
-
-              PanelSlider {
-                bar: root.bar
-                Layout.fillWidth: true
-                minimum: 0
-                maximum: Math.max(1, media.castDuration)
-                step: 5
-                integer: true
-                value: Math.max(0, media.castPosition)
-                onReleased: function(v) { media.seekCast(v) }
-              }
-
-              Text {
-                textFormat: Text.PlainText
-                text: media.formatTime(media.castDuration)
-                color: root.dim
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.caption
-                Layout.alignment: Qt.AlignVCenter
-              }
-            }
-          }
-
-          TextField {
-            id: videoSearch
-            width: parent.width
-            foreground: root.foreground
-            font.family: root.fontFamily
-            placeholderText: media.videos.length > 0
-              ? "Search " + media.videos.length + " videos (/)"
-              : "No videos in ~/Videos, ~/Downloads or ~/Movies"
-            Keys.onPressed: function(event) {
-              if (event.key === Qt.Key_Escape) {
-                if (text !== "") text = ""
-                else keyCatcher.forceActiveFocus()
-                event.accepted = true
-              } else if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
-                keyCatcher.forceActiveFocus()
-                event.accepted = true
-              }
-            }
-            onAccepted: if (root.videoMatches.length > 0) media.cast(root.videoMatches[0].path)
-          }
-
-          Column {
-            width: parent.width
-            spacing: Style.space(4)
-
-            Repeater {
-              model: root.videoMatches
-              ActionRow {
-                required property var modelData
-                required property int index
-                width: parent.width
-                glyph: modelData.path === media.castPath && media.casting ? "󰐊" : "󰕧"
-                label: modelData.name
-                detail: modelData.folder + " · " + media.formatSize(modelData.size)
-                  + (modelData.subtitles ? " · subtitles" : "")
-                  + (index === 0 && videoSearch.activeFocus && videoSearch.text !== "" ? " · Enter" : "")
-                onActivated: media.cast(modelData.path)
-              }
-            }
-          }
-
-          Text {
-            textFormat: Text.PlainText
-            visible: videoSearch.text !== "" && root.videoMatches.length === 0
-            width: parent.width
-            text: "No video matches"
-            color: root.dim
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.bodySmall
-          }
-
           ActionRow {
             width: parent.width
-            glyph: "󰐾"
-            label: "Open the caster…"
-            detail: "Queue, whole folders, links, continue where you left off"
-            onActivated: root.openCaster()
-          }
-
-          ActionRow {
-            width: parent.width
-            glyph: "󰉋"
-            label: "Browse for a video…"
-            detail: "Anywhere on this machine"
-            onActivated: media.browseVideo()
+            glyph: "󰑔"
+            label: "Remote (Enter)"
+            detail: "Touchpad and buttons, typing and YouTube, scenes, casting"
+            onActivated: root.openRemote()
           }
         }
       }

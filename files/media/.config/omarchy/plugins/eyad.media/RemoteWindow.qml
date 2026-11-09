@@ -2,23 +2,62 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 
-// The TV remote: a touchpad for the TV's pointer, remote buttons, and a text box
-// that types into the TV's system keyboard. It holds one `media tv pipe`
-// connection open while visible, so pointer moves don't start a process each.
-FloatingWindow {
+// The living-room remote: TV power, Sonos volume, scenes, then two tabs. Remote
+// is a touchpad for the TV's pointer, remote buttons, and a text box that types
+// into the TV's keyboard. Cast is what's playing and the video library.
+//
+// An overlay, not a window: it floats above everything (fullscreen video
+// included) and stays out of tiling and alt-tab. Drag the header to move it
+// (double-click it to send it back to the corner); Panel remembers where. It
+// takes the keyboard once clicked.
+//
+// It holds one `media tv pipe` connection open while shown, so pointer moves
+// don't start a process each.
+PanelWindow {
   id: win
-  title: "TV remote"
-  color: background
-  implicitWidth: 460
-  implicitHeight: 640
-  minimumSize: Qt.size(380, 540)
 
+  required property var svc       // the panel's Service: TV and Sonos state, casting
+  property real posX: -1          // top-left corner on the screen; -1: bottom-right
+  property real posY: -1
   signal closeRequested()
+  signal moved(real x, real y)
+  signal openCasterRequested()
+
+  readonly property int cardWidth: 460
+  readonly property int cardHeight: 780
+  readonly property int edgeGap: 40
+
+  // The screen it opens on: the focused monitor's.
+  screen: {
+    var m = Hyprland.focusedMonitor
+    var name = m ? String(m.name || "") : ""
+    for (var i = 0; i < Quickshell.screens.length; i++)
+      if (Quickshell.screens[i].name === name) return Quickshell.screens[i]
+    return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+  }
+  readonly property real screenW: screen ? screen.width : 1920
+  readonly property real screenH: screen ? screen.height : 1080
+  function clampX(x) { return Math.max(0, Math.min(screenW - cardWidth, x)) }
+  function clampY(y) { return Math.max(0, Math.min(screenH - cardHeight, y)) }
+  readonly property real atX: clampX(posX < 0 ? screenW - cardWidth - edgeGap : posX)
+  readonly property real atY: clampY(posY < 0 ? screenH - cardHeight - edgeGap : posY)
+
+  WlrLayershell.layer: WlrLayer.Overlay
+  WlrLayershell.namespace: "eyad-media-remote"
+  WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+  exclusionMode: ExclusionMode.Ignore
+  anchors { top: true; left: true }
+  margins { top: atY; left: atX }
+  implicitWidth: cardWidth
+  implicitHeight: cardHeight
+  color: "transparent"
 
   readonly property color foreground: Commons.Color.foreground
   readonly property color background: Commons.Color.background
@@ -27,6 +66,8 @@ FloatingWindow {
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property color faint: Qt.rgba(foreground.r, foreground.g, foreground.b, 0.12)
   readonly property string fontFamily: Style.font.family
+
+  property string tab: "remote"   // "remote" or "cast"
 
   property bool connected: false
   property bool tvKeyboard: false
@@ -69,8 +110,11 @@ FloatingWindow {
     send("wake")
   }
   // If it isn't up in 40 s (Wake-on-LAN off in the TV's settings, say), stop
-  // claiming it's coming and offer the button again.
+  // claiming it's coming and offer the switch again.
   Timer { id: wakeGiveUp; interval: 40000; onTriggered: win.waking = false }
+
+  readonly property bool tvUp: connected && !tvOff
+  function togglePower() { if (tvUp) svc.setTvPower(false); else wakeTv() }
 
   // A pasted link plays on the TV instead of being typed into it.
   readonly property string typed: typeBox.text.trim()
@@ -114,10 +158,11 @@ FloatingWindow {
     ytPlay.command = ["media", "tv", "youtube", v.id]
     ytPlay.running = true
   }
-  // Focusing the scope alone would hand focus straight back to the text box,
+  // Focusing the scope alone would hand focus straight back to a text box,
   // its remembered focus child.
   function leaveTextBox() {
     typeBox.focus = false
+    videoSearch.focus = false
     scope.forceActiveFocus()
   }
   function closeYouTube() {
@@ -140,6 +185,21 @@ FloatingWindow {
     if (n >= 1e3) return Math.round(n / 1e3) + "K views"
     return n + " views"
   }
+
+  // Videos matching the cast search, newest first. Every word must appear in the name or folder.
+  readonly property var videoMatches: {
+    var words = videoSearch.text.toLowerCase().split(/\s+/).filter(function(w) { return w !== "" })
+    var out = []
+    var all = svc.videos || []
+    for (var i = 0; i < all.length && out.length < 40; i++) {
+      var v = all[i]
+      var hay = (String(v.name) + " " + String(v.folder)).toLowerCase()
+      if (words.every(function(w) { return hay.indexOf(w) >= 0 })) out.push(v)
+    }
+    return out
+  }
+
+  readonly property string volumeGlyph: svc.sonosMuted ? "󰝟" : (svc.volume < 34 ? "󰕿" : (svc.volume < 67 ? "󰖀" : "󰕾"))
 
   Process {
     id: ytSearch
@@ -188,9 +248,9 @@ FloatingWindow {
     sentText = now
   }
 
-  onVisibleChanged: {
-    if (visible) { power = ""; waking = false; everConnected = false; Qt.callLater(function() { scope.forceActiveFocus() }) }
-    else { padOn = false; closeYouTube(); closeRequested() }
+  Component.onCompleted: {
+    svc.refreshVideos()
+    Qt.callLater(function() { scope.forceActiveFocus() })
   }
 
   Process {
@@ -247,257 +307,660 @@ FloatingWindow {
     }
   }
 
-  FocusScope {
-    id: scope
+  // ---- the card ----
+  Rectangle {
     anchors.fill: parent
-    focus: true
+    color: win.background
+    radius: Style.cornerRadius
+    border.width: Math.max(1, Style.normalBorderWidth)
+    border.color: Commons.Color.popups.border
 
-    // Keys while the text box doesn't have focus act like the remote.
-    Keys.onPressed: function(event) {
-      var k = event.key
-      var map = {}
-      map[Qt.Key_Up] = "UP"; map[Qt.Key_Down] = "DOWN"; map[Qt.Key_Left] = "LEFT"; map[Qt.Key_Right] = "RIGHT"
-      map[Qt.Key_Return] = "ENTER"; map[Qt.Key_Enter] = "ENTER"; map[Qt.Key_Backspace] = "BACK"
-      map[Qt.Key_Home] = "HOME"
-      if (win.ytShown) {  // the results take arrows, Enter and Esc
-        var n = win.ytResults.length
-        if (k === Qt.Key_Escape) { win.closeYouTube(); event.accepted = true; return }
-        if (k === Qt.Key_Down && n) { win.ytIndex = Math.min(n - 1, win.ytIndex + 1); event.accepted = true; return }
-        if (k === Qt.Key_Up && n) { win.ytIndex = Math.max(0, win.ytIndex - 1); event.accepted = true; return }
-        if ((k === Qt.Key_Return || k === Qt.Key_Enter) && n) { win.playYouTube(win.ytResults[win.ytIndex]); event.accepted = true; return }
-      }
-      if (k === Qt.Key_Escape) { if (win.padOn) win.padOn = false; else win.closeRequested(); event.accepted = true }
-      else if (k === Qt.Key_Space) { win.playPause(); event.accepted = true }
-      else if (event.text === "c") { win.padOn = !win.padOn; event.accepted = true }
-      else if (map[k] !== undefined) { win.key(map[k]); event.accepted = true }
-      else if (event.text === "/" || event.text === "t") { typeBox.forceActiveFocus(); event.accepted = true }
-      else if (event.text === "+" || event.text === "=") { win.key("VOLUMEUP"); event.accepted = true }
-      else if (event.text === "-") { win.key("VOLUMEDOWN"); event.accepted = true }
-      else if (event.text === "m") { win.key("MUTE"); event.accepted = true }
-      else if (event.text === "h") { win.key("HOME"); event.accepted = true }
-      else if (event.text === "]") { win.stepSpeed(1); event.accepted = true }
-      else if (event.text === "[") { win.stepSpeed(-1); event.accepted = true }
-    }
-
-    ColumnLayout {
+    FocusScope {
+      id: scope
       anchors.fill: parent
-      anchors.margins: Style.space(18)
-      spacing: Style.space(12)
+      focus: true
 
-      // ---- header ----
-      RowLayout {
-        Layout.fillWidth: true
-        spacing: Style.space(12)
-        Text {
-          textFormat: Text.PlainText
-          text: "󰑔"
-          color: win.foreground
-          font.family: win.fontFamily
-          font.pixelSize: Style.font.display
+      // Keys while no text box has focus act like the remote.
+      Keys.onPressed: function(event) {
+        var k = event.key
+        if (k === Qt.Key_Tab) { win.tab = win.tab === "remote" ? "cast" : "remote"; event.accepted = true; return }
+        if (k === Qt.Key_Escape) {
+          if (win.ytShown) win.closeYouTube()
+          else if (win.padOn) win.padOn = false
+          else win.closeRequested()
+          event.accepted = true
+          return
         }
-        ColumnLayout {
-          Layout.fillWidth: true
-          spacing: 0
-          Text {
-            textFormat: Text.PlainText
-            text: "Remote"
-            color: win.foreground
-            font.family: win.fontFamily
-            font.pixelSize: Style.font.title
-            font.bold: true
-          }
-          Text {
-            textFormat: Text.PlainText
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-            text: win.waking && (win.tvOff || !win.connected) ? "Turning the TV on…"
-                : win.tvOff ? "The TV is off (" + win.power + ")"
-                : win.error !== "" ? win.error
-                : win.connected ? "Connected to the TV" : "Connecting…"
-            color: win.waking && (win.tvOff || !win.connected) ? win.accent
-                 : win.error !== "" || win.tvOff ? win.urgent : win.dim
-            font.family: win.fontFamily
-            font.pixelSize: Style.font.bodySmall
-          }
+        if (event.text === "p") { win.togglePower(); event.accepted = true; return }
+        if (event.text === "m") { win.svc.toggleMute(); event.accepted = true; return }
+        if (event.text === "+" || event.text === "=") { win.svc.nudgeVolume(5); event.accepted = true; return }
+        if (event.text === "-") { win.svc.nudgeVolume(-5); event.accepted = true; return }
+        if (win.tab === "cast") {
+          if (event.text === "/" || event.text === "t") { videoSearch.forceActiveFocus(); event.accepted = true }
+          return
         }
-        Button {
-          visible: win.tvOff || !win.connected
-          text: "Turn on"
-          iconText: "󰐥"
-          tooltipText: "Wake the TV (Wake-on-LAN, or its screen back on)"
-          bordered: true
-          foreground: win.foreground
-          fontFamily: win.fontFamily
-          onClicked: win.wakeTv()
+        var map = {}
+        map[Qt.Key_Up] = "UP"; map[Qt.Key_Down] = "DOWN"; map[Qt.Key_Left] = "LEFT"; map[Qt.Key_Right] = "RIGHT"
+        map[Qt.Key_Return] = "ENTER"; map[Qt.Key_Enter] = "ENTER"; map[Qt.Key_Backspace] = "BACK"
+        map[Qt.Key_Home] = "HOME"
+        if (win.ytShown) {  // the results take arrows and Enter
+          var n = win.ytResults.length
+          if (k === Qt.Key_Down && n) { win.ytIndex = Math.min(n - 1, win.ytIndex + 1); event.accepted = true; return }
+          if (k === Qt.Key_Up && n) { win.ytIndex = Math.max(0, win.ytIndex - 1); event.accepted = true; return }
+          if ((k === Qt.Key_Return || k === Qt.Key_Enter) && n) { win.playYouTube(win.ytResults[win.ytIndex]); event.accepted = true; return }
         }
+        if (k === Qt.Key_Space) { win.playPause(); event.accepted = true }
+        else if (event.text === "c") { win.padOn = !win.padOn; event.accepted = true }
+        else if (map[k] !== undefined) { win.key(map[k]); event.accepted = true }
+        else if (event.text === "/" || event.text === "t") { typeBox.forceActiveFocus(); event.accepted = true }
+        else if (event.text === "h") { win.key("HOME"); event.accepted = true }
+        else if (event.text === "]") { win.stepSpeed(1); event.accepted = true }
+        else if (event.text === "[") { win.stepSpeed(-1); event.accepted = true }
       }
 
-      // ---- typing ----
-      TextField {
-        id: typeBox
-        Layout.fillWidth: true
-        foreground: win.foreground
-        font.family: win.fontFamily
-        font.pixelSize: Style.font.body
-        placeholderText: win.typingToGrid ? "Search " + win.tvGrid : "Search YouTube, type on the TV, or paste a link"
-        onTextChanged: win.syncText(text)
-        onAccepted: {
-          if (win.typedIsLink) { win.playLink(false); return }
-          if (win.typingToGrid) {  // the app searches as you type: just start afresh
-            win.sentText = ""
-            text = ""
-            return
-          }
-          if (!win.tvKeyboard && win.typed !== "") {
-            var q = win.typed
-            win.sentText = ""
-            text = ""
-            win.searchYouTube(q)
-            return
-          }
-          win.send("enter")
-          win.sentText = ""
-          text = ""
-        }
-        Keys.onPressed: function(event) {
-          if (event.key === Qt.Key_Escape) {
-            win.sentText = ""
-            text = ""
-            win.leaveTextBox()
-            event.accepted = true
-          }
-        }
-      }
-      RowLayout {
-        visible: win.typedIsLink
-        Layout.fillWidth: true
-        spacing: Style.space(8)
-        Text {
-          textFormat: Text.PlainText
-          Layout.fillWidth: true
-          elide: Text.ElideRight
-          text: win.typedIsYouTube ? "󰗃  A YouTube link: open it in the TV's YouTube app" : "󰌹  A link: play it on the TV (via yt-dlp)"
-          color: win.foreground
-          font.family: win.fontFamily
-          font.pixelSize: Style.font.caption
-        }
-        Button {
-          text: "Play on TV"
-          iconText: "󰐊"
-          bordered: true
-          foreground: win.foreground
-          fontFamily: win.fontFamily
-          onClicked: win.playLink(false)
-        }
-        Button {
-          visible: !win.typedIsYouTube
-          text: "Queue"
-          iconText: "󰐕"
-          bordered: true
-          foreground: win.foreground
-          fontFamily: win.fontFamily
-          onClicked: win.playLink(true)
-        }
-      }
-      Text {
-        visible: !win.typedIsLink
-        textFormat: Text.PlainText
-        Layout.fillWidth: true
-        wrapMode: Text.Wrap
-        text: win.tvKeyboard
-          ? "󰌌  The TV keyboard is open: what you type goes straight in, Enter submits."
-          : win.typingToGrid && win.gridError !== "" ? "󰀦  " + win.gridError
-          : win.typingToGrid ? "󰌌  Typing walks " + win.tvGrid + "'s letters on the TV (arrows and OK). Have its search open."
-          : "Enter searches YouTube; pick a video to play it on the TV. In Plex, Prime or Shahid, open their search and type here."
-        color: win.typingToGrid && win.gridError !== "" ? win.urgent
-             : win.tvKeyboard || win.typingToGrid ? win.accent : win.dim
-        font.family: win.fontFamily
-        font.pixelSize: Style.font.caption
-      }
-
-      // ---- YouTube results (in the touchpad's place) ----
       ColumnLayout {
-        visible: win.ytShown
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.minimumHeight: Style.space(160)
-        spacing: Style.space(6)
+        anchors.fill: parent
+        anchors.margins: Style.space(18)
+        spacing: Style.space(10)
 
+        // ---- header: drag it to move the remote ----
+        Item {
+          Layout.fillWidth: true
+          implicitHeight: headerRow.implicitHeight
+
+          MouseArea {
+            anchors.fill: parent
+            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+            property real pressX: 0
+            property real pressY: 0
+            onPressed: function(mouse) { pressX = mouse.x; pressY = mouse.y; win.leaveTextBox() }
+            // The window follows the margins, so the press point stays under the
+            // cursor and its offset from there is the move.
+            onPositionChanged: function(mouse) {
+              if (!pressed) return
+              win.posX = win.clampX(win.atX + mouse.x - pressX)
+              win.posY = win.clampY(win.atY + mouse.y - pressY)
+            }
+            onReleased: win.moved(win.posX, win.posY)
+            onDoubleClicked: { win.posX = -1; win.posY = -1; win.moved(-1, -1) }
+          }
+
+          RowLayout {
+            id: headerRow
+            anchors.left: parent.left
+            anchors.right: parent.right
+            spacing: Style.space(12)
+            Text {
+              textFormat: Text.PlainText
+              text: "󰔂"
+              color: win.foreground
+              opacity: win.tvUp ? 1 : 0.5
+              font.family: win.fontFamily
+              font.pixelSize: Style.font.display
+            }
+            ColumnLayout {
+              Layout.fillWidth: true
+              spacing: 0
+              Text {
+                textFormat: Text.PlainText
+                text: "Living room"
+                color: win.foreground
+                font.family: win.fontFamily
+                font.pixelSize: Style.font.title
+                font.bold: true
+              }
+              Text {
+                textFormat: Text.PlainText
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: win.waking && (win.tvOff || !win.connected) ? "Turning the TV on…"
+                    : win.tvOff ? "The TV is off (" + win.power + ")"
+                    : win.error !== "" ? win.error
+                    : win.svc.lastError !== "" ? win.svc.lastError
+                    : win.svc.actionStatus !== "" ? win.svc.actionStatus
+                    : win.connected ? (win.svc.appName ? "TV on · " + win.svc.appName : "TV on")
+                    : "Connecting…"
+                color: win.waking && (win.tvOff || !win.connected) ? win.accent
+                     : win.error !== "" || win.tvOff || win.svc.lastError !== "" ? win.urgent : win.dim
+                font.family: win.fontFamily
+                font.pixelSize: Style.font.bodySmall
+              }
+            }
+            ToggleSwitch {
+              id: powerSwitch
+              checked: win.tvUp
+              busy: win.waking || (win.svc.busy && win.svc.runningLabel.indexOf("Turning") === 0)
+              foreground: win.foreground
+              onToggled: win.togglePower()
+              PanelToolTip {
+                visible: powerSwitch.containsMouse
+                text: win.tvUp ? "Turn the TV off (p)" : "Turn the TV on (p)"
+                fontFamily: win.fontFamily
+              }
+            }
+            Button {
+              iconText: "󰅖"
+              tooltipText: "Close (Esc)"
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.closeRequested()
+            }
+          }
+        }
+
+        // ---- Sonos volume ----
         RowLayout {
           Layout.fillWidth: true
-          spacing: Style.space(8)
-          Text {
-            textFormat: Text.PlainText
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-            text: "󰗃  " + win.ytQuery
-            color: win.foreground
-            font.family: win.fontFamily
-            font.pixelSize: Style.font.body
-            font.bold: true
-          }
-          Button {
-            iconText: "󰅖"
-            tooltipText: "Back to the touchpad (Esc)"
+          spacing: Style.space(10)
+          enabled: win.svc.sonosReachable
+          opacity: enabled ? 1.0 : 0.5
+          PanelActionButton {
+            iconText: win.volumeGlyph
+            tooltipText: (win.svc.sonosMuted ? "Unmute" : "Mute") + " the Sonos (m)"
             foreground: win.foreground
             fontFamily: win.fontFamily
-            onClicked: win.closeYouTube()
+            Layout.alignment: Qt.AlignVCenter
+            onClicked: win.svc.toggleMute()
+          }
+          PanelSlider {
+            Layout.fillWidth: true
+            minimum: 0
+            maximum: 100
+            step: 2
+            integer: true
+            value: win.svc.volume
+            opacity: win.svc.sonosMuted ? 0.5 : 1.0
+            onReleased: function(v) { win.svc.setVolume(v) }
+            onRightClicked: win.svc.toggleMute()
+          }
+          Text {
+            textFormat: Text.PlainText
+            text: win.svc.sonosReachable ? String(win.svc.volume) : "—"
+            color: win.foreground
+            font.family: win.fontFamily
+            font.pixelSize: Style.font.bodySmall
+            horizontalAlignment: Text.AlignRight
+            Layout.preferredWidth: Style.space(26)
+            Layout.alignment: Qt.AlignVCenter
           }
         }
-        Text {
-          visible: win.ytStatus !== ""
-          textFormat: Text.PlainText
+
+        // ---- scenes ----
+        RowLayout {
+          visible: win.svc.scenes.length > 0
           Layout.fillWidth: true
-          wrapMode: Text.Wrap
-          text: win.ytStatus
-          color: win.ytFailed ? win.urgent : win.dim
-          font.family: win.fontFamily
-          font.pixelSize: Style.font.caption
+          spacing: Style.space(4)
+          Repeater {
+            model: win.svc.scenes
+            Button {
+              required property var modelData
+              Layout.fillWidth: true
+              text: modelData.name.charAt(0).toUpperCase() + modelData.name.slice(1)
+              iconText: modelData.name === "off" ? "󰐥" : (modelData.name === "night" ? "󰖔" : (modelData.name === "movie" ? "󰿎" : "󰐊"))
+              tooltipText: modelData.description || ""
+              bordered: true
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.svc.runScene(modelData.name)
+            }
+          }
         }
-        ListView {
-          id: ytList
+
+        // ---- tabs ----
+        RowLayout {
+          Layout.fillWidth: true
+          spacing: Style.space(4)
+          Repeater {
+            model: [
+              { id: "remote", label: "Remote", glyph: "󰑔" },
+              { id: "cast", label: "Cast", glyph: "󰐾" }
+            ]
+            Button {
+              required property var modelData
+              Layout.fillWidth: true
+              text: modelData.label
+              iconText: modelData.glyph
+              tooltipText: "Tab switches"
+              selected: win.tab === modelData.id
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: { win.tab = modelData.id; win.leaveTextBox() }
+            }
+          }
+        }
+
+        // ================= Remote tab =================
+        ColumnLayout {
+          visible: win.tab === "remote"
           Layout.fillWidth: true
           Layout.fillHeight: true
-          clip: true
-          spacing: Style.space(2)
-          model: win.ytResults
-          currentIndex: win.ytIndex
-          boundsBehavior: Flickable.StopAtBounds
-          ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-          onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+          spacing: Style.space(10)
 
-          delegate: CursorSurface {
-            id: ytRow
-            required property var modelData
-            required property int index
-            width: ytList.width
-            implicitHeight: ytLayout.implicitHeight + Style.spacing.rowPaddingX
+          TextField {
+            id: typeBox
+            Layout.fillWidth: true
             foreground: win.foreground
-            hasCursor: ytHover.hovered || index === win.ytIndex
-
-            HoverHandler { id: ytHover; cursorShape: Qt.PointingHandCursor }
-            MouseArea {
-              anchors.fill: parent
-              cursorShape: Qt.PointingHandCursor
-              onClicked: { win.ytIndex = ytRow.index; win.playYouTube(ytRow.modelData) }
+            font.family: win.fontFamily
+            font.pixelSize: Style.font.body
+            placeholderText: win.typingToGrid ? "Search " + win.tvGrid : "Search YouTube, type on the TV, or paste a link"
+            onTextChanged: win.syncText(text)
+            onAccepted: {
+              if (win.typedIsLink) { win.playLink(false); return }
+              if (win.typingToGrid) {  // the app searches as you type: just start afresh
+                win.sentText = ""
+                text = ""
+                return
+              }
+              if (!win.tvKeyboard && win.typed !== "") {
+                var q = win.typed
+                win.sentText = ""
+                text = ""
+                win.searchYouTube(q)
+                return
+              }
+              win.send("enter")
+              win.sentText = ""
+              text = ""
             }
+            Keys.onPressed: function(event) {
+              if (event.key === Qt.Key_Escape) {
+                win.sentText = ""
+                text = ""
+                win.leaveTextBox()
+                event.accepted = true
+              }
+            }
+          }
+          RowLayout {
+            visible: win.typedIsLink
+            Layout.fillWidth: true
+            spacing: Style.space(8)
+            Text {
+              textFormat: Text.PlainText
+              Layout.fillWidth: true
+              elide: Text.ElideRight
+              text: win.typedIsYouTube ? "󰗃  A YouTube link: open it in the TV's YouTube app" : "󰌹  A link: play it on the TV (via yt-dlp)"
+              color: win.foreground
+              font.family: win.fontFamily
+              font.pixelSize: Style.font.caption
+            }
+            Button {
+              text: "Play on TV"
+              iconText: "󰐊"
+              bordered: true
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.playLink(false)
+            }
+            Button {
+              visible: !win.typedIsYouTube
+              text: "Queue"
+              iconText: "󰐕"
+              bordered: true
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.playLink(true)
+            }
+          }
+          Text {
+            visible: !win.typedIsLink && (typeBox.activeFocus || win.tvKeyboard || win.typingToGrid)
+            textFormat: Text.PlainText
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            text: win.tvKeyboard
+              ? "󰌌  The TV keyboard is open: what you type goes straight in, Enter submits."
+              : win.typingToGrid && win.gridError !== "" ? "󰀦  " + win.gridError
+              : win.typingToGrid ? "󰌌  Typing walks " + win.tvGrid + "'s letters on the TV (arrows and OK). Have its search open."
+              : "Enter searches YouTube; pick a video to play it on the TV. In Plex, Prime or Shahid, open their search and type here."
+            color: win.typingToGrid && win.gridError !== "" ? win.urgent
+                 : win.tvKeyboard || win.typingToGrid ? win.accent : win.dim
+            font.family: win.fontFamily
+            font.pixelSize: Style.font.caption
+          }
+
+          // ---- YouTube results (in the touchpad's place) ----
+          ColumnLayout {
+            visible: win.ytShown
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumHeight: Style.space(140)
+            spacing: Style.space(6)
 
             RowLayout {
-              id: ytLayout
-              anchors.left: parent.left
-              anchors.right: parent.right
-              anchors.verticalCenter: parent.verticalCenter
-              anchors.leftMargin: Style.space(6)
-              anchors.rightMargin: Style.space(6)
-              spacing: Style.space(10)
+              Layout.fillWidth: true
+              spacing: Style.space(8)
+              Text {
+                textFormat: Text.PlainText
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: "󰗃  " + win.ytQuery
+                color: win.foreground
+                font.family: win.fontFamily
+                font.pixelSize: Style.font.body
+                font.bold: true
+              }
+              Button {
+                iconText: "󰅖"
+                tooltipText: "Back to the touchpad (Esc)"
+                foreground: win.foreground
+                fontFamily: win.fontFamily
+                onClicked: win.closeYouTube()
+              }
+            }
+            Text {
+              visible: win.ytStatus !== ""
+              textFormat: Text.PlainText
+              Layout.fillWidth: true
+              wrapMode: Text.Wrap
+              text: win.ytStatus
+              color: win.ytFailed ? win.urgent : win.dim
+              font.family: win.fontFamily
+              font.pixelSize: Style.font.caption
+            }
+            ListView {
+              id: ytList
+              Layout.fillWidth: true
+              Layout.fillHeight: true
+              clip: true
+              spacing: Style.space(2)
+              model: win.ytResults
+              currentIndex: win.ytIndex
+              boundsBehavior: Flickable.StopAtBounds
+              ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+              onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
-              Image {
-                Layout.preferredWidth: Style.space(96)
-                Layout.preferredHeight: Style.space(54)
-                source: "https://i.ytimg.com/vi/" + ytRow.modelData.id + "/mqdefault.jpg"
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                sourceSize.width: 192
+              delegate: CursorSurface {
+                id: ytRow
+                required property var modelData
+                required property int index
+                width: ytList.width
+                implicitHeight: ytLayout.implicitHeight + Style.spacing.rowPaddingX
+                foreground: win.foreground
+                hasCursor: ytHover.hovered || index === win.ytIndex
+
+                HoverHandler { id: ytHover; cursorShape: Qt.PointingHandCursor }
+                MouseArea {
+                  anchors.fill: parent
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: { win.ytIndex = ytRow.index; win.playYouTube(ytRow.modelData) }
+                }
+
+                RowLayout {
+                  id: ytLayout
+                  anchors.left: parent.left
+                  anchors.right: parent.right
+                  anchors.verticalCenter: parent.verticalCenter
+                  anchors.leftMargin: Style.space(6)
+                  anchors.rightMargin: Style.space(6)
+                  spacing: Style.space(10)
+
+                  Image {
+                    Layout.preferredWidth: Style.space(96)
+                    Layout.preferredHeight: Style.space(54)
+                    source: "https://i.ytimg.com/vi/" + ytRow.modelData.id + "/mqdefault.jpg"
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    sourceSize.width: 192
+                  }
+                  ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.space(1)
+                    Text {
+                      textFormat: Text.PlainText
+                      Layout.fillWidth: true
+                      text: ytRow.modelData.title
+                      color: win.foreground
+                      font.family: win.fontFamily
+                      font.pixelSize: Style.font.bodySmall
+                      wrapMode: Text.Wrap
+                      maximumLineCount: 2
+                      elide: Text.ElideRight
+                    }
+                    Text {
+                      textFormat: Text.PlainText
+                      Layout.fillWidth: true
+                      text: {
+                        var v = ytRow.modelData
+                        var bits = [v.channel, v.live ? "LIVE" : win.formatDuration(v.duration), win.formatViews(v.views)]
+                        return bits.filter(function(b) { return b }).join(" · ")
+                      }
+                      color: ytRow.modelData.live ? win.urgent : win.dim
+                      font.family: win.fontFamily
+                      font.pixelSize: Style.font.caption
+                      elide: Text.ElideRight
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // ---- touchpad ----
+          Rectangle {
+            visible: !win.ytShown
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumHeight: Style.space(140)
+            color: pad.pressed || win.padOn ? Qt.rgba(win.foreground.r, win.foreground.g, win.foreground.b, 0.08)
+                               : Qt.rgba(win.foreground.r, win.foreground.g, win.foreground.b, 0.04)
+            border.width: win.padOn ? 2 : 1
+            border.color: win.padOn || pad.containsMouse ? win.accent : win.faint
+            radius: Style.cornerRadius
+
+            Text {
+              anchors.centerIn: parent
+              width: parent.width - Style.space(24)
+              horizontalAlignment: Text.AlignHCenter
+              wrapMode: Text.Wrap
+              textFormat: Text.PlainText
+              text: (win.padOn
+                ? "Touchpad on\nmove to move the pointer · click to click · c or Esc to stop"
+                : "Touchpad\ndrag to move the pointer · click to click · scroll to scroll\nc: move without holding")
+                + "\nspeed " + win.speed + "× ( [ and ] ) · endless: the edges wrap to the middle"
+              color: win.padOn ? win.accent : win.dim
+              font.family: win.fontFamily
+              font.pixelSize: Style.font.caption
+            }
+
+            MouseArea {
+              id: pad
+              anchors.fill: parent
+              hoverEnabled: true
+              acceptedButtons: Qt.LeftButton | Qt.RightButton
+              cursorShape: Qt.CrossCursor
+              property real lastX: 0
+              property real lastY: 0
+              property real lastT: 0
+              property real travelled: 0
+              property bool primed: false   // lastX/lastY hold a real position
+
+              // Endless pad: near an edge the cursor is put back in the middle
+              // (Hyprland), so one long swipe can cross the whole TV. Motion until
+              // the cursor lands there is the warp itself, not the user, so it's skipped.
+              readonly property real edge: Math.min(28, width / 8, height / 8)
+              property bool warping: false
+              function recentre(mouse) {
+                var cx = width / 2, cy = height / 2
+                warping = true
+                warpGuard.restart()
+                win.run(["sh", "-c",
+                  "p=$(hyprctl cursorpos) && x=${p%,*} && y=${p#*, } && " +
+                  "hyprctl eval \"hl.dispatch(hl.dsp.cursor.move({ x = $((x + $1)), y = $((y + $2)) }))\"",
+                  "sh", String(Math.round(cx - mouse.x)), String(Math.round(cy - mouse.y))])
+              }
+              Timer { id: warpGuard; interval: 250; onTriggered: { pad.warping = false; pad.primed = false } }
+
+              onExited: primed = false
+
+              onPressed: function(mouse) {
+                win.leaveTextBox()
+                lastX = mouse.x; lastY = mouse.y; lastT = Date.now(); travelled = 0; primed = true
+              }
+              onPositionChanged: function(mouse) {
+                if (!pressed && !win.padOn) return
+                var now = Date.now()
+                if (warping) {
+                  if (Math.abs(mouse.x - width / 2) < 40 && Math.abs(mouse.y - height / 2) < 40) {
+                    warping = false
+                    warpGuard.stop()
+                    lastX = mouse.x; lastY = mouse.y; lastT = now; primed = true
+                  }
+                  return
+                }
+                if (!primed) { lastX = mouse.x; lastY = mouse.y; lastT = now; primed = true; return }
+                var dx = mouse.x - lastX, dy = mouse.y - lastY
+                var dt = Math.max(1, now - lastT)
+                lastX = mouse.x; lastY = mouse.y; lastT = now
+                travelled += Math.abs(dx) + Math.abs(dy)
+                var gain = win.pointerGain(Math.sqrt(dx * dx + dy * dy) / dt)
+                win.pendingX += dx * gain
+                win.pendingY += dy * gain
+                if (mouse.x < edge || mouse.y < edge || mouse.x > width - edge || mouse.y > height - edge)
+                  recentre(mouse)
+              }
+              onReleased: function(mouse) {
+                if (travelled > 6) return
+                if (mouse.button === Qt.RightButton) win.key("BACK")
+                else win.send("click")
+              }
+              onWheel: function(wheel) {
+                var steps = Math.round(-wheel.angleDelta.y / 120) || (wheel.angleDelta.y > 0 ? -1 : 1)
+                win.send("scroll " + steps)
+              }
+            }
+          }
+
+          // ---- apps ----
+          RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: Style.space(4)
+            Repeater {
+              model: [
+                { label: "Plex", glyph: "󰚺", app: "plex" },
+                { label: "YouTube", glyph: "󰗃", app: "youtube" },
+                { label: "Prime", glyph: "", app: "prime video" },
+                { label: "Shahid", glyph: "󰕼", app: "shahid" }
+              ]
+              Button {
+                required property var modelData
+                text: modelData.label
+                iconText: modelData.glyph
+                tooltipText: "Open " + modelData.label + " on the TV"
+                bordered: true
+                foreground: win.foreground
+                fontFamily: win.fontFamily
+                onClicked: win.run(["media", "tv", "app", modelData.app])
+              }
+            }
+          }
+
+          // ---- buttons ----
+          GridLayout {
+            Layout.alignment: Qt.AlignHCenter
+            columns: 3
+            rowSpacing: Style.space(4)
+            columnSpacing: Style.space(4)
+
+            Repeater {
+              model: [
+                { glyph: "󰁮", key: "BACK", tip: "Back (Backspace)" },
+                { glyph: "󰁝", key: "UP", tip: "Up" },
+                { glyph: "󰋜", key: "HOME", tip: "Home (h)" },
+                { glyph: "󰁍", key: "LEFT", tip: "Left" },
+                { glyph: "󰄬", key: "ENTER", tip: "OK (Enter)" },
+                { glyph: "󰁔", key: "RIGHT", tip: "Right" },
+                { glyph: "󰒓", key: "MENU", tip: "Settings" },
+                { glyph: "󰁅", key: "DOWN", tip: "Down" },
+                { glyph: "󰋽", key: "INFO", tip: "Info" }
+              ]
+              Button {
+                required property var modelData
+                Layout.preferredWidth: Style.space(64)
+                iconText: modelData.glyph
+                iconSize: Style.font.title
+                tooltipText: modelData.tip
+                bordered: true
+                foreground: win.foreground
+                fontFamily: win.fontFamily
+                onClicked: win.key(modelData.key)
+              }
+            }
+          }
+
+          // TV volume, then playback (the TV's own media keys)
+          RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: Style.space(2)
+            Repeater {
+              model: [
+                { glyph: "󰝞", key: "VOLUMEDOWN", tip: "TV volume down" },
+                { glyph: "󰝟", key: "MUTE", tip: "TV mute" },
+                { glyph: "󰝝", key: "VOLUMEUP", tip: "TV volume up" }
+              ]
+              Button {
+                required property var modelData
+                iconText: modelData.glyph
+                tooltipText: modelData.tip
+                foreground: win.foreground
+                fontFamily: win.fontFamily
+                onClicked: win.key(modelData.key)
+              }
+            }
+            Item { implicitWidth: Style.space(12) }
+            Button {
+              iconText: "󰑟"
+              tooltipText: "Rewind"
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.svc.tvKey("rew")
+            }
+            Button {
+              iconText: win.paused ? "󰐊" : "󰏤"
+              tooltipText: (win.paused ? "Play" : "Pause") + " (space)"
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.playPause()
+            }
+            Button {
+              iconText: "󰓛"
+              tooltipText: "Stop"
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.svc.tvKey("stop")
+            }
+            Button {
+              iconText: "󰈑"
+              tooltipText: "Fast forward"
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.svc.tvKey("ff")
+            }
+          }
+        }
+
+        // ================= Cast tab =================
+        ColumnLayout {
+          visible: win.tab === "cast"
+          Layout.fillWidth: true
+          Layout.fillHeight: true
+          spacing: Style.space(8)
+
+          // What's playing: name, progress (drag to seek), play/pause, next, stop.
+          ColumnLayout {
+            visible: win.svc.casting || win.svc.castState === "failed"
+            Layout.fillWidth: true
+            spacing: Style.space(6)
+
+            RowLayout {
+              Layout.fillWidth: true
+              spacing: Style.space(8)
+              Text {
+                textFormat: Text.PlainText
+                text: win.svc.castState === "paused" ? "󰏤" : (win.svc.castState === "starting" ? "󰑓" : "󰐊")
+                color: win.foreground
+                font.family: win.fontFamily
+                font.pixelSize: Style.font.icon
+                Layout.alignment: Qt.AlignVCenter
               }
               ColumnLayout {
                 Layout.fillWidth: true
@@ -505,221 +968,234 @@ FloatingWindow {
                 Text {
                   textFormat: Text.PlainText
                   Layout.fillWidth: true
-                  text: ytRow.modelData.title
+                  text: win.svc.castName
                   color: win.foreground
                   font.family: win.fontFamily
-                  font.pixelSize: Style.font.bodySmall
-                  wrapMode: Text.Wrap
-                  maximumLineCount: 2
-                  elide: Text.ElideRight
+                  font.pixelSize: Style.font.body
+                  elide: Text.ElideMiddle
                 }
                 Text {
                   textFormat: Text.PlainText
                   Layout.fillWidth: true
                   text: {
-                    var v = ytRow.modelData
-                    var bits = [v.channel, v.live ? "LIVE" : win.formatDuration(v.duration), win.formatViews(v.views)]
-                    return bits.filter(function(b) { return b }).join(" · ")
+                    var s = win.svc
+                    var st = s.castState === "starting" ? (s.castMessage || "Starting on the TV…")
+                      : s.castState === "paused" ? "Paused"
+                      : s.castState === "failed" ? (s.castMessage || "Didn't play")
+                      : "Playing on the TV"
+                    if (s.queueLength > 1) st += " · " + (s.cs.index + 1) + " of " + s.queueLength
+                    return s.castSubtitles ? st + " · subtitles" : st
                   }
-                  color: ytRow.modelData.live ? win.urgent : win.dim
+                  color: win.dim
                   font.family: win.fontFamily
                   font.pixelSize: Style.font.caption
                   elide: Text.ElideRight
                 }
               }
+              PanelActionButton {
+                visible: win.svc.casting
+                iconText: win.svc.castState === "playing" ? "󰏤" : "󰐊"
+                tooltipText: win.svc.castState === "playing" ? "Pause" : "Play"
+                foreground: win.foreground
+                fontFamily: win.fontFamily
+                onClicked: win.svc.toggleCast()
+              }
+              PanelActionButton {
+                visible: win.svc.casting && win.svc.hasNext
+                iconText: "󰒭"
+                tooltipText: "Next in the queue"
+                foreground: win.foreground
+                fontFamily: win.fontFamily
+                onClicked: win.svc.nextCast()
+              }
+              PanelActionButton {
+                visible: win.svc.casting
+                iconText: "󰓛"
+                tooltipText: "Stop casting"
+                foreground: win.foreground
+                fontFamily: win.fontFamily
+                onClicked: win.svc.stopCast()
+              }
+            }
+            RowLayout {
+              visible: win.svc.casting && win.svc.castDuration > 0
+              Layout.fillWidth: true
+              spacing: Style.space(8)
+              Text {
+                textFormat: Text.PlainText
+                text: win.svc.formatTime(win.svc.castPosition)
+                color: win.dim
+                font.family: win.fontFamily
+                font.pixelSize: Style.font.caption
+              }
+              PanelSlider {
+                Layout.fillWidth: true
+                minimum: 0
+                maximum: Math.max(1, win.svc.castDuration)
+                step: 5
+                integer: true
+                value: Math.max(0, win.svc.castPosition)
+                onReleased: function(v) { win.svc.seekCast(v) }
+              }
+              Text {
+                textFormat: Text.PlainText
+                text: win.svc.formatTime(win.svc.castDuration)
+                color: win.dim
+                font.family: win.fontFamily
+                font.pixelSize: Style.font.caption
+              }
+            }
+          }
+
+          TextField {
+            id: videoSearch
+            Layout.fillWidth: true
+            foreground: win.foreground
+            font.family: win.fontFamily
+            placeholderText: (win.svc.videos || []).length > 0
+              ? "Search " + win.svc.videos.length + " videos (/)"
+              : "No videos in ~/Videos, ~/Downloads or ~/Movies"
+            Keys.onPressed: function(event) {
+              if (event.key === Qt.Key_Escape) {
+                if (text !== "") text = ""
+                else win.leaveTextBox()
+                event.accepted = true
+              }
+            }
+            onAccepted: if (win.videoMatches.length > 0) win.svc.cast(win.videoMatches[0].path)
+          }
+
+          ListView {
+            id: videoList
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            spacing: Style.space(2)
+            model: win.videoMatches
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+            delegate: ActionRow {
+              required property var modelData
+              required property int index
+              width: videoList.width
+              glyph: modelData.path === win.svc.castPath && win.svc.casting ? "󰐊" : "󰕧"
+              label: modelData.name
+              detail: modelData.folder + " · " + win.svc.formatSize(modelData.size)
+                + (modelData.subtitles ? " · subtitles" : "")
+                + (index === 0 && videoSearch.activeFocus && videoSearch.text !== "" ? " · Enter" : "")
+              onActivated: win.svc.cast(modelData.path)
+            }
+          }
+          Text {
+            textFormat: Text.PlainText
+            visible: videoSearch.text !== "" && win.videoMatches.length === 0
+            Layout.fillWidth: true
+            text: "No video matches"
+            color: win.dim
+            font.family: win.fontFamily
+            font.pixelSize: Style.font.bodySmall
+          }
+
+          RowLayout {
+            Layout.fillWidth: true
+            spacing: Style.space(4)
+            Button {
+              Layout.fillWidth: true
+              text: "Caster…"
+              iconText: "󰐾"
+              tooltipText: "Queue, whole folders, links, continue where you left off"
+              bordered: true
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.openCasterRequested()
+            }
+            Button {
+              Layout.fillWidth: true
+              text: "Browse…"
+              iconText: "󰉋"
+              tooltipText: "Pick a video anywhere on this machine"
+              bordered: true
+              foreground: win.foreground
+              fontFamily: win.fontFamily
+              onClicked: win.svc.browseVideo()
             }
           }
         }
-      }
-
-      // ---- touchpad ----
-      Rectangle {
-        visible: !win.ytShown
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.minimumHeight: Style.space(160)
-        color: pad.pressed || win.padOn ? Qt.rgba(win.foreground.r, win.foreground.g, win.foreground.b, 0.08)
-                           : Qt.rgba(win.foreground.r, win.foreground.g, win.foreground.b, 0.04)
-        border.width: win.padOn ? 2 : 1
-        border.color: win.padOn || pad.containsMouse ? win.accent : win.faint
-        radius: Style.cornerRadius
 
         Text {
-          anchors.centerIn: parent
-          width: parent.width - Style.space(24)
+          textFormat: Text.PlainText
+          Layout.fillWidth: true
           horizontalAlignment: Text.AlignHCenter
           wrapMode: Text.Wrap
-          textFormat: Text.PlainText
-          text: (win.padOn
-            ? "Touchpad on\nmove to move the pointer · click to click · c or Esc to stop"
-            : "Touchpad\ndrag to move the pointer · click to click · scroll to scroll\nc: move without holding")
-            + "\nspeed " + win.speed + "× ( [ and ] ) · endless: the edges wrap to the middle"
-          color: win.padOn ? win.accent : win.dim
+          text: win.tab === "remote"
+            ? "arrows · ⏎ OK · ⌫ back · c touchpad · [ ] speed · / type · space play/pause · p power · m mute · Tab cast · Esc close"
+            : "/ search · ⏎ cast the first · p power · m mute · +/- Sonos · Tab remote · Esc close"
+          color: win.dim
           font.family: win.fontFamily
           font.pixelSize: Style.font.caption
         }
-
-        MouseArea {
-          id: pad
-          anchors.fill: parent
-          hoverEnabled: true
-          acceptedButtons: Qt.LeftButton | Qt.RightButton
-          cursorShape: Qt.CrossCursor
-          property real lastX: 0
-          property real lastY: 0
-          property real lastT: 0
-          property real travelled: 0
-          property bool primed: false   // lastX/lastY hold a real position
-
-          // Endless pad: near an edge the cursor is put back in the middle
-          // (Hyprland), so one long swipe can cross the whole TV. Motion until
-          // the cursor lands there is the warp itself, not the user, so it's skipped.
-          readonly property real edge: Math.min(28, width / 8, height / 8)
-          property bool warping: false
-          function recentre(mouse) {
-            var cx = width / 2, cy = height / 2
-            warping = true
-            warpGuard.restart()
-            win.run(["sh", "-c",
-              "p=$(hyprctl cursorpos) && x=${p%,*} && y=${p#*, } && " +
-              "hyprctl eval \"hl.dispatch(hl.dsp.cursor.move({ x = $((x + $1)), y = $((y + $2)) }))\"",
-              "sh", String(Math.round(cx - mouse.x)), String(Math.round(cy - mouse.y))])
-          }
-          Timer { id: warpGuard; interval: 250; onTriggered: { pad.warping = false; pad.primed = false } }
-
-          onExited: primed = false
-
-          onPressed: function(mouse) {
-            win.leaveTextBox()
-            lastX = mouse.x; lastY = mouse.y; lastT = Date.now(); travelled = 0; primed = true
-          }
-          onPositionChanged: function(mouse) {
-            if (!pressed && !win.padOn) return
-            var now = Date.now()
-            if (warping) {
-              if (Math.abs(mouse.x - width / 2) < 40 && Math.abs(mouse.y - height / 2) < 40) {
-                warping = false
-                warpGuard.stop()
-                lastX = mouse.x; lastY = mouse.y; lastT = now; primed = true
-              }
-              return
-            }
-            if (!primed) { lastX = mouse.x; lastY = mouse.y; lastT = now; primed = true; return }
-            var dx = mouse.x - lastX, dy = mouse.y - lastY
-            var dt = Math.max(1, now - lastT)
-            lastX = mouse.x; lastY = mouse.y; lastT = now
-            travelled += Math.abs(dx) + Math.abs(dy)
-            var gain = win.pointerGain(Math.sqrt(dx * dx + dy * dy) / dt)
-            win.pendingX += dx * gain
-            win.pendingY += dy * gain
-            if (mouse.x < edge || mouse.y < edge || mouse.x > width - edge || mouse.y > height - edge)
-              recentre(mouse)
-          }
-          onReleased: function(mouse) {
-            if (travelled > 6) return
-            if (mouse.button === Qt.RightButton) win.key("BACK")
-            else win.send("click")
-          }
-          onWheel: function(wheel) {
-            var steps = Math.round(-wheel.angleDelta.y / 120) || (wheel.angleDelta.y > 0 ? -1 : 1)
-            win.send("scroll " + steps)
-          }
-        }
       }
+    }
+  }
 
-      // ---- apps ----
-      RowLayout {
-        Layout.alignment: Qt.AlignHCenter
-        spacing: Style.space(4)
-        Repeater {
-          model: [
-            { label: "Plex", glyph: "󰚺", app: "plex" },
-            { label: "YouTube", glyph: "󰗃", app: "youtube" },
-            { label: "Prime", glyph: "", app: "prime video" },
-            { label: "Shahid", glyph: "󰕼", app: "shahid" }
-          ]
-          Button {
-            required property var modelData
-            text: modelData.label
-            iconText: modelData.glyph
-            tooltipText: "Open " + modelData.label + " on the TV"
-            bordered: true
-            foreground: win.foreground
-            fontFamily: win.fontFamily
-            onClicked: win.run(["media", "tv", "app", modelData.app])
-          }
-        }
-      }
+  component ActionRow: CursorSurface {
+    id: row
+    property string glyph: ""
+    property string label: ""
+    property string detail: ""
+    signal activated()
 
-      // ---- buttons ----
-      GridLayout {
-        Layout.alignment: Qt.AlignHCenter
-        columns: 3
-        rowSpacing: Style.space(4)
-        columnSpacing: Style.space(4)
+    hasCursor: rowMouse.containsMouse
+    foreground: win.foreground
+    implicitHeight: rowLayout.implicitHeight + Style.spacing.rowPaddingX
 
-        Repeater {
-          model: [
-            { glyph: "󰁮", key: "BACK", tip: "Back (Backspace)" },
-            { glyph: "󰁝", key: "UP", tip: "Up" },
-            { glyph: "󰋜", key: "HOME", tip: "Home (h)" },
-            { glyph: "󰁍", key: "LEFT", tip: "Left" },
-            { glyph: "󰄬", key: "ENTER", tip: "OK (Enter)" },
-            { glyph: "󰁔", key: "RIGHT", tip: "Right" },
-            { glyph: "󰒓", key: "MENU", tip: "Settings" },
-            { glyph: "󰁅", key: "DOWN", tip: "Down" },
-            { glyph: "󰋽", key: "INFO", tip: "Info" }
-          ]
-          Button {
-            required property var modelData
-            Layout.preferredWidth: Style.space(64)
-            iconText: modelData.glyph
-            iconSize: Style.font.title
-            tooltipText: modelData.tip
-            bordered: true
-            foreground: win.foreground
-            fontFamily: win.fontFamily
-            onClicked: win.key(modelData.key)
-          }
-        }
-      }
+    MouseArea {
+      id: rowMouse
+      anchors.fill: parent
+      hoverEnabled: true
+      cursorShape: Qt.PointingHandCursor
+      onClicked: row.activated()
+    }
 
-      RowLayout {
-        Layout.alignment: Qt.AlignHCenter
-        spacing: Style.space(4)
-        Repeater {
-          model: [
-            { glyph: "󰝞", key: "VOLUMEDOWN", tip: "Volume down (-)" },
-            { glyph: "󰝟", key: "MUTE", tip: "Mute (m)" },
-            { glyph: "󰝝", key: "VOLUMEUP", tip: "Volume up (+)" }
-          ]
-          Button {
-            required property var modelData
-            iconText: modelData.glyph
-            tooltipText: modelData.tip
-            foreground: win.foreground
-            fontFamily: win.fontFamily
-            onClicked: win.key(modelData.key)
-          }
-        }
-        Button {
-          iconText: win.paused ? "󰐊" : "󰏤"
-          tooltipText: (win.paused ? "Play" : "Pause") + " (space)"
-          foreground: win.foreground
-          fontFamily: win.fontFamily
-          onClicked: win.playPause()
-        }
-      }
+    RowLayout {
+      id: rowLayout
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.leftMargin: Style.space(10)
+      anchors.rightMargin: Style.space(10)
+      spacing: Style.space(10)
 
       Text {
         textFormat: Text.PlainText
-        Layout.fillWidth: true
-        horizontalAlignment: Text.AlignHCenter
-        wrapMode: Text.Wrap
-        text: "arrows · ⏎ OK · ⌫ back · c touchpad · [ ] speed · / type · space play/pause · +/- volume · Esc close"
-        color: win.dim
+        text: row.glyph
+        color: win.foreground
         font.family: win.fontFamily
-        font.pixelSize: Style.font.caption
+        font.pixelSize: Style.font.icon
+        Layout.alignment: Qt.AlignVCenter
+      }
+      ColumnLayout {
+        Layout.fillWidth: true
+        spacing: Style.space(1)
+        Text {
+          textFormat: Text.PlainText
+          Layout.fillWidth: true
+          text: row.label
+          color: win.foreground
+          font.family: win.fontFamily
+          font.pixelSize: Style.font.body
+          elide: Text.ElideRight
+        }
+        Text {
+          textFormat: Text.PlainText
+          visible: text !== ""
+          Layout.fillWidth: true
+          text: row.detail
+          color: win.dim
+          font.family: win.fontFamily
+          font.pixelSize: Style.font.caption
+          elide: Text.ElideRight
+        }
       }
     }
   }
