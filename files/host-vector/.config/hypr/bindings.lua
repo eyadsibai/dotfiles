@@ -48,6 +48,8 @@ o.bind("SUPER + SHIFT + R", "TV remote", "omarchy-shell eyad.media remote")
 -- Play or open the copied link: videos in mpv, images and PDFs in their viewer
 -- (linkhandler, from the newsboat module)
 o.bind("SUPER + ALT + V", "Open copied link", "linkhandler")
+-- …or pick what to do with it: mpv, loop, the TV, download, browser, subscribe
+o.bind("SUPER + ALT + SHIFT + V", "Open copied link with…", "openwith")
 
 -- Dictation keys from before Alt + Space and Right Alt became the defaults.
 -- Remove these lines to give the keys back to applications.
