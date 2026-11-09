@@ -9,7 +9,15 @@ tv --list [query]   list channels
 tv --check          probe the channels; --prune hides dead ones, --revive brings them back
 ```
 
-While watching: `ENTER`/`c` opens the grouped channel menu (type to search), `0-9` jumps to a channel, `PGUP`/`PGDN` changes channel, `/` or `Shift+ENTER` lists every channel with the search open, `-`/`+` changes volume, `m`/`M` mutes, and `r` reloads it. These keys are bound in `tv.lua`, so they only apply inside TV and need no `input.conf`.
+While watching: `ENTER`/`c` opens the channel menu (Favorites, Recent, then categories; type to search), `0-9` jumps to a channel, `PGUP`/`PGDN` changes channel, `TAB` goes back to the last one, `s` stars the channel (`Ctrl+S` on a menu row), `/` or `Shift+ENTER` lists every channel with the search open, `-`/`+` changes volume, `m`/`M` mutes, and `r` reloads it. These keys are bound in `tv.lua`, so they only apply inside TV and need no `input.conf`.
+
+The menu files channels under categories (News, General, Series & Drama, Movies, Kids & Family, Sports, Documentary, Music & Radio, Religious, Other) taken from the `<source> - <kind>` group-titles, with the source as a language; names drop `(1080p)`, and `[Geo-blocked]`/`[Not 24/7]` become tags. `tv.m3u` keeps its own groups. A banner shows each channel: its `tvg-logo` (cached in `~/.cache/tv/logos`) or initials, number, name, category, language, and the channel `TAB` returns to.
+
+Colours follow the Omarchy theme (`~/.local/state/omarchy/current/theme/colors.toml`) for uosc and the banner, re-read while playing, and the menus use the Omarchy font (`omarchy-font-current`; `$TV_FONT` overrides).
+
+## The bar
+
+While TV runs, the Omarchy bar shows it (the `eyad.tv` plugin, `.config/omarchy/plugins/eyad.tv`): click for a popup that searches every channel and lists favorites and recent ones; scroll changes channel, middle-click goes back, right-click opens TV's own menu. It reads `$XDG_RUNTIME_DIR/tv/now.json` and `channels.json`, written by `tv.lua`, and talks back through `tv --ctl menu|next|prev|last|star|play <N>` (mpv's IPC socket, `$XDG_RUNTIME_DIR/tv/mpv.sock`). `tv --bar` prints the playing channel as JSON.
 
 ## Files
 
@@ -18,7 +26,8 @@ While watching: `ENTER`/`c` opens the grouped channel menu (type to search), `0-
 | `.local/bin/tv` | Launcher. Rebuilds the channel list (`tv-check --sync`), numbers channels and resumes the last one |
 | `.local/bin/tv-check` | `uv` script. Probes every channel with ffprobe, keeps failure and success streaks, prunes channels dead 2+ runs and revives pruned ones live 2+ runs, and builds the channel list the player plays |
 | `.config/mpv/tv/tv.conf` | The `[tv]` mpv profile. The launcher loads it with `--include`, so `~/.config/mpv/mpv.conf` stays untouched |
-| `.config/mpv/tv/tv.lua` | Per-channel HTTP headers and signed-link resolving from the m3u, uosc channel menu, digit entry, auto-reconnect, dead-channel guard |
+| `.config/mpv/tv/tv.lua` | Per-channel HTTP headers and signed-link resolving from the m3u, uosc channel menu by category with favorites and recent, channel banner, Omarchy theme, digit entry, auto-reconnect, dead-channel guard, state for the bar |
+| `.config/omarchy/plugins/eyad.tv` | The Omarchy bar widget |
 | `.local/share/applications/TV.desktop` | App launcher entry (runs `tv` from `PATH`) |
 | `.local/share/icons/hicolor/scalable/apps/tv.svg` | Its icon |
 | `.config/tv/tv.m3u` | The channel playlist (or `$TV_M3U`). Yours to edit; the tools only read it |
@@ -32,7 +41,7 @@ Some channels (Al Kass) only play with a short-lived token. Their entry keeps th
 
 ## Not in the package
 
-- `${XDG_STATE_HOME:-~/.local/state}/tv/`: last channel, `health.json`, the pruned channels (`offline.m3u`) and the channel list the player plays (`playing.m3u`).
+- `${XDG_STATE_HOME:-~/.local/state}/tv/`: last channel, `favorites`, `recent`, `health.json`, the pruned channels (`offline.m3u`) and the channel list the player plays (`playing.m3u`).
 - The Hyprland window rule that tiles `mpv-tv` at full opacity. It lives in the `hypr` package.
 
 ## Needs

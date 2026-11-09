@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "eyad.tv",
+  "name": "Live TV",
+  "version": "0.1.0",
+  "author": "Eyad Sibai",
+  "license": "MIT",
+  "description": "The channel playing in the tv app (mpv), with search, favorites and recent channels to switch to. Shown only while TV is running.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Live TV",
+    "description": "The playing channel while TV runs. Click for search, favorites and recent; scroll changes channel, middle-click goes back to the last one, right-click opens TV's channel menu.",
+    "category": "Media",
+    "aliases": [
+      "tv",
+      "iptv",
+      "channels"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {},
+    "schema": []
+  }
+}

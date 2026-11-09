@@ -35,8 +35,10 @@ class Fixture(unittest.TestCase):
         self.playlist = self.config / "tv.m3u"
         self.bin = self.root / "bin"
         self.bin.mkdir()
+        self.run_dir = self.root / "run"
         self.env = dict(os.environ, HOME=str(self.home), XDG_CONFIG_HOME=str(self.config.parent),
-                        XDG_STATE_HOME=str(self.state.parent), TV_M3U="",
+                        XDG_STATE_HOME=str(self.state.parent), XDG_RUNTIME_DIR=str(self.run_dir), TV_M3U="",
+                        TV_FONT="",
                         PATH=str(self.bin) + os.pathsep + os.environ["PATH"], TV_TEST_DEAD="[]")
         self.write_playlist(self.playlist, ["A", "B", "C"])
         self.executable("ffprobe", f"#!{sys.executable}\n" + '''
@@ -345,6 +347,31 @@ class LauncherTests(Fixture):
         args = self.launch_args()
         self.assertFalse([a for a in args if a.startswith(("--script=", "--osc", "--osd-"))], args)
 
+    def test_bar_shows_the_playing_channel_and_nothing_once_tv_is_gone(self):
+        now = self.run_dir / "tv" / "now.json"
+        now.parent.mkdir(parents=True)
+        now.write_text(json.dumps({"pid": os.getpid(), "text": "󰔂 3 Film"}))
+        proc = self.launch("--bar")
+        self.assertEqual((proc.returncode, json.loads(proc.stdout)["text"]), (0, "󰔂 3 Film"), proc.stderr)
+        gone = subprocess.Popen(["true"])
+        gone.wait()
+        now.write_text(json.dumps({"pid": gone.pid, "text": "stale"}))
+        proc = self.launch("--bar")
+        self.assertEqual((proc.returncode, proc.stdout), (0, ""), proc.stderr)
+
+    def test_ctl_checks_its_action_and_needs_a_running_tv(self):
+        proc = self.launch("--ctl", "menu")
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("isn't running", proc.stderr)
+        proc = self.launch("--ctl", "explode")
+        self.assertIn("usage: tv --ctl", proc.stderr)
+
+    def test_player_gets_a_control_socket_and_the_chosen_font(self):
+        self.env["TV_FONT"] = "Test Mono"
+        args = self.launch_args()
+        self.assertIn(f"--input-ipc-server={self.run_dir}/tv/mpv.sock", args)
+        self.assertIn("--osd-font=Test Mono", args)
+
     def test_leading_zero_numbers_are_decimal(self):
         for value, index in [("08", 7), ("09", 8), ("010", 9), ("00012", 11)]:
             with self.subTest(value=value):
@@ -446,18 +473,57 @@ mp.add_timeout(5, function() mp.command('quit') end)
         proc = self.play(extra=["--idle=yes", driver, *extra])
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
 
-    def test_channel_menu_goes_to_uosc_grouped(self):
+    def fake_uosc(self, out):
+        """A stand-in uosc that saves the menu it is asked to open, then quits mpv."""
+        return self.script("uosc.lua", "mp.register_script_message('open-menu', function(json)\n"
+                           f"    local f = io.open({json.dumps(str(out))}, 'w')\n"
+                           "    f:write(json) f:close() mp.command('quit')\nend)\n")
+
+    def test_channel_menu_goes_to_uosc_by_category(self):
         second = self.root / "audio2.wav"
         shutil.copy(self.audio, second)
-        self.playlist.write_text(f'#EXTM3U\n#EXTINF:-1 group-title="News",One\n{self.audio}\n'
-                                 f'#EXTINF:-1 group-title="Kids",Two\n{second}\n')
+        self.playlist.write_text(f'#EXTM3U\n#EXTINF:-1 group-title="IPTV - News",One (1080p)\n{self.audio}\n'
+                                 f'#EXTINF:-1 group-title="English - Kids",Two [Geo-blocked]\n{second}\n')
         menu = self.root / "menu.json"
-        self.open_channel_menu(self.script("uosc.lua", "mp.register_script_message('open-menu', function(json)\n"
-                                           f"    local f = io.open({json.dumps(str(menu))}, 'w')\n"
-                                           "    f:write(json) f:close() mp.command('quit')\nend)\n"))
-        groups = json.loads(menu.read_text())["items"]
-        self.assertEqual([(g["title"], g["hint"], [c["title"] for c in g["items"]]) for g in groups],
-                         [("News", "1", ["One"]), ("Kids", "1", ["Two"])])
+        self.open_channel_menu(self.fake_uosc(menu))
+        data = json.loads(menu.read_text())
+        groups = [(g["title"], g["hint"], [(c["title"], c["hint"]) for c in g["items"]]) for g in data["items"]]
+        self.assertEqual(groups, [
+            ("↺ Recent", "1", [("One", "News  ·  1")]),
+            ("News", "1", [("One", "1")]),
+            ("Kids & Family", "1", [("Two", "geo-blocked  ·  2")]),
+        ])
+        self.assertEqual(data["selected_index"], 2)   # the playing channel's category
+        self.assertEqual(data["callback"], ["tv", "menu-event"])
+
+    def test_star_from_the_menu_marks_and_lists_the_channel(self):
+        url = str(self.audio)
+        self.playlist.write_text(f'#EXTM3U\n#EXTINF:-1 group-title="IPTV - News",One\n{url}\n')
+        menu = self.root / "menu.json"
+        event = json.dumps({"type": "key", "key": "ctrl+s", "selected_item": {"value": url}})
+        driver = self.script("star.lua", "mp.register_event('file-loaded', function()\n"
+                             f"    mp.commandv('script-message-to', 'tv', 'menu-event', {json.dumps(event)})\n"
+                             "    mp.commandv('script-binding', 'tv/tv-channels')\nend)\n")
+        proc = self.play(extra=["--idle=yes", driver, self.fake_uosc(menu)])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertEqual((self.state / "favorites").read_text(), url + "\n")
+        first = json.loads(menu.read_text())["items"][0]
+        self.assertEqual((first["title"], [c["title"] for c in first["items"]]), ("★ Favorites", ["★ One"]))
+
+    def test_now_json_is_written_while_playing_and_removed_on_quit(self):
+        self.playlist.write_text(f'#EXTM3U\n#EXTINF:-1 group-title="English - Movies",Film (720p)\n{self.audio}\n')
+        now = self.run_dir / "tv" / "now.json"
+        probe = self.script("now.lua", "mp.register_event('file-loaded', function()\n"
+                            "  mp.add_timeout(0.2, function()\n"
+                            f"    local f = io.open({json.dumps(str(now))}) print('now ' .. f:read('*a')) f:close()\n"
+                            "    mp.command('quit')\n  end)\nend)\n")
+        proc = self.play(extra=["--idle=yes", probe, "--msg-level=all=warn,tv=info,now=info"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        line = next(x for x in proc.stdout.splitlines() if x.startswith("[now] now "))
+        data = json.loads(line.removeprefix("[now] now "))
+        self.assertEqual((data["number"], data["name"], data["category"], data["language"]),
+                         (1, "Film", "Movies", "English"))
+        self.assertFalse(now.exists())
 
     def test_channel_menu_without_uosc_opens_mpv_playlist_picker(self):
         options = subprocess.run(["mpv", "--list-options"], capture_output=True, text=True, check=False).stdout

@@ -7,6 +7,8 @@
 #   tv -l|--list [q]    list channels (number, group, name), optionally filtered
 #   tv --dump           list channels tab-separated: number, group, name, url
 #   tv --check [args]   run tv-check (probe the playlist; --prune / --revive channels)
+#   tv --bar            the playing channel as Omarchy bar JSON; nothing when TV isn't running
+#   tv --ctl <action>   menu | next | prev | last | star | play <N>, sent to the running TV
 #   tv -h|--help
 #
 # Anything after "--" is passed to mpv, e.g.  tv mbc1 -- --fullscreen
@@ -18,16 +20,21 @@
 # autoload it, tv loads $TV_UOSC (default /usr/share/mpv/scripts/uosc) for TV only.
 #
 # Keys while watching:
-#   ENTER / c   channel menu (grouped, type to search)     0-9  jump to channel
-#   PGUP/PGDN   previous / next channel                    r    reload channel
-#   / or S-ENTER  all channels, search                     q    quit
-#   - / + =     volume down / up                           m/M  mute
+#   ENTER / c   channel menu (by category, type to search)  0-9  jump to channel
+#   PGUP/PGDN   previous / next channel                     r    reload channel
+#   / or S-ENTER  all channels, search                      q    quit
+#   TAB         last channel                                s    star (favorite)
+#   - / + =     volume down / up                            m/M  mute
+# Menus and the channel banner take the Omarchy theme's colours and font.
 
 set -euo pipefail
 
 PLAYLIST="${TV_M3U:-${XDG_CONFIG_HOME:-$HOME/.config}/tv/tv.m3u}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/tv"
 LAST_FILE="$STATE_DIR/last"
+
+RUN_DIR="${XDG_RUNTIME_DIR:-/tmp}/tv"
+SOCKET="$RUN_DIR/mpv.sock"
 
 usage() { sed -n '2,/^$/p' "$0" | sed -e 's/^# \{0,1\}//' -e '/^$/d'; }
 
@@ -74,6 +81,35 @@ index_of_name() {
   list_channels | awk -F'\t' -v q="$1" \
     'BEGIN { q = tolower(q) } !n && index(tolower($3), q) { n = $1 } END { if (n) print n }'
 }
+
+# The bar polls --bar every few seconds, so it and --ctl skip the channel list.
+case "${1:-}" in
+  --bar)
+    # tv.lua writes now.json on every channel change and removes it on quit; a
+    # crash leaves it behind, so its pid has to be alive too.
+    now="$RUN_DIR/now.json"
+    [ -r "$now" ] || exit 0
+    pid="$(grep -o '"pid": *[0-9]*' "$now" | grep -o '[0-9]*$' || true)"
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then cat "$now"; fi
+    exit 0 ;;
+  --ctl)
+    case "${2:-}" in
+      menu|next|prev|last|star) ;;
+      play) [[ "${3:-}" =~ ^[0-9]+$ ]] || die "usage: tv --ctl play <channel number>" ;;
+      *) die "usage: tv --ctl menu|next|prev|last|star|play <N>" ;;
+    esac
+    [ -S "$SOCKET" ] || die "TV isn't running"
+    # The menu opens in TV's window, so bring that forward first.
+    if [ "$2" = menu ] && command -v hyprctl >/dev/null; then
+      hyprctl eval 'hl.dispatch(hl.dsp.focus({ window = "class:mpv-tv" }))' >/dev/null 2>&1 || true
+    fi
+    python3 -c 'import json, socket, sys
+s = socket.socket(socket.AF_UNIX)
+s.connect(sys.argv[1])
+s.sendall((json.dumps({"command": ["script-message", "tv-" + sys.argv[2], *sys.argv[3:]]}) + "\n").encode())' \
+      "$SOCKET" "$2" "${@:3}"
+    exit 0 ;;
+esac
 
 [ -r "$PLAYLIST" ] || die "playlist not found: $PLAYLIST"
 
@@ -125,6 +161,12 @@ esac
 
 # Load the [tv] profile here rather than from mpv.conf, so installing is just `stow tv`.
 args=("--include=~~/tv/tv.conf" --profile=tv "--playlist=$PLAYING")
+# For `tv --ctl`; one TV at a time owns it.
+mkdir -p "$RUN_DIR"
+args+=("--input-ipc-server=$SOCKET")
+# The Omarchy font for uosc's menus and the banner ($TV_FONT overrides; empty: mpv's).
+font="${TV_FONT-$(omarchy-font-current 2>/dev/null || true)}"
+[ -n "$font" ] && args+=("--osd-font=$font")
 [ -n "$start_index" ] && args+=("--playlist-start=$start_index")
 
 # uosc draws the grouped channel menu; without it tv.lua falls back to mpv's flat
