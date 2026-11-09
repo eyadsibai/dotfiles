@@ -1,0 +1,13 @@
+# Keeps Spotify patchable by spicetify (Spotify themed from Omarchy): installing
+# or upgrading the package resets /opt/spotify to root-only, and spicetify, run
+# as you, has to write there. Install: sudo cp arch/spicetify.hook /etc/pacman.d/hooks/
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = spotify
+
+[Action]
+Description = Letting spicetify patch Spotify...
+When = PostTransaction
+Exec = /usr/bin/sh -c 'chmod a+wr /opt/spotify && chmod -R a+wr /opt/spotify/Apps'

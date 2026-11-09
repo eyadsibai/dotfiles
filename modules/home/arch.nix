@@ -46,7 +46,13 @@ in
     "tv"
   ];
 
-  home.packages = [ pkgs.nh ];
+  home.packages = with pkgs; [
+    nh
+    # Not in Arch's repos (spicetify is AUR-only) or easier from Nix. Their
+    # colours come from the theme-set hooks (10-spotify.sh, 40-cava.sh).
+    spicetify-cli # Spotify themed from Omarchy; needs /opt/spotify writable
+    cava # audio visualizer; also drives the bar's (eyad.cava)
+  ];
   programs.man.package = null; # pacman's man-db
 
   # Omarchy's theme-set links the current theme to ~/.config/btop/themes/current.theme

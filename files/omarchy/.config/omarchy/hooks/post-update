@@ -19,6 +19,13 @@ fi
 # critical "config reverted by update" on every single update. The snapshot in
 # ~/.local/state/waybar-custom/ is left in place as an archive of the old bar.
 
+# An updated Spotify drops spicetify's theme (arch/spicetify.hook keeps it
+# writable): put it back.
+if command -v spicetify &>/dev/null && [[ -w /opt/spotify/Apps ]]; then
+  spicetify backup apply >/dev/null 2>&1 ||
+    notify-send "Spotify's theme didn't re-apply" "Run: spicetify backup apply"
+fi
+
 # Omarchy defaults that changed under a file the dotfiles repo overrides. Nothing is
 # touched here: `just omarchy-merge` brings the changes in, for review with git diff.
 repo=$HOME/dev/dotfiles
