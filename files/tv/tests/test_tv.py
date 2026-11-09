@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import runpy
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -372,6 +373,36 @@ class LauncherTests(Fixture):
         self.assertIn(f"--input-ipc-server={self.run_dir}/tv/mpv.sock", args)
         self.assertIn("--osd-font=Test Mono", args)
 
+    def test_pip_opens_a_muted_corner_tv_with_its_own_socket(self):
+        proc = self.launch("--pip", "3")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        args = proc.stdout.splitlines()
+        for arg in (f"--input-ipc-server={self.run_dir}/tv/pip.sock", "--wayland-app-id=mpv-tv-pip",
+                    "--mute=yes", "--script-opts-append=tv-pip=yes", "--playlist-start=2"):
+            self.assertIn(arg, args)
+
+    def test_pip_switches_an_open_corner_tv_instead_of_starting_another(self):
+        sock = self.run_dir / "tv" / "pip.sock"
+        sock.parent.mkdir(parents=True)
+        server = socket.socket(socket.AF_UNIX)
+        server.bind(str(sock))
+        server.listen(1)
+        self.addCleanup(server.close)
+        proc = self.launch("--pip", "5")
+        self.assertEqual((proc.returncode, proc.stdout), (0, ""), proc.stderr)   # mpv not started
+        conn, _ = server.accept()
+        with conn:
+            message = json.loads(conn.recv(4096))
+        self.assertEqual(message, {"command": ["script-message", "tv-play", "5"]})
+
+    def test_bar_pip_reads_the_corner_tvs_state(self):
+        state = self.run_dir / "tv"
+        state.mkdir(parents=True)
+        (state / "pip.json").write_text(json.dumps({"pid": os.getpid(), "number": 12}))
+        proc = self.launch("--bar", "--pip")
+        self.assertEqual(json.loads(proc.stdout)["number"], 12, proc.stderr)
+        self.assertEqual(self.launch("--bar").stdout, "")
+
     def test_leading_zero_numbers_are_decimal(self):
         for value, index in [("08", 7), ("09", 8), ("010", 9), ("00012", 11)]:
             with self.subTest(value=value):
@@ -535,6 +566,20 @@ mp.add_timeout(5, function() mp.command('quit') end)
                                            f"    io.open({json.dumps(str(picked))}, 'w'):close()\n"
                                            "    mp.command('quit')\nend)\n"))
         self.assertTrue(picked.exists())
+
+    def test_corner_tv_leaves_the_main_tvs_state_alone(self):
+        pip = self.run_dir / "tv" / "pip.json"
+        probe = self.script("pip.lua", "mp.register_event('file-loaded', function()\n"
+                            "  mp.add_timeout(0.2, function()\n"
+                            f"    local f = io.open({json.dumps(str(pip))}) print('pip ' .. f:read('*a')) f:close()\n"
+                            "    mp.command('quit')\n  end)\nend)\n")
+        proc = self.play(",tv-pip=yes", extra=["--idle=yes", probe, "--msg-level=all=warn,tv=info,pip=info"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("[pip] pip {", proc.stdout)
+        self.assertFalse((self.state / "last").exists())
+        self.assertFalse((self.state / "recent").exists())
+        self.assertFalse((self.run_dir / "tv" / "now.json").exists())
+        self.assertFalse(pip.exists())   # removed on quit
 
     def test_remember_channel_uses_xdg_state(self):
         proc = self.play()

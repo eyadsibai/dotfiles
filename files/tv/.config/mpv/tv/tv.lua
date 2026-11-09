@@ -16,7 +16,11 @@
 --   * A channel banner (logo, number, name, category, language), and uosc's
 --     colours, from the Omarchy theme; both follow a theme change while playing.
 --   * $XDG_RUNTIME_DIR/tv/now.json for the Omarchy bar (`tv --bar`), and script
---     messages tv-menu / tv-next / tv-prev / tv-last / tv-star for `tv --ctl`.
+--     messages tv-menu / tv-next / tv-prev / tv-last / tv-star / tv-play / tv-mute /
+--     tv-unmute / tv-quit for `tv --ctl`.
+--   * A second, corner TV (`tv --pip`, pip=yes): it leaves the main TV's last
+--     channel, recent list and bar files alone and writes pip.json instead. In
+--     either, a takes the sound (muting the other) and x swaps their channels.
 --   * Remote-style channel numbers: type digits (0-9 / keypad), ENTER or a
 --     short pause jumps to that channel.  r reloads the current channel.
 --     PGUP/PGDN change channel, / or Shift+ENTER searches all channels,
@@ -70,6 +74,8 @@ local o = {
     recent_file = state_home .. '/tv/recent',
     runtime_dir = (os.getenv('XDG_RUNTIME_DIR') or '/tmp') .. '/tv',
     logo_dir = '~/.cache/tv/logos',
+    pip = false,       -- the corner TV (tv --pip)
+    launcher = 'tv',   -- the tv launcher, for messages to the other TV
     dump = '',   -- test hook (tests/parsers.sh): write parsed channels here and quit
     state_file = state_home .. '/tv/last',
     health_file = state_home .. '/tv/health.json',
@@ -611,7 +617,8 @@ mp.observe_property('osd-dimensions', 'native', function()
 end)
 
 -- The bar's view of TV: written on every change, removed when mpv quits.
-local function now_file() return expand(o.runtime_dir) .. '/now.json' end
+local function now_file() return expand(o.runtime_dir) .. (o.pip and '/pip.json' or '/now.json') end
+local function other_now_file() return expand(o.runtime_dir) .. (o.pip and '/now.json' or '/pip.json') end
 
 local function write_now()
     local url = current.url
@@ -633,6 +640,7 @@ end
 
 -- Every channel for the bar's search, with favorites and recent channels by number.
 local function write_channels()
+    if o.pip then return end   -- the main TV's job
     local playlist = mp.get_property_native('playlist') or {}
     local list, number_of = {}, {}
     for i, item in ipairs(playlist) do
@@ -656,7 +664,7 @@ end
 
 mp.register_event('shutdown', function()
     os.remove(now_file())
-    os.remove(expand(o.runtime_dir) .. '/channels.json')
+    if not o.pip then os.remove(expand(o.runtime_dir) .. '/channels.json') end
 end)
 
 mp.register_event('start-file', function()
@@ -678,6 +686,7 @@ end)
 -- late event handler can see the next channel or none, and if mpv is already
 -- quitting it kills the first run's mkdir.
 mp.add_hook('on_preloaded', 50, function()
+    if o.pip then return end   -- the corner TV doesn't move the main one's last channel
     remember_channel(mp.get_property('path'))
     push_recent(mp.get_property('path'))
 end)
@@ -1002,6 +1011,37 @@ mp.register_script_message('tv-next', function() mp.command('playlist-next') end
 mp.register_script_message('tv-prev', function() mp.command('playlist-prev') end)
 mp.register_script_message('tv-last', last_channel)
 mp.register_script_message('tv-star', function() if current.url then toggle_favorite(current.url) end end)
+mp.register_script_message('tv-mute', function() mp.set_property_bool('mute', true) end)
+mp.register_script_message('tv-unmute', function() mp.set_property_bool('mute', false) end)
+mp.register_script_message('tv-quit', function() mp.command('quit') end)
+
+-- The other TV (main <-> corner), through the launcher; quietly nothing when it isn't open.
+local function tell_other(...)
+    mp.command_native_async({ name = 'subprocess', playback_only = false, capture_stderr = true,
+        args = { o.launcher, o.pip and '--ctl' or '--pip-ctl', ... } }, function() end)
+end
+
+-- a: this TV takes the sound; the other goes quiet.
+mp.add_key_binding('a', 'tv-take-sound', function()
+    mp.set_property_bool('mute', false)
+    tell_other('mute')
+    osd('🔊  Sound from this TV', 1.5)
+end)
+
+-- x: swap channels with the other TV.
+mp.add_key_binding('x', 'tv-swap', function()
+    local f = io.open(other_now_file(), 'r')
+    local other = f and utils.parse_json(f:read('*a'))
+    if f then f:close() end
+    local mine = (mp.get_property_number('playlist-pos') or -1) + 1
+    if type(other) ~= 'table' or not tonumber(other.number) or mine < 1 then
+        osd('No other TV open (tv --pip opens one)', 2)
+        return
+    end
+    tell_other('play', tostring(mine))
+    mp.commandv('playlist-play-index', tostring(tonumber(other.number) - 1))
+end)
+
 mp.register_script_message('tv-play', function(n)
     local count = mp.get_property_number('playlist-count') or 0
     n = tonumber(n)

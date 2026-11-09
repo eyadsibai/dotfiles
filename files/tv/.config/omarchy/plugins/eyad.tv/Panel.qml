@@ -9,8 +9,10 @@ import qs.Ui
 
 // Bar icon + popup for the tv app, shown only while it runs. The popup searches
 // every channel and lists favorites and recent ones; picking one switches TV to
-// it. Scroll changes channel, middle-click goes back to the last one,
-// right-click opens TV's own channel menu.
+// it, and each row can open it in the corner TV (tv --pip) instead. While a
+// corner TV is open the bar shows both numbers, and the popup can hand it the
+// sound, swap the two, or close it. Scroll changes channel, middle-click goes
+// back to the last one, right-click opens TV's own channel menu.
 //
 // tv.lua writes what this shows ($XDG_RUNTIME_DIR/tv/now.json, channels.json);
 // commands go back through `tv --ctl`.
@@ -27,12 +29,23 @@ Panel {
   readonly property string runDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/tv"
 
   property var now: null          // the playing channel, from `tv --bar`; null: TV isn't running
+  property var pip: null          // the corner TV's, from `tv --bar --pip`
+  readonly property string pipGlyph: "\u{eb7f}"
   property var lists: ({ channels: [], favorites: [], recent: [] })
-  readonly property bool running: now !== null
+  readonly property bool running: now !== null || pip !== null
   readonly property int resultLimit: 12
 
   function ctl(args) { Quickshell.execDetached(["tv", "--ctl"].concat(args)) }
   function play(n) { ctl(["play", String(n)]); root.close() }
+  function pipCtl(args) { Quickshell.execDetached(["tv", "--pip-ctl"].concat(args)) }
+  function playInCorner(n) { Quickshell.execDetached(["tv", "--pip", String(n)]); root.close() }
+  function soundToCorner() { pipCtl(["unmute"]); ctl(["mute"]) }
+  function soundToMain() { ctl(["unmute"]); pipCtl(["mute"]) }
+  function swap() {
+    if (!now || !pip) return
+    ctl(["play", String(pip.number)])
+    pipCtl(["play", String(now.number)])
+  }
 
   function channel(n) { return lists.channels[n - 1] || null }
   function numbers(ns) {
@@ -73,11 +86,15 @@ Panel {
   // Is TV running, and on what? `tv --bar` checks the player is alive.
   Process {
     id: poll
-    command: ["tv", "--bar"]
+    // First line: the main TV, the rest: the corner one (either may be empty).
+    command: ["sh", "-c", "tv --bar; echo; tv --bar --pip"]
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: {
-        try { root.now = text.trim() === "" ? null : JSON.parse(text) } catch (e) { root.now = null }
+        var lines = text.split("\n")
+        var main = lines[0].trim(), corner = lines.slice(1).join("").trim()
+        try { root.now = main === "" ? null : JSON.parse(main) } catch (e) { root.now = null }
+        try { root.pip = corner === "" ? null : JSON.parse(corner) } catch (e) { root.pip = null }
       }
     }
   }
@@ -123,9 +140,10 @@ Panel {
     fixedWidth: root.bar && root.bar.vertical ? -1
       : Style.bar.iconSlot + (button.labelText !== "" ? Math.ceil(numberMetrics.advanceWidth) + Style.space(4) : 0)
     text: root.tvGlyph
-    labelText: root.now ? String(root.now.number) : ""
+    labelText: (root.now ? String(root.now.number) : "") + (root.pip ? "·" + root.pip.number : "")
     active: root.opened
     tooltipText: root.opened || !root.now ? "" : root.now.tooltip
+      + (root.pip ? "\nCorner: " + root.pip.number + " " + root.pip.name : "")
     onPressed: function(b) {
       if (b === Qt.MiddleButton) root.ctl(["last"])
       else if (b === Qt.RightButton) root.ctl(["menu"])
@@ -192,6 +210,53 @@ Panel {
                 fontFamily: hero.fontFamily
                 onClicked: root.ctl(["star"])
               }
+            }
+          }
+
+          // ---- the corner TV ----
+          RowLayout {
+            visible: root.pip !== null
+            width: parent.width
+            spacing: Style.space(8)
+            Text {
+              textFormat: Text.PlainText
+              text: root.pipGlyph
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.icon
+              Layout.alignment: Qt.AlignVCenter
+            }
+            Text {
+              textFormat: Text.PlainText
+              Layout.fillWidth: true
+              elide: Text.ElideRight
+              text: root.pip ? "Corner: " + root.pip.number + "  " + root.pip.name : ""
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.bodySmall
+              Layout.alignment: Qt.AlignVCenter
+            }
+            PanelActionButton {
+              iconText: "󰕾"
+              tooltipText: "Sound from the corner TV (mutes the main one)"
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onClicked: root.soundToCorner()
+            }
+            PanelActionButton {
+              visible: root.now !== null
+              iconText: "󰓡"
+              tooltipText: "Swap the two channels"
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onClicked: root.swap()
+            }
+            PanelActionButton {
+              iconText: "󰅖"
+              tooltipText: "Close the corner TV"
+              foreground: root.foreground
+              fontFamily: root.fontFamily
+              onClicked: { root.pipCtl(["quit"]); root.soundToMain() }
             }
           }
 
@@ -349,6 +414,16 @@ Panel {
           font.pixelSize: Style.font.caption
           elide: Text.ElideRight
         }
+      }
+      PanelActionButton {
+        id: cornerButton
+        opacity: rowMouse.containsMouse || cornerButton._hot ? 1 : 0.35
+        iconText: root.pipGlyph
+        tooltipText: "Watch in the corner, muted"
+        foreground: root.foreground
+        fontFamily: root.fontFamily
+        Layout.alignment: Qt.AlignVCenter
+        onClicked: root.playInCorner(row.channel.n)
       }
     }
   }

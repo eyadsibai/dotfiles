@@ -7,8 +7,10 @@
 #   tv -l|--list [q]    list channels (number, group, name), optionally filtered
 #   tv --dump           list channels tab-separated: number, group, name, url
 #   tv --check [args]   run tv-check (probe the playlist; --prune / --revive channels)
-#   tv --bar            the playing channel as Omarchy bar JSON; nothing when TV isn't running
-#   tv --ctl <action>   menu | next | prev | last | star | play <N>, sent to the running TV
+#   tv --pip [N|name]   a second, muted TV pinned in a corner (or switch the open one)
+#   tv --bar [--pip]    the playing channel as Omarchy bar JSON; nothing when TV isn't running
+#   tv --ctl <action>   menu | next | prev | last | star | mute | unmute | quit | play <N>,
+#                       sent to the running TV; --pip-ctl sends it to the corner one
 #   tv -h|--help
 #
 # Anything after "--" is passed to mpv, e.g.  tv mbc1 -- --fullscreen
@@ -25,6 +27,7 @@
 #   / or S-ENTER  all channels, search                      q    quit
 #   TAB         last channel                                s    star (favorite)
 #   - / + =     volume down / up                            m/M  mute
+#   a           take the sound (mutes the other TV)         x    swap channels with it
 # Menus and the channel banner take the Omarchy theme's colours and font.
 
 set -euo pipefail
@@ -82,32 +85,48 @@ index_of_name() {
     'BEGIN { q = tolower(q) } !n && index(tolower($3), q) { n = $1 } END { if (n) print n }'
 }
 
+# The corner TV (tv --pip) has its own socket and state file, so the main one's
+# last channel, recent list and bar widget stay its own.
+PIP=""
+if [ "${1:-}" = --pip ]; then PIP=1; SOCKET="$RUN_DIR/pip.sock"; shift; fi
+
+# send_ctl <socket> <action> [args]: a script message to a running TV; fails when
+# nothing answers on the socket.
+send_ctl() {
+  python3 -c 'import json, socket, sys
+s = socket.socket(socket.AF_UNIX)
+try:
+    s.connect(sys.argv[1])
+except OSError:
+    sys.exit(1)
+s.sendall((json.dumps({"command": ["script-message", "tv-" + sys.argv[2], *sys.argv[3:]]}) + "\n").encode())' "$@"
+}
+
 # The bar polls --bar every few seconds, so it and --ctl skip the channel list.
 case "${1:-}" in
   --bar)
-    # tv.lua writes now.json on every channel change and removes it on quit; a
-    # crash leaves it behind, so its pid has to be alive too.
+    # tv.lua writes now.json (pip.json for the corner TV) on every channel change
+    # and removes it on quit; a crash leaves it behind, so its pid has to be alive too.
     now="$RUN_DIR/now.json"
+    if [ "${2:-}" = --pip ]; then now="$RUN_DIR/pip.json"; fi
     [ -r "$now" ] || exit 0
     pid="$(grep -o '"pid": *[0-9]*' "$now" | grep -o '[0-9]*$' || true)"
     if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then cat "$now"; fi
     exit 0 ;;
-  --ctl)
+  --ctl|--pip-ctl)
+    sock="$RUN_DIR/mpv.sock" class=mpv-tv
+    if [ "$1" = --pip-ctl ]; then sock="$RUN_DIR/pip.sock" class=mpv-tv-pip; fi
     case "${2:-}" in
-      menu|next|prev|last|star) ;;
+      menu|next|prev|last|star|mute|unmute|quit) ;;
       play) [[ "${3:-}" =~ ^[0-9]+$ ]] || die "usage: tv --ctl play <channel number>" ;;
-      *) die "usage: tv --ctl menu|next|prev|last|star|play <N>" ;;
+      *) die "usage: tv --ctl|--pip-ctl menu|next|prev|last|star|mute|unmute|quit|play <N>" ;;
     esac
-    [ -S "$SOCKET" ] || die "TV isn't running"
+    [ -S "$sock" ] || die "TV isn't running"
     # The menu opens in TV's window, so bring that forward first.
     if [ "$2" = menu ] && command -v hyprctl >/dev/null; then
-      hyprctl eval 'hl.dispatch(hl.dsp.focus({ window = "class:mpv-tv" }))' >/dev/null 2>&1 || true
+      hyprctl eval "hl.dispatch(hl.dsp.focus({ window = \"class:^$class\$\" }))" >/dev/null 2>&1 || true
     fi
-    python3 -c 'import json, socket, sys
-s = socket.socket(socket.AF_UNIX)
-s.connect(sys.argv[1])
-s.sendall((json.dumps({"command": ["script-message", "tv-" + sys.argv[2], *sys.argv[3:]]}) + "\n").encode())' \
-      "$SOCKET" "$2" "${@:3}"
+    send_ctl "$sock" "${@:2}" || die "TV isn't running"
     exit 0 ;;
 esac
 
@@ -120,6 +139,7 @@ case "${1:-}" in
 esac
 
 start_index=""   # 0-based, for --playlist-start
+chosen=""        # a channel was named on the command line
 case "${1:-}" in
   -h|--help)
     usage; exit 0 ;;
@@ -146,7 +166,7 @@ case "${1:-}" in
   -*)
     die "unknown option $1 (use -- before mpv options)" ;;
   *)
-    query="$1"; shift
+    query="$1"; shift; chosen=1
     if [[ "$query" =~ ^[0-9]+$ ]]; then
       count="$(list_channels | wc -l)"
       [ "$query" -ge 1 ] && [ "$query" -le "$count" ] || die "channel $query is out of range (1-$count)"
@@ -159,11 +179,25 @@ case "${1:-}" in
     if [ "${1:-}" = "--" ]; then shift; fi ;;
 esac
 
+# A corner TV already open just switches to the channel asked for.
+if [ -n "$PIP" ] && [ -S "$SOCKET" ]; then
+  if [ -z "$chosen" ]; then
+    send_ctl "$SOCKET" noop 2>/dev/null && exit 0   # already open: nothing to do
+  elif send_ctl "$SOCKET" play "$((start_index + 1))" 2>/dev/null; then
+    exit 0
+  fi
+fi
+
 # Load the [tv] profile here rather than from mpv.conf, so installing is just `stow tv`.
 args=("--include=~~/tv/tv.conf" --profile=tv "--playlist=$PLAYING")
 # For `tv --ctl`; one TV at a time owns it.
 mkdir -p "$RUN_DIR"
-args+=("--input-ipc-server=$SOCKET")
+args+=("--input-ipc-server=$SOCKET" "--script-opts-append=tv-launcher=$0")
+# The corner TV: muted, its own app id (the hypr package floats and pins it), and
+# tv.lua's pip mode, which keeps the main TV's state alone.
+if [ -n "$PIP" ]; then
+  args+=(--wayland-app-id=mpv-tv-pip --mute=yes --script-opts-append=tv-pip=yes)
+fi
 # The Omarchy font for uosc's menus and the banner ($TV_FONT overrides; empty: mpv's).
 font="${TV_FONT-$(omarchy-font-current 2>/dev/null || true)}"
 [ -n "$font" ] && args+=("--osd-font=$font")
