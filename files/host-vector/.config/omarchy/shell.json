@@ -107,6 +107,9 @@
         },
         {
           "id": "local.prayer-times"
+        },
+        {
+          "id": "omarchy.media"
         }
       ],
       "left": [
@@ -187,5 +190,8 @@
       "id": "omakade.guide"
     }
   ],
-  "version": 1
+  "version": 1,
+  "disabledPlugins": [
+    "omarchy.dock"
+  ]
 }
