@@ -609,6 +609,42 @@ mp.add_timeout(5, function() mp.command('quit') end)
         self.assertFalse((self.run_dir / "tv" / "now.json").exists())
         self.assertFalse(pip.exists())   # removed on quit
 
+    def test_w_and_shift_enter_open_channels_in_the_corner_tv(self):
+        # Clips long enough to still be playing when the keys arrive: the 0.1 s
+        # fixture ends first and moves the playlist on.
+        first, second = self.root / "one.wav", self.root / "two.wav"
+        for path in (first, second):
+            with wave.open(str(path), "wb") as output:
+                output.setnchannels(1)
+                output.setsampwidth(2)
+                output.setframerate(8000)
+                output.writeframes(bytes(8000 * 2 * 5))
+        self.playlist.write_text(f"#EXTM3U\n#EXTINF:-1,One\n{first}\n#EXTINF:-1,Two\n{second}\n")
+        calls = self.root / "calls"
+        self.executable("fake-tv", f'#!/bin/sh\necho "$*" >> {calls}\n')
+        event = json.dumps({"type": "activate", "value": str(second), "shift": True})
+        plain = json.dumps({"type": "activate", "value": str(second), "shift": False})
+        driver = self.script("corner.lua", "local done = false\n"
+                             "mp.register_event('file-loaded', function()\n"
+                             "  if done then return end done = true\n"
+                             "  mp.commandv('keypress', 'w')\n"
+                             f"  mp.commandv('script-message-to', 'tv', 'menu-event', {json.dumps(event)})\n"
+                             "  mp.add_timeout(0.5, function()\n"
+                             "    print('pos ' .. mp.get_property('playlist-pos'))\n"
+                             f"    mp.commandv('script-message-to', 'tv', 'menu-event', {json.dumps(plain)})\n"
+                             "  end)\n"
+                             "  mp.add_timeout(1, function()\n"
+                             "    print('pos ' .. mp.get_property('playlist-pos')) mp.command('quit')\n"
+                             "  end)\nend)\n")
+        proc = self.play(f",tv-launcher={self.bin / 'fake-tv'}",
+                         extra=["--idle=yes", "--pause", driver, "--msg-level=all=warn,tv=info,corner=info"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        # w sends the playing channel (1), Shift+ENTER the row's (2); this TV stays on 1
+        # until a plain ENTER plays the row here.
+        self.assertEqual(sorted(calls.read_text().splitlines()), ["--pip 1", "--pip 2"])
+        self.assertEqual([x.split()[-1] for x in proc.stdout.splitlines() if x.startswith("[corner] pos ")],
+                         ["0", "1"])
+
     def test_remember_channel_uses_xdg_state(self):
         proc = self.play()
         self.assertEqual(proc.returncode, 0, proc.stderr)

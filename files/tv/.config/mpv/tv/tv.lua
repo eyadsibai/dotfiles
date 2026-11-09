@@ -21,7 +21,9 @@
 --   * A second, corner TV (`tv --pip`, pip=yes): it leaves the main TV's last
 --     channel, recent list and bar files alone and writes pip.json instead. In
 --     either, a moves the sound to the other TV (or back) and x swaps the two TVs: their
---     windows trade places and roles (`tv --swap`), no stream reopens.
+--     windows trade places and roles (`tv --swap`), no stream reopens. In the main
+--     TV, w opens the channel playing in the corner TV (or switches the open one),
+--     and Shift+ENTER or Shift+click on a menu row opens that channel there.
 --   * Remote-style channel numbers: type digits (0-9 / keypad), ENTER or a
 --     short pause jumps to that channel.  r reloads the current channel.
 --     PGUP/PGDN change channel, / or Shift+ENTER searches all channels,
@@ -830,7 +832,7 @@ end
 -- Menus answer through menu-event (below), so starring a row (Ctrl+S) can
 -- update the menu in place instead of closing it.
 local MENU_CALLBACK = { mp.get_script_name(), 'menu-event' }
-local FOOTNOTE = 'type to search · Ctrl+S stars · TAB last channel'
+local FOOTNOTE = 'type to search · Ctrl+S stars · Shift+ENTER in the corner · TAB last channel'
 
 local function grouped_menu()
     local channels = channel_list()
@@ -904,14 +906,33 @@ local function open_channel_menu() open_menu(grouped_menu()) end
 -- / and Shift+ENTER: every channel in one list, search box open.
 local function open_all_channels() open_menu(flat_menu()) end
 
-local function play_url(url)
+-- A URL's channel number (1-based playlist position), or nil.
+local function number_of(url)
     for i, item in ipairs(mp.get_property_native('playlist') or {}) do
-        if item.filename == url then
-            mp.commandv('playlist-play-index', tostring(i - 1))
-            return true
-        end
+        if item.filename == url then return i end
     end
-    return false
+    return nil
+end
+
+local function play_url(url)
+    local n = number_of(url)
+    if n then mp.commandv('playlist-play-index', tostring(n - 1)) end
+    return n ~= nil
+end
+
+-- Channel n in the corner TV: `tv --pip <n>` opens it, or switches the open one.
+-- `run` detaches, so the corner TV outlives this one. In the corner TV itself
+-- there's no other corner: the channel just plays here.
+local function play_in_corner(n)
+    if not n then return end
+    if o.pip then
+        mp.commandv('playlist-play-index', tostring(n - 1))
+        return
+    end
+    mp.commandv('run', o.launcher, '--pip', tostring(n))
+    local item = (mp.get_property_native('playlist') or {})[n] or {}
+    osd('◳  ' .. channel_info(item.filename or '', item.title ~= '' and item.title or nil).name
+        .. ' in the corner', 2)
 end
 
 local function toggle_favorite(url)
@@ -932,7 +953,7 @@ mp.register_script_message('menu-event', function(json)
     local menu_type = ev.menu_id and ev.menu_id:match('^tv%-all') and 'tv-all-channels' or nil
     if ev.type == 'activate' and type(ev.value) == 'string' then
         for name in pairs(menu_builders) do mp.commandv('script-message-to', 'uosc', 'close-menu', name) end
-        play_url(ev.value)
+        if ev.shift then play_in_corner(number_of(ev.value)) else play_url(ev.value) end
     elseif ev.type == 'key' and ev.key == 'ctrl+s' and type(ev.selected_item) == 'table'
         and type(ev.selected_item.value) == 'string' then
         toggle_favorite(ev.selected_item.value)
@@ -1044,6 +1065,17 @@ mp.add_key_binding('a', 'tv-switch-sound', function()
     mp.set_property_bool('mute', not here)
     tell_other(here and 'mute' or 'unmute')
     osd(here and '🔊  Sound from this TV' or '🔇  Sound from the other TV', 1.5)
+end)
+
+-- w: the channel playing here, in the corner TV too (mpv's w is pan-and-scan zoom).
+mp.add_key_binding('w', 'tv-pip', function()
+    if o.pip then
+        osd('This is the corner TV — x makes it the big one', 2)
+        return
+    end
+    local n = (mp.get_property_number('playlist-pos') or -1) + 1
+    if n < 1 then osd('No channel playing', 2) return end
+    play_in_corner(n)
 end)
 
 -- Swapping roles (tv --swap): the main TV becomes the corner one or back. The

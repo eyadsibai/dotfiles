@@ -29,6 +29,7 @@
 #   TAB         last channel                                s    star (favorite)
 #   - / + =     volume down / up                            m/M  mute
 #   a           sound to the other TV, or back              x    swap it with the other TV
+#   w           this channel in the corner TV               S-ENTER / S-click on a menu row: that one
 # Menus and the channel banner take the Omarchy theme's colours and font.
 
 set -euo pipefail
