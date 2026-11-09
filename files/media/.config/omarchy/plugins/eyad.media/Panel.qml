@@ -34,6 +34,79 @@ Panel {
     }
     return out
   }
+  // Search on the TV: typed into the app's own search when it draws a letter grid
+  // lgtv can walk (lgtv gridtype), otherwise a YouTube search listed here.
+  readonly property var gridApps: ({ "cdp-30": "Plex", "amazon": "Prime Video", "net.mbc.shahid-lgapp": "Shahid" })
+  readonly property string tvGridApp: gridApps[String(media.tv.app || "")] || ""
+  property var ytResults: []
+  property string tvSearchStatus: ""
+  property bool tvSearchFailed: false
+
+  function tvSearchGo(q) {
+    if (q === "") return
+    ytResults = []
+    tvSearchFailed = false
+    var proc = tvGridApp !== "" ? tvTypeProc : ytSearchProc
+    tvTypeProc.running = false
+    ytSearchProc.running = false
+    if (tvGridApp !== "") {
+      tvSearchStatus = "Typing into " + tvGridApp + "'s search on the TV…"
+      tvTypeProc.command = ["media", "tv", "gridtype", q]
+    } else {
+      tvSearchStatus = "Searching YouTube…"
+      ytSearchProc.command = ["media", "tv", "ytsearch", q]
+    }
+    proc.running = true
+  }
+  function playYouTube(v) {
+    tvSearchFailed = false
+    tvSearchStatus = "Starting “" + v.title + "” on the TV…"
+    ytPlayProc.command = ["media", "tv", "youtube", v.id]
+    ytPlayProc.running = true
+  }
+  function lastLine(t, fallback) {
+    var lines = String(t || "").trim().split("\n")
+    return (lines[lines.length - 1] || fallback).replace(/^lgtv: /, "")
+  }
+  function formatDuration(sec) {
+    if (!sec) return ""
+    sec = Math.round(sec)
+    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60
+    return (h > 0 ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s
+  }
+
+  Process {
+    id: tvTypeProc
+    stderr: StdioCollector { id: tvTypeErr; waitForEnd: true }
+    onExited: function(code) {
+      root.tvSearchFailed = code !== 0
+      root.tvSearchStatus = code !== 0 ? root.lastLine(tvTypeErr.text, "Couldn't type on the TV") : ""
+      if (code === 0) tvSearch.text = ""
+    }
+  }
+  Process {
+    id: ytSearchProc
+    stdout: SplitParser {
+      onRead: function(line) {
+        try { root.ytResults = root.ytResults.concat([JSON.parse(line)]) } catch (e) {}
+      }
+    }
+    stderr: StdioCollector { id: ytSearchErr; waitForEnd: true }
+    onExited: function(code) {
+      root.tvSearchFailed = code !== 0
+      root.tvSearchStatus = code !== 0 ? root.lastLine(ytSearchErr.text, "YouTube search failed")
+                          : root.ytResults.length === 0 ? "Nothing found" : ""
+    }
+  }
+  Process {
+    id: ytPlayProc
+    stderr: StdioCollector { id: ytPlayErr; waitForEnd: true }
+    onExited: function(code) {
+      root.tvSearchFailed = code !== 0
+      root.tvSearchStatus = code !== 0 ? root.lastLine(ytPlayErr.text, "Couldn't start the video") : "Playing on the TV"
+    }
+  }
+
   readonly property string volumeGlyph: media.sonosMuted ? "󰝟" : (media.volume < 34 ? "󰕿" : (media.volume < 67 ? "󰖀" : "󰕾"))
 
   visible: !(hideWhenUnreachable && media.loaded && !media.anyReachable)
@@ -47,6 +120,11 @@ Panel {
       media.refresh()
       media.refreshVideos()
       videoSearch.text = ""
+      if (!ytSearchProc.running && !ytPlayProc.running && !tvTypeProc.running) {
+        tvSearch.text = ""
+        ytResults = []
+        tvSearchStatus = ""
+      }
       Qt.callLater(function() { keyCatcher.forceActiveFocus() })
     }
   }
@@ -133,7 +211,7 @@ Panel {
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
-      blocked: videoSearch.activeFocus
+      blocked: videoSearch.activeFocus || tvSearch.activeFocus
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
       onMoveRequested: function(dx, dy) {
@@ -147,6 +225,7 @@ Panel {
         else if (k === "+" || k === "=") media.nudgeVolume(5)
         else if (k === "-") media.nudgeVolume(-5)
         else if (k === "/" || k === "c") videoSearch.forceActiveFocus()
+        else if (k === "s" || k === "y") tvSearch.forceActiveFocus()
       }
 
       Flickable {
@@ -295,6 +374,59 @@ Panel {
               foreground: root.foreground
               fontFamily: root.fontFamily
               onClicked: root.openRemote()
+            }
+          }
+
+          TextField {
+            id: tvSearch
+            width: parent.width
+            enabled: media.tvOn
+            opacity: enabled ? 1.0 : 0.5
+            foreground: root.foreground
+            font.family: root.fontFamily
+            placeholderText: root.tvGridApp !== ""
+              ? "Type into " + root.tvGridApp + "'s search (s)"
+              : "Search YouTube, play on the TV (s)"
+            Keys.onPressed: function(event) {
+              if (event.key === Qt.Key_Escape) {
+                if (text !== "" || root.ytResults.length > 0) { text = ""; root.ytResults = []; root.tvSearchStatus = "" }
+                else keyCatcher.forceActiveFocus()
+                event.accepted = true
+              }
+            }
+            onAccepted: root.tvSearchGo(text.trim())
+          }
+
+          Text {
+            textFormat: Text.PlainText
+            visible: text !== ""
+            width: parent.width
+            wrapMode: Text.Wrap
+            text: root.tvSearchStatus !== "" ? root.tvSearchStatus
+              : root.tvGridApp !== "" && tvSearch.activeFocus
+                ? "Have " + root.tvGridApp + "'s search open on the TV; Enter types it there."
+                : ""
+            color: root.tvSearchFailed ? root.urgent : root.dim
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+          }
+
+          Column {
+            width: parent.width
+            spacing: Style.space(4)
+            visible: root.ytResults.length > 0
+
+            Repeater {
+              model: root.ytResults.slice(0, 8)
+              ActionRow {
+                required property var modelData
+                width: parent.width
+                glyph: "󰗃"
+                label: modelData.title
+                detail: [modelData.channel, modelData.live ? "LIVE" : root.formatDuration(modelData.duration)]
+                  .filter(function(b) { return b }).join(" · ")
+                onActivated: root.playYouTube(modelData)
+              }
             }
           }
 

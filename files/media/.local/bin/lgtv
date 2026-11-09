@@ -220,7 +220,7 @@ NO_KEYBOARD = ("the TV's system keyboard isn't open. Apps like Plex, YouTube, Pr
 # 960x540 screenshot; a grid is rows of 6 keys plus a bottom row of wide keys.
 
 class Grid:
-    def __init__(self, rows, xs, ys, bottom_y, bottom, ltr, half, side_up=False):
+    def __init__(self, rows, xs, ys, bottom_y, bottom, ltr, half, key_bg, side_up=False, escapes=()):
         self.rows, self.xs, self.ys, self.ltr, self.half = rows, xs, ys, ltr, half
         self.by = bottom_y
         # bottom keys: (name, first col, last col, x). UP from one returns to the column
@@ -228,6 +228,9 @@ class Grid:
         # side_up: after arriving sideways, UP lands on the key's first column (Plex);
         # otherwise where it lands is unknown, so we step off the space bar first.
         self.bottom, self.side_up = bottom, side_up
+        # keys off the grid we can step back from: (x, y, half, key to press)
+        self.escapes = escapes
+        self.key_bg = key_bg  # a plain key's background shade (0-255), to recognise the grid
         self.B = len(rows)  # the bottom row's index
 
     def find(self, ch):
@@ -244,17 +247,18 @@ LATIN = ["abcdef", "ghijkl", "mnopqr", "stuvwx", "yz1234", "567890"]
 GRID_APPS = {
     "cdp-30": ("Plex", {
         "en": Grid(LATIN, [62, 98, 134, 170, 206, 242], [85, 121, 157, 193, 229, 265], 301,
-                   [("bksp", 0, 1, 80), ("space", 2, 3, 152), ("clear", 4, 5, 224)], True, 11,
+                   [("bksp", 0, 1, 80), ("space", 2, 3, 152), ("clear", 4, 5, 224)], True, 11, 69,
                    side_up=True)}),
     "amazon": ("Prime Video", {
         "en": Grid(LATIN, [94, 127, 160, 193, 226, 259], [86, 119, 152, 185, 218, 251], 283,
-                   [("space", 0, 3, 143), ("bksp", 4, 5, 242)], True, 10)}),
+                   [("space", 0, 3, 143), ("bksp", 4, 5, 242)], True, 10, 5,
+                   escapes=[(114, 317, 10, "UP"), (208, 317, 10, "UP"), (178, 344, 6, "UP")])}),
     "net.mbc.shahid-lgapp": ("Shahid", {
         "ar": Grid(["ابتثجح", "خدذرزس", "شصضطظع", "غفقكلم", "نهويةئ", "ءؤ1234", "567890"],
                    [892, 855, 818, 781, 744, 707], [121, 158, 195, 232, 269, 306, 343], 380,
-                   [("toggle", 0, 0, 892), ("space", 1, 4, 800), ("bksp", 5, 5, 707)], False, 12),
+                   [("toggle", 0, 0, 892), ("space", 1, 4, 800), ("bksp", 5, 5, 707)], False, 12, 45),
         "en": Grid(LATIN, [707, 744, 781, 818, 855, 892], [121, 158, 195, 232, 269, 306], 343,
-                   [("toggle", 0, 0, 707), ("space", 1, 4, 800), ("bksp", 5, 5, 892)], True, 12)}),
+                   [("toggle", 0, 0, 707), ("space", 1, 4, 800), ("bksp", 5, 5, 892)], True, 12, 45)}),
 }
 ARABIC_FOLD = str.maketrans({"أ": "ا", "إ": "ا", "آ": "ا", "ى": "ي"})
 
@@ -269,18 +273,36 @@ def _cell_bg(img, x, y, h):
 
 
 def grid_locate(img, layouts):
-    """Which layout is showing and where its highlight is: (name, (row, col), on_space) or None."""
+    """Which layout is showing and where its highlight is: (name, (row, col)), or
+    (name, ("via", KEY)) on an extra key that KEY steps back from, or None."""
     # Of several layouts, the one whose bottom row is lowest and actually drawn
     for name, g in sorted(layouts.items(), key=lambda kv: -kv[1].by):
         if len(layouts) > 1 and max(_lum(img, b[3], g.by) for b in g.bottom) < 80:
             continue
         cells = [((r, c), x, y) for r, y in enumerate(g.ys) for c, x in enumerate(g.xs)]
         cells += [((g.B, b[1]), b[3], g.by) for b in g.bottom]
-        scored = sorted(((_cell_bg(img, x, y, g.half), pos) for pos, x, y in cells), reverse=True)
+        scored = [(_cell_bg(img, x, y, g.half), pos) for pos, x, y in cells]
+        scored += [(_cell_bg(img, x, y, h), ("via", k)) for x, y, h, k in g.escapes]
+        scored.sort(reverse=True)
         if scored[0][0] >= 185 and scored[1][0] < 120:  # one white key among dark ones
             return name, scored[0][1]
         return None
     return None
+
+
+def grid_visible(img, layouts):
+    """True if one of the layouts' letters are drawn, even with nothing highlighted on them:
+    most keys show the app's plain key background with a bright letter on it."""
+    gray = img.convert("L")
+    for g in layouts.values():
+        good = 0
+        for y in g.ys:
+            for x in g.xs:
+                px = sorted(gray.getpixel((x + dx, y + dy)) for dx in range(-7, 8) for dy in range(-7, 8))
+                good += abs(px[len(px) // 2] - g.key_bg) <= 15 and px[-1] > 140
+        if good >= len(g.ys) * len(g.xs) * 0.8:
+            return True
+    return False
 
 
 def grid_walk(g, pos, memo, target):
@@ -364,16 +386,33 @@ async def grid_type(call, sock, app, ops):
     title, layouts = GRID_APPS[app]
     lost = f"open {title}'s search first: its letter grid isn't on the screen"
 
-    async def where():
-        await asyncio.sleep(0.25)  # let the highlight settle
-        return grid_locate(await tv_screenshot(call), layouts)
+    # The search results sit beside the letters: left of them for a right-to-left app
+    toward_grid = "LEFT" if next(iter(layouts.values())).ltr else "RIGHT"
+
+    async def where(settle=0.25):
+        """Locate the highlight, stepping back onto the grid when it's in the results
+        beside the letters or on a known extra key."""
+        for _ in range(12):
+            await asyncio.sleep(settle)  # let the highlight settle
+            img = await tv_screenshot(call)
+            found = grid_locate(img, layouts)
+            if found and found[1][0] != "via":
+                return found
+            if found:
+                await press(sock, found[1][1])
+            elif grid_visible(img, layouts):
+                await press(sock, toward_grid)
+            else:
+                return None
+            settle = 0.4
+        return None
 
     async def keys(ks):
         for k in ks:
             await press(sock, k)
             await asyncio.sleep(0.15)
 
-    found = grid_locate(await tv_screenshot(call), layouts)
+    found = await where(0)
     if not found:
         return lost
     lname, pos = found
