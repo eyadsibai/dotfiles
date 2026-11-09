@@ -1,6 +1,6 @@
 {
   "bar": {
-    "background": "opaque",
+    "background": "none",
     "layout": {
       "center": [
         {
@@ -23,8 +23,8 @@
           "id": "omarchy.system-update"
         },
         {
-          "id": "io.github.sspaeti.timezones",
           "activeProfile": "default",
+          "id": "io.github.sspaeti.timezones",
           "meetingMinutes": 60,
           "profiles": [
             {
@@ -131,13 +131,13 @@
           "id": "37signals.hey"
         },
         {
-          "id": "news",
-          "type": "command",
           "exec": "newsboat-unread --bar",
+          "id": "news",
           "interval": 60,
           "onClick": "omarchy-launch-or-focus-tui newsboat",
+          "onMiddleClick": "systemctl --user start newsboat-refresh",
           "onRightClick": "omarchy-launch-or-focus-tui newsboat-yt",
-          "onMiddleClick": "systemctl --user start newsboat-refresh"
+          "type": "command"
         },
         {
           "id": "omarchy.dropbox"
@@ -183,6 +183,9 @@
     },
     "position": "top"
   },
+  "disabledPlugins": [
+    "omarchy.dock"
+  ],
   "dock": {
     "autohide": true,
     "position": "bottom"
@@ -196,8 +199,5 @@
       "id": "omakade.guide"
     }
   ],
-  "version": 1,
-  "disabledPlugins": [
-    "omarchy.dock"
-  ]
+  "version": 1
 }
