@@ -14,12 +14,7 @@ default:
 # Build, show the package diff, then activate
 switch name=host:
     {{ if arch == "true" { "scripts/omarchy-links guard" } else { "true" } }}
-    {{ if arch == "true" { "scripts/arch-system" } else { "true" } }}
     {{nh}} switch . {{target}}{{name}}{{ if arch == "true" { " -b hm-backup" } else { "" } }}
-
-# Arch: the root-owned setup (modules/arch-system) through system-manager; sudo only if it changed
-arch-system *args:
-    @scripts/arch-system {{args}}
 
 # Build and show the diff without activating
 build name=host:

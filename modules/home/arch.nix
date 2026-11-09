@@ -46,6 +46,15 @@ in
     "tv"
   ];
 
+  # The caches every machine uses, in ~/.config/nix/nix.conf. The daemon accepts
+  # them from me because /etc/nix/nix.conf (arch/nix.conf, written once by hand)
+  # makes me a trusted user. The package only checks the file at build time;
+  # pacman's nix is the one that runs.
+  nix = {
+    package = pkgs.nix;
+    settings = { inherit (import ../common/caches.nix) substituters trusted-public-keys; };
+  };
+
   home.packages = with pkgs; [
     nh
     # Not in Arch's repos (spicetify is AUR-only) or easier from Nix. Their
@@ -117,7 +126,7 @@ in
 
   # Spotify in the Omarchy theme, kept that way. The theme-set hook 10-spotify.sh does
   # the theming; this re-runs it (alone, with the current theme) when pacman installs
-  # or upgrades Spotify, whose hook writes /run/spotify-updated (modules/arch-system),
+  # or upgrades Spotify, whose hook writes /run/spotify-updated (arch/spicetify.hook),
   # and when a switch finds Spotify unthemed, e.g. on a new machine.
   systemd.user.paths.spotify-theme = {
     Unit.Description = "Re-theme Spotify after pacman installs or upgrades it";

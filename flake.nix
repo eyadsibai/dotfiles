@@ -38,12 +38,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # The root-owned files on the Arch machines (/etc/nix/nix.conf, pacman hooks)
-    system-manager = {
-      url = "github:numtide/system-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # home-server: a root that starts empty on every boot, and Secure Boot
     impermanence = {
       url = "github:nix-community/impermanence";
@@ -81,7 +75,6 @@
       nix-darwin,
       nix-index-database,
       sops-nix,
-      system-manager,
       ...
     }@inputs:
     let
@@ -171,13 +164,6 @@
           ];
         };
 
-      # Omarchy on Arch, the system side: what scripts/arch-system puts in place as
-      # root (modules/arch-system), applied by `just switch` through system-manager
-      mkArchSystem = system-manager.lib.makeSystemConfig {
-        modules = [ ./modules/arch-system ];
-        inherit overlays;
-      };
-
       forAllSystems = lib.genAttrs [
         "x86_64-linux"
         "aarch64-linux"
@@ -212,11 +198,6 @@
         "${username}@cachy" = mkArch ./hosts/cachy; # desktop, Omarchy on Arch
       };
 
-      systemConfigs = {
-        vector = mkArchSystem;
-        cachy = mkArchSystem;
-      };
-
       darwinConfigurations = {
         eyad-m3 = mkDarwin "eyad-m3";
         eyad-mac = mkDarwin "eyad-mac";
@@ -226,7 +207,6 @@
       ciJobs = {
         hosts = lib.mapAttrs (_: c: c.config.system.build.toplevel) self.nixosConfigurations;
         homes = lib.mapAttrs (_: c: c.activationPackage) self.homeConfigurations;
-        arch-systems = self.systemConfigs;
         pkgs = self.packages.x86_64-linux;
       };
 

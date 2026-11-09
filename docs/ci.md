@@ -4,7 +4,7 @@
 
 `.github/workflows/check.yml` runs on every push:
 
-- **eval**: every NixOS, macOS, Home Manager and system-manager configuration, without
+- **eval**: every NixOS, macOS, and Home Manager configuration, without
   building (the runners can't build CUDA or macOS).
 - **packages**: builds everything in `pkgs/`, so a re-released download with a new
   hash fails here instead of at the next switch.

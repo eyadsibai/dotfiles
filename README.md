@@ -75,13 +75,12 @@ flowchart LR
 ```
 
 ```
-flake.nix          inputs, mkNixos / mkDarwin / mkArch / mkArchSystem, hosts, packages, checks
+flake.nix          inputs, mkNixos / mkDarwin / mkArch, hosts, packages, checks
 hosts/<name>/      hardware and what that machine is for; nothing shared lives here
 modules/common/    Nix itself: caches, GC, nh, trusted users (both platforms)
 modules/nixos/     every NixOS host gets default.nix; desktop, sunshine, ai and
                    virtualisation are opt-in by import
 modules/darwin/    macOS defaults, Homebrew, Mac-only apps
-modules/arch-system/  the Arch machines' root-owned files, through system-manager
 modules/home/      Home Manager for every machine: shells, CLI, git, ssh, 1Password,
                    newsboat, herdr, mpv; firefox and the GUI apps only on Linux desktops
 files/<package>/   plain config files mirroring ~, linked one by one (like stow); a host
@@ -96,10 +95,10 @@ secrets/           sops-encrypted, recipients in .sops.yaml
 ## Omarchy on Arch
 
 `vector` and `cachy` are `homeConfigurations` (`eyad@vector`, `eyad@cachy`): Home Manager
-without NixOS. The few root-owned files they need (`/etc/nix/nix.conf` with the same caches
-as every other machine, the pacman hook that keeps Spotify patchable) come from
-`modules/arch-system` through [system-manager](https://github.com/numtide/system-manager),
-which `just switch` applies first, asking for sudo only when that part changed.
+without NixOS. The two root-owned files they need are copied in once by hand: `arch/nix.conf`
+(flakes, and me as a trusted user so my own `~/.config/nix/nix.conf`, written by Home
+Manager with the same caches as every other machine, is honoured) and the pacman hook
+`arch/spicetify.hook` that keeps Spotify patchable.
 Spotify follows the Omarchy theme through spicetify, and stays themed: a theme change, a
 new Spotify from pacman, and a fresh machine's first switch all apply it (the theme-set
 hook `10-spotify.sh`, re-run by the `spotify-theme` user service). Pacman installs the system, Omarchy and every program, the CLI tools and
@@ -210,16 +209,14 @@ Omarchy first, then Nix from pacman, then Home Manager:
 sudo pacman -S nix
 git clone git@github.com:eyadsibai/dotfiles.git ~/dev/dotfiles
 cd ~/dev/dotfiles
-sudo cp arch/nix.conf /etc/nix/nix.conf    # bootstrap: flakes and the caches until system-manager
-                                           # takes the file over at the first switch
+sudo cp arch/nix.conf /etc/nix/nix.conf    # flakes, the caches, me as a trusted user
+sudo cp arch/spicetify.hook /etc/pacman.d/hooks/   # keeps Spotify patchable
 sudo systemctl enable --now nix-daemon.socket
 sudo systemctl restart nix-daemon
 
 cp -r hosts/vector hosts/$(hostname -s)    # new machine only: also add it to homeConfigurations
                                            # in flake.nix and give it a files/host-<name>
 nix develop -c just switch                 # just and nh come from the dev shell until then
-                                           # (switch first applies modules/arch-system through
-                                           # system-manager, with sudo, then Home Manager)
 just arch-sync                             # pacman/AUR packages from arch/<host>.packages
 ```
 

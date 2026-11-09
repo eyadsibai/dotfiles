@@ -2,16 +2,15 @@
 
 My machines in one flake: NixOS (workstation, eyad-nixos, home-server, the Mac VMs
 vm-fusion/vm-utm), nix-darwin (eyad-m3, eyad-mac), and Omarchy on Arch (vector, cachy:
-Home Manager plus system-manager, the system itself stays pacman's). README.md is the
-overview; docs/ has the longer procedures.
+Home Manager only; the system stays pacman's, and arch/ has the two root-owned files,
+copied in once by hand). README.md is the overview; docs/ has the longer procedures.
 
 ## Layout
 
-- `flake.nix`: inputs, mkNixos / mkDarwin / mkArch / mkArchSystem, outputs.
+- `flake.nix`: inputs, mkNixos / mkDarwin / mkArch, outputs.
 - `hosts/<name>/`: what's specific to one machine. Shared things never live here.
 - `modules/common` (Nix itself, binary caches), `modules/nixos`, `modules/darwin`,
-  `modules/home` (Home Manager, every machine), `modules/arch-system` (root-owned
-  files on Arch, through system-manager).
+  `modules/home` (Home Manager, every machine).
 - `files/<package>/`: plain config linked into `~` from the checkout (not the store),
   per host via `my.files`. Editing `~/.config/...` on an Arch machine edits the repo.
 - `pkgs/` (packages not in nixpkgs, as `pkgs.<name>` through `overlays/`), `overlays/`
@@ -26,11 +25,11 @@ Nothing here can be switched from a session; check what can be checked:
   ```sh
   for a in nixosConfigurations.{workstation,eyad-nixos,home-server,vm-fusion,vm-utm}.config.system.build.toplevel \
            darwinConfigurations.eyad-m3.config.system.build.toplevel \
-           'homeConfigurations."eyad@vector".activationPackage' 'homeConfigurations."eyad@cachy".activationPackage' \
-           systemConfigs.vector; do nix eval --raw ".#$a.drvPath" >/dev/null || echo "FAILED: $a"; done
+           'homeConfigurations."eyad@vector".activationPackage' 'homeConfigurations."eyad@cachy".activationPackage'
+  do nix eval --raw ".#$a.drvPath" >/dev/null || echo "FAILED: $a"; done
   ```
 - On an Arch machine, build its own configs for real:
-  `nix build --no-link '.#homeConfigurations."eyad@<host>".activationPackage' .#systemConfigs.<host>`.
+  `nix build --no-link '.#homeConfigurations."eyad@<host>".activationPackage'`.
 - New files must be known to git (`git add -N`) or the flake can't see them.
 - `files/tv` has tests: `uvx pre-commit run --files <changed files>`.
 - Options that are off by default (`my.ci.*`, `my.secureBoot`, `my.autoUpgrade.from`)

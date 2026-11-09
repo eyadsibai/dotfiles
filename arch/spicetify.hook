@@ -2,7 +2,8 @@
 # re-applies the Omarchy theme (modules/home/arch.nix).
 # Keeps Spotify patchable by spicetify (Spotify themed from Omarchy): installing
 # or upgrading the package resets /opt/spotify to root-only, and spicetify, run
-# as you, has to write there. Put in place by system-manager (modules/arch-system).
+# as you, has to write there. Install once:
+#   sudo cp arch/spicetify.hook /etc/pacman.d/hooks/
 [Trigger]
 Operation = Install
 Operation = Upgrade

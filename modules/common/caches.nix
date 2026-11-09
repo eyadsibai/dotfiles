@@ -1,5 +1,5 @@
 # The binary caches every machine uses: modules/common/nix.nix for NixOS and macOS,
-# modules/arch-system for the Arch machines' /etc/nix/nix.conf
+# modules/home/arch.nix (~/.config/nix/nix.conf) for the Arch machines
 {
   substituters = [
     # Mirror of cache.nixos.org, tried first: the route to cache.nixos.org's CDN

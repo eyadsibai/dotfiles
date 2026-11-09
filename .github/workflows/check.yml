@@ -34,9 +34,6 @@ jobs:
           # The Omarchy (Arch) machines: Home Manager only
           - homeConfigurations."eyad@vector".activationPackage
           - homeConfigurations."eyad@cachy".activationPackage
-          # Their root-owned side (system-manager)
-          - systemConfigs.vector
-          - systemConfigs.cachy
     name: eval ${{ matrix.attr }}
     steps:
       - uses: actions/checkout@v7
