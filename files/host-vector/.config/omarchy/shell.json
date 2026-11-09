@@ -1,6 +1,6 @@
 {
   "bar": {
-    "background": "glassy",
+    "background": "opaque",
     "layout": {
       "center": [
         {
@@ -23,9 +23,9 @@
           "id": "omarchy.system-update"
         },
         {
-          "activeProfile": "default",
           "id": "io.github.sspaeti.timezones",
-          "meetingMinutes": 30,
+          "activeProfile": "default",
+          "meetingMinutes": 60,
           "profiles": [
             {
               "barMode": "hover",
