@@ -891,36 +891,47 @@ PanelWindow {
             }
           }
 
-          // Playback: a big play/pause icon between rewind and fast-forward; TV
-          // volume and stop either side. Equal widths, play/pause double.
+          // TV volume together on the left, playback on the right; every
+          // button the same size.
           RowLayout {
             Layout.fillWidth: true
-            spacing: Style.space(4)
+            spacing: Style.space(12)
             Repeater {
               model: [
-                { glyph: "󰝞", tip: "TV volume down", key: "VOLUMEDOWN" },
-                { glyph: "󰝟", tip: "TV mute", key: "MUTE" },
-                { glyph: "󰑟", tip: "Rewind", tv: "rew" },
-                { glyph: "", tip: "", play: true },
-                { glyph: "󰈑", tip: "Fast forward", tv: "ff" },
-                { glyph: "󰓛", tip: "Stop", tv: "stop" },
-                { glyph: "󰝝", tip: "TV volume up", key: "VOLUMEUP" }
+                [
+                  { glyph: "󰝞", tip: "TV volume down", key: "VOLUMEDOWN" },
+                  { glyph: "󰝟", tip: "TV mute", key: "MUTE" },
+                  { glyph: "󰝝", tip: "TV volume up", key: "VOLUMEUP" }
+                ],
+                [
+                  { glyph: "󰑟", tip: "Rewind", tv: "rew" },
+                  { glyph: "", tip: "", play: true },
+                  { glyph: "󰈑", tip: "Fast forward", tv: "ff" },
+                  { glyph: "󰓛", tip: "Stop", tv: "stop" }
+                ]
               ]
-              Button {
+              RowLayout {
                 required property var modelData
                 Layout.fillWidth: true
-                Layout.preferredWidth: modelData.play ? 2 : 1
-                iconText: modelData.play ? (win.paused ? "󰐊" : "󰏤") : modelData.glyph
-                iconSize: modelData.play ? Style.font.display : Style.font.icon
-                tooltipText: modelData.play ? (win.paused ? "Play" : "Pause") + " (space)" : modelData.tip
-                bordered: true
-                selected: modelData.play === true
-                foreground: win.foreground
-                fontFamily: win.fontFamily
-                onClicked: {
-                  if (modelData.play) win.playPause()
-                  else if (modelData.tv) win.svc.tvKey(modelData.tv)
-                  else win.key(modelData.key)
+                Layout.preferredWidth: modelData.length
+                spacing: Style.space(4)
+                Repeater {
+                  model: parent.modelData
+                  Button {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    iconText: modelData.play ? (win.paused ? "󰐊" : "󰏤") : modelData.glyph
+                    tooltipText: modelData.play ? (win.paused ? "Play" : "Pause") + " (space)" : modelData.tip
+                    bordered: true
+                    foreground: win.foreground
+                    fontFamily: win.fontFamily
+                    onClicked: {
+                      if (modelData.play) win.playPause()
+                      else if (modelData.tv) win.svc.tvKey(modelData.tv)
+                      else win.key(modelData.key)
+                    }
+                  }
                 }
               }
             }
