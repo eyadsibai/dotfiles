@@ -115,6 +115,34 @@ in
     };
   };
 
+  # Spotify in the Omarchy theme, kept that way. The theme-set hook 10-spotify.sh does
+  # the theming; this re-runs it (alone, with the current theme) when pacman installs
+  # or upgrades Spotify, whose hook writes /run/spotify-updated (modules/arch-system),
+  # and when a switch finds Spotify unthemed, e.g. on a new machine.
+  systemd.user.paths.spotify-theme = {
+    Unit.Description = "Re-theme Spotify after pacman installs or upgrades it";
+    Path.PathChanged = "/run/spotify-updated";
+    Install.WantedBy = [ "default.target" ];
+  };
+  systemd.user.services.spotify-theme = {
+    Unit.Description = "Theme Spotify from the current Omarchy theme (spicetify)";
+    Service = {
+      Type = "oneshot";
+      Environment = [
+        "PATH=${config.home.profileDirectory}/bin:/usr/share/omarchy/bin:/usr/local/bin:/usr/bin"
+        "THEME_SET_ONLY=10-spotify.sh"
+        "SPOTIFY_THEME_WAIT=1"
+      ];
+      ExecStart = "/usr/bin/bash %h/.config/omarchy/hooks/theme-set";
+    };
+  };
+  home.activation.spotifyTheme = lib.hm.dag.entryAfter [ "reloadSystemd" ] ''
+    if [ -d /opt/spotify/Apps ] &&
+      ! grep -qE '^current_theme *= *omarchy' "$HOME/.config/spicetify/config-xpui.ini" 2>/dev/null; then
+      run systemctl --user start --no-block spotify-theme.service || true
+    fi
+  '';
+
   programs.bash.initExtra = ''
     bwunlock() { export BW_SESSION=$(bw unlock --raw); }
     gh-relogin() {

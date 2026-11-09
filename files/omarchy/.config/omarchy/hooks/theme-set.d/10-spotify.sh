@@ -83,30 +83,37 @@ if ! command -v spicetify >/dev/null 2>&1; then
     skipped "Spicetify"
 fi
 
-spotify_was_running=false
-if pgrep -x "spotify" > /dev/null 2>&1; then
-    spotify_was_running=true
-fi
-
 create_spicetify_styling
 create_dynamic_theme
 change_spicetify_theme
 
-if [ "$spotify_was_running" = true ]; then
-       spicetify apply > /dev/null 2>&1 &
-else
-    setsid bash -c '
-        spicetify apply > /dev/null 2>&1 &
+# Spotify writes its prefs at its first launch, and spicetify won't start without the
+# file: an empty one does until then
+if [[ ! -e $HOME/.config/spotify/prefs ]]; then
+    mkdir -p "$HOME/.config/spotify"
+    : > "$HOME/.config/spotify/prefs"
+fi
 
-        for i in {1..250}; do
-            if pgrep -x "spotify" > /dev/null 2>&1; then
-                sleep 0.2
-                killall -9 spotify > /dev/null 2>&1
-                exit 0
-            fi
-            sleep 0.1
-        done
-    ' > /dev/null 2>&1 < /dev/null &
+# A plain apply needs spicetify's backup of this Spotify. There's none the first time,
+# and an upgraded Spotify makes the old one useless; then take a fresh one. A Spotify
+# that isn't running stays closed (-n); a running one restarts with the theme.
+apply_theme() {
+    local args=()
+    pgrep -x spotify > /dev/null 2>&1 || args=(-n)
+    spicetify apply "${args[@]}" ||
+        spicetify backup apply "${args[@]}" ||
+        spicetify restore backup apply "${args[@]}"
+}
+
+# The spotify-theme service (modules/home/arch.nix: after pacman installs or upgrades
+# Spotify, or a switch finds it unthemed) waits for the result; a theme switch doesn't
+if [[ -n $SPOTIFY_THEME_WAIT ]]; then
+    if ! apply_theme > /dev/null 2>&1; then
+        warning "spicetify couldn't theme Spotify; try: spicetify restore backup apply"
+        exit 1
+    fi
+else
+    (apply_theme > /dev/null 2>&1 &)
 fi
 
 success "Spotify theme updated!"

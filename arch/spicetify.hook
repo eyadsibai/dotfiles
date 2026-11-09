@@ -1,6 +1,8 @@
+# Writing /run/spotify-updated starts the spotify-theme user service, which
+# re-applies the Omarchy theme (modules/home/arch.nix).
 # Keeps Spotify patchable by spicetify (Spotify themed from Omarchy): installing
 # or upgrading the package resets /opt/spotify to root-only, and spicetify, run
-# as you, has to write there. Install: sudo cp arch/spicetify.hook /etc/pacman.d/hooks/
+# as you, has to write there. Put in place by system-manager (modules/arch-system).
 [Trigger]
 Operation = Install
 Operation = Upgrade
@@ -10,4 +12,4 @@ Target = spotify
 [Action]
 Description = Letting spicetify patch Spotify...
 When = PostTransaction
-Exec = /usr/bin/sh -c 'chmod a+wr /opt/spotify && chmod -R a+wr /opt/spotify/Apps'
+Exec = /usr/bin/sh -c 'chmod a+wr /opt/spotify && chmod -R a+wr /opt/spotify/Apps && date > /run/spotify-updated'

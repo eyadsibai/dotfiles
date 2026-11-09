@@ -175,6 +175,8 @@ fi
 
 if [[ -d ~/.config/omarchy/hooks/theme-set.d ]]; then
     for hook in ~/.config/omarchy/hooks/theme-set.d/*.sh; do
+        # THEME_SET_ONLY=<file>: re-run one hook with the current theme (spotify-theme)
+        [[ -n $THEME_SET_ONLY && $(basename "$hook") != "$THEME_SET_ONLY" ]] && continue
         if [[ -f "$hook" && -x "$hook" ]]; then
             if ! "$hook" "$@"; then
                 error "Hook $(basename "$hook") failed!" >&2
