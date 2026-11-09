@@ -107,13 +107,13 @@ Panel {
     function toggle(): void { root.toggle() }
   }
 
-  // Room for a three-digit channel number whatever is playing, so the widget
-  // keeps its width and a gap to its neighbours on both sides.
+  // Wide enough for the icon and its channel number, with a small gap to the
+  // neighbours, so a three-digit number never runs into them.
   TextMetrics {
     id: numberMetrics
     font.family: root.fontFamily
     font.pixelSize: Style.bar.iconFont
-    text: "000"
+    text: button.labelText
   }
 
   BarIconButton {
@@ -121,7 +121,7 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     fixedWidth: root.bar && root.bar.vertical ? -1
-      : Style.bar.iconSlot + Math.ceil(numberMetrics.advanceWidth) + Style.space(4) + Style.space(10)
+      : Style.bar.iconSlot + (button.labelText !== "" ? Math.ceil(numberMetrics.advanceWidth) + Style.space(4) : 0)
     text: root.tvGlyph
     labelText: root.now ? String(root.now.number) : ""
     active: root.opened
