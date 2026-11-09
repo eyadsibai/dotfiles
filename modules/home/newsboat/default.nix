@@ -236,6 +236,10 @@ let
     macro a set browser "${lib.getExe qdl} audio %u"; open-in-browser ; set browser ${lh}
     macro v set browser "setsid mpv"; open-in-browser ; set browser ${lh}
     macro c set browser "printf %s %u | ${copy}"; open-in-browser ; set browser ${lh}
+    ${lib.optionalString isArch ''
+      # d: pick what to do with it from a menu
+      macro d set browser "${lib.getExe openwith} %u"; open-in-browser ; set browser ${lh}
+    ''}
   '';
 
   # Subscribe to a site: `rssadd <page or feed url>` finds the feed itself, the way
@@ -313,6 +317,91 @@ let
     '';
   };
 
+  # "Open with…": a menu of what to do with a link (voidrice's dmenuhandler, on the
+  # Omarchy menu). Takes the link or the clipboard; Super+Alt+Shift+V, and `,d` in
+  # newsboat. Omarchy only.
+  openwith = pkgs.writeShellApplication {
+    name = "openwith";
+    runtimeInputs = with pkgs; [
+      coreutils
+      wl-clipboard
+    ];
+    text = ''
+      url=''${1:-$(wl-paste --no-newline 2>/dev/null || true)}
+      if [ -z "$url" ]; then notify-send "Open with" "No link given or copied"; exit 1; fi
+      opts=(
+        $'󰐊\tPlay in mpv'
+        $'󰑖\tPlay on loop'
+        $'󰔂\tPlay on the TV'
+        $'󰇚\tDownload video'
+        $'󰎆\tDownload audio'
+        $'󰆏\tCopy link'
+        $'󰖟\tOpen in browser'
+        $'󰌹\tOpen with the default app'
+        $'󰑫\tSubscribe in newsboat'
+      )
+      choice=$(omarchy-menu-select "Open with" "''${opts[@]}") || exit 0
+      case "$choice" in
+        "Play in mpv") setsid mpv --quiet "$url" >/dev/null 2>&1 & ;;
+        "Play on loop") setsid mpv --quiet --loop "$url" >/dev/null 2>&1 & ;;
+        "Play on the TV")
+          case "$url" in
+            *youtube.com/*|*youtu.be/*) media tv youtube "$url" ;;
+            *) cast play "$url" ;;
+          esac >/dev/null 2>&1 & ;;
+        "Download video") ${lib.getExe qdl} video "$url" ;;
+        "Download audio") ${lib.getExe qdl} audio "$url" ;;
+        "Copy link") printf '%s' "$url" | wl-copy ;;
+        "Open in browser") setsid omarchy-launch-browser "$url" >/dev/null 2>&1 & ;;
+        "Open with the default app") ${lib.getExe linkhandler} "$url" ;;
+        "Subscribe in newsboat") ${lib.getExe rssadd} "$url" </dev/null >/dev/null ;;
+      esac
+    '';
+  };
+
+  # Unread counts straight from the caches (newsboat's -x needs its lock, which an
+  # open newsboat holds). `--bar` prints the Omarchy bar's command-module JSON: what
+  # came in over the last day, hidden when there's nothing.
+  newsboatUnread = pkgs.writeShellApplication {
+    name = "newsboat-unread";
+    runtimeInputs = with pkgs; [
+      sqlite
+      jq
+    ];
+    text = ''
+      q() {
+        [ -f "$1" ] || { echo "0 0"; return; }
+        sqlite3 -readonly "$1" "select coalesce(sum(pubDate > strftime('%s','now') - 86400), 0) || ' ' || count(*)
+          from rss_item where unread = 1 and deleted = 0;" 2>/dev/null || echo "0 0"
+      }
+      read -r an at <<<"$(q "${config.xdg.dataHome}/newsboat/cache.db")"
+      read -r vn vt <<<"$(q "${config.xdg.dataHome}/newsboat/ytcache.db")"
+      if [ "''${1:-}" = --bar ]; then
+        text=""
+        [ "$an" -gt 0 ] && text="󰑫 $an"
+        [ "$vn" -gt 0 ] && text="$text''${text:+  }󰗃 $vn"
+        jq -cn --arg text "$text" --arg tooltip "Today: $an new articles, $vn new videos
+      Unread: $at articles, $vt videos
+      click: newsboat · right-click: newsboat-yt · middle-click: reload" '{$text, $tooltip}'
+      else
+        echo "today:  $an articles, $vn videos"
+        echo "unread: $at articles, $vt videos"
+      fi
+    '';
+  };
+
+  # Reload both feed lists in the background (the timer below); newsboat's own
+  # notify-program announces what's new. A newsboat that's open keeps its lock and
+  # is skipped: it reloads itself.
+  newsboatRefresh = pkgs.writeShellScript "newsboat-refresh" ''
+    for pair in "config urls" "ytconfig yturls"; do
+      set -- $pair
+      ${exe pkgs.newsboat "newsboat"} -C "${config.xdg.configHome}/newsboat/$1" \
+        -u "${config.xdg.configHome}/newsboat/$2" -x reload ||
+        echo "skipped $1: newsboat has it open"
+    done
+  '';
+
   # Feed files and feed:// links open with rssadd
   rssTypes = [
     "application/rss+xml"
@@ -368,7 +457,9 @@ in
     ytadd
     qdl
     linkhandler
+    newsboatUnread
   ]
+  ++ lib.optional isArch openwith
   ++ lib.optional (!isArch) pkgs.yt-dlp
   ++ [
     (pkgs.writeShellScriptBin "newsboat-yt" ''
@@ -386,6 +477,24 @@ in
       mimeType = rssTypes;
     };
   };
+  # Reload the feeds every half hour, so new articles show in the bar and notify
+  # without newsboat open
+  systemd.user.services.newsboat-refresh = lib.mkIf (!isDarwin) {
+    Unit.Description = "Reload newsboat's feeds";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${newsboatRefresh}";
+    };
+  };
+  systemd.user.timers.newsboat-refresh = lib.mkIf (!isDarwin) {
+    Unit.Description = "Reload newsboat's feeds every half hour";
+    Timer = {
+      OnBootSec = "5min";
+      OnUnitActiveSec = "30min";
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
+
   home.activation.rssaddHandler = lib.mkIf (!isDarwin) (
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       for t in ${lib.concatStringsSep " " rssTypes}; do
