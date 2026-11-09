@@ -23,7 +23,7 @@ Panel {
   readonly property color foreground: bar ? bar.foreground : Commons.Color.foreground
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
-  readonly property string tvGlyph: "󰔂"
+  readonly property string tvGlyph: "\u{f07f4}"   // television-classic; the living room's is the flat TV
   readonly property string runDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/tv"
 
   property var now: null          // the playing channel, from `tv --bar`; null: TV isn't running
@@ -107,10 +107,21 @@ Panel {
     function toggle(): void { root.toggle() }
   }
 
+  // Room for a three-digit channel number whatever is playing, so the widget
+  // keeps its width and a gap to its neighbours on both sides.
+  TextMetrics {
+    id: numberMetrics
+    font.family: root.fontFamily
+    font.pixelSize: Style.bar.iconFont
+    text: "000"
+  }
+
   BarIconButton {
     id: button
     anchors.fill: parent
     bar: root.bar
+    fixedWidth: root.bar && root.bar.vertical ? -1
+      : Style.bar.iconSlot + Math.ceil(numberMetrics.advanceWidth) + Style.space(4) + Style.space(10)
     text: root.tvGlyph
     labelText: root.now ? String(root.now.number) : ""
     active: root.opened
