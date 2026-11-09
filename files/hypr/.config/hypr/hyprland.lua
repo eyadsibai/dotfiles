@@ -38,7 +38,14 @@ o.window("^(bitwarden)$", { no_screen_share = true, tag = "+floating-window" })
 -- profile in ~/.config/mpv/tv/tv.conf). A plain "mpv" class gets Omarchy's
 -- floating-window treatment and the default 0.985/0.96 window opacity; the TV
 -- window should tile like any app and never dim the picture.
-o.window("^(mpv-tv)$", { tag = "-default-opacity", opacity = "1 1" })
+o.window("^(mpv-tv|mpv-tv-pip)$", { tag = "-default-opacity", opacity = "1 1" })
+-- The corner TV (tv --pip): a small floating picture pinned top-right on every workspace.
+o.window("^(mpv-tv-pip)$", {
+  float = true,
+  pin = true,
+  size = { 480, 270 },
+  move = { "(monitor_w-480-24)", "(52)" },
+})
 
 -- Omarchy Meeting Recorder: centered floating window.
 o.window("^com\\.jankeesvw\\.OmarchyMeetingRecorder$", { float = true, size = { 480, 700 }, center = true })
