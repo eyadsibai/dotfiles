@@ -15,7 +15,8 @@
   lgtv apps                   list installed apps
   lgtv app <name|id>          launch an app (e.g. lgtv app netflix)
   lgtv open <url>             open a URL in the TV browser
-  lgtv youtube <url|id>       play a video in the YouTube app
+  lgtv youtube <url|id>       play a video in the YouTube app (as the phone's cast button does)
+  lgtv ytsearch <query>       search YouTube; one JSON line per video (id, title, channel, ...)
   lgtv notify <message>       show a toast on the TV
   lgtv key <KEY>...           press remote keys (UP DOWN LEFT RIGHT ENTER BACK HOME ...)
   lgtv type [--enter] <text>  type into the TV's on-screen keyboard (e.g. a search box)
@@ -30,7 +31,8 @@
 
 Config and pairing key live in ~/.config/lgtv/. LGTV_HOST overrides the TV address.
 """
-import asyncio, json, os, re, socket, ssl, subprocess, sys, pathlib
+import asyncio, json, os, re, socket, ssl, subprocess, sys, pathlib, time, uuid
+import urllib.parse, urllib.request
 
 CONF_DIR = pathlib.Path(os.environ.get("XDG_CONFIG_HOME", pathlib.Path.home() / ".config")) / "lgtv"
 KEYFILE = CONF_DIR / "client-key"
@@ -328,13 +330,81 @@ def youtube_id(s):
     die(f"can't find a YouTube video id in {s!r}")
 
 
-async def cmd_youtube(tv, args):
+# The YouTube app ignores video ids passed at launch now, so play the way a
+# phone's cast button does: DIAL (the TV's port 36866) starts the app and names
+# its screen, and YouTube's lounge service tells that screen what to play.
+DIAL_PORT = 36866
+YT_ORIGIN = {"Origin": "https://www.youtube.com"}
+LOUNGE = "https://www.youtube.com/api/lounge"
+
+
+def http(url, data=None, headers=None, timeout=10):
+    body = urllib.parse.urlencode(data).encode() if isinstance(data, dict) else data
+    req = urllib.request.Request(url, data=body, headers=headers or {})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read().decode(errors="ignore")
+
+
+def youtube_screen(host):
+    """Start the YouTube app if needed; return its lounge screen id."""
+    url = f"http://{host}:{DIAL_PORT}/apps/YouTube"
+
+    def state():
+        xml = http(url, headers=YT_ORIGIN, timeout=5)
+        m = re.search(r"<screenId>([^<]+)</screenId>", xml)
+        return re.search(r"<state>([^<]*)</state>", xml).group(1), m and m.group(1)
+
+    try:
+        st, screen = state()
+        if st != "running":
+            http(url, b"", headers=YT_ORIGIN, timeout=5)
+            for _ in range(30):
+                time.sleep(1)
+                st, screen = state()
+                if st == "running" and screen:
+                    break
+            time.sleep(5)  # let the app reach YouTube before it's told what to play
+    except (OSError, AttributeError) as e:
+        die(f"can't reach the TV's YouTube app over DIAL ({e}); is the TV on?")
+    if not screen:
+        die("the TV's YouTube app didn't give a screen id")
+    return screen
+
+
+def cmd_youtube(args):
     if len(args) != 1:
         die("usage: lgtv youtube <url|id>")
     vid = youtube_id(args[0])
-    apps = dict(await list_apps(tv))
-    app_id = next((a for a in apps if a.startswith("youtube.leanback")), "youtube.leanback.v4")
-    await tv.call("ssap://system.launcher/launch", {"id": app_id, "contentId": vid})
+    screen = youtube_screen(tv_host())
+    try:
+        tok = json.loads(http(f"{LOUNGE}/pairing/get_lounge_token_batch", {"screen_ids": screen}))
+        q = {"device": "REMOTE_CONTROL", "id": str(uuid.uuid4()), "name": "lgtv", "app": "youtube-desktop",
+             "mdx-version": "3", "loungeIdToken": tok["screens"][0]["loungeToken"], "VER": "8", "v": "2",
+             "theme": "cl", "capabilities": "que,dsdtr,atp", "ui": "", "TYPE": "", "CVER": "1", "zx": "x", "t": "1"}
+        bind = f"{LOUNGE}/bc/bind?"
+        raw = http(bind + urllib.parse.urlencode({**q, "RID": "1"}), {"count": "0"})
+        sid = re.search(r'"c","([^"]+)"', raw).group(1)
+        gsession = re.search(r'"S","([^"]+)"', raw).group(1)
+        http(bind + urllib.parse.urlencode({**q, "RID": "2", "SID": sid, "gsessionid": gsession, "AID": "5"}),
+             {"count": "1", "ofs": "0", "req0__sc": "setPlaylist", "req0_videoId": vid,
+              "req0_currentTime": "0", "req0_currentIndex": "0", "req0_videoIds": vid,
+              "req0_listId": "", "req0_audioOnly": "false"})
+    except (OSError, KeyError, IndexError, ValueError, AttributeError) as e:
+        die(f"YouTube's lounge service refused the video ({e})")
+
+
+def cmd_ytsearch(args):
+    if not args:
+        die("usage: lgtv ytsearch <query>")
+    r = subprocess.run(["yt-dlp", "--flat-playlist", "-J", "--no-warnings", "ytsearch15:" + " ".join(args)],
+                       capture_output=True, text=True, timeout=60)
+    if r.returncode != 0:
+        die((r.stderr.strip().splitlines() or ["yt-dlp failed"])[-1])
+    for e in json.loads(r.stdout).get("entries", []):
+        if e.get("id"):
+            print(json.dumps({"id": e["id"], "title": e.get("title") or "", "channel": e.get("channel") or "",
+                              "duration": e.get("duration"), "live": e.get("live_status") == "is_live",
+                              "views": e.get("view_count")}, ensure_ascii=False))
 
 
 async def cmd_notify(tv, args):
@@ -611,7 +681,7 @@ COMMANDS = {
     "status": cmd_status, "vol": cmd_vol, "volume": cmd_vol,
     "mute": lambda tv, a: cmd_mute(tv, a, True), "unmute": lambda tv, a: cmd_mute(tv, a, False),
     "off": cmd_off, "screen": cmd_screen, "input": cmd_input, "hdmi": cmd_input,
-    "apps": cmd_apps, "app": cmd_app, "open": cmd_open, "youtube": cmd_youtube, "yt": cmd_youtube,
+    "apps": cmd_apps, "app": cmd_app, "open": cmd_open,
     "notify": cmd_notify, "key": cmd_key, "type": cmd_type, "remote": cmd_remote, "pipe": cmd_pipe, "pair": cmd_pair,
     **{m: (lambda m: lambda tv, a: cmd_media(tv, a, m))(m) for m in MEDIA},
 }
@@ -636,6 +706,10 @@ def main():
         return cmd_on(args)
     if cmd == "cast":
         return cmd_cast(args)
+    if cmd in ("youtube", "yt"):
+        return cmd_youtube(args)
+    if cmd == "ytsearch":
+        return cmd_ytsearch(args)
     if cmd == "host":
         return print(tv_host())
     if cmd not in COMMANDS:

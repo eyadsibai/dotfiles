@@ -57,6 +57,86 @@ FloatingWindow {
     typeBox.text = ""
   }
 
+  // YouTube draws its own letter grid, which typing can't reach, so search from
+  // here (yt-dlp) and send the pick to the TV's YouTube app.
+  property string ytQuery: ""     // non-empty while the results replace the touchpad
+  property var ytResults: []
+  property int ytIndex: 0
+  property string ytStatus: ""
+  property bool ytFailed: false
+  readonly property bool ytShown: ytQuery !== ""
+
+  function searchYouTube(q) {
+    ytSearch.running = false
+    ytQuery = q
+    ytResults = []
+    ytIndex = 0
+    ytFailed = false
+    ytStatus = "Searching YouTube…"
+    ytSearch.command = ["media", "tv", "ytsearch", q]
+    ytSearch.running = true
+    leaveTextBox()
+  }
+  function playYouTube(v) {
+    if (!v) return
+    ytFailed = false
+    ytStatus = "Starting “" + v.title + "” on the TV… (a few seconds if YouTube wasn't open)"
+    ytPlay.running = false
+    ytPlay.command = ["media", "tv", "youtube", v.id]
+    ytPlay.running = true
+  }
+  // Focusing the scope alone would hand focus straight back to the text box,
+  // its remembered focus child.
+  function leaveTextBox() {
+    typeBox.focus = false
+    scope.forceActiveFocus()
+  }
+  function closeYouTube() {
+    ytSearch.running = false
+    ytQuery = ""
+    ytResults = []
+    ytStatus = ""
+  }
+  function formatDuration(sec) {
+    if (!sec) return ""
+    sec = Math.round(sec)
+    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60
+    var mm = h > 0 && m < 10 ? "0" + m : "" + m
+    return (h > 0 ? h + ":" : "") + mm + ":" + (s < 10 ? "0" : "") + s
+  }
+  function formatViews(n) {
+    if (!n) return ""
+    if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, "") + "B views"
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M views"
+    if (n >= 1e3) return Math.round(n / 1e3) + "K views"
+    return n + " views"
+  }
+
+  Process {
+    id: ytSearch
+    stdout: SplitParser {
+      onRead: function(line) {
+        try { win.ytResults = win.ytResults.concat([JSON.parse(line)]) } catch (e) {}
+      }
+    }
+    stderr: StdioCollector { id: ytSearchErr; waitForEnd: true }
+    onExited: function(code) {
+      var lines = String(ytSearchErr.text || "").trim().split("\n")
+      win.ytFailed = code !== 0
+      win.ytStatus = code !== 0 ? (lines[lines.length - 1] || "YouTube search failed")
+                   : win.ytResults.length === 0 ? "Nothing found" : ""
+    }
+  }
+  Process {
+    id: ytPlay
+    stderr: StdioCollector { id: ytPlayErr; waitForEnd: true }
+    onExited: function(code) {
+      var lines = String(ytPlayErr.text || "").trim().split("\n")
+      win.ytFailed = code !== 0
+      win.ytStatus = code !== 0 ? (lines[lines.length - 1] || "Couldn't start the video") : "Playing on the TV"
+    }
+  }
+
   function send(line) {
     if (pipe.running) pipe.write(line + "\n")
   }
@@ -81,7 +161,7 @@ FloatingWindow {
 
   onVisibleChanged: {
     if (visible) Qt.callLater(function() { scope.forceActiveFocus() })
-    else { padOn = false; closeRequested() }
+    else { padOn = false; closeYouTube(); closeRequested() }
   }
 
   Process {
@@ -137,6 +217,13 @@ FloatingWindow {
       map[Qt.Key_Up] = "UP"; map[Qt.Key_Down] = "DOWN"; map[Qt.Key_Left] = "LEFT"; map[Qt.Key_Right] = "RIGHT"
       map[Qt.Key_Return] = "ENTER"; map[Qt.Key_Enter] = "ENTER"; map[Qt.Key_Backspace] = "BACK"
       map[Qt.Key_Home] = "HOME"
+      if (win.ytShown) {  // the results take arrows, Enter and Esc
+        var n = win.ytResults.length
+        if (k === Qt.Key_Escape) { win.closeYouTube(); event.accepted = true; return }
+        if (k === Qt.Key_Down && n) { win.ytIndex = Math.min(n - 1, win.ytIndex + 1); event.accepted = true; return }
+        if (k === Qt.Key_Up && n) { win.ytIndex = Math.max(0, win.ytIndex - 1); event.accepted = true; return }
+        if ((k === Qt.Key_Return || k === Qt.Key_Enter) && n) { win.playYouTube(win.ytResults[win.ytIndex]); event.accepted = true; return }
+      }
       if (k === Qt.Key_Escape) { if (win.padOn) win.padOn = false; else win.closeRequested(); event.accepted = true }
       else if (k === Qt.Key_Space) { win.playPause(); event.accepted = true }
       else if (event.text === "c") { win.padOn = !win.padOn; event.accepted = true }
@@ -194,10 +281,17 @@ FloatingWindow {
         foreground: win.foreground
         font.family: win.fontFamily
         font.pixelSize: Style.font.body
-        placeholderText: "Type on the TV, or paste a link to play"
+        placeholderText: "Search YouTube, type on the TV, or paste a link"
         onTextChanged: win.syncText(text)
         onAccepted: {
           if (win.typedIsLink) { win.playLink(false); return }
+          if (!win.tvKeyboard && win.typed !== "") {
+            var q = win.typed
+            win.sentText = ""
+            text = ""
+            win.searchYouTube(q)
+            return
+          }
           win.send("enter")
           win.sentText = ""
           text = ""
@@ -206,7 +300,7 @@ FloatingWindow {
           if (event.key === Qt.Key_Escape) {
             win.sentText = ""
             text = ""
-            scope.forceActiveFocus()
+            win.leaveTextBox()
             event.accepted = true
           }
         }
@@ -249,14 +343,132 @@ FloatingWindow {
         wrapMode: Text.Wrap
         text: win.tvKeyboard
           ? "󰌌  The TV keyboard is open: what you type goes straight in, Enter submits."
-          : "Typing reaches the TV's own keyboard (browser, home search). Plex, YouTube and Netflix draw their own letter grid: click the letters with the touchpad."
+          : "Enter searches YouTube; pick a video to play it on the TV. Plex and Netflix: click their letters with the touchpad."
         color: win.tvKeyboard ? win.accent : win.dim
         font.family: win.fontFamily
         font.pixelSize: Style.font.caption
       }
 
+      // ---- YouTube results (in the touchpad's place) ----
+      ColumnLayout {
+        visible: win.ytShown
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.minimumHeight: Style.space(160)
+        spacing: Style.space(6)
+
+        RowLayout {
+          Layout.fillWidth: true
+          spacing: Style.space(8)
+          Text {
+            textFormat: Text.PlainText
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            text: "󰗃  " + win.ytQuery
+            color: win.foreground
+            font.family: win.fontFamily
+            font.pixelSize: Style.font.body
+            font.bold: true
+          }
+          Button {
+            iconText: "󰅖"
+            tooltipText: "Back to the touchpad (Esc)"
+            foreground: win.foreground
+            fontFamily: win.fontFamily
+            onClicked: win.closeYouTube()
+          }
+        }
+        Text {
+          visible: win.ytStatus !== ""
+          textFormat: Text.PlainText
+          Layout.fillWidth: true
+          wrapMode: Text.Wrap
+          text: win.ytStatus
+          color: win.ytFailed ? win.urgent : win.dim
+          font.family: win.fontFamily
+          font.pixelSize: Style.font.caption
+        }
+        ListView {
+          id: ytList
+          Layout.fillWidth: true
+          Layout.fillHeight: true
+          clip: true
+          spacing: Style.space(2)
+          model: win.ytResults
+          currentIndex: win.ytIndex
+          boundsBehavior: Flickable.StopAtBounds
+          ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+          onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+
+          delegate: CursorSurface {
+            id: ytRow
+            required property var modelData
+            required property int index
+            width: ytList.width
+            implicitHeight: ytLayout.implicitHeight + Style.spacing.rowPaddingX
+            foreground: win.foreground
+            hasCursor: ytHover.hovered || index === win.ytIndex
+
+            HoverHandler { id: ytHover; cursorShape: Qt.PointingHandCursor }
+            MouseArea {
+              anchors.fill: parent
+              cursorShape: Qt.PointingHandCursor
+              onClicked: { win.ytIndex = ytRow.index; win.playYouTube(ytRow.modelData) }
+            }
+
+            RowLayout {
+              id: ytLayout
+              anchors.left: parent.left
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              anchors.leftMargin: Style.space(6)
+              anchors.rightMargin: Style.space(6)
+              spacing: Style.space(10)
+
+              Image {
+                Layout.preferredWidth: Style.space(96)
+                Layout.preferredHeight: Style.space(54)
+                source: "https://i.ytimg.com/vi/" + ytRow.modelData.id + "/mqdefault.jpg"
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                sourceSize.width: 192
+              }
+              ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Style.space(1)
+                Text {
+                  textFormat: Text.PlainText
+                  Layout.fillWidth: true
+                  text: ytRow.modelData.title
+                  color: win.foreground
+                  font.family: win.fontFamily
+                  font.pixelSize: Style.font.bodySmall
+                  wrapMode: Text.Wrap
+                  maximumLineCount: 2
+                  elide: Text.ElideRight
+                }
+                Text {
+                  textFormat: Text.PlainText
+                  Layout.fillWidth: true
+                  text: {
+                    var v = ytRow.modelData
+                    var bits = [v.channel, v.live ? "LIVE" : win.formatDuration(v.duration), win.formatViews(v.views)]
+                    return bits.filter(function(b) { return b }).join(" · ")
+                  }
+                  color: ytRow.modelData.live ? win.urgent : win.dim
+                  font.family: win.fontFamily
+                  font.pixelSize: Style.font.caption
+                  elide: Text.ElideRight
+                }
+              }
+            }
+          }
+        }
+      }
+
       // ---- touchpad ----
       Rectangle {
+        visible: !win.ytShown
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.minimumHeight: Style.space(160)
@@ -295,7 +507,7 @@ FloatingWindow {
           onExited: primed = false
 
           onPressed: function(mouse) {
-            scope.forceActiveFocus()
+            win.leaveTextBox()
             lastX = mouse.x; lastY = mouse.y; lastT = Date.now(); travelled = 0; primed = true
           }
           onPositionChanged: function(mouse) {
