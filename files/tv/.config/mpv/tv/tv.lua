@@ -1064,7 +1064,9 @@ for _, key in ipairs(mp.get_property_native('input-key-list') or {}) do
         mp.add_key_binding(key, 'tv-kp-volume-up', volume(2), { repeatable = true })
     end
 end
-mp.add_key_binding('M', 'tv-mute', function() mp.command('osd-msg cycle mute') end)
+-- Not 'tv-mute': binding names double as script messages, and tv-mute is the
+-- message `tv --ctl mute` sends to set mute, not toggle it.
+mp.add_key_binding('M', 'tv-toggle-mute', function() mp.command('osd-msg cycle mute') end)
 -- Also works after a stop: current still holds the channel that gave up.
 mp.add_key_binding('r', 'tv-reload', function()
     if not current.pos or current.pos < 0 then

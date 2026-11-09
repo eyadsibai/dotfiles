@@ -487,7 +487,7 @@ mp.add_timeout(5, function() mp.command('quit') end)
                  if len(words) > 3 and words[:2] == ["[probe]", "binding"]}
         for key, name in (("PGUP", "tv-prev"), ("PGDWN", "tv-next"), ("/", "tv-search"),
                           ("Shift+ENTER", "tv-search-alt"), ("-", "tv-volume-down"), ("+", "tv-volume-up"),
-                          ("M", "tv-mute")):
+                          ("M", "tv-toggle-mute")):
             self.assertEqual(bound.get(key), f"tv/{name}", key)
         self.assertIn("now at 1", proc.stdout)
 
@@ -566,6 +566,24 @@ mp.add_timeout(5, function() mp.command('quit') end)
                                            f"    io.open({json.dumps(str(picked))}, 'w'):close()\n"
                                            "    mp.command('quit')\nend)\n"))
         self.assertTrue(picked.exists())
+
+    def test_mute_messages_set_rather_than_toggle(self):
+        # Binding names double as script messages: a key binding named tv-mute once
+        # turned "mute the other TV" into a toggle, so a second "a" unmuted it.
+        probe = self.script("mute.lua", "mp.register_event('file-loaded', function()\n"
+                            "  mp.commandv('script-message', 'tv-mute')\n"
+                            "  mp.commandv('script-message', 'tv-mute')\n"
+                            "  mp.add_timeout(0.3, function()\n"
+                            "    print('mute ' .. tostring(mp.get_property_bool('mute')))\n"
+                            "    mp.commandv('script-message', 'tv-unmute')\n"
+                            "    mp.commandv('script-message', 'tv-unmute')\n"
+                            "    mp.add_timeout(0.3, function()\n"
+                            "      print('mute ' .. tostring(mp.get_property_bool('mute'))) mp.command('quit')\n"
+                            "    end)\n  end)\nend)\n")
+        proc = self.play(extra=["--idle=yes", probe, "--msg-level=all=warn,tv=info,mute=info"])
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        states = [x.split()[-1] for x in proc.stdout.splitlines() if x.startswith("[mute] mute ")]
+        self.assertEqual(states, ["true", "false"])
 
     def test_corner_tv_leaves_the_main_tvs_state_alone(self):
         pip = self.run_dir / "tv" / "pip.json"
