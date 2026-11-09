@@ -45,7 +45,15 @@ o.window("^com\\.jankeesvw\\.OmarchyMeetingRecorder$", { float = true, size = { 
 
 -- The caster (eyad.media's CastWindow, a window of the Omarchy shell): centered and floating.
 o.window({ class = "^org\\.quickshell$", title = "^Cast$" }, { float = true, size = { 1000, 660 }, center = true })
-o.window({ class = "^org\\.quickshell$", title = "^TV remote$" }, { float = true, size = { 460, 720 }, center = true })
+-- The TV remote stays out of the way like picture-in-picture: bottom-right corner,
+-- pinned so it follows across workspaces.
+o.window({ class = "^org\\.quickshell$", title = "^TV remote$" }, {
+  float = true,
+  pin = true,
+  size = { 460, 720 },
+  -- the size, not window_w/h: those are still the window's own size when this runs
+  move = { "(monitor_w-460-40)", "(monitor_h-720-40)" },
+})
 
 -- Zoom desktop app (class "Zoom" on native Wayland, "zoom" under XWayland).
 -- Float its popups/dialogs; keep the main and meeting windows tiled.
