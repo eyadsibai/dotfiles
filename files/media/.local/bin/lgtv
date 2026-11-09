@@ -20,7 +20,9 @@
   lgtv notify <message>       show a toast on the TV
   lgtv key <KEY>...           press remote keys (UP DOWN LEFT RIGHT ENTER BACK HOME ...)
   lgtv type [--enter] <text>  type into the TV's on-screen keyboard (e.g. a search box)
-  lgtv gridtype <text>        type on Plex's, Prime Video's or Shahid's own letter grid
+  lgtv gridtype [--replace] <text>
+                              type on Plex's, Prime Video's or Shahid's own letter grid;
+                              --replace clears their search box first
   lgtv remote                 interactive remote in this terminal; typing goes to the
                               TV when its keyboard is open, c toggles a mouse pointer
   lgtv pipe                   one connection driven from stdin, for the bar widget:
@@ -220,7 +222,8 @@ NO_KEYBOARD = ("the TV's system keyboard isn't open. Apps like Plex, YouTube, Pr
 # 960x540 screenshot; a grid is rows of 6 keys plus a bottom row of wide keys.
 
 class Grid:
-    def __init__(self, rows, xs, ys, bottom_y, bottom, ltr, half, key_bg, side_up=False, escapes=()):
+    def __init__(self, rows, xs, ys, bottom_y, bottom, ltr, half, key_bg, side_up=False, escapes=(),
+                 clear_below=0):
         self.rows, self.xs, self.ys, self.ltr, self.half = rows, xs, ys, ltr, half
         self.by = bottom_y
         # bottom keys: (name, first col, last col, x). UP from one returns to the column
@@ -230,6 +233,8 @@ class Grid:
         self.bottom, self.side_up = bottom, side_up
         # keys off the grid we can step back from: (x, y, half, key to press)
         self.escapes = escapes
+        # a Clear key this many DOWNs below backspace (Prime), when not on the bottom row
+        self.clear_below = clear_below
         self.key_bg = key_bg  # a plain key's background shade (0-255), to recognise the grid
         self.B = len(rows)  # the bottom row's index
 
@@ -252,7 +257,8 @@ GRID_APPS = {
     "amazon": ("Prime Video", {
         "en": Grid(LATIN, [94, 127, 160, 193, 226, 259], [86, 119, 152, 185, 218, 251], 283,
                    [("space", 0, 3, 143), ("bksp", 4, 5, 242)], True, 10, 5,
-                   escapes=[(114, 317, 10, "UP"), (208, 317, 10, "UP"), (178, 344, 6, "UP")])}),
+                   escapes=[(114, 317, 10, "UP", "symbols"), (208, 317, 10, "UP", "accents"),
+                            (178, 344, 6, "UP", "clear")], clear_below=2)}),
     "net.mbc.shahid-lgapp": ("Shahid", {
         "ar": Grid(["ابتثجح", "خدذرزس", "شصضطظع", "غفقكلم", "نهويةئ", "ءؤ1234", "567890"],
                    [892, 855, 818, 781, 744, 707], [121, 158, 195, 232, 269, 306, 343], 380,
@@ -274,7 +280,7 @@ def _cell_bg(img, x, y, h):
 
 def grid_locate(img, layouts):
     """Which layout is showing and where its highlight is: (name, (row, col)), or
-    (name, ("via", KEY)) on an extra key that KEY steps back from, or None."""
+    (name, ("via", KEY, key name)) on an extra key that KEY steps back from, or None."""
     # Of several layouts, the one whose bottom row is lowest and actually drawn
     for name, g in sorted(layouts.items(), key=lambda kv: -kv[1].by):
         if len(layouts) > 1 and max(_lum(img, b[3], g.by) for b in g.bottom) < 80:
@@ -282,7 +288,7 @@ def grid_locate(img, layouts):
         cells = [((r, c), x, y) for r, y in enumerate(g.ys) for c, x in enumerate(g.xs)]
         cells += [((g.B, b[1]), b[3], g.by) for b in g.bottom]
         scored = [(_cell_bg(img, x, y, g.half), pos) for pos, x, y in cells]
-        scored += [(_cell_bg(img, x, y, h), ("via", k)) for x, y, h, k in g.escapes]
+        scored += [(_cell_bg(img, x, y, h), ("via", k, n)) for x, y, h, k, n in g.escapes]
         scored.sort(reverse=True)
         if scored[0][0] >= 185 and scored[1][0] < 120:  # one white key among dark ones
             return name, scored[0][1]
@@ -358,6 +364,9 @@ def grid_units(ops):
     """Split ops into single key presses: ("char", ch) | ("space",) | ("bksp", n)."""
     units = []
     for op, arg in ops:
+        if op == "clear":
+            units.append(("clear",))
+            continue
         if op == "del":
             if arg > 0:
                 units.append(("bksp", arg))
@@ -428,6 +437,13 @@ async def grid_type(call, sock, app, ops):
             target, presses = "toggle", 1
         elif unit[0] == "char":
             target, presses = g.find(unit[1]), 1
+        elif unit[0] == "clear":
+            if any(b[0] == "clear" for b in g.bottom):
+                target, presses = "clear", 1
+            elif g.clear_below:
+                target, presses = "bksp", 0  # then step down to the Clear key
+            else:
+                target, presses = "bksp", 30  # no Clear key: delete more than a search holds
         else:
             target, presses = unit[0], unit[1] if unit[0] == "bksp" else 1
 
@@ -444,6 +460,20 @@ async def grid_type(call, sock, app, ops):
                     return f"the highlight on {title}'s letters keeps landing somewhere unexpected; try again"
                 continue
         tries = 0
+        if unit[0] == "clear" and presses == 0:
+            await keys(["DOWN"] * g.clear_below)
+            await asyncio.sleep(0.25)
+            hit = grid_locate(await tv_screenshot(call), layouts)
+            if hit and hit[1][0] == "via" and hit[1][2] == "clear":
+                await keys(["ENTER"])
+                units.pop(0)
+            else:
+                units[0] = ("bksp", 30)  # didn't find it: delete instead
+            found = await where()
+            if not found:
+                return lost
+            lname, pos, memo = found[0], found[1], None
+            continue
         await keys(["ENTER"] * presses)
         if switch_to:  # the other layout opens on its first key; type the letter there next
             lname, pos, memo = switch_to, (0, 0), None
@@ -459,14 +489,18 @@ async def foreground_app(tv):
 
 async def cmd_gridtype(tv, args):
     if not args:
-        die("usage: lgtv gridtype <text>   (Plex, Prime Video or Shahid, with its search open)")
+        die("usage: lgtv gridtype [--replace] <text>   (Plex, Prime Video or Shahid, search open)")
+    replace = args[0] == "--replace"
+    if replace:
+        args = args[1:]
     app = await foreground_app(tv)
     if app not in GRID_APPS:
         die(f"the app on screen ({app or 'none'}) isn't one whose letter grid I know: "
             + ", ".join(t for t, _ in GRID_APPS.values()))
     sock = await tv.buttons()
     try:
-        err = await grid_type(lambda uri: tv.call(uri), sock, app, [("text", " ".join(args))])
+        ops = ([("clear", None)] if replace else []) + [("text", " ".join(args))]
+        err = await grid_type(lambda uri: tv.call(uri), sock, app, ops)
     finally:
         await sock.close()
     if err:

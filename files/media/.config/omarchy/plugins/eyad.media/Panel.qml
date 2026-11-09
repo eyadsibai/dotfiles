@@ -51,7 +51,7 @@ Panel {
     ytSearchProc.running = false
     if (tvGridApp !== "") {
       tvSearchStatus = "Typing into " + tvGridApp + "'s search on the TV…"
-      tvTypeProc.command = ["media", "tv", "gridtype", q]
+      tvTypeProc.command = ["media", "tv", "gridtype", "--replace", q]
     } else {
       tvSearchStatus = "Searching YouTube…"
       ytSearchProc.command = ["media", "tv", "ytsearch", q]
