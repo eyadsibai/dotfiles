@@ -22,4 +22,8 @@ if [[ -n $check ]]; then
   exit 1
 fi
 echo "System setup changed (modules/arch-system); switching needs sudo"
-nix run --inputs-from . system-manager -- switch --store-path "$new" --sudo
+# What `system-manager switch` does, through the engine already in the built config:
+# the system-manager CLI, built against our nixpkgs, is in no binary cache and pulls in
+# a whole Rust/LLVM toolchain to compile
+sudo "$new/bin/register-profile"
+sudo "$new/bin/activate"

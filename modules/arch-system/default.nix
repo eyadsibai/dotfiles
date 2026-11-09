@@ -18,8 +18,16 @@ in
 {
   nixpkgs.hostPlatform = "x86_64-linux";
 
+  # Activation otherwise refuses anything but NixOS, Ubuntu and Debian
+  system-manager.allowAnyDistro = true;
+
   # system-manager turns userborn on to manage /etc/passwd; Arch owns the users
   services.userborn.enable = false;
+
+  # NixOS-style setuid wrappers in /run/wrappers: Arch's own sudo and friends are
+  # setuid already. Their unit also orders itself after userborn.service, and that
+  # dangling reference makes every activation try (and fail) to restart userborn.
+  security.enableWrappers = false;
 
   environment.etc = {
     # pacman's nix reads this; the daemon is restarted when it changes (below)
