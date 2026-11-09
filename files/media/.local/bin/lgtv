@@ -20,14 +20,14 @@
   lgtv notify <message>       show a toast on the TV
   lgtv key <KEY>...           press remote keys (UP DOWN LEFT RIGHT ENTER BACK HOME ...)
   lgtv type [--enter] <text>  type into the TV's on-screen keyboard (e.g. a search box)
-  lgtv gridtype <text>        type on Prime Video's or Shahid's own letter grid (search open)
+  lgtv gridtype <text>        type on Plex's, Prime Video's or Shahid's own letter grid
   lgtv remote                 interactive remote in this terminal; typing goes to the
                               TV when its keyboard is open, c toggles a mouse pointer
   lgtv pipe                   one connection driven from stdin, for the bar widget:
                               key NAME · move DX DY · click · scroll DY · text STR ·
                               enter · del [N]; prints {"keyboard": bool} and {"app", "grid"}
-                              as they change. Text goes to Prime's/Shahid's letter grid
-                              when one of them is on screen
+                              as they change. Text goes to Plex's, Prime's or Shahid's
+                              letter grid when one of them is on screen
   lgtv cast <file|url>...     play videos on the TV (the cast service, DLNA)
   lgtv pair                   (re)pair; accept the prompt on the TV
   lgtv host                   print the TV's address
@@ -209,23 +209,25 @@ async def scroll(sock, dy):
 
 NO_KEYBOARD = ("the TV's system keyboard isn't open. Apps like Plex, YouTube, Prime Video and Shahid draw "
                "their own letter grid, which only takes arrow keys; typing reaches the grey "
-               "webOS keyboard (Web Browser, home search, some apps). For Prime Video and "
-               "Shahid use: lgtv gridtype <text>; for YouTube: lgtv ytsearch / lgtv youtube.")
+               "webOS keyboard (Web Browser, home search, some apps). For Plex, Prime Video "
+               "and Shahid use: lgtv gridtype <text>; for YouTube: lgtv ytsearch / lgtv youtube.")
 
 
 # ---------- typing on an app's own letter grid ----------
-# Prime Video and Shahid draw their own keyboards, which only take arrow keys.
+# Plex, Prime Video and Shahid draw their own keyboards, which only take arrow keys.
 # We type on them as a person would: screenshot the TV, find the highlighted
 # key, then walk the arrows to each letter and press OK. Positions are in the
 # 960x540 screenshot; a grid is rows of 6 keys plus a bottom row of wide keys.
 
 class Grid:
-    def __init__(self, rows, xs, ys, bottom_y, bottom, ltr, half):
+    def __init__(self, rows, xs, ys, bottom_y, bottom, ltr, half, side_up=False):
         self.rows, self.xs, self.ys, self.ltr, self.half = rows, xs, ys, ltr, half
         self.by = bottom_y
-        # bottom keys: (name, first col, last col, x); UP from one lands on its first
-        # col, except the space bar, which remembers the column you came down from
-        self.bottom = bottom
+        # bottom keys: (name, first col, last col, x). UP from one returns to the column
+        # you came down from; we enter all but the space bar from their first column.
+        # side_up: after arriving sideways, UP lands on the key's first column (Plex);
+        # otherwise where it lands is unknown, so we step off the space bar first.
+        self.bottom, self.side_up = bottom, side_up
         self.B = len(rows)  # the bottom row's index
 
     def find(self, ch):
@@ -240,6 +242,10 @@ class Grid:
 
 LATIN = ["abcdef", "ghijkl", "mnopqr", "stuvwx", "yz1234", "567890"]
 GRID_APPS = {
+    "cdp-30": ("Plex", {
+        "en": Grid(LATIN, [62, 98, 134, 170, 206, 242], [85, 121, 157, 193, 229, 265], 301,
+                   [("bksp", 0, 1, 80), ("space", 2, 3, 152), ("clear", 4, 5, 224)], True, 11,
+                   side_up=True)}),
     "amazon": ("Prime Video", {
         "en": Grid(LATIN, [94, 127, 160, 193, 226, 259], [86, 119, 152, 185, 218, 251], 283,
                    [("space", 0, 3, 143), ("bksp", 4, 5, 242)], True, 10)}),
@@ -277,11 +283,12 @@ def grid_locate(img, layouts):
     return None
 
 
-def grid_keys(layouts, lname, pos, ops):
-    """Arrow/OK presses that apply ops ([("text", s) | ("del", n)]) from a known position."""
-    g = layouts[lname]
+def grid_walk(g, pos, memo, target):
+    """Arrow presses from pos to target (a (row, col) cell or a bottom key's name).
+
+    memo is the column UP from a bottom key returns to, when known. Returns the
+    presses, where they end, and the memo there."""
     r, c = pos
-    memo = None  # the column the space bar will return to, when known
     keys = []
 
     def fwd(n):  # move n columns (negative: back)
@@ -290,59 +297,52 @@ def grid_keys(layouts, lname, pos, ops):
     def up_out():
         nonlocal r, c, memo
         i = g.special(c)
-        if g.bottom[i][0] == "space" and memo is None:
+        if memo is None and g.side_up:
+            memo = g.bottom[i][1]
+        elif g.bottom[i][0] == "space" and memo is None:
             fwd(1)  # unsure where UP from the space bar lands: step off it first
             i += 1
-        c = memo if g.bottom[i][0] == "space" else g.bottom[i][1]
+        c = memo if memo is not None else g.bottom[i][1]
         keys.append("UP")
         r, memo = g.B - 1, None
 
-    def goto_cell(tr, tc):
-        nonlocal r, c
+    if isinstance(target, tuple):
         if r == g.B:
             up_out()
+        tr, tc = target
         keys.extend(["DOWN" if tr > r else "UP"] * abs(tr - r))
         fwd(tc - c)
-        r, c = tr, tc
+        return keys, target, None
 
-    def goto_special(name):
-        nonlocal r, c, memo
-        i = next(i for i, b in enumerate(g.bottom) if b[0] == name)
-        lo, hi = g.bottom[i][1], g.bottom[i][2]
-        if r == g.B:
-            j = g.special(c)
-            fwd(i - j)
-            if i != j:
-                memo = None
-        else:
-            col = min(max(c, lo), hi)
-            goto_cell(g.B - 1, col)
-            keys.append("DOWN")
-            memo = col if name == "space" else None
-        r, c = g.B, lo
+    i = next(i for i, b in enumerate(g.bottom) if b[0] == target)
+    lo, hi = g.bottom[i][1], g.bottom[i][2]
+    if r == g.B:
+        j = g.special(c)
+        fwd(i - j)
+        if i != j:
+            memo = None
+    else:
+        # enter from a known column; all but the space bar from their first one
+        col = min(max(c, lo), hi) if target == "space" else lo
+        if r != g.B - 1 or c != col:
+            keys.extend(["DOWN" if g.B - 1 > r else "UP"] * abs(g.B - 1 - r))
+            fwd(col - c)
+        keys.append("DOWN")
+        memo = col
+    return keys, (g.B, lo), memo
 
+
+def grid_units(ops):
+    """Split ops into single key presses: ("char", ch) | ("space",) | ("bksp", n)."""
+    units = []
     for op, arg in ops:
         if op == "del":
             if arg > 0:
-                goto_special("bksp")
-                keys.extend(["ENTER"] * arg)
+                units.append(("bksp", arg))
             continue
         for ch in arg.lower().translate(ARABIC_FOLD):
-            if ch.isspace():
-                goto_special("space")
-                keys.append("ENTER")
-                continue
-            if g.find(ch) is None:
-                other = next((n for n, o in layouts.items() if n != lname and o.find(ch)), None)
-                if other is None:
-                    continue  # not on this keyboard
-                goto_special("toggle")
-                keys.append("ENTER")
-                lname, g = other, layouts[other]
-                r, c, memo = 0, 0, None
-            goto_cell(*g.find(ch))
-            keys.append("ENTER")
-    return keys
+            units.append(("space",) if ch.isspace() else ("char", ch))
+    return units
 
 
 async def tv_screenshot(call):
@@ -356,14 +356,61 @@ async def tv_screenshot(call):
 
 
 async def grid_type(call, sock, app, ops):
-    """Type ops on the app's letter grid. Returns an error message, or None."""
+    """Type ops on the app's letter grid. Returns an error message, or None.
+
+    Before each OK it checks, on a fresh screenshot, that the intended key is
+    highlighted, and walks again from wherever the highlight really is if not:
+    an app busy loading results can drop or delay a press."""
     title, layouts = GRID_APPS[app]
+    lost = f"open {title}'s search first: its letter grid isn't on the screen"
+
+    async def where():
+        await asyncio.sleep(0.25)  # let the highlight settle
+        return grid_locate(await tv_screenshot(call), layouts)
+
+    async def keys(ks):
+        for k in ks:
+            await press(sock, k)
+            await asyncio.sleep(0.15)
+
     found = grid_locate(await tv_screenshot(call), layouts)
     if not found:
-        return f"open {title}'s search first: its letter grid isn't on the screen"
-    for k in grid_keys(layouts, found[0], found[1], ops):
-        await press(sock, k)
-        await asyncio.sleep(0.15)
+        return lost
+    lname, pos = found
+    memo, tries = None, 0
+    units = grid_units(ops)
+    while units:
+        unit, g, switch_to = units[0], layouts[lname], None
+        if unit[0] == "char" and g.find(unit[1]) is None:
+            switch_to = next((n for n, o in layouts.items() if o.find(unit[1])), None)
+            if switch_to is None:
+                units.pop(0)  # not on this keyboard
+                continue
+            target, presses = "toggle", 1
+        elif unit[0] == "char":
+            target, presses = g.find(unit[1]), 1
+        else:
+            target, presses = unit[0], unit[1] if unit[0] == "bksp" else 1
+
+        moves, expect, new_memo = grid_walk(g, pos, memo, target)
+        await keys(moves)
+        if moves:
+            found = await where()
+            if not found:
+                return lost
+            if found != (lname, expect):  # re-plan from where the highlight really is
+                lname, pos, memo = found[0], found[1], None
+                tries += 1
+                if tries > 3:
+                    return f"the highlight on {title}'s letters keeps landing somewhere unexpected; try again"
+                continue
+        tries = 0
+        await keys(["ENTER"] * presses)
+        if switch_to:  # the other layout opens on its first key; type the letter there next
+            lname, pos, memo = switch_to, (0, 0), None
+        else:
+            pos, memo = expect, new_memo
+            units.pop(0)
     return None
 
 
@@ -373,7 +420,7 @@ async def foreground_app(tv):
 
 async def cmd_gridtype(tv, args):
     if not args:
-        die("usage: lgtv gridtype <text>   (Prime Video or Shahid, with its search open)")
+        die("usage: lgtv gridtype <text>   (Plex, Prime Video or Shahid, with its search open)")
     app = await foreground_app(tv)
     if app not in GRID_APPS:
         die(f"the app on screen ({app or 'none'}) isn't one whose letter grid I know: "

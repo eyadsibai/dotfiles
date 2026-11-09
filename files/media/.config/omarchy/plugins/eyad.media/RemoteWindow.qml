@@ -356,7 +356,7 @@ FloatingWindow {
           ? "󰌌  The TV keyboard is open: what you type goes straight in, Enter submits."
           : win.typingToGrid && win.gridError !== "" ? "󰀦  " + win.gridError
           : win.typingToGrid ? "󰌌  Typing walks " + win.tvGrid + "'s letters on the TV (arrows and OK). Have its search open."
-          : "Enter searches YouTube; pick a video to play it on the TV. Plex: click its letters with the touchpad."
+          : "Enter searches YouTube; pick a video to play it on the TV. In Plex, Prime or Shahid, open their search and type here."
         color: win.typingToGrid && win.gridError !== "" ? win.urgent
              : win.tvKeyboard || win.typingToGrid ? win.accent : win.dim
         font.family: win.fontFamily
