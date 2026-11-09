@@ -150,6 +150,7 @@ Panel {
   }
 
   // The remote window (RemoteWindow.qml): touchpad, buttons, typing on the TV.
+  property real remoteSpeed: 1   // the touchpad speed, kept between openings
   function openRemote() {
     root.close()
     remoteLoader.active = true
@@ -160,6 +161,8 @@ Panel {
     active: false
     RemoteWindow {
       visible: true
+      speed: root.remoteSpeed
+      onSpeedChanged: root.remoteSpeed = speed
       onCloseRequested: remoteLoader.active = false
     }
   }

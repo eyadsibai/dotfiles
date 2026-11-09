@@ -41,10 +41,36 @@ FloatingWindow {
   onPadOnChanged: pad.primed = false
 
   // Pointer moves are summed and flushed every 30 ms. Slow drags move the
-  // pointer about 1:1 for small targets; fast flicks cross the screen.
+  // pointer about 1:1 for small targets; fast flicks cross the screen. The
+  // speed ([ and ]) scales both; Panel keeps it between openings.
   property real pendingX: 0
   property real pendingY: 0
-  function pointerGain(pxPerMs) { return 0.9 + 2.4 * Math.min(pxPerMs, 1.5) }
+  readonly property var speeds: [0.6, 1, 1.5, 2.2, 3]
+  property real speed: 1
+  function stepSpeed(dir) {
+    var i = speeds.indexOf(speed)
+    if (i < 0) i = 1
+    speed = speeds[Math.max(0, Math.min(speeds.length - 1, i + dir))]
+  }
+  function pointerGain(pxPerMs) { return speed * (0.9 + 2.4 * Math.min(pxPerMs, 1.5)) }
+
+  // The TV's power state, from the pipe. With Quick Start+ an off TV still
+  // answers ("Active Standby", "Suspend", "Screen Off") but ignores the remote,
+  // so opening the remote then wakes it: Wake-on-LAN, or the screen back on.
+  property string power: ""
+  readonly property bool tvOff: power !== "" && power !== "Active"
+  property bool everConnected: false
+  property bool waking: false     // a wake was sent since the remote opened
+  property bool restarting: false
+  function wakeTv() {
+    waking = true
+    wakeGiveUp.restart()
+    run(["media", "tv", "on"])
+    send("wake")
+  }
+  // If it isn't up in 40 s (Wake-on-LAN off in the TV's settings, say), stop
+  // claiming it's coming and offer the button again.
+  Timer { id: wakeGiveUp; interval: 40000; onTriggered: win.waking = false }
 
   // A pasted link plays on the TV instead of being typed into it.
   readonly property string typed: typeBox.text.trim()
@@ -163,7 +189,7 @@ FloatingWindow {
   }
 
   onVisibleChanged: {
-    if (visible) Qt.callLater(function() { scope.forceActiveFocus() })
+    if (visible) { power = ""; waking = false; everConnected = false; Qt.callLater(function() { scope.forceActiveFocus() }) }
     else { padOn = false; closeYouTube(); closeRequested() }
   }
 
@@ -176,7 +202,14 @@ FloatingWindow {
       onRead: function(line) {
         try {
           var m = JSON.parse(line)
-          if (m.ready) { win.connected = true; win.error = "" }
+          if (m.ready) { win.connected = true; win.everConnected = true; win.error = "" }
+          if (m.power !== undefined) {
+            var wasOff = win.tvOff
+            win.power = m.power
+            if (win.tvOff && !win.waking) win.wakeTv()
+            // Back on: a pointer socket opened in standby is dead, so start afresh
+            if (wasOff && !win.tvOff) { win.waking = false; wakeGiveUp.stop(); win.restarting = true; pipe.running = false }
+          }
           if (m.keyboard !== undefined) win.tvKeyboard = m.keyboard === true
           if (m.grid !== undefined) { win.tvGrid = m.grid || ""; win.gridError = "" }
           if (m.grid_error !== undefined) win.gridError = m.grid_error || ""
@@ -189,9 +222,12 @@ FloatingWindow {
       win.connected = false
       win.tvKeyboard = false
       win.tvGrid = ""
+      if (win.restarting) { win.restarting = false; if (win.visible) pipe.running = true; return }
       if (code !== 0) {
         var lines = String(pipeErr.text || "").trim().split("\n")
         win.error = lines[lines.length - 1] || "Lost the TV"
+        // Unreachable from the start: most likely off, so wake it
+        if (!win.everConnected && !win.waking && win.visible) win.wakeTv()
       }
       if (win.visible) reconnect.restart()
     }
@@ -239,6 +275,8 @@ FloatingWindow {
       else if (event.text === "-") { win.key("VOLUMEDOWN"); event.accepted = true }
       else if (event.text === "m") { win.key("MUTE"); event.accepted = true }
       else if (event.text === "h") { win.key("HOME"); event.accepted = true }
+      else if (event.text === "]") { win.stepSpeed(1); event.accepted = true }
+      else if (event.text === "[") { win.stepSpeed(-1); event.accepted = true }
     }
 
     ColumnLayout {
@@ -272,11 +310,25 @@ FloatingWindow {
             textFormat: Text.PlainText
             Layout.fillWidth: true
             elide: Text.ElideRight
-            text: win.error !== "" ? win.error : (win.connected ? "Connected to the TV" : "Connecting…")
-            color: win.error !== "" ? win.urgent : win.dim
+            text: win.waking && (win.tvOff || !win.connected) ? "Turning the TV on…"
+                : win.tvOff ? "The TV is off (" + win.power + ")"
+                : win.error !== "" ? win.error
+                : win.connected ? "Connected to the TV" : "Connecting…"
+            color: win.waking && (win.tvOff || !win.connected) ? win.accent
+                 : win.error !== "" || win.tvOff ? win.urgent : win.dim
             font.family: win.fontFamily
             font.pixelSize: Style.font.bodySmall
           }
+        }
+        Button {
+          visible: win.tvOff || !win.connected
+          text: "Turn on"
+          iconText: "󰐥"
+          tooltipText: "Wake the TV (Wake-on-LAN, or its screen back on)"
+          bordered: true
+          foreground: win.foreground
+          fontFamily: win.fontFamily
+          onClicked: win.wakeTv()
         }
       }
 
@@ -498,9 +550,10 @@ FloatingWindow {
           horizontalAlignment: Text.AlignHCenter
           wrapMode: Text.Wrap
           textFormat: Text.PlainText
-          text: win.padOn
+          text: (win.padOn
             ? "Touchpad on\nmove to move the pointer · click to click · c or Esc to stop"
-            : "Touchpad\ndrag to move the pointer · click to click · scroll to scroll\nc: move without holding"
+            : "Touchpad\ndrag to move the pointer · click to click · scroll to scroll\nc: move without holding")
+            + "\nspeed " + win.speed + "× ( [ and ] ) · endless: the edges wrap to the middle"
           color: win.padOn ? win.accent : win.dim
           font.family: win.fontFamily
           font.pixelSize: Style.font.caption
@@ -518,6 +571,22 @@ FloatingWindow {
           property real travelled: 0
           property bool primed: false   // lastX/lastY hold a real position
 
+          // Endless pad: near an edge the cursor is put back in the middle
+          // (Hyprland), so one long swipe can cross the whole TV. Motion until
+          // the cursor lands there is the warp itself, not the user, so it's skipped.
+          readonly property real edge: Math.min(28, width / 8, height / 8)
+          property bool warping: false
+          function recentre(mouse) {
+            var cx = width / 2, cy = height / 2
+            warping = true
+            warpGuard.restart()
+            win.run(["sh", "-c",
+              "p=$(hyprctl cursorpos) && x=${p%,*} && y=${p#*, } && " +
+              "hyprctl eval \"hl.dispatch(hl.dsp.cursor.move({ x = $((x + $1)), y = $((y + $2)) }))\"",
+              "sh", String(Math.round(cx - mouse.x)), String(Math.round(cy - mouse.y))])
+          }
+          Timer { id: warpGuard; interval: 250; onTriggered: { pad.warping = false; pad.primed = false } }
+
           onExited: primed = false
 
           onPressed: function(mouse) {
@@ -527,6 +596,14 @@ FloatingWindow {
           onPositionChanged: function(mouse) {
             if (!pressed && !win.padOn) return
             var now = Date.now()
+            if (warping) {
+              if (Math.abs(mouse.x - width / 2) < 40 && Math.abs(mouse.y - height / 2) < 40) {
+                warping = false
+                warpGuard.stop()
+                lastX = mouse.x; lastY = mouse.y; lastT = now; primed = true
+              }
+              return
+            }
             if (!primed) { lastX = mouse.x; lastY = mouse.y; lastT = now; primed = true; return }
             var dx = mouse.x - lastX, dy = mouse.y - lastY
             var dt = Math.max(1, now - lastT)
@@ -535,6 +612,8 @@ FloatingWindow {
             var gain = win.pointerGain(Math.sqrt(dx * dx + dy * dy) / dt)
             win.pendingX += dx * gain
             win.pendingY += dy * gain
+            if (mouse.x < edge || mouse.y < edge || mouse.x > width - edge || mouse.y > height - edge)
+              recentre(mouse)
           }
           onReleased: function(mouse) {
             if (travelled > 6) return
@@ -637,7 +716,7 @@ FloatingWindow {
         Layout.fillWidth: true
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.Wrap
-        text: "arrows · ⏎ OK · ⌫ back · c touchpad · / type · space play/pause · +/- volume · Esc close"
+        text: "arrows · ⏎ OK · ⌫ back · c touchpad · [ ] speed · / type · space play/pause · +/- volume · Esc close"
         color: win.dim
         font.family: win.fontFamily
         font.pixelSize: Style.font.caption

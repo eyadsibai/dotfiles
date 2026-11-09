@@ -27,8 +27,8 @@
                               TV when its keyboard is open, c toggles a mouse pointer
   lgtv pipe                   one connection driven from stdin, for the bar widget:
                               key NAME · move DX DY · click · scroll DY · text STR ·
-                              enter · del [N]; prints {"keyboard": bool} and {"app", "grid"}
-                              as they change. Text goes to Plex's, Prime's or Shahid's
+                              enter · del [N] · wake (screen back on); prints
+                              {"keyboard": bool}, {"app", "grid"} and {"power"} as they change. Text goes to Plex's, Prime's or Shahid's
                               letter grid when one of them is on screen
   lgtv cast <file|url>...     play videos on the TV (the cast service, DLNA)
   lgtv pair                   (re)pair; accept the prompt on the TV
@@ -898,7 +898,7 @@ async def cmd_pipe(tv, args):
         await tv.ws.send(json.dumps(msg))
 
     waiting = {}  # request id -> future, for the replies we wait on
-    state = {"keyboard": False, "app": ""}
+    state = {"keyboard": False, "app": "", "power": ""}
 
     async def call(uri, payload=None):
         nonlocal n
@@ -927,6 +927,11 @@ async def cmd_pipe(tv, args):
                 if isinstance(widget, dict) and "focus" in widget and bool(widget["focus"]) != state["keyboard"]:
                     state["keyboard"] = bool(widget["focus"])
                     emit(keyboard=state["keyboard"])
+            elif mid == "pw" and payload.get("state") and payload["state"] != state["power"]:
+                # "Active" when on; with Quick Start+ an "off" TV still answers, as
+                # "Active Standby", "Suspend" or "Screen Off", and ignores the remote
+                state["power"] = payload["state"]
+                emit(power=state["power"])
             elif mid == "fg" and "appId" in payload and payload["appId"] != state["app"]:
                 state["app"] = payload["appId"]
                 emit(app=state["app"], grid=GRID_APPS.get(state["app"], ("",))[0])
@@ -958,6 +963,8 @@ async def cmd_pipe(tv, args):
                                  "uri": "ssap://com.webos.service.ime/registerRemoteKeyboard"}))
     await tv.ws.send(json.dumps({"type": "subscribe", "id": "fg",
                                  "uri": "ssap://com.webos.applicationManager/getForegroundAppInfo"}))
+    await tv.ws.send(json.dumps({"type": "subscribe", "id": "pw",
+                                 "uri": "ssap://com.webos.service.tvpower/power/getPowerState"}))
     watcher = asyncio.create_task(watch())
     emit(ready=True, keyboard=False)
     pending = None
@@ -990,6 +997,8 @@ async def cmd_pipe(tv, args):
                     await send("ssap://com.webos.service.ime/sendEnterKey")
                 elif cmd == "del":
                     await send("ssap://com.webos.service.ime/deleteCharacters", {"count": int(rest or 1)})
+                elif cmd == "wake" and state["power"] == "Screen Off":
+                    await send("ssap://com.webos.service.tvpower/power/turnOnScreen", {"standbyMode": "active"})
             except ValueError:
                 pass
             if watcher.done():
