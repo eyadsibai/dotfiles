@@ -30,6 +30,9 @@ FloatingWindow {
 
   property bool connected: false
   property bool tvKeyboard: false
+  property string tvGrid: ""      // "Prime Video" or "Shahid" while that app is on screen
+  property string gridError: ""
+  readonly property bool typingToGrid: tvGrid !== "" && !tvKeyboard
   property string error: ""
   property string sentText: ""   // what the text box has already typed on the TV
   // With the touchpad on (c), plain mouse movement over it moves the TV's
@@ -175,6 +178,8 @@ FloatingWindow {
           var m = JSON.parse(line)
           if (m.ready) { win.connected = true; win.error = "" }
           if (m.keyboard !== undefined) win.tvKeyboard = m.keyboard === true
+          if (m.grid !== undefined) { win.tvGrid = m.grid || ""; win.gridError = "" }
+          if (m.grid_error !== undefined) win.gridError = m.grid_error || ""
         } catch (e) {}
       }
     }
@@ -183,6 +188,7 @@ FloatingWindow {
     onExited: function(code) {
       win.connected = false
       win.tvKeyboard = false
+      win.tvGrid = ""
       if (code !== 0) {
         var lines = String(pipeErr.text || "").trim().split("\n")
         win.error = lines[lines.length - 1] || "Lost the TV"
@@ -281,10 +287,15 @@ FloatingWindow {
         foreground: win.foreground
         font.family: win.fontFamily
         font.pixelSize: Style.font.body
-        placeholderText: "Search YouTube, type on the TV, or paste a link"
+        placeholderText: win.typingToGrid ? "Search " + win.tvGrid : "Search YouTube, type on the TV, or paste a link"
         onTextChanged: win.syncText(text)
         onAccepted: {
           if (win.typedIsLink) { win.playLink(false); return }
+          if (win.typingToGrid) {  // the app searches as you type: just start afresh
+            win.sentText = ""
+            text = ""
+            return
+          }
           if (!win.tvKeyboard && win.typed !== "") {
             var q = win.typed
             win.sentText = ""
@@ -343,8 +354,11 @@ FloatingWindow {
         wrapMode: Text.Wrap
         text: win.tvKeyboard
           ? "󰌌  The TV keyboard is open: what you type goes straight in, Enter submits."
-          : "Enter searches YouTube; pick a video to play it on the TV. Plex, Prime and Shahid: click their letters with the touchpad."
-        color: win.tvKeyboard ? win.accent : win.dim
+          : win.typingToGrid && win.gridError !== "" ? "󰀦  " + win.gridError
+          : win.typingToGrid ? "󰌌  Typing walks " + win.tvGrid + "'s letters on the TV (arrows and OK). Have its search open."
+          : "Enter searches YouTube; pick a video to play it on the TV. Plex: click its letters with the touchpad."
+        color: win.typingToGrid && win.gridError !== "" ? win.urgent
+             : win.tvKeyboard || win.typingToGrid ? win.accent : win.dim
         font.family: win.fontFamily
         font.pixelSize: Style.font.caption
       }

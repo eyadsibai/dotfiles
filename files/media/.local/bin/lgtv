@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run -q --script
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["websockets>=13"]
+# dependencies = ["websockets>=13", "pillow"]
 # ///
 """lgtv — control the LG webOS TV from this machine.
 
@@ -20,11 +20,14 @@
   lgtv notify <message>       show a toast on the TV
   lgtv key <KEY>...           press remote keys (UP DOWN LEFT RIGHT ENTER BACK HOME ...)
   lgtv type [--enter] <text>  type into the TV's on-screen keyboard (e.g. a search box)
+  lgtv gridtype <text>        type on Prime Video's or Shahid's own letter grid (search open)
   lgtv remote                 interactive remote in this terminal; typing goes to the
                               TV when its keyboard is open, c toggles a mouse pointer
   lgtv pipe                   one connection driven from stdin, for the bar widget:
                               key NAME · move DX DY · click · scroll DY · text STR ·
-                              enter · del [N]; prints {"keyboard": bool} as it changes
+                              enter · del [N]; prints {"keyboard": bool} and {"app", "grid"}
+                              as they change. Text goes to Prime's/Shahid's letter grid
+                              when one of them is on screen
   lgtv cast <file|url>...     play videos on the TV (the cast service, DLNA)
   lgtv pair                   (re)pair; accept the prompt on the TV
   lgtv host                   print the TV's address
@@ -206,7 +209,182 @@ async def scroll(sock, dy):
 
 NO_KEYBOARD = ("the TV's system keyboard isn't open. Apps like Plex, YouTube, Prime Video and Shahid draw "
                "their own letter grid, which only takes arrow keys; typing reaches the grey "
-               "webOS keyboard (Web Browser, home search, some apps).")
+               "webOS keyboard (Web Browser, home search, some apps). For Prime Video and "
+               "Shahid use: lgtv gridtype <text>; for YouTube: lgtv ytsearch / lgtv youtube.")
+
+
+# ---------- typing on an app's own letter grid ----------
+# Prime Video and Shahid draw their own keyboards, which only take arrow keys.
+# We type on them as a person would: screenshot the TV, find the highlighted
+# key, then walk the arrows to each letter and press OK. Positions are in the
+# 960x540 screenshot; a grid is rows of 6 keys plus a bottom row of wide keys.
+
+class Grid:
+    def __init__(self, rows, xs, ys, bottom_y, bottom, ltr, half):
+        self.rows, self.xs, self.ys, self.ltr, self.half = rows, xs, ys, ltr, half
+        self.by = bottom_y
+        # bottom keys: (name, first col, last col, x); UP from one lands on its first
+        # col, except the space bar, which remembers the column you came down from
+        self.bottom = bottom
+        self.B = len(rows)  # the bottom row's index
+
+    def find(self, ch):
+        for r, row in enumerate(self.rows):
+            if ch in row:
+                return r, row.index(ch)
+        return None
+
+    def special(self, c):
+        return next(i for i, b in enumerate(self.bottom) if b[1] <= c <= b[2])
+
+
+LATIN = ["abcdef", "ghijkl", "mnopqr", "stuvwx", "yz1234", "567890"]
+GRID_APPS = {
+    "amazon": ("Prime Video", {
+        "en": Grid(LATIN, [94, 127, 160, 193, 226, 259], [86, 119, 152, 185, 218, 251], 283,
+                   [("space", 0, 3, 143), ("bksp", 4, 5, 242)], True, 10)}),
+    "net.mbc.shahid-lgapp": ("Shahid", {
+        "ar": Grid(["ابتثجح", "خدذرزس", "شصضطظع", "غفقكلم", "نهويةئ", "ءؤ1234", "567890"],
+                   [892, 855, 818, 781, 744, 707], [121, 158, 195, 232, 269, 306, 343], 380,
+                   [("toggle", 0, 0, 892), ("space", 1, 4, 800), ("bksp", 5, 5, 707)], False, 12),
+        "en": Grid(LATIN, [707, 744, 781, 818, 855, 892], [121, 158, 195, 232, 269, 306], 343,
+                   [("toggle", 0, 0, 707), ("space", 1, 4, 800), ("bksp", 5, 5, 892)], True, 12)}),
+}
+ARABIC_FOLD = str.maketrans({"أ": "ا", "إ": "ا", "آ": "ا", "ى": "ي"})
+
+
+def _lum(img, x, y):
+    return sum(sum(img.getpixel((x + i, y + j))[:3]) / 3 for i in (-1, 0, 1) for j in (-1, 0, 1)) / 9
+
+
+def _cell_bg(img, x, y, h):
+    """A key's background brightness, sampled inside its corners (clear of the glyph)."""
+    return sum(_lum(img, x + dx, y + dy) for dx in (-h, h) for dy in (-h, h)) / 4
+
+
+def grid_locate(img, layouts):
+    """Which layout is showing and where its highlight is: (name, (row, col), on_space) or None."""
+    # Of several layouts, the one whose bottom row is lowest and actually drawn
+    for name, g in sorted(layouts.items(), key=lambda kv: -kv[1].by):
+        if len(layouts) > 1 and max(_lum(img, b[3], g.by) for b in g.bottom) < 80:
+            continue
+        cells = [((r, c), x, y) for r, y in enumerate(g.ys) for c, x in enumerate(g.xs)]
+        cells += [((g.B, b[1]), b[3], g.by) for b in g.bottom]
+        scored = sorted(((_cell_bg(img, x, y, g.half), pos) for pos, x, y in cells), reverse=True)
+        if scored[0][0] >= 185 and scored[1][0] < 120:  # one white key among dark ones
+            return name, scored[0][1]
+        return None
+    return None
+
+
+def grid_keys(layouts, lname, pos, ops):
+    """Arrow/OK presses that apply ops ([("text", s) | ("del", n)]) from a known position."""
+    g = layouts[lname]
+    r, c = pos
+    memo = None  # the column the space bar will return to, when known
+    keys = []
+
+    def fwd(n):  # move n columns (negative: back)
+        keys.extend([("RIGHT" if g.ltr else "LEFT") if n > 0 else ("LEFT" if g.ltr else "RIGHT")] * abs(n))
+
+    def up_out():
+        nonlocal r, c, memo
+        i = g.special(c)
+        if g.bottom[i][0] == "space" and memo is None:
+            fwd(1)  # unsure where UP from the space bar lands: step off it first
+            i += 1
+        c = memo if g.bottom[i][0] == "space" else g.bottom[i][1]
+        keys.append("UP")
+        r, memo = g.B - 1, None
+
+    def goto_cell(tr, tc):
+        nonlocal r, c
+        if r == g.B:
+            up_out()
+        keys.extend(["DOWN" if tr > r else "UP"] * abs(tr - r))
+        fwd(tc - c)
+        r, c = tr, tc
+
+    def goto_special(name):
+        nonlocal r, c, memo
+        i = next(i for i, b in enumerate(g.bottom) if b[0] == name)
+        lo, hi = g.bottom[i][1], g.bottom[i][2]
+        if r == g.B:
+            j = g.special(c)
+            fwd(i - j)
+            if i != j:
+                memo = None
+        else:
+            col = min(max(c, lo), hi)
+            goto_cell(g.B - 1, col)
+            keys.append("DOWN")
+            memo = col if name == "space" else None
+        r, c = g.B, lo
+
+    for op, arg in ops:
+        if op == "del":
+            if arg > 0:
+                goto_special("bksp")
+                keys.extend(["ENTER"] * arg)
+            continue
+        for ch in arg.lower().translate(ARABIC_FOLD):
+            if ch.isspace():
+                goto_special("space")
+                keys.append("ENTER")
+                continue
+            if g.find(ch) is None:
+                other = next((n for n, o in layouts.items() if n != lname and o.find(ch)), None)
+                if other is None:
+                    continue  # not on this keyboard
+                goto_special("toggle")
+                keys.append("ENTER")
+                lname, g = other, layouts[other]
+                r, c, memo = 0, 0, None
+            goto_cell(*g.find(ch))
+            keys.append("ENTER")
+    return keys
+
+
+async def tv_screenshot(call):
+    """The TV's screen as a PIL image; call(uri) makes the request on the TV's socket."""
+    from PIL import Image
+    import io
+    uri = (await call("ssap://tv/executeOneShot"))["imageUri"]
+    data = await asyncio.to_thread(
+        lambda: urllib.request.urlopen(uri, context=no_verify_ssl(), timeout=5).read())
+    return Image.open(io.BytesIO(data)).convert("RGB")
+
+
+async def grid_type(call, sock, app, ops):
+    """Type ops on the app's letter grid. Returns an error message, or None."""
+    title, layouts = GRID_APPS[app]
+    found = grid_locate(await tv_screenshot(call), layouts)
+    if not found:
+        return f"open {title}'s search first: its letter grid isn't on the screen"
+    for k in grid_keys(layouts, found[0], found[1], ops):
+        await press(sock, k)
+        await asyncio.sleep(0.15)
+    return None
+
+
+async def foreground_app(tv):
+    return (await tv.call("ssap://com.webos.applicationManager/getForegroundAppInfo")).get("appId", "")
+
+
+async def cmd_gridtype(tv, args):
+    if not args:
+        die("usage: lgtv gridtype <text>   (Prime Video or Shahid, with its search open)")
+    app = await foreground_app(tv)
+    if app not in GRID_APPS:
+        die(f"the app on screen ({app or 'none'}) isn't one whose letter grid I know: "
+            + ", ".join(t for t, _ in GRID_APPS.values()))
+    sock = await tv.buttons()
+    try:
+        err = await grid_type(lambda uri: tv.call(uri), sock, app, [("text", " ".join(args))])
+    finally:
+        await sock.close()
+    if err:
+        die(err)
 
 
 async def tv_keyboard_open(tv):
@@ -599,32 +777,85 @@ async def cmd_pipe(tv, args):
             msg["payload"] = payload
         await tv.ws.send(json.dumps(msg))
 
+    waiting = {}  # request id -> future, for the replies we wait on
+    state = {"keyboard": False, "app": ""}
+
+    async def call(uri, payload=None):
+        nonlocal n
+        n += 1
+        fut = waiting[f"w{n}"] = loop.create_future()
+        msg = {"type": "request", "id": f"w{n}", "uri": uri}
+        if payload is not None:
+            msg["payload"] = payload
+        await tv.ws.send(json.dumps(msg))
+        try:
+            return await asyncio.wait_for(fut, 10)
+        finally:
+            waiting.pop(f"w{n}", None)
+
     async def watch():
-        last = None
         async for raw in tv.ws:
             try:
                 msg = json.loads(raw)
             except ValueError:
                 continue
-            if msg.get("id") != "kbd":
-                continue
-            widget = msg.get("payload", {}).get("currentWidget")
-            if isinstance(widget, dict) and "focus" in widget and bool(widget["focus"]) != last:
-                last = bool(widget["focus"])
-                emit(keyboard=last)
+            mid, payload = msg.get("id"), msg.get("payload", {})
+            if mid in waiting:
+                waiting[mid].set_result(payload)
+            elif mid == "kbd":
+                widget = payload.get("currentWidget")
+                if isinstance(widget, dict) and "focus" in widget and bool(widget["focus"]) != state["keyboard"]:
+                    state["keyboard"] = bool(widget["focus"])
+                    emit(keyboard=state["keyboard"])
+            elif mid == "fg" and "appId" in payload and payload["appId"] != state["app"]:
+                state["app"] = payload["appId"]
+                emit(app=state["app"], grid=GRID_APPS.get(state["app"], ("",))[0])
+
+    async def grid(first):
+        """Type on the app's letter grid: gather what follows within a moment, walk once."""
+        ops, pushback = [first], None
+        while True:
+            try:
+                nxt = await asyncio.wait_for(reader.readline(), 0.35)
+            except asyncio.TimeoutError:
+                break
+            c, _, a = nxt.decode(errors="ignore").rstrip("\n").partition(" ")
+            if c == "text" and a:
+                ops.append(("text", a))
+            elif c == "del":
+                ops.append(("del", int(a or 1)))
+            else:
+                pushback = nxt
+                break
+        try:
+            err = await grid_type(call, sock, state["app"], ops)
+        except (OSError, asyncio.TimeoutError, KeyError, ValueError) as e:
+            err = f"couldn't read the TV's screen ({e})"
+        emit(grid_error=err or "")
+        return pushback
 
     await tv.ws.send(json.dumps({"type": "subscribe", "id": "kbd",
                                  "uri": "ssap://com.webos.service.ime/registerRemoteKeyboard"}))
+    await tv.ws.send(json.dumps({"type": "subscribe", "id": "fg",
+                                 "uri": "ssap://com.webos.applicationManager/getForegroundAppInfo"}))
     watcher = asyncio.create_task(watch())
     emit(ready=True, keyboard=False)
+    pending = None
     try:
         while True:
-            line = await reader.readline()
+            line, pending = pending or await reader.readline(), None
             if not line:
                 break
             cmd, _, rest = line.decode(errors="ignore").rstrip("\n").partition(" ")
+            on_grid = not state["keyboard"] and state["app"] in GRID_APPS
             try:
-                if cmd == "key" and rest:
+                if on_grid and cmd == "text" and rest:
+                    pending = await grid(("text", rest))
+                elif on_grid and cmd == "del":
+                    pending = await grid(("del", int(rest or 1)))
+                elif on_grid and cmd == "enter":
+                    pass  # these apps search as you type
+                elif cmd == "key" and rest:
                     await press(sock, rest.strip().upper())
                 elif cmd == "move":
                     dx, dy = (int(float(v)) for v in rest.split()[:2])
@@ -682,7 +913,7 @@ COMMANDS = {
     "mute": lambda tv, a: cmd_mute(tv, a, True), "unmute": lambda tv, a: cmd_mute(tv, a, False),
     "off": cmd_off, "screen": cmd_screen, "input": cmd_input, "hdmi": cmd_input,
     "apps": cmd_apps, "app": cmd_app, "open": cmd_open,
-    "notify": cmd_notify, "key": cmd_key, "type": cmd_type, "remote": cmd_remote, "pipe": cmd_pipe, "pair": cmd_pair,
+    "notify": cmd_notify, "key": cmd_key, "type": cmd_type, "gridtype": cmd_gridtype, "remote": cmd_remote, "pipe": cmd_pipe, "pair": cmd_pair,
     **{m: (lambda m: lambda tv, a: cmd_media(tv, a, m))(m) for m in MEDIA},
 }
 
