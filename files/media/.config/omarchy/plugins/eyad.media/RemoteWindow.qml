@@ -495,6 +495,7 @@ PanelWindow {
             Button {
               required property var modelData
               Layout.fillWidth: true
+              Layout.preferredWidth: 1
               text: modelData.name.charAt(0).toUpperCase() + modelData.name.slice(1)
               iconText: modelData.name === "off" ? "󰐥" : (modelData.name === "night" ? "󰖔" : (modelData.name === "movie" ? "󰿎" : "󰐊"))
               tooltipText: modelData.description || ""
@@ -518,6 +519,7 @@ PanelWindow {
             Button {
               required property var modelData
               Layout.fillWidth: true
+              Layout.preferredWidth: 1
               text: modelData.label
               iconText: modelData.glyph
               tooltipText: "Tab switches"
@@ -830,9 +832,9 @@ PanelWindow {
             }
           }
 
-          // ---- apps ----
+          // ---- apps: equal widths across the card ----
           RowLayout {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
             spacing: Style.space(4)
             Repeater {
               model: [
@@ -843,6 +845,8 @@ PanelWindow {
               ]
               Button {
                 required property var modelData
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
                 text: modelData.label
                 iconText: modelData.glyph
                 tooltipText: "Open " + modelData.label + " on the TV"
@@ -887,53 +891,39 @@ PanelWindow {
             }
           }
 
-          // TV volume, then playback (the TV's own media keys)
+          // Playback: one big play/pause between rewind and fast-forward; TV
+          // volume and stop either side. Equal widths, play/pause double.
           RowLayout {
-            Layout.alignment: Qt.AlignHCenter
-            spacing: Style.space(2)
+            Layout.fillWidth: true
+            spacing: Style.space(4)
             Repeater {
               model: [
-                { glyph: "󰝞", key: "VOLUMEDOWN", tip: "TV volume down" },
-                { glyph: "󰝟", key: "MUTE", tip: "TV mute" },
-                { glyph: "󰝝", key: "VOLUMEUP", tip: "TV volume up" }
+                { glyph: "󰝞", tip: "TV volume down", key: "VOLUMEDOWN" },
+                { glyph: "󰝟", tip: "TV mute", key: "MUTE" },
+                { glyph: "󰑟", tip: "Rewind", tv: "rew" },
+                { glyph: "", tip: "", play: true },
+                { glyph: "󰈑", tip: "Fast forward", tv: "ff" },
+                { glyph: "󰓛", tip: "Stop", tv: "stop" },
+                { glyph: "󰝝", tip: "TV volume up", key: "VOLUMEUP" }
               ]
               Button {
                 required property var modelData
-                iconText: modelData.glyph
-                tooltipText: modelData.tip
+                Layout.fillWidth: true
+                Layout.preferredWidth: modelData.play ? 2 : 1
+                iconText: modelData.play ? (win.paused ? "󰐊" : "󰏤") : modelData.glyph
+                iconSize: modelData.play ? Style.font.display : Style.font.icon
+                text: modelData.play ? (win.paused ? "Play" : "Pause") : ""
+                tooltipText: modelData.play ? (win.paused ? "Play" : "Pause") + " (space)" : modelData.tip
+                bordered: true
+                selected: modelData.play === true
                 foreground: win.foreground
                 fontFamily: win.fontFamily
-                onClicked: win.key(modelData.key)
+                onClicked: {
+                  if (modelData.play) win.playPause()
+                  else if (modelData.tv) win.svc.tvKey(modelData.tv)
+                  else win.key(modelData.key)
+                }
               }
-            }
-            Item { implicitWidth: Style.space(12) }
-            Button {
-              iconText: "󰑟"
-              tooltipText: "Rewind"
-              foreground: win.foreground
-              fontFamily: win.fontFamily
-              onClicked: win.svc.tvKey("rew")
-            }
-            Button {
-              iconText: win.paused ? "󰐊" : "󰏤"
-              tooltipText: (win.paused ? "Play" : "Pause") + " (space)"
-              foreground: win.foreground
-              fontFamily: win.fontFamily
-              onClicked: win.playPause()
-            }
-            Button {
-              iconText: "󰓛"
-              tooltipText: "Stop"
-              foreground: win.foreground
-              fontFamily: win.fontFamily
-              onClicked: win.svc.tvKey("stop")
-            }
-            Button {
-              iconText: "󰈑"
-              tooltipText: "Fast forward"
-              foreground: win.foreground
-              fontFamily: win.fontFamily
-              onClicked: win.svc.tvKey("ff")
             }
           }
         }
