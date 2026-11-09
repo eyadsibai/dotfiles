@@ -125,6 +125,15 @@
           "id": "37signals.hey"
         },
         {
+          "id": "news",
+          "type": "command",
+          "exec": "newsboat-unread --bar",
+          "interval": 60,
+          "onClick": "omarchy-launch-or-focus-tui newsboat",
+          "onRightClick": "omarchy-launch-or-focus-tui newsboat-yt",
+          "onMiddleClick": "systemctl --user start newsboat-refresh"
+        },
+        {
           "id": "omarchy.dropbox"
         },
         {
