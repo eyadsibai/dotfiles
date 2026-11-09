@@ -20,7 +20,8 @@
 --     tv-unmute / tv-quit for `tv --ctl`.
 --   * A second, corner TV (`tv --pip`, pip=yes): it leaves the main TV's last
 --     channel, recent list and bar files alone and writes pip.json instead. In
---     either, a takes the sound (muting the other) and x swaps their channels.
+--     either, a moves the sound to the other TV (or back) and x swaps the two TVs: their
+--     windows trade places and roles (`tv --swap`), no stream reopens.
 --   * Remote-style channel numbers: type digits (0-9 / keypad), ENTER or a
 --     short pause jumps to that channel.  r reloads the current channel.
 --     PGUP/PGDN change channel, / or Shift+ENTER searches all channels,
@@ -630,6 +631,9 @@ local function write_now()
     if not f then return end
     f:write(utils.format_json({
         pid = mp.get_property_number('pid'), number = pos + 1, name = c.name,
+        -- `tv --ctl` reaches whichever player holds this role through it
+        socket = expand(mp.get_property('input-ipc-server') or '') or '',
+        muted = mp.get_property_bool('mute'),
         category = c.category, language = c.language, favorite = favorites[url] == true,
         text = '󰔂 ' .. (pos + 1) .. ' ' .. utf8_cut(c.name, 16),
         tooltip = c.name .. (favorites[url] and ' ★' or '') .. '\n' .. where
@@ -662,8 +666,20 @@ local function write_channels()
     f:close()
 end
 
+-- Only our own: after a swap the other TV may have written this role's file.
+local function owns(path)
+    local f = io.open(path, 'r')
+    if not f then return false end
+    local data = utils.parse_json(f:read('*a') or '')
+    f:close()
+    return type(data) == 'table' and data.pid == mp.get_property_number('pid')
+end
+
+-- The bar shows which TV has the sound.
+mp.observe_property('mute', 'bool', function() if current.url then write_now() end end)
+
 mp.register_event('shutdown', function()
-    os.remove(now_file())
+    if owns(now_file()) then os.remove(now_file()) end
     if not o.pip then os.remove(expand(o.runtime_dir) .. '/channels.json') end
 end)
 
@@ -1021,15 +1037,32 @@ local function tell_other(...)
         args = { o.launcher, o.pip and '--ctl' or '--pip-ctl', ... } }, function() end)
 end
 
--- a: this TV takes the sound; the other goes quiet.
-mp.add_key_binding('a', 'tv-take-sound', function()
-    mp.set_property_bool('mute', false)
-    tell_other('mute')
-    osd('🔊  Sound from this TV', 1.5)
+-- a: the sound moves to the other TV, or back here if this one is the quiet one,
+-- so it works from whichever window has focus.
+mp.add_key_binding('a', 'tv-switch-sound', function()
+    local here = mp.get_property_bool('mute')   -- quiet here: the sound comes here
+    mp.set_property_bool('mute', not here)
+    tell_other(here and 'mute' or 'unmute')
+    osd(here and '🔊  Sound from this TV' or '🔇  Sound from the other TV', 1.5)
 end)
 
--- x: swap channels with the other TV.
-mp.add_key_binding('x', 'tv-swap', function()
+-- Swapping roles (tv --swap): the main TV becomes the corner one or back. The
+-- big one keeps the sound and the main one's state: last channel, recent, bar.
+mp.register_script_message('tv-role', function(role)
+    o.pip = role == 'pip'
+    mp.set_property_bool('mute', o.pip)
+    write_now()
+    if not o.pip then
+        remember_channel(current.url)
+        push_recent(current.url)
+        write_channels()
+        show_banner()
+    end
+end)
+
+-- Without Hyprland the windows can't trade places: trade channels instead (slower,
+-- both streams reopen).
+local function swap_channels()
     local f = io.open(other_now_file(), 'r')
     local other = f and utils.parse_json(f:read('*a'))
     if f then f:close() end
@@ -1040,6 +1073,14 @@ mp.add_key_binding('x', 'tv-swap', function()
     end
     tell_other('play', tostring(mine))
     mp.commandv('playlist-play-index', tostring(tonumber(other.number) - 1))
+end
+
+-- x: swap the two TVs, the corner one becoming the big one with the sound.
+mp.add_key_binding('x', 'tv-swap', function()
+    mp.command_native_async({ name = 'subprocess', playback_only = false, capture_stderr = true,
+        args = { o.launcher, '--swap' } }, function(ok, r)
+        if not ok or not r or r.status ~= 0 then swap_channels() end
+    end)
 end)
 
 mp.register_script_message('tv-play', function(n)

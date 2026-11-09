@@ -17,11 +17,11 @@ Colours follow the Omarchy theme (`~/.local/state/omarchy/current/theme/colors.t
 
 ## Two channels at once
 
-`tv --pip <channel>` opens a second TV: small, muted, floating and pinned top-right on every workspace (the `hypr` package's `mpv-tv-pip` rule), for keeping an eye on a news channel while watching another. In either window `a` takes the sound and mutes the other, and `x` swaps their channels; the bar's popup does the same and closes it. `tv --pip <channel>` again switches the open one. It has its own socket (`pip.sock`) and state file (`pip.json`) and never touches the main TV's last channel, recent list or bar files. `tv --pip-ctl <action>` sends it the same actions as `tv --ctl`.
+`tv --pip <channel>` opens a second TV: small, muted, floating and pinned top-right on every workspace (the `hypr` package's `mpv-tv-pip` rule), for keeping an eye on a news channel while watching another. From either window, `a` toggles the sound between the two TVs, and `x` swaps them (`tv --swap`): the windows trade places and the players trade roles, so nothing reopens and it's instant (without Hyprland it trades channels instead). The bar's popup toggles the sound, swaps, and closes the corner TV. `tv --pip <channel>` again switches the open one. Each player has its own socket (`mpv-<pid>.sock`); the role files `now.json` and `pip.json` say whose is whose, so the corner TV never touches the main one's last channel, recent list or bar entry. `tv --pip-ctl <action>` sends it the same actions as `tv --ctl`.
 
 ## The bar
 
-While TV runs, the Omarchy bar shows it (the `eyad.tv` plugin, `.config/omarchy/plugins/eyad.tv`): click for a popup that searches every channel and lists favorites and recent ones (each row can also open its channel in the corner TV); scroll changes channel, middle-click goes back, right-click opens TV's own menu. It reads `$XDG_RUNTIME_DIR/tv/now.json` and `channels.json`, written by `tv.lua`, and talks back through `tv --ctl menu|next|prev|last|star|play <N>` (mpv's IPC socket, `$XDG_RUNTIME_DIR/tv/mpv.sock`). `tv --bar` prints the playing channel as JSON.
+While TV runs, the Omarchy bar shows it (the `eyad.tv` plugin, `.config/omarchy/plugins/eyad.tv`): click for a popup that searches every channel and lists favorites and recent ones (each row can also open its channel in the corner TV); scroll changes channel, middle-click goes back, right-click opens TV's own menu. It reads `$XDG_RUNTIME_DIR/tv/now.json` and `channels.json`, written by `tv.lua`, and talks back through `tv --ctl menu|next|prev|last|star|play <N>` (mpv's IPC socket, named in `now.json`). `tv --bar` prints the playing channel as JSON.
 
 ## Files
 

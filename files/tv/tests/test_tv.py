@@ -370,20 +370,24 @@ class LauncherTests(Fixture):
     def test_player_gets_a_control_socket_and_the_chosen_font(self):
         self.env["TV_FONT"] = "Test Mono"
         args = self.launch_args()
-        self.assertIn(f"--input-ipc-server={self.run_dir}/tv/mpv.sock", args)
+        sockets = [a for a in args if a.startswith("--input-ipc-server=")]
+        self.assertEqual(len(sockets), 1, args)
+        self.assertRegex(sockets[0], rf"^--input-ipc-server={self.run_dir}/tv/mpv-[0-9]+\.sock$")
         self.assertIn("--osd-font=Test Mono", args)
 
     def test_pip_opens_a_muted_corner_tv_with_its_own_socket(self):
         proc = self.launch("--pip", "3")
         self.assertEqual(proc.returncode, 0, proc.stderr)
         args = proc.stdout.splitlines()
-        for arg in (f"--input-ipc-server={self.run_dir}/tv/pip.sock", "--wayland-app-id=mpv-tv-pip",
-                    "--mute=yes", "--script-opts-append=tv-pip=yes", "--playlist-start=2"):
+        for arg in ("--wayland-app-id=mpv-tv-pip", "--mute=yes", "--script-opts-append=tv-pip=yes",
+                    "--playlist-start=2"):
             self.assertIn(arg, args)
+        self.assertTrue([a for a in args if a.startswith(f"--input-ipc-server={self.run_dir}/tv/mpv-")], args)
 
     def test_pip_switches_an_open_corner_tv_instead_of_starting_another(self):
-        sock = self.run_dir / "tv" / "pip.sock"
+        sock = self.run_dir / "tv" / "mpv-1.sock"
         sock.parent.mkdir(parents=True)
+        (sock.parent / "pip.json").write_text(json.dumps({"pid": os.getpid(), "socket": str(sock)}))
         server = socket.socket(socket.AF_UNIX)
         server.bind(str(sock))
         server.listen(1)
@@ -394,6 +398,12 @@ class LauncherTests(Fixture):
         with conn:
             message = json.loads(conn.recv(4096))
         self.assertEqual(message, {"command": ["script-message", "tv-play", "5"]})
+
+    def test_swap_needs_both_tvs(self):
+        self.executable("hyprctl", "#!/bin/sh\necho '[]'\n")
+        proc = self.launch("--swap")
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("needs both TVs open", proc.stderr)
 
     def test_bar_pip_reads_the_corner_tvs_state(self):
         state = self.run_dir / "tv"

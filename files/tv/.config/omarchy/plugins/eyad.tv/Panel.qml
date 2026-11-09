@@ -41,11 +41,8 @@ Panel {
   function playInCorner(n) { Quickshell.execDetached(["tv", "--pip", String(n)]); root.close() }
   function soundToCorner() { pipCtl(["unmute"]); ctl(["mute"]) }
   function soundToMain() { ctl(["unmute"]); pipCtl(["mute"]) }
-  function swap() {
-    if (!now || !pip) return
-    ctl(["play", String(pip.number)])
-    pipCtl(["play", String(now.number)])
-  }
+  // The two TVs trade windows and roles: no stream reopens, so it's instant.
+  function swap() { if (now && pip) Quickshell.execDetached(["tv", "--swap"]) }
 
   function channel(n) { return lists.channels[n - 1] || null }
   function numbers(ns) {
@@ -236,17 +233,20 @@ Panel {
               font.pixelSize: Style.font.bodySmall
               Layout.alignment: Qt.AlignVCenter
             }
+            // Where the sound is; a click moves it to the other TV.
             PanelActionButton {
-              iconText: "󰕾"
-              tooltipText: "Sound from the corner TV (mutes the main one)"
+              readonly property bool cornerHasSound: root.pip !== null && root.pip.muted === false
+              iconText: cornerHasSound ? "󰕾" : "󰖁"
+              tooltipText: cornerHasSound ? "The corner TV has the sound (click: the main one)"
+                                          : "The main TV has the sound (click: the corner one)"
               foreground: root.foreground
               fontFamily: root.fontFamily
-              onClicked: root.soundToCorner()
+              onClicked: cornerHasSound ? root.soundToMain() : root.soundToCorner()
             }
             PanelActionButton {
               visible: root.now !== null
               iconText: "󰓡"
-              tooltipText: "Swap the two channels"
+              tooltipText: "Swap the two TVs: the corner one grows, with the sound"
               foreground: root.foreground
               fontFamily: root.fontFamily
               onClicked: root.swap()

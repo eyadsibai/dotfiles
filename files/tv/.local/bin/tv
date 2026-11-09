@@ -11,6 +11,7 @@
 #   tv --bar [--pip]    the playing channel as Omarchy bar JSON; nothing when TV isn't running
 #   tv --ctl <action>   menu | next | prev | last | star | mute | unmute | quit | play <N>,
 #                       sent to the running TV; --pip-ctl sends it to the corner one
+#   tv --swap           the corner TV and the main one trade windows and roles (Hyprland)
 #   tv -h|--help
 #
 # Anything after "--" is passed to mpv, e.g.  tv mbc1 -- --fullscreen
@@ -27,7 +28,7 @@
 #   / or S-ENTER  all channels, search                      q    quit
 #   TAB         last channel                                s    star (favorite)
 #   - / + =     volume down / up                            m/M  mute
-#   a           take the sound (mutes the other TV)         x    swap channels with it
+#   a           sound to the other TV, or back              x    swap it with the other TV
 # Menus and the channel banner take the Omarchy theme's colours and font.
 
 set -euo pipefail
@@ -37,7 +38,10 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/tv"
 LAST_FILE="$STATE_DIR/last"
 
 RUN_DIR="${XDG_RUNTIME_DIR:-/tmp}/tv"
-SOCKET="$RUN_DIR/mpv.sock"
+# Each player gets its own socket, named after its pid ($$: exec keeps it). Roles
+# can swap between the two players, so the role files (now.json, pip.json) say
+# whose socket is whose.
+SOCKET="$RUN_DIR/mpv-$$.sock"
 
 usage() { sed -n '2,/^$/p' "$0" | sed -e 's/^# \{0,1\}//' -e '/^$/d'; }
 
@@ -88,7 +92,19 @@ index_of_name() {
 # The corner TV (tv --pip) has its own socket and state file, so the main one's
 # last channel, recent list and bar widget stay its own.
 PIP=""
-if [ "${1:-}" = --pip ]; then PIP=1; SOCKET="$RUN_DIR/pip.sock"; shift; fi
+if [ "${1:-}" = --pip ]; then PIP=1; shift; fi
+
+# role_socket main|pip: the socket of the live player in that role, or nothing.
+role_socket() {
+  local file="$RUN_DIR/now.json" pid sock
+  if [ "$1" = pip ]; then file="$RUN_DIR/pip.json"; fi
+  [ -r "$file" ] || return 1
+  pid="$(grep -o '"pid": *[0-9]*' "$file" | grep -o '[0-9]*$' || true)"
+  { [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; } || return 1
+  sock="$(grep -o '"socket": *"[^"]*"' "$file" | sed 's/.*"\([^"]*\)"$/\1/' || true)"
+  [ -S "$sock" ] || return 1
+  printf '%s\n' "$sock"
+}
 
 # send_ctl <socket> <action> [args]: a script message to a running TV; fails when
 # nothing answers on the socket.
@@ -114,19 +130,83 @@ case "${1:-}" in
     if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then cat "$now"; fi
     exit 0 ;;
   --ctl|--pip-ctl)
-    sock="$RUN_DIR/mpv.sock" class=mpv-tv
-    if [ "$1" = --pip-ctl ]; then sock="$RUN_DIR/pip.sock" class=mpv-tv-pip; fi
+    role=main
+    if [ "$1" = --pip-ctl ]; then role=pip; fi
     case "${2:-}" in
       menu|next|prev|last|star|mute|unmute|quit) ;;
       play) [[ "${3:-}" =~ ^[0-9]+$ ]] || die "usage: tv --ctl play <channel number>" ;;
       *) die "usage: tv --ctl|--pip-ctl menu|next|prev|last|star|mute|unmute|quit|play <N>" ;;
     esac
-    [ -S "$sock" ] || die "TV isn't running"
+    sock="$(role_socket "$role")" || die "TV isn't running"
     # The menu opens in TV's window, so bring that forward first.
     if [ "$2" = menu ] && command -v hyprctl >/dev/null; then
-      hyprctl eval "hl.dispatch(hl.dsp.focus({ window = \"class:^$class\$\" }))" >/dev/null 2>&1 || true
+      pid="$(basename "$sock" .sock)"; pid="${pid#mpv-}"
+      hyprctl eval "hl.dispatch(hl.dsp.focus({ window = \"pid:$pid\" }))" >/dev/null 2>&1 || true
     fi
     send_ctl "$sock" "${@:2}" || die "TV isn't running"
+    exit 0 ;;
+  --swap)
+    # The two players trade windows (Hyprland) and then roles, so nothing
+    # reopens a stream: the corner one grows into the main window with the sound.
+    command -v hyprctl >/dev/null || die "--swap needs Hyprland"
+    python3 - "$RUN_DIR" <<'EOF' || exit 1
+import json, os, socket, subprocess, sys
+
+run = sys.argv[1]
+
+def role(name):
+    try:
+        with open(f"{run}/{name}.json") as f:
+            data = json.load(f)
+        os.kill(data["pid"], 0)
+        return data
+    except Exception:
+        return None
+
+def send(sock, *args):
+    s = socket.socket(socket.AF_UNIX)
+    s.connect(sock)
+    s.sendall((json.dumps({"command": ["script-message", *args]}) + "\n").encode())
+    s.close()
+
+main, pip = role("now"), role("pip")
+if not main or not pip:
+    sys.exit("tv: --swap needs both TVs open (tv --pip opens the corner one)")
+clients = json.loads(subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True, check=True).stdout)
+by_pid = {c["pid"]: c for c in clients}
+big, small = by_pid.get(main["pid"]), by_pid.get(pip["pid"])
+if not big or not small:
+    sys.exit("tv: can't find both TV windows")
+
+B, S = f'"address:{big["address"]}"', f'"address:{small["address"]}"'
+(x, y), (w, h) = small["at"], small["size"]
+full = {1: "maximized", 2: "fullscreen"}.get(big.get("fullscreen", 0))
+lua = []
+if full:
+    lua.append(f'hl.dispatch(hl.dsp.window.fullscreen({{ mode = "{full}", action = "unset", window = {B} }}))')
+# the big window shrinks into the corner, pinned
+lua += [f'hl.dispatch(hl.dsp.window.float({{ action = "on", window = {B} }}))',
+        f'hl.dispatch(hl.dsp.window.pin({{ action = "on", window = {B} }}))',
+        f'hl.dispatch(hl.dsp.window.resize({{ x = {w}, y = {h}, relative = false, window = {B} }}))',
+        f'hl.dispatch(hl.dsp.window.move({{ x = {x}, y = {y}, window = {B} }}))']
+# the corner window takes the big one's place: its workspace, tiled or floating as it was
+lua += [f'hl.dispatch(hl.dsp.window.pin({{ action = "off", window = {S} }}))',
+        f'hl.dispatch(hl.dsp.window.move({{ workspace = "{big["workspace"]["id"]}", follow = false, window = {S} }}))']
+if big["floating"]:
+    (bx, by), (bw, bh) = big["at"], big["size"]
+    lua += [f'hl.dispatch(hl.dsp.window.resize({{ x = {bw}, y = {bh}, relative = false, window = {S} }}))',
+            f'hl.dispatch(hl.dsp.window.move({{ x = {bx}, y = {by}, window = {S} }}))']
+else:
+    lua.append(f'hl.dispatch(hl.dsp.window.float({{ action = "off", window = {S} }}))')
+if full:
+    lua.append(f'hl.dispatch(hl.dsp.window.fullscreen({{ mode = "{full}", action = "set", window = {S} }}))')
+lua.append(f'hl.dispatch(hl.dsp.focus({{ window = {S} }}))')
+subprocess.run(["hyprctl", "eval", "\n".join(lua)], capture_output=True, check=True)
+
+# then roles: the new main one takes the sound, last channel, recent and the bar
+send(pip["socket"], "tv-role", "main")
+send(main["socket"], "tv-role", "pip")
+EOF
     exit 0 ;;
 esac
 
@@ -180,10 +260,10 @@ case "${1:-}" in
 esac
 
 # A corner TV already open just switches to the channel asked for.
-if [ -n "$PIP" ] && [ -S "$SOCKET" ]; then
+if [ -n "$PIP" ] && pip_sock="$(role_socket pip)"; then
   if [ -z "$chosen" ]; then
-    send_ctl "$SOCKET" noop 2>/dev/null && exit 0   # already open: nothing to do
-  elif send_ctl "$SOCKET" play "$((start_index + 1))" 2>/dev/null; then
+    send_ctl "$pip_sock" noop 2>/dev/null && exit 0   # already open: nothing to do
+  elif send_ctl "$pip_sock" play "$((start_index + 1))" 2>/dev/null; then
     exit 0
   fi
 fi
