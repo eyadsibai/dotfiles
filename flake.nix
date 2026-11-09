@@ -26,6 +26,18 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Disk layout for the Mac VMs, which nixos-anywhere partitions at install
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # direnv in the background, so a slow .envrc doesn't hold up the prompt
+    direnv-instant = {
+      url = "github:Mic92/direnv-instant";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Omarchy's desktop packaged for NixOS. Follows main, which runs ahead of the
     # release tags; `just update` moves it along with everything else.
     nixarchy = {
@@ -158,6 +170,8 @@
         workstation = mkNixos ./hosts/workstation; # Intel + RTX 4090 desktop
         eyad-nixos = mkNixos ./hosts/eyad-nixos; # AMD ThinkPad
         home-server = mkNixos ./hosts/home-server; # future Unraid replacement (skeleton)
+        vm-fusion = mkNixos ./hosts/vm-fusion; # desktop VM on the Macs, VMware Fusion
+        vm-utm = mkNixos ./hosts/vm-utm; # desktop VM on the Macs, UTM
       };
 
       homeConfigurations = {
@@ -195,6 +209,7 @@
             nixfmt
             nixd
             just
+            nixos-anywhere # `just vm-install`
             nh
             sops
             age

@@ -58,6 +58,16 @@ in
     '';
   };
 
+  # API keys as 1Password references rather than values: the variable holds the
+  # op:// path, and only a command run as `op run -- <command>` (or `opr <command>`)
+  # sees the secret itself, so it never sits in a file or in every shell's env.
+  # Add one per key: "op://<vault>/<item>/<field>", as 1Password's "Copy Secret
+  # Reference" gives it.
+  home.sessionVariables = {
+    # OPENAI_API_KEY = "op://Private/OpenAI/credential";
+  };
+  home.shellAliases.opr = "op run --";
+
   # Sign commits with the same key, held in 1Password (the "id_rsa" item, an ed25519 key)
   programs.git = {
     signing = {

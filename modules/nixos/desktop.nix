@@ -27,7 +27,10 @@ let
   '';
 in
 {
-  imports = [ inputs.nixarchy.nixosModules.nixarchy ];
+  imports = [
+    inputs.nixarchy.nixosModules.nixarchy
+    ./fallback-desktop.nix
+  ];
 
   options.my.desktop.autoLogin = lib.mkEnableOption "logging in automatically at boot, then locking the screen";
 

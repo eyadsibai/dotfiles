@@ -2,6 +2,7 @@
 # config; Nix still installs its own tooling there (nil, nixd, devenv) and Claude Code.
 {
   config,
+  inputs,
   lib,
   pkgs,
   useremail,
@@ -14,6 +15,8 @@ let
   prettyLog = "log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate";
 in
 {
+  imports = [ inputs.direnv-instant.homeModules.direnv-instant ];
+
   home.packages =
     with pkgs;
     [
@@ -59,6 +62,9 @@ in
     });
     nix-direnv.enable = true;
   };
+  # Takes over direnv's shell hooks: the .envrc loads in the background and the
+  # prompt comes back at once (inside tmux, a pane shows a slow load's progress)
+  programs.direnv-instant.enable = true;
 
   # Pager for diff, log, show and `git add -p`
   programs.delta = {

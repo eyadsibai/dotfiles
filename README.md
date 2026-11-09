@@ -34,6 +34,7 @@ commented with the reason.
 | `eyad-m3`, `eyad-mac` | macOS · Apple Silicon | One configuration, two names. macOS defaults, Homebrew casks managed declaratively, a Linux builder VM, Rosetta. |
 | `vector` | Omarchy on Arch · Dell XPS 14 (2026) | The laptop I carry. Arch and Omarchy own the system; Home Manager on its own adds the shell, CLI, git and the files in `files/`. |
 | `cachy` | Omarchy on Arch · desktop | Reached remotely for development. Same as `vector`, with fish as the interactive shell. |
+| `vm-fusion`, `vm-utm` | NixOS · aarch64 VM on the Macs | A full GNOME desktop that runs full screen on a Mac, for dev work in Linux while the Mac keeps its apps ([Mitchell Hashimoto's setup](https://github.com/mitchellh/nixos-config)). One for VMware Fusion, one for UTM; see [A NixOS VM on the Mac](#a-nixos-vm-on-the-mac). |
 | `home-server` | NixOS | A skeleton with placeholder hardware. It will replace the Unraid box: backups and data, Plex, and the long list of homelab services that go with them. |
 
 A DGX Spark is on its way and will take the large models off the workstation.
@@ -172,6 +173,10 @@ used over SSH:
   signer is a small wrapper that uses the forwarded agent (`ssh-keygen -Y sign`) when there
   is one. Commits made over `ssh -A` get approved on the laptop I'm typing on.
 
+API keys for the shell work the same way: `modules/home/onepassword.nix` sets them to
+1Password references (`OPENAI_API_KEY = "op://Private/OpenAI/credential"`), and only a
+command run under `op run --` (alias `opr`) sees the value.
+
 System secrets use [sops-nix](https://github.com/Mic92/sops-nix): age keys derived from each
 host's SSH host key, plus a personal key backed up in 1Password. A machine decrypts its own
 secrets at activation, into RAM, never into the store.
@@ -217,6 +222,26 @@ anything worth keeping into the repo. Then open a new terminal for the Nix `PATH
 Finally sign in to the 1Password app at the machine and turn on Settings → Developer →
 "Use the SSH agent", or commits made at its own keyboard can't be signed.
 
+## A NixOS VM on the Mac
+
+`vm-fusion` (VMware Fusion) and `vm-utm` (UTM) are the same aarch64 NixOS with GNOME,
+logged in automatically, with this repo's shell, CLI, git and 1Password setup. The Mac's
+shared folders appear at `/host`, and x86_64 binaries run through QEMU.
+
+1. Create the VM: UEFI, the aarch64 NixOS ISO, most of the cores and RAM. Fusion: a SATA
+   disk (`/dev/sda`) and 3D acceleration on. UTM: the QEMU backend (not "Use Apple
+   Virtualization") and a VirtIO disk (`/dev/vda`).
+2. In the VM's console: `sudo passwd root`, and note its address (`ip a`).
+3. On the Mac, in this repo: `ssh-copy-id root@<ip>`, then `just vm-install vm-utm <ip>`
+   (or `vm-fusion`). nixos-anywhere partitions the disk with the layout in
+   `modules/nixos/vm-guest.nix`, builds the system on the Mac's Linux builder, installs
+   it and reboots.
+4. In the VM: sign in to 1Password, clone this repo to `~/dev/dotfiles`, and from then on
+   `just switch` there like on any other host.
+
+A new Mac can be set up the same way from an existing one: `just mac-copy <name> <user>@<ip>`
+builds that Mac's system here and copies it over, so its first switch downloads nothing.
+
 ## Day to day
 
 Clone to `~/dev/dotfiles` (the path `nh` and Omarchy's Update menu expect), `direnv allow`
@@ -228,6 +253,8 @@ once for the dev shell, then:
 | `just build [host]` | build and show the diff only |
 | `just boot [host]` | NixOS: activate on next boot, for desktop or login changes |
 | `just vm [host]` | NixOS: boot the exact configuration in a throwaway QEMU VM (no NVIDIA) |
+| `just vm-install <host> <ip>` | Mac: install `vm-fusion` or `vm-utm` on a VM booted from the NixOS ISO |
+| `just mac-copy <name> <user@ip>` | Mac: copy a Mac's built system to a new Mac before its first switch |
 | `just update [input...]` | update every flake input, or only the ones named |
 | `just check` | `nix flake check`: evaluates every host, checks formatting |
 | `just clean` | drop old generations, GC the store |
@@ -258,7 +285,9 @@ Small things in `modules/home/` I'd miss if they were gone:
 ## When it breaks
 
 Ten generations in the boot menu, `nh os rollback` over SSH, and `just vm` before anything
-that touches the login path. The boot-menu editor is off on every host, so nobody at the
+that touches the login path. The Omarchy machines also have a second boot entry,
+"gnome": the same system with GNOME instead of the Omarchy session, for when an update
+breaks Hyprland or the desktop itself (`modules/nixos/fallback-desktop.nix`). The boot-menu editor is off on every host, so nobody at the
 keyboard gets a root shell with `init=/bin/sh`.
 
 ## Built on

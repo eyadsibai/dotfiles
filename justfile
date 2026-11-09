@@ -57,6 +57,19 @@ secret name:
 generations:
     nixos-rebuild list-generations
 
+# First, in the VM: `sudo passwd root`; then here: `ssh-copy-id root@<ip>`. Wipes its disk.
+# Mac: install vm-fusion or vm-utm on a new VM booted from the aarch64 NixOS ISO
+[group('vm')]
+vm-install name addr:
+    nix run --inputs-from . nixpkgs#nixos-anywhere -- --flake .#{{name}} --target-host root@{{addr}}
+
+# The new Mac needs Nix installed and `trusted-users = eyad` in its nix.conf.
+# Mac: build a Mac's system here and copy it to a new Mac, so its first switch builds nothing
+[group('mac')]
+mac-copy name addr:
+    nix build .#darwinConfigurations.{{name}}.system
+    nix copy -s --to "ssh-ng://{{addr}}?remote-program=/nix/var/nix/profiles/default/bin/nix-daemon" ./result
+
 # Arch: show every file in ~ that `just switch` would replace or add, with diffs
 [group('arch')]
 arch-preview name=host:

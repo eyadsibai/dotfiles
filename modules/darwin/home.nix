@@ -60,7 +60,6 @@
     };
   };
   programs.kakoune.enable = true;
-  programs.bat.enable = true;
 
   programs.gpg = {
     enable = true;

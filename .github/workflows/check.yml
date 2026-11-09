@@ -26,6 +26,9 @@ jobs:
           - nixosConfigurations.workstation.config.system.build.toplevel
           - nixosConfigurations.eyad-nixos.config.system.build.toplevel
           - nixosConfigurations.home-server.config.system.build.toplevel
+          # The Mac VMs (aarch64-linux)
+          - nixosConfigurations.vm-fusion.config.system.build.toplevel
+          - nixosConfigurations.vm-utm.config.system.build.toplevel
           - darwinConfigurations.eyad-m3.config.system.build.toplevel
           - darwinConfigurations.eyad-mac.config.system.build.toplevel
           # The Omarchy (Arch) machines: Home Manager only

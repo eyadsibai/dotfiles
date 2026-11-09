@@ -14,6 +14,10 @@ let
       target = "linux-x64";
       hash = "sha256-spvvVf1aQaKHKThRas3kb0wMz4/YHA2GgpxDWnWl/Zo=";
     };
+    aarch64-linux = {
+      target = "linux-arm64";
+      hash = "sha256-RWfqQtDFKm9RNBgNIuXw3k51cys+JfsaXFpDPMqhDZw=";
+    };
     aarch64-darwin = {
       target = "darwin-arm64";
       hash = "sha256-vzypbAjlpXhug3A+KF4w20PdJuDm3Fm4LZB03cqluFQ=";

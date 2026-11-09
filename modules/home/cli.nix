@@ -80,6 +80,17 @@ in
   # Omarchy's own shell init already loads pacman's fzf key bindings on Arch
   programs.fzf.enable = !isArch;
 
+  programs.bat = {
+    enable = true;
+    # pacman's bat (Omarchy ships it), seen through a link so the module has a package
+    package = lib.mkIf isArch (
+      import ./pacman-bin.nix pkgs {
+        bin = "bat";
+        from = pkgs.bat;
+      }
+    );
+  };
+
   programs.eza = {
     enable = true;
     package = lib.mkIf isArch null;
@@ -113,7 +124,12 @@ in
   programs.bash.initExtra = lib.mkIf isArch ''
     [[ -r /usr/share/skim/key-bindings.bash ]] && source /usr/share/skim/key-bindings.bash
   '';
-  home.sessionVariables = lib.mkIf isArch {
+  home.sessionVariables = {
+    # man pages through bat (above): colours, and its pager's search
+    MANPAGER = "sh -c 'col -bx | bat -l man -p'";
+    MANROFFOPT = "-c";
+  }
+  // lib.optionalAttrs isArch {
     NNN_BMS = nnnList nnn.bookmarks;
     NNN_PLUG = nnnList nnn.mappings;
   };
