@@ -2,9 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
-import Quickshell.Wayland
 import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
@@ -13,51 +11,25 @@ import qs.Ui
 // is a touchpad for the TV's pointer, remote buttons, and a text box that types
 // into the TV's keyboard. Cast is what's playing and the video library.
 //
-// An overlay, not a window: it floats above everything (fullscreen video
-// included) and stays out of tiling and alt-tab. Drag the header to move it
-// (double-click it to send it back to the corner); Panel remembers where. It
-// takes the keyboard once clicked.
+// A floating window (Hyprland's rule puts it bottom-right and pins it): move it
+// with Super+drag or by dragging its header; Super+W closes it.
 //
 // It holds one `media tv pipe` connection open while shown, so pointer moves
 // don't start a process each.
-PanelWindow {
+FloatingWindow {
   id: win
+  title: "TV remote"
+  color: background
+  implicitWidth: 460
+  implicitHeight: 780
+  minimumSize: Qt.size(400, 680)
 
   required property var svc       // the panel's Service: TV and Sonos state, casting
-  property real posX: -1          // top-left corner on the screen; -1: bottom-right
-  property real posY: -1
   signal closeRequested()
-  signal moved(real x, real y)
   signal openCasterRequested()
 
-  readonly property int cardWidth: 460
-  readonly property int cardHeight: 780
-  readonly property int edgeGap: 40
-
-  // The screen it opens on: the focused monitor's.
-  screen: {
-    var m = Hyprland.focusedMonitor
-    var name = m ? String(m.name || "") : ""
-    for (var i = 0; i < Quickshell.screens.length; i++)
-      if (Quickshell.screens[i].name === name) return Quickshell.screens[i]
-    return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
-  }
-  readonly property real screenW: screen ? screen.width : 1920
-  readonly property real screenH: screen ? screen.height : 1080
-  function clampX(x) { return Math.max(0, Math.min(screenW - cardWidth, x)) }
-  function clampY(y) { return Math.max(0, Math.min(screenH - cardHeight, y)) }
-  readonly property real atX: clampX(posX < 0 ? screenW - cardWidth - edgeGap : posX)
-  readonly property real atY: clampY(posY < 0 ? screenH - cardHeight - edgeGap : posY)
-
-  WlrLayershell.layer: WlrLayer.Overlay
-  WlrLayershell.namespace: "eyad-media-remote"
-  WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-  exclusionMode: ExclusionMode.Ignore
-  anchors { top: true; left: true }
-  margins { top: atY; left: atX }
-  implicitWidth: cardWidth
-  implicitHeight: cardHeight
-  color: "transparent"
+  // Super+W (or any close by the compositor) hides the window; let Panel unload it.
+  onVisibleChanged: if (!visible) { padOn = false; closeYouTube(); closeRequested() }
 
   readonly property color foreground: Commons.Color.foreground
   readonly property color background: Commons.Color.background
@@ -311,9 +283,6 @@ PanelWindow {
   Rectangle {
     anchors.fill: parent
     color: win.background
-    radius: Style.cornerRadius
-    border.width: Math.max(1, Style.normalBorderWidth)
-    border.color: Commons.Color.popups.border
 
     FocusScope {
       id: scope
@@ -368,21 +337,14 @@ PanelWindow {
           Layout.fillWidth: true
           implicitHeight: headerRow.implicitHeight
 
+          // Dragging the header moves the window, as a title bar would.
           MouseArea {
             anchors.fill: parent
-            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-            property real pressX: 0
-            property real pressY: 0
-            onPressed: function(mouse) { pressX = mouse.x; pressY = mouse.y; win.leaveTextBox() }
-            // The window follows the margins, so the press point stays under the
-            // cursor and its offset from there is the move.
-            onPositionChanged: function(mouse) {
-              if (!pressed) return
-              win.posX = win.clampX(win.atX + mouse.x - pressX)
-              win.posY = win.clampY(win.atY + mouse.y - pressY)
+            cursorShape: Qt.OpenHandCursor
+            onPressed: function(mouse) {
+              win.leaveTextBox()
+              if (!parent.Window.window || !parent.Window.window.startSystemMove()) mouse.accepted = false
             }
-            onReleased: win.moved(win.posX, win.posY)
-            onDoubleClicked: { win.posX = -1; win.posY = -1; win.moved(-1, -1) }
           }
 
           RowLayout {

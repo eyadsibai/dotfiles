@@ -58,9 +58,9 @@ Panel {
     }
   }
 
-  // The remote (RemoteWindow.qml), an overlay holding everything but power and
-  // volume: touchpad, buttons, typing and YouTube search, scenes, casting. Its
-  // spot on screen and touchpad speed are kept in a small state file.
+  // The remote (RemoteWindow.qml), a floating window holding everything but power
+  // and volume: touchpad, buttons, typing and YouTube search, scenes, casting. Its
+  // touchpad speed is kept in a small state file.
   FileView {
     id: remoteState
     path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/eyad-media-remote.json"
@@ -90,11 +90,8 @@ Panel {
     RemoteWindow {
       visible: true
       svc: media
-      posX: root.remoteSaved.x === undefined ? -1 : root.remoteSaved.x
-      posY: root.remoteSaved.y === undefined ? -1 : root.remoteSaved.y
       speed: root.remoteSaved.speed || 1
       onSpeedChanged: if (speed !== (root.remoteSaved.speed || 1)) root.saveRemote({ speed: speed })
-      onMoved: function(x, y) { root.saveRemote({ x: x, y: y }) }
       onOpenCasterRequested: root.openCaster()
       onCloseRequested: remoteLoader.active = false
     }
