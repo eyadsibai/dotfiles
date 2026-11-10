@@ -45,6 +45,11 @@ FloatingWindow {
   property bool tvKeyboard: false
   property string tvGrid: ""      // "Prime Video" or "Shahid" while that app is on screen
   property string gridError: ""
+  property int gridLeft: 0        // keystrokes still being walked on the app's letters
+  // Just after leaving the box with Enter or for the touchpad, Backspace still
+  // deletes letters (fixing a typo shouldn't send the TV Back out of its search);
+  // using the remote, or the touchpad, makes it Back again.
+  property bool backspaceDeletes: false
   readonly property bool typingToGrid: tvGrid !== "" && !tvKeyboard
   property string error: ""
   property string sentText: ""   // what the text box has already typed on the TV
@@ -245,6 +250,7 @@ FloatingWindow {
           if (m.keyboard !== undefined) win.tvKeyboard = m.keyboard === true
           if (m.grid !== undefined) { win.tvGrid = m.grid || ""; win.gridError = "" }
           if (m.grid_error !== undefined) win.gridError = m.grid_error || ""
+          if (m.grid_left !== undefined) win.gridLeft = m.grid_left
         } catch (e) {}
       }
     }
@@ -254,6 +260,7 @@ FloatingWindow {
       win.connected = false
       win.tvKeyboard = false
       win.tvGrid = ""
+      win.gridLeft = 0
       if (win.restarting) { win.restarting = false; if (win.visible) pipe.running = true; return }
       if (code !== 0) {
         var lines = String(pipeErr.text || "").trim().split("\n")
@@ -292,6 +299,12 @@ FloatingWindow {
       // Keys while no text box has focus act like the remote.
       Keys.onPressed: function(event) {
         var k = event.key
+        if (k === Qt.Key_Backspace && win.backspaceDeletes && typeBox.text !== "") {
+          typeBox.text = typeBox.text.slice(0, -1)
+          event.accepted = true
+          return
+        }
+        win.backspaceDeletes = false
         if (k === Qt.Key_Tab) { win.tab = win.tab === "remote" ? "cast" : "remote"; event.accepted = true; return }
         if (k === Qt.Key_Escape) {
           if (win.ytShown) win.closeYouTube()
@@ -508,12 +521,14 @@ FloatingWindow {
             font.pixelSize: Style.font.body
             placeholderText: win.typingToGrid ? "Search " + win.tvGrid : "Search YouTube, type on the TV, or paste a link"
             onTextChanged: win.syncText(text)
+            onActiveFocusChanged: if (activeFocus) win.backspaceDeletes = false
             onAccepted: {
               if (win.typedIsLink) { win.playLink(false); return }
               // The app searches as you type, so Enter means done: back to the remote
               // keys to pick a result. The box keeps mirroring what the TV holds.
               if (win.typingToGrid) {
                 win.leaveTextBox()
+                win.backspaceDeletes = true
                 return
               }
               if (!win.tvKeyboard && win.typed !== "") {
@@ -574,14 +589,18 @@ FloatingWindow {
             }
           }
           Text {
-            visible: !win.typedIsLink && (typeBox.activeFocus || win.tvKeyboard || win.typingToGrid)
+            visible: !win.typedIsLink && (typeBox.activeFocus || win.tvKeyboard || win.typingToGrid || win.backspaceDeletes)
             textFormat: Text.PlainText
             Layout.fillWidth: true
             wrapMode: Text.Wrap
             text: win.tvKeyboard
               ? "󰌌  The TV keyboard is open: what you type goes straight in, Enter submits."
               : win.typingToGrid && win.gridError !== "" ? "󰀦  " + win.gridError
-              : win.typingToGrid ? "󰌌  Typing walks " + win.tvGrid + "'s letters on the TV (arrows and OK). Have its search open; Enter or ↓ when done."
+              : win.typingToGrid && win.gridLeft > 0 ? "󰔟  Typing on the TV… " + win.gridLeft + " to go"
+                  + (typeBox.activeFocus ? " · Enter or ↓ when done" : "")
+              : win.typingToGrid && typeBox.activeFocus ? "󰌌  Typing walks " + win.tvGrid + "'s letters on the TV (arrows and OK). Have its search open; Enter or ↓ when done."
+              : win.typingToGrid ? "󰑔  Keys work the remote" + (win.backspaceDeletes ? ", but Backspace still deletes" : "")
+                  + " · click the box or / to type"
               : "Enter searches YouTube; pick a video to play it on the TV. In Plex, Prime or Shahid, open their search and type here."
             color: win.typingToGrid && win.gridError !== "" ? win.urgent
                  : win.tvKeyboard || win.typingToGrid ? win.accent : win.dim
@@ -764,10 +783,11 @@ FloatingWindow {
               onExited: primed = false
               // Reaching for the pad means typing is over, so c and the arrows are
               // the remote's again rather than letters in the box.
-              onEntered: if (typeBox.activeFocus) win.leaveTextBox()
+              onEntered: if (typeBox.activeFocus) { win.leaveTextBox(); win.backspaceDeletes = true }
 
               onPressed: function(mouse) {
                 win.leaveTextBox()
+                win.backspaceDeletes = false
                 lastX = mouse.x; lastY = mouse.y; lastT = Date.now(); travelled = 0; primed = true
               }
               onPositionChanged: function(mouse) {
