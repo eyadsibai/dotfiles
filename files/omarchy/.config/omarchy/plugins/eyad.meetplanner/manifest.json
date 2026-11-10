@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "eyad.meetplanner",
+  "name": "Meeting Planner",
+  "version": "2.0.0",
+  "author": "Eyad Sibai (from Simon Späti's Timezones)",
+  "license": "MIT",
+  "description": "Plan a meeting across Elsewhen's cities: an hour grid with working hours and the windows that suit everyone.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Meeting Planner",
+    "description": "Hour grid and shared working windows for Elsewhen's cities",
+    "category": "Time",
+    "allowMultiple": false,
+    "defaultSection": "center"
+  }
+}
