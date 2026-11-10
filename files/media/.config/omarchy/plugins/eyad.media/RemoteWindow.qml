@@ -510,9 +510,10 @@ FloatingWindow {
             onTextChanged: win.syncText(text)
             onAccepted: {
               if (win.typedIsLink) { win.playLink(false); return }
-              if (win.typingToGrid) {  // the app searches as you type: just start afresh
-                win.sentText = ""
-                text = ""
+              // The app searches as you type, so Enter means done: back to the remote
+              // keys to pick a result. The box keeps mirroring what the TV holds.
+              if (win.typingToGrid) {
+                win.leaveTextBox()
                 return
               }
               if (!win.tvKeyboard && win.typed !== "") {
@@ -531,6 +532,12 @@ FloatingWindow {
                 win.sentText = ""
                 text = ""
                 win.leaveTextBox()
+                event.accepted = true
+              } else if (event.key === Qt.Key_Down || event.key === Qt.Key_Up) {
+                // A one-line box has no use for them: they step out of it onto the
+                // TV, toward the results, as they would on the TV's own keyboard.
+                win.leaveTextBox()
+                win.key(event.key === Qt.Key_Down ? "DOWN" : "UP")
                 event.accepted = true
               }
             }
@@ -574,7 +581,7 @@ FloatingWindow {
             text: win.tvKeyboard
               ? "󰌌  The TV keyboard is open: what you type goes straight in, Enter submits."
               : win.typingToGrid && win.gridError !== "" ? "󰀦  " + win.gridError
-              : win.typingToGrid ? "󰌌  Typing walks " + win.tvGrid + "'s letters on the TV (arrows and OK). Have its search open."
+              : win.typingToGrid ? "󰌌  Typing walks " + win.tvGrid + "'s letters on the TV (arrows and OK). Have its search open; Enter or ↓ when done."
               : "Enter searches YouTube; pick a video to play it on the TV. In Plex, Prime or Shahid, open their search and type here."
             color: win.typingToGrid && win.gridError !== "" ? win.urgent
                  : win.tvKeyboard || win.typingToGrid ? win.accent : win.dim
@@ -755,6 +762,9 @@ FloatingWindow {
               Timer { id: warpGuard; interval: 250; onTriggered: { pad.warping = false; pad.primed = false } }
 
               onExited: primed = false
+              // Reaching for the pad means typing is over, so c and the arrows are
+              // the remote's again rather than letters in the box.
+              onEntered: if (typeBox.activeFocus) win.leaveTextBox()
 
               onPressed: function(mouse) {
                 win.leaveTextBox()
