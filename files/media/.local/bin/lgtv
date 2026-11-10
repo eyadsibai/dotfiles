@@ -408,8 +408,10 @@ async def tv_screenshot(call):
             await asyncio.sleep(0.5)
 
 
-async def grid_type(call, sock, app, ops):
-    """Type ops on the app's letter grid. Returns an error message, or None.
+async def grid_type(call, sock, app, units, progress=lambda left: None):
+    """Type units (from grid_units) on the app's letter grid, taking each off the list
+    once it's typed: after an error, what's left is what didn't reach the TV.
+    Returns an error message, or None. progress(n) hears how many are left.
 
     Before each OK it checks, on a fresh screenshot, that the intended key is
     highlighted, and walks again from wherever the highlight really is if not:
@@ -485,8 +487,8 @@ async def grid_type(call, sock, app, ops):
         return lost
     lname, pos = found
     memo, tries = None, 0
-    units = grid_units(ops)
     while units:
+        progress(len(units))
         unit, g, switch_to = units[0], layouts[lname], None
         if unit[0] == "char" and g.find(unit[1]) is None:
             switch_to = next((n for n, o in layouts.items() if o.find(unit[1])), None)
@@ -542,6 +544,7 @@ async def grid_type(call, sock, app, ops):
         else:
             pos, memo = expect, new_memo
             units.pop(0)
+    progress(0)
     return None
 
 
@@ -562,7 +565,7 @@ async def cmd_gridtype(tv, args):
     sock = await tv.buttons()
     try:
         ops = ([("clear", None)] if replace else []) + [("text", " ".join(args))]
-        err = await grid_type(lambda uri: tv.call(uri), sock, app, ops)
+        err = await grid_type(lambda uri: tv.call(uri), sock, app, grid_units(ops))
     finally:
         await sock.close()
     if err:
@@ -1014,11 +1017,22 @@ async def cmd_pipe(tv, args):
             else:
                 pushback = nxt
                 break
-        try:
-            err = await grid_type(call, sock, state["app"], ops)
-        except (OSError, asyncio.TimeoutError, KeyError, ValueError) as e:
-            err = f"couldn't read the TV's screen ({e})"
-        emit(grid_error=err or "")
+        # A busy TV can miss a screenshot or lose the highlight for a moment: try what's
+        # left again rather than let the TV fall behind the box without a word
+        units = grid_units(ops)
+        for attempt in range(3):
+            try:
+                err = await grid_type(call, sock, state["app"], units,
+                                      lambda left: emit(grid_left=left))
+            except (OSError, asyncio.TimeoutError, KeyError, ValueError) as e:
+                err = f"couldn't read the TV's screen ({e})"
+            if not err or not units:
+                break
+            await asyncio.sleep(1.5)
+        if err:
+            emit(grid_left=0, grid_error=f"{err} ({len(units)} typed in the box didn't reach the TV)")
+        else:
+            emit(grid_error="")
         return pushback
 
     await tv.ws.send(json.dumps({"type": "subscribe", "id": "kbd",
