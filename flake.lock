@@ -1629,7 +1629,8 @@
         "nixbot": "nixbot",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_3",
-        "sops-nix": "sops-nix"
+        "sops-nix": "sops-nix",
+        "vpn-confinement": "vpn-confinement"
       }
     },
     "rust-overlay": {
@@ -1773,6 +1774,21 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "vpn-confinement": {
+      "locked": {
+        "lastModified": 1791310298,
+        "narHash": "sha256-SpqEEuyrkzTqjIHwHrZE+Rs6ez2tzIeYkSY67zp6fcQ=",
+        "owner": "Maroka-chan",
+        "repo": "VPN-Confinement",
+        "rev": "cc37bcf5000e237709e725a9cda010a5cbce3111",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Maroka-chan",
+        "repo": "VPN-Confinement",
         "type": "github"
       }
     },

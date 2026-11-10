@@ -48,6 +48,9 @@
       url = "github:nix-community/lanzaboote";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # home-server: qBittorrent in a network namespace that only reaches the internet
+    # through WireGuard (modules/nixos/homelab/downloads.nix). No inputs of its own.
+    vpn-confinement.url = "github:Maroka-chan/VPN-Confinement";
 
     # Self-hosted CI on the workstation, off unless my.ci.nixbot.enable (modules/nixos/ci)
     nixbot = {

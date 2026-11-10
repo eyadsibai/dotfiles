@@ -79,7 +79,7 @@ flake.nix          inputs, mkNixos / mkDarwin / mkArch, hosts, packages, checks
 hosts/<name>/      hardware and what that machine is for; nothing shared lives here
 modules/common/    Nix itself: caches, GC, nh, trusted users (both platforms)
 modules/nixos/     every NixOS host gets default.nix; desktop, sunshine, ai and
-                   virtualisation are opt-in by import
+                   virtualisation are opt-in by import; homelab/ is home-server's services
 modules/darwin/    macOS defaults, Homebrew, Mac-only apps
 modules/home/      Home Manager for every machine: shells, CLI, git, ssh, 1Password,
                    newsboat, herdr, mpv; firefox and the GUI apps only on Linux desktops
@@ -234,6 +234,9 @@ Finally sign in to the 1Password app at the machine and turn on Settings → Dev
   and setting up a new Mac from an existing one.
 - [docs/home-server.md](docs/home-server.md): installing home-server (encrypted, TPM-unlocked,
   a root wiped on every boot, self-upgrading).
+- [docs/homelab.md](docs/homelab.md): home-server's services (Plex and the *arr apps,
+  Miniflux, Immich, Paperless, ...), how to add one, and turning on disks, the domain,
+  the VPN and backups as they're decided.
 - [docs/ci.md](docs/ci.md): GitHub Actions, and the self-hosted nixbot on the workstation
   (off until needed).
 - [CLAUDE.md](CLAUDE.md) (also `AGENTS.md`): how to check a change and write commits, for

@@ -20,7 +20,25 @@
     inputs.impermanence.nixosModules.impermanence
     ./disk.nix
     ../../modules/nixos
+    ../../modules/nixos/homelab
   ];
+
+  # The services (modules/nixos/homelab, docs/homelab.md). Next steps, as they're
+  # decided: storage.dataDisks/parityDisks from `ls -l /dev/disk/by-id`, then
+  # secrets.enable once secrets/home-server.yaml exists, then domain, vpn and backup.
+  my.homelab.enable = true;
+
+  # RTX 2070, for Plex's transcoding (and anything with CUDA later). No display:
+  # the open kernel modules (Turing supports them) and the persistence daemon,
+  # which keeps the driver loaded between transcodes instead of initialising the
+  # card each time.
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.graphics.enable = true;
+  hardware.nvidia = {
+    open = true;
+    nvidiaPersistenced = true;
+    nvidiaSettings = false;
+  };
 
   networking.hostName = "home-server";
   nixpkgs.hostPlatform = "x86_64-linux";

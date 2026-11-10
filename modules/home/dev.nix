@@ -33,7 +33,13 @@ in
     ++ lib.optional (stdenv.hostPlatform.isLinux && !isArch) jetbrains.jdk
     # The Macs get codex from Homebrew and uv from modules/darwin/apps.nix
     ++ lib.optionals (stdenv.hostPlatform.isLinux && !isArch) [
-      codex # replaces Omarchy's "codex is not installed" stub
+      # Replaces Omarchy's "codex is not installed" stub. codex 0.167.0 (nixpkgs
+      # f4a03c0, 2026-11-07) fails to build: aws-lc-sys is told to use a system
+      # AWS-LC and finds none ("AWS_LC_SYS_USE_SYSTEM=1 requires a system-installed
+      # AWS-LC"), so this host and the NixOS desktops can't switch until nixpkgs
+      # fixes it. No upstream issue or fix yet. If it lingers, override the package
+      # with AWS_LC_SYS_USE_SYSTEM unset, in overlays/.
+      codex
       uv
       beads # `bd`: git-backed issue tracker for agents
       dolt # the database beads stores issues in

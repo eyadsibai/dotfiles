@@ -1,5 +1,7 @@
 # Installing home-server
 
+The services it runs, and setting them up after the install: [homelab.md](homelab.md).
+
 `hosts/home-server` is built to run with nobody at it:
 
 - **Encrypted disk, unlocked by the TPM.** One LUKS partition holding btrfs
