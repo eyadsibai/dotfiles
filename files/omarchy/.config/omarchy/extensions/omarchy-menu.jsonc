@@ -1,4 +1,7 @@
 {
+  // >>> hey-cli — managed by `hey setup omarchy`, do not edit between the markers
+  "hey-tui": {"icon":"","label":"HEY","action":"omarchy-launch-or-focus-tui --app-id=org.omarchy.hey hey tui","when":"command -v hey >/dev/null"},
+  // <<< hey-cli
   // Extend the Quickshell Omarchy menu with JSONC.
   //
   // IDs are object keys. The parent is inferred from the dotted id, so
