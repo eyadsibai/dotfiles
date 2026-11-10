@@ -10,6 +10,29 @@
           "id": "omarchy.clock",
           "lifeExpectancy": 90,
           "verticalFormat": "HH\n—\nmm"
+        },
+        {
+          "cities": [
+            {
+              "name": "Riyadh",
+              "zone": "Asia/Riyadh"
+            },
+            {
+              "name": "San Francisco",
+              "zone": "America/Los_Angeles"
+            },
+            {
+              "name": "UTC",
+              "zone": "Etc/UTC"
+            },
+            {
+              "name": "Istanbul",
+              "zone": "Asia/Istanbul"
+            }
+          ],
+          "hour24": true,
+          "id": "omarchy.elsewhen",
+          "units": "C"
         }
       ],
       "centerBegin": [
@@ -83,36 +106,7 @@
       ],
       "centerEnd": [
         {
-          "cities": [
-            {
-              "name": "Riyadh",
-              "zone": "Asia/Riyadh"
-            },
-            {
-              "name": "San Francisco",
-              "zone": "America/Los_Angeles"
-            },
-            {
-              "name": "UTC",
-              "zone": "Etc/UTC"
-            },
-            {
-              "name": "Istanbul",
-              "zone": "Asia/Istanbul"
-            }
-          ],
-          "hour24": true,
-          "id": "omarchy.elsewhen",
-          "units": "C"
-        },
-        {
           "id": "local.prayer-times"
-        },
-        {
-          "id": "eyad.cava"
-        },
-        {
-          "id": "omarchy.media"
         }
       ],
       "left": [
@@ -121,6 +115,9 @@
         },
         {
           "id": "omarchy.workspaces"
+        },
+        {
+          "id": "eyad.cava"
         }
       ],
       "right": [
