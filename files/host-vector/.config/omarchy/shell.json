@@ -1,6 +1,6 @@
 {
   "bar": {
-    "background": "glassy",
+    "background": "opaque",
     "layout": {
       "center": [
         {
