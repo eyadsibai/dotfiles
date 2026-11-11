@@ -187,9 +187,14 @@ in
     ];
   };
 
-  # Claude Code from nixpkgs (updated with `just update`; the built-in auto-updater is off).
-  # Settings stay in ~/.claude/settings.json, writable by Claude Code itself.
-  programs.claude-code.enable = true;
+  # The module without its package: Claude Code itself comes from its own installer
+  # (~/.local/bin/claude) so new versions arrive the day they're released through its
+  # auto-updater; on NixOS it runs through nix-ld. Settings stay in ~/.claude/settings.json,
+  # writable by Claude Code itself.
+  programs.claude-code = {
+    enable = true;
+    package = null;
+  };
 
   programs.gh = {
     enable = true;
