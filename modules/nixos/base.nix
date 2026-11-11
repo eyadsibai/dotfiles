@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   boot.loader.systemd-boot = {
     enable = true;
@@ -36,11 +41,11 @@
   services.journald.settings.Journal.SystemMaxUse = "1G";
   boot.tmp.cleanOnBoot = true;
 
-  services.printing.enable = true;
-
+  # Printing and sound, for machines someone sits at
+  services.printing.enable = !config.my.server;
   services.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
+  security.rtkit.enable = !config.my.server;
+  services.pipewire = lib.mkIf (!config.my.server) {
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;

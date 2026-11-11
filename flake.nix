@@ -52,11 +52,11 @@
     # through WireGuard (modules/nixos/homelab/downloads.nix). No inputs of its own.
     vpn-confinement.url = "github:Maroka-chan/VPN-Confinement";
 
-    # Self-hosted CI on the workstation, off unless my.ci.nixbot.enable (modules/nixos/ci)
-    nixbot = {
-      url = "github:Mic92/nixbot";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # Self-hosted CI on the workstation, parked (modules/nixos/ci/nixbot.nix, docs/ci.md)
+    # nixbot = {
+    #   url = "github:Mic92/nixbot";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     # Omarchy's desktop packaged for NixOS. Follows main, which runs ahead of the
     # release tags; `just update` moves it along with everything else.
@@ -191,7 +191,7 @@
       nixosConfigurations = {
         workstation = mkNixos ./hosts/workstation; # Intel + RTX 4090 desktop
         eyad-nixos = mkNixos ./hosts/eyad-nixos; # AMD ThinkPad
-        home-server = mkNixos ./hosts/home-server; # future Unraid replacement (skeleton)
+        home-server = mkNixos ./hosts/home-server; # Unraid replacement, not installed yet
         vm-fusion = mkNixos ./hosts/vm-fusion; # desktop VM on the Macs, VMware Fusion
         vm-utm = mkNixos ./hosts/vm-utm; # desktop VM on the Macs, UTM
       };
@@ -223,6 +223,16 @@
         {
           workstation = self.nixosConfigurations.workstation.config.system.build.toplevel;
           eyad-nixos = self.nixosConfigurations.eyad-nixos.config.system.build.toplevel;
+          home-server = self.nixosConfigurations.home-server.config.system.build.toplevel;
+          # Boots the homelab in a VM (tests/homelab.nix)
+          homelab = import ./tests/homelab.nix {
+            pkgs = import nixpkgs {
+              system = "x86_64-linux";
+              inherit overlays;
+              config.allowUnfree = true;
+            };
+            inherit inputs username useremail;
+          };
           vector = self.homeConfigurations."${username}@vector".activationPackage;
           cachy = self.homeConfigurations."${username}@cachy".activationPackage;
           formatting = pkgs.runCommand "check-formatting" { } ''

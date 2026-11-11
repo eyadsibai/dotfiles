@@ -8,7 +8,9 @@
 # Pull-based: it polls GitHub, so no GitHub App, webhook or open port is needed. Builds
 # only run for commits signed with my 1Password key (verify-commit-signature below).
 #
+# Parked: not imported (modules/nixos/default.nix) and its flake input commented out.
 # To turn it on (docs/ci.md has the details):
+#   0. uncomment the nixbot input in flake.nix and ./ci/nixbot.nix in modules/nixos/default.nix
 #   1. nix key generate-secret --key-name workstation-1 > key; nix key convert-secret-to-public < key
 #   2. just secret nixbot   # cache-signing-key: |  (the secret key)
 #   3. my.ci.nixbot.enable = true on the workstation; my.ci.cachePublicKey everywhere
@@ -22,13 +24,16 @@
 let
   cfg = config.my.ci;
 
-  # The commit-signing key (modules/home/onepassword.nix)
+  # The commit-signing key (modules/common/signing-key.nix)
   allowedSigners = pkgs.writeText "ci-allowed-signers" ''
-    * namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOpovYakzNvqZRJKiE7H43QJ1Y1zJt3ixf+tvzDBNXJe
+    * namespaces="git" ${import ../../common/signing-key.nix}
   '';
 in
 {
-  imports = [ inputs.nixbot.nixosModules.nixbot ];
+  imports = [
+    inputs.nixbot.nixosModules.nixbot
+    ../nixbot-auto-upgrade.nix
+  ];
 
   options.my.ci = {
     nixbot.enable = lib.mkEnableOption "the nixbot CI service and its binary cache on this host";
@@ -98,6 +103,20 @@ in
         80
         5000
       ];
+    })
+
+    # home-server taking the CI's builds instead of building (my.autoUpgrade.from)
+    (lib.mkIf (config.my.autoUpgrade.enable && config.my.autoUpgrade.from == "nixbot") {
+      system.nixbotAutoUpgrade = {
+        enable = true;
+        inherit (config.my.autoUpgrade) dates;
+        instance = "http://workstation";
+        project = "pull_based/eyadsibai/dotfiles";
+        inherit (config.my.autoUpgrade) branch;
+        source = "git+https://github.com/eyadsibai/dotfiles?ref=${config.my.autoUpgrade.branch}";
+        job = "ciJobs.hosts.${config.networking.hostName}";
+      };
+      my.ci.useCache = true;
     })
 
     (lib.mkIf cfg.useCache {

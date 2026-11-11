@@ -7,8 +7,12 @@ let
   blockedHosts = [ "apresolve.spotify.com" ];
 in
 {
-  security.pam.services.sudo_local.touchIdAuth = true;
-  security.sudo.extraConfig = "%admin ALL = (ALL) NOPASSWD: ALL";
+  # sudo asks for a fingerprint, also inside tmux (reattach). It used to need no
+  # password at all, which let anything running as me become root unasked.
+  security.pam.services.sudo_local = {
+    touchIdAuth = true;
+    reattach = true;
+  };
 
   # Raise the file descriptor limit to 524288
   environment.launchDaemons."limit.maxfiles.plist" = {

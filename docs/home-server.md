@@ -16,9 +16,18 @@ The services it runs, and setting them up after the install: [homelab.md](homela
 - **No passwords.** Users come only from the config (`users.mutableUsers = false`), you
   log in with SSH keys, and sudo is approved through the forwarded SSH agent (`ssh -A`,
   so 1Password on the machine you're sitting at).
-- **Upgrades itself** every night at 04:00 from `github:eyadsibai/dotfiles`
-  (`my.autoUpgrade`), or from the self-hosted CI's builds (docs/ci.md).
+- **Upgrades itself** every night at 04:00 from GitHub (`my.autoUpgrade`), from the
+  `server` branch rather than master: `just promote` moves it up to master once the
+  desktops have run what's there, so a flake.lock update that breaks something
+  breaks a desktop first. It only takes a commit signed with my SSH key that follows
+  from the last one it took. Merging a pull request in GitHub's web UI leaves a
+  commit signed by GitHub instead, which the server refuses (and says so on ntfy)
+  until I push a signed one on top: merge locally, e.g. the weekly flake.lock pull
+  request. Promote at least every few weeks, or it misses security fixes.
 - **Secure Boot** once its keys exist (`my.secureBoot`, steps below).
+- **Keeps going on its own**: a failed mount at boot carries on to SSH instead of an
+  emergency shell nobody could log into, a hung kernel is rebooted by the hardware
+  watchdog, and it never sleeps. Upgrades take a snapshot first (homelab.md, Backups).
 
 ## 1. Prepare
 
@@ -40,6 +49,9 @@ ssh-keygen -t ed25519 -N "" -f /tmp/hs/persist/etc/ssh/ssh_host_ed25519_key
 nix shell nixpkgs#ssh-to-age -c ssh-to-age < /tmp/hs/persist/etc/ssh/ssh_host_ed25519_key.pub
 #   add that age key to .sops.yaml as &home-server, then `sops updatekeys secrets/*.yaml`
 
+# The initrd's own SSH host key, for typing the passphrase remotely (step 3)
+ssh-keygen -t ed25519 -N "" -f /tmp/hs/persist/etc/ssh/initrd_ssh_host_ed25519_key
+
 # The disk passphrase, also saved in 1Password
 read -s pass; printf %s "$pass" > /tmp/disk.key
 ```
@@ -58,15 +70,44 @@ shred -u /tmp/disk.key; rm -rf /tmp/hs
 It partitions and encrypts the disk, installs, and reboots. Type the passphrase at the
 console.
 
-## 3. Unlock with the TPM
+## 3. Tailscale, then unlock with the TPM
+
+Join the tailnet (`just deploy` and the domain's addresses go through it), and in
+Tailscale's admin page turn off key expiry for home-server, or it drops off the
+tailnet after six months:
 
 ```sh
 ssh -A eyad@home-server
-sudo systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=0+7 /dev/disk/by-partlabel/disk-main-luks
+sudo tailscale up
+```
+
+Then bind the disk's key to the TPM:
+
+```sh
+sudo systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto \
+  --tpm2-pcrs=0+7+15:sha256=0000000000000000000000000000000000000000000000000000000000000000 \
+  /dev/disk/by-partlabel/disk-main-luks
 ```
 
 From the next boot it unlocks by itself, as long as the firmware and Secure Boot state
-(PCRs 0 and 7) are unchanged. The passphrase still works as a fallback.
+(PCRs 0 and 7) are unchanged. PCR 15 must still be empty when the key is unsealed,
+and the unlock itself fills it (`tpm2-measure-pcr` in disk.nix), so a disk swapped in
+to imitate this one can't get the key afterwards. The passphrase still works as a
+fallback. `--wipe-slot=tpm2` replaces an earlier enrolment rather than adding another.
+
+Until Secure Boot is on (step 4), PCR 7 doesn't pin what boots: someone with the box
+in hand can boot their own system and have the TPM unseal the key. The disk is
+protected against a lost or discarded drive, not yet against a stolen machine.
+
+If the TPM ever refuses (after a firmware update, say), the boot waits for the
+passphrase, and it can be typed from another machine at home:
+`ssh -p 2222 root@<its LAN address>`, then `systemd-tty-ask-password-agent`. Enroll the
+TPM again afterwards. The initrd only has a network driver for common onboard chips
+(`hosts/home-server/default.nix`); check that list against `nixos-generate-config`'s.
+
+Once a reboot has unlocked by itself, set `my.autoUpgrade.allowReboot = true;` in
+`hosts/home-server/default.nix`: nightly upgrades that bring a new kernel or NVIDIA
+driver then reboot between 04:00 and 06:00 (Plex can't use the GPU until they do).
 
 ## 4. Secure Boot (optional, later)
 
@@ -80,5 +121,6 @@ matches the new state.
 ## Day to day
 
 `just deploy home-server` builds here and switches it over Tailscale. The nightly
-upgrade picks up whatever is on master, so a pushed change lands by the next morning
-without either.
+upgrade takes whatever signed commit is on `server`, so after `just promote` a change
+lands by the next morning without deploying. The first `just promote` creates the
+branch; until then the upgrade fails each night, saying so on ntfy.

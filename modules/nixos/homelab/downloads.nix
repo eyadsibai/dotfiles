@@ -7,17 +7,18 @@
 # 192.168.15.1:8090; from the LAN and tailnet at home-server:8090.
 #
 # SABnzbd (Usenet) needs no VPN: it only talks to the Usenet provider, over TLS.
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  homelab,
+  ...
+}:
 let
   cfg = config.my.homelab;
   apps = cfg.apps;
-  on = name: cfg.enable && apps.${name}.enable;
+  inherit (homelab) on shareMedia;
   vpn = cfg.vpn;
   hostName = config.networking.hostName;
-  shareMedia = {
-    SupplementaryGroups = [ "media" ];
-    UMask = lib.mkForce "0002";
-  };
 in
 {
   options.my.homelab.vpn = {
@@ -29,8 +30,10 @@ in
       type = lib.types.nullOr lib.types.port;
       default = null;
       description = ''
-        The port the VPN provider forwards to you, if it does (Proton, AirVPN).
-        Without one, downloads work but fewer peers can connect.
+        A fixed port the VPN provider forwards to you (AirVPN gives one). Without
+        one, downloads work but fewer peers can connect. Not for Proton: it leases
+        a port for a minute at a time over NAT-PMP and the number changes, so a
+        fixed one here would be wrong.
       '';
     };
   };
@@ -86,6 +89,9 @@ in
             protocol = "both";
           };
         };
+        # Avahi on the namespace's bridge breaks mDNS for the whole LAN, and with it
+        # the Macs finding Time Machine (shares.nix)
+        services.avahi.settings.server.deny-interfaces = [ "wg-br" ];
       })
 
       (lib.mkIf (on "qbittorrent") {
@@ -112,11 +118,24 @@ in
         sops.secrets."sabnzbd/secrets.ini" = lib.mkIf cfg.secrets.enable {
           owner = config.services.sabnzbd.user;
         };
+        # Its API key, set rather than made up, so Sonarr, Radarr and Lidarr can be
+        # pointed at it (media.nix). `openssl rand -hex 16`.
+        sops.secrets."sabnzbd/api-key" = lib.mkIf cfg.secrets.enable { };
+        sops.templates."sabnzbd-api-key.ini" = lib.mkIf cfg.secrets.enable {
+          owner = config.services.sabnzbd.user;
+          content = ''
+            [misc]
+            api_key = ${config.sops.placeholder."sabnzbd/api-key"}
+          '';
+        };
         services.sabnzbd = {
           enable = true;
           configFile = null;
           allowConfigWrite = true;
-          secretFiles = lib.optional cfg.secrets.enable config.sops.secrets."sabnzbd/secrets.ini".path;
+          secretFiles = lib.optionals cfg.secrets.enable [
+            config.sops.secrets."sabnzbd/secrets.ini".path
+            config.sops.templates."sabnzbd-api-key.ini".path
+          ];
           settings.misc = {
             host = "0.0.0.0";
             port = apps.sabnzbd.port;

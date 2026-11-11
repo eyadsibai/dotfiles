@@ -4,6 +4,10 @@
   nixpkgs.config.allowUnfree = true;
 
   nix.settings = {
+    # Lets me copy builds in unsigned, which `just deploy` needs to put a system
+    # built here onto home-server. That makes anything running as me able to get
+    # root without sudo's approval. Kept: only my SSH keys log in as me, and the
+    # alternative is signing every build with a key the server trusts.
     trusted-users = [ username ];
     experimental-features = [
       "nix-command"

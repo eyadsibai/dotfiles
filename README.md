@@ -5,7 +5,7 @@
 **Every machine I own, in one flake.**
 
 NixOS on the desk, Omarchy on Arch on the laptop I carry, nix-darwin on the Macs, Home
-Manager underneath all of them. About 2,200 lines of Nix, and every setting lives in exactly one place.
+Manager underneath all of them. About 7,000 lines of Nix, and every setting lives in exactly one place.
 
 [![check](https://github.com/eyadsibai/dotfiles/actions/workflows/check.yml/badge.svg)](https://github.com/eyadsibai/dotfiles/actions/workflows/check.yml)
 [![NixOS unstable](https://img.shields.io/badge/NixOS-unstable-5277C3?logo=nixos&logoColor=white)](https://nixos.org)
@@ -235,9 +235,9 @@ Finally sign in to the 1Password app at the machine and turn on Settings → Dev
 - [docs/home-server.md](docs/home-server.md): installing home-server (encrypted, TPM-unlocked,
   a root wiped on every boot, self-upgrading).
 - [docs/homelab.md](docs/homelab.md): home-server's services (Plex and the *arr apps,
-  Miniflux, Immich, Paperless, ...), how to add one, and turning on disks, the domain,
-  the VPN and backups as they're decided.
-- [docs/ci.md](docs/ci.md): GitHub Actions, and the self-hosted nixbot on the workstation
+  Miniflux, Immich, Paperless, games streamed to the TVs, ...), how to add one, and
+  turning on disks, the domain, the VPN and backups as they're decided.
+- [docs/ci.md](docs/ci.md): GitHub Actions, and the self-hosted nixbot (parked)
   (off until needed).
 - [CLAUDE.md](CLAUDE.md) (also `AGENTS.md`): how to check a change and write commits, for
   coding agents and for me.
@@ -257,7 +257,7 @@ once for the dev shell, then:
 | `just vm-install <host> <ip>` | Mac: install `vm-fusion` or `vm-utm` on a VM booted from the NixOS ISO |
 | `just mac-copy <name> <user@ip>` | Mac: copy a Mac's built system to a new Mac before its first switch |
 | `just update [input...]` | update every flake input, or only the ones named |
-| `just check` | `nix flake check`: evaluates every host, checks formatting |
+| `just check` | evaluates every host and checks formatting, without building |
 | `just clean` | drop old generations, GC the store |
 | `just secret <name>` | edit `secrets/<name>.yaml` |
 | `just arch-preview` / `arch-backup` | Arch: list every file in `~` a switch would replace or add, with diffs / and archive the existing ones first |

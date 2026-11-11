@@ -32,9 +32,10 @@ vm name=host:
 update *inputs:
     nix flake update {{inputs}}
 
-# Evaluate every host and run flake checks
+# Evaluate every host and check formatting, without building (as CI does)
 check:
-    nix flake check
+    nix flake check --no-build
+    nix fmt -- --ci
 
 # Format all Nix files
 fmt:
@@ -43,6 +44,14 @@ fmt:
 # Build a NixOS host here and switch it over SSH (addr defaults to its Tailscale name)
 deploy name addr=name:
     NIX_SSHOPTS="-A" nix run --inputs-from . nixpkgs#nixos-rebuild-ng -- switch --flake .#{{name}} --target-host {{addr}} --sudo --ask-sudo-password
+
+# Let home-server's nightly upgrade take master (or a given commit): it follows the
+# `server` branch, moved up here once the desktops have run what's on master
+promote rev="origin/master":
+    git fetch --quiet origin
+    git verify-commit {{rev}}
+    git log --oneline origin/server..{{rev}} 2>/dev/null || true
+    git push origin {{rev}}:refs/heads/server
 
 # Delete old generations and garbage-collect the store
 clean:

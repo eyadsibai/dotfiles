@@ -14,7 +14,7 @@
 }:
 let
   inherit (pkgs.stdenv.hostPlatform) isDarwin isLinux;
-  signingKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOpovYakzNvqZRJKiE7H43QJ1Y1zJt3ixf+tvzDBNXJe";
+  signingKey = import ../common/signing-key.nix;
   home = config.home.homeDirectory;
   agentSocket =
     if isDarwin then

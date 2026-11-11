@@ -21,6 +21,17 @@ let
   inherit (lib) mkOption types;
   enabledApps = lib.filterAttrs (_: a: a.enable) cfg.apps;
   hostName = config.networking.hostName;
+
+  # Caddy asks tinyauth (auth.nix) whether the visitor is signed in before passing
+  # the request on; if not, they're sent to sign in with a passkey
+  signIn =
+    a:
+    lib.optionalString (a.auth && cfg.apps.auth.enable) ''
+      forward_auth ${cfg.apps.auth.upstream} {
+        uri /api/auth/caddy
+        copy_headers Remote-User Remote-Name Remote-Email Remote-Groups
+      }
+    '';
 in
 {
   imports = [
@@ -31,6 +42,9 @@ in
     ./media.nix
     ./downloads.nix
     ./apps.nix
+    ./gaming.nix
+    ./shares.nix
+    ./auth.nix
   ];
 
   options.my.homelab = {
@@ -70,6 +84,16 @@ in
         "172.16.0.0/12"
       ];
       description = "Networks treated as home, e.g. allowed into the VPN namespace's web UI.";
+    };
+
+    heartbeat = lib.mkOption {
+      type = lib.types.bool;
+      default = cfg.secrets.enable;
+      defaultText = lib.literalExpression "config.my.homelab.secrets.enable";
+      description = ''
+        Ping an outside check (healthchecks.io) every 5 minutes, so the server going
+        down is noticed (platform.nix). Needs heartbeat-url in the secrets.
+      '';
     };
 
     secrets = {
@@ -130,6 +154,21 @@ in
                 type = types.bool;
                 default = true;
               };
+              # Behind the passkey sign-in (auth.nix) once there's a domain. For
+              # admin pages with weak or no login of their own; not for apps that
+              # phones or TVs talk to directly (Plex, Immich, Audiobookshelf, ntfy)
+              auth = mkOption {
+                type = types.bool;
+                default = false;
+              };
+              # Signs in with a passkey through Pocket ID itself (OIDC), for apps that
+              # support it (Miniflux, Paperless). Off until its client has been made
+              # in Pocket ID and its id and secret are in the secrets
+              # (docs/homelab.md, "Signing in")
+              oidc = mkOption {
+                type = types.bool;
+                default = false;
+              };
               url = mkOption {
                 type = types.str;
                 readOnly = true;
@@ -150,64 +189,84 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable (
-    lib.mkMerge [
-      {
-        assertions = [
-          {
-            assertion = cfg.domain == null || cfg.secrets.enable;
-            message = "my.homelab.domain needs my.homelab.secrets.enable: the certificate comes from a Cloudflare token in sops.";
-          }
-        ];
-
-        sops.defaultSopsFile = lib.mkIf cfg.secrets.enable cfg.secrets.file;
-
-        # I can read the libraries and downloads too, e.g. over SSH
-        users.users.${username}.extraGroups = [ "media" ];
-      }
-
-      (lib.mkIf (cfg.domain == null) {
-        networking.firewall.allowedTCPPorts = lib.mapAttrsToList (_: a: a.port) enabledApps;
-      })
-
-      (lib.mkIf (cfg.domain != null) {
-        # CF_DNS_API_TOKEN=<token with Zone:DNS:Edit on the domain's zone>
-        sops.secrets.cloudflare-acme = { };
-        security.acme = {
-          acceptTerms = true;
-          defaults.email = cfg.acmeEmail;
-          certs.${cfg.domain} = {
-            domain = "*.${cfg.domain}";
-            extraDomainNames = [ cfg.domain ];
-            dnsProvider = "cloudflare";
-            environmentFile = config.sops.secrets.cloudflare-acme.path;
-            group = config.services.caddy.group;
-          };
+  config = lib.mkMerge [
+    {
+      # Shared by the homelab's modules, as their `homelab` argument
+      _module.args.homelab = {
+        # Whether an app is on (the homelab, and the app in it)
+        on = name: cfg.enable && cfg.apps.${name}.enable;
+        # For the apps that write into /data: they share the `media` group and leave
+        # files group-writable, so each can rename or hard-link what another wrote
+        shareMedia = {
+          SupplementaryGroups = [ "media" ];
+          UMask = lib.mkForce "0002";
         };
+      };
+    }
 
-        services.caddy = {
-          enable = true;
-          virtualHosts =
-            lib.mapAttrs' (
-              name: a:
-              lib.nameValuePair "${name}.${cfg.domain}" {
-                useACMEHost = cfg.domain;
-                extraConfig = "reverse_proxy ${a.upstream}";
-              }
-            ) enabledApps
-            // {
-              ${cfg.domain} = {
-                useACMEHost = cfg.domain;
-                extraConfig = "reverse_proxy ${cfg.apps.homepage.upstream}";
-              };
+    (lib.mkIf cfg.enable (
+      lib.mkMerge [
+        {
+          assertions = [
+            {
+              assertion = cfg.domain == null || cfg.secrets.enable;
+              message = "my.homelab.domain needs my.homelab.secrets.enable: the certificate comes from a Cloudflare token in sops.";
+            }
+          ];
+
+          sops.defaultSopsFile = lib.mkIf cfg.secrets.enable cfg.secrets.file;
+
+          # I can read the libraries and downloads too, e.g. over SSH
+          users.users.${username}.extraGroups = [ "media" ];
+        }
+
+        (lib.mkIf (cfg.domain == null) {
+          networking.firewall.allowedTCPPorts = lib.mapAttrsToList (_: a: a.port) enabledApps;
+        })
+
+        (lib.mkIf (cfg.domain != null) {
+          # CF_DNS_API_TOKEN=<token with Zone:DNS:Edit on the domain's zone>
+          sops.secrets.cloudflare-acme = { };
+          security.acme = {
+            acceptTerms = true;
+            defaults.email = cfg.acmeEmail;
+            certs.${cfg.domain} = {
+              domain = "*.${cfg.domain}";
+              extraDomainNames = [ cfg.domain ];
+              dnsProvider = "cloudflare";
+              # Checks the challenge record against Cloudflare, not the local resolver
+              dnsResolver = "1.1.1.1:53";
+              environmentFile = config.sops.secrets.cloudflare-acme.path;
+              group = config.services.caddy.group;
             };
-        };
+          };
+          # A renewal that keeps failing ends with every app's certificate expired
+          systemd.services."acme-order-renew-${cfg.domain}".onFailure = [ "notify-failure@%n.service" ];
 
-        networking.firewall.allowedTCPPorts = [
-          80
-          443
-        ];
-      })
-    ]
-  );
+          services.caddy = {
+            enable = true;
+            virtualHosts =
+              lib.mapAttrs' (
+                name: a:
+                lib.nameValuePair "${name}.${cfg.domain}" {
+                  useACMEHost = cfg.domain;
+                  extraConfig = signIn a + "reverse_proxy ${a.upstream}";
+                }
+              ) enabledApps
+              // {
+                ${cfg.domain} = {
+                  useACMEHost = cfg.domain;
+                  extraConfig = signIn cfg.apps.homepage + "reverse_proxy ${cfg.apps.homepage.upstream}";
+                };
+              };
+          };
+
+          networking.firewall.allowedTCPPorts = [
+            80
+            443
+          ];
+        })
+      ]
+    ))
+  ];
 }

@@ -4,11 +4,22 @@
 #   Paperless-ngx   scanned letters and PDFs, OCR'd and searchable
 #   Immich          photos and videos from the phones, in /data/photos
 #   Audiobookshelf  audiobooks and podcasts, with phone apps
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  homelab,
+  ...
+}:
 let
   cfg = config.my.homelab;
   apps = cfg.apps;
-  on = name: cfg.enable && apps.${name}.enable;
+  inherit (homelab) on shareMedia;
+
+  # Signing in through Pocket ID needs it running at its https address
+  oidcNeeds = name: {
+    assertion = cfg.secrets.enable && cfg.domain != null && on "id";
+    message = "my.homelab.apps.${name}.oidc needs the secrets, the domain and Pocket ID.";
+  };
 in
 {
   config = lib.mkIf cfg.enable (
@@ -74,6 +85,27 @@ in
         };
       })
 
+      # Pocket ID's client "miniflux", with callback
+      # https://miniflux.<domain>/oauth2/oidc/callback
+      (lib.mkIf (on "miniflux" && apps.miniflux.oidc) {
+        assertions = [ (oidcNeeds "miniflux") ];
+        sops.secrets."miniflux/oidc-client-id" = { };
+        sops.secrets."miniflux/oidc-client-secret" = { };
+        sops.templates."miniflux-oidc.env".content = ''
+          OAUTH2_CLIENT_ID=${config.sops.placeholder."miniflux/oidc-client-id"}
+          OAUTH2_CLIENT_SECRET=${config.sops.placeholder."miniflux/oidc-client-secret"}
+        '';
+        services.miniflux.config = {
+          OAUTH2_PROVIDER = "oidc";
+          OAUTH2_OIDC_PROVIDER_NAME = "Pocket ID";
+          OAUTH2_OIDC_DISCOVERY_ENDPOINT = apps.id.url;
+          OAUTH2_REDIRECT_URL = "${apps.miniflux.url}/oauth2/oidc/callback";
+        };
+        systemd.services.miniflux.serviceConfig.EnvironmentFile = [
+          config.sops.templates."miniflux-oidc.env".path
+        ];
+      })
+
       (lib.mkIf (on "karakeep") {
         services.karakeep = {
           enable = true;
@@ -85,16 +117,43 @@ in
         };
       })
 
+      # Pocket ID's client "paperless", with callback
+      # https://paperless.<domain>/accounts/oidc/pocketid/login/callback/
+      (lib.mkIf (on "paperless" && apps.paperless.oidc) {
+        assertions = [ (oidcNeeds "paperless") ];
+        sops.secrets."paperless/oidc-client-id" = { };
+        sops.secrets."paperless/oidc-client-secret" = { };
+        # Read by systemd and by a shell, so the JSON sits in single quotes
+        sops.templates."paperless-oidc.env".content =
+          "PAPERLESS_SOCIALACCOUNT_PROVIDERS='"
+          + builtins.toJSON {
+            openid_connect = {
+              OAUTH_PKCE_ENABLED = true;
+              APPS = [
+                {
+                  provider_id = "pocketid";
+                  name = "Pocket ID";
+                  client_id = config.sops.placeholder."paperless/oidc-client-id";
+                  secret = config.sops.placeholder."paperless/oidc-client-secret";
+                  settings.server_url = apps.id.url;
+                }
+              ];
+            };
+          }
+          + "'\n";
+        services.paperless = {
+          environmentFile = config.sops.templates."paperless-oidc.env".path;
+          settings.PAPERLESS_APPS = "allauth.socialaccount.providers.openid_connect";
+        };
+      })
+
       (lib.mkIf (on "audiobookshelf") {
         services.audiobookshelf = {
           enable = true;
           host = "0.0.0.0";
           port = apps.audiobookshelf.port;
         };
-        systemd.services.audiobookshelf.serviceConfig = {
-          SupplementaryGroups = [ "media" ];
-          UMask = lib.mkForce "0002";
-        };
+        systemd.services.audiobookshelf.serviceConfig = shareMedia;
       })
 
       (lib.mkIf (on "immich") {

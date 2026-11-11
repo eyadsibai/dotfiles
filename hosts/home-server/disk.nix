@@ -5,6 +5,8 @@
 # boot (below), so nothing accumulates outside what the config declares. What has to
 # survive lives on its own subvolumes: /nix, /home, /var/lib (every service's state),
 # /var/log, and /persist for the odd single file (impermanence, in default.nix).
+# Three more hold what is large and can be fetched again, which keeps it out of the
+# hourly snapshots of /var/lib: container images, /var/cache, and Wolf's games.
 { lib, ... }:
 let
   mount = path: {
@@ -41,7 +43,13 @@ in
             passwordFile = "/tmp/disk.key";
             settings = {
               allowDiscards = true;
-              crypttabExtraOpts = [ "tpm2-device=auto" ];
+              crypttabExtraOpts = [
+                "tpm2-device=auto"
+                # Records which volume was unlocked in PCR 15, so a disk swapped in
+                # to fool the boot can't then unseal the key: enrol with PCR 15
+                # pinned to zero (docs/home-server.md, step 3)
+                "tpm2-measure-pcr=yes"
+              ];
             };
             content = {
               type = "btrfs";
@@ -53,6 +61,12 @@ in
                 "/var-lib" = mount "/var/lib";
                 "/var-log" = mount "/var/log";
                 "/persist" = mount "/persist";
+                "/containers" = mount "/var/lib/containers";
+                # Downloaded models and caches (Immich's, restic's): kept across
+                # boots so they aren't fetched again, but never snapshotted or backed up
+                "/cache" = mount "/var/cache";
+                # Wolf's state, at the path it expects (modules/nixos/homelab/gaming.nix)
+                "/games" = mount "/etc/wolf";
                 "/swap" = {
                   mountpoint = "/.swapvol";
                   swap.swapfile.size = "8G";

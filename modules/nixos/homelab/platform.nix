@@ -9,12 +9,13 @@
   config,
   lib,
   pkgs,
+  homelab,
   ...
 }:
 let
   cfg = config.my.homelab;
   apps = cfg.apps;
-  on = name: cfg.enable && apps.${name}.enable;
+  inherit (homelab) on;
   enabledApps = lib.filterAttrs (_: a: a.enable) apps;
   hostName = config.networking.hostName;
   ntfyLocal = "http://127.0.0.1:${toString apps.ntfy.port}";
@@ -38,6 +39,16 @@ let
     ++ lib.filter (g: !lib.elem g groupOrder) (lib.attrNames byGroup);
 in
 {
+  options.my.homelab.beszelKey = lib.mkOption {
+    type = lib.types.nullOr lib.types.str;
+    default = null;
+    example = "ssh-ed25519 AAAA...";
+    description = ''
+      The Beszel hub's public key, from its "Add system" dialog (host 127.0.0.1,
+      port 45876). Not secret: it only lets the hub prove itself to the agent.
+    '';
+  };
+
   config = lib.mkIf cfg.enable (
     lib.mkMerge [
       {
@@ -76,6 +87,13 @@ in
             group = "System";
             health = "/api/health";
           };
+          beszel = {
+            port = 8092;
+            title = "Beszel";
+            description = "CPU, memory, disk and GPU over time";
+            group = "System";
+            health = "/api/health";
+          };
           # Passkeys need HTTPS, so sign-on starts with the domain
           id = {
             enable = lib.mkDefault (cfg.domain != null);
@@ -102,15 +120,24 @@ in
                 --data-binary @- ${ntfyLocal}/homelab
           '';
         };
-        systemd.services.nixos-upgrade.onFailure = lib.mkIf config.system.autoUpgrade.enable [
-          "notify-failure@%n.service"
-        ];
+        # Both upgrade sources (GitHub and the CI's builds) run as nixos-upgrade
+        systemd.services.nixos-upgrade = lib.mkIf config.my.autoUpgrade.enable {
+          onFailure = [ "notify-failure@%n.service" ];
+          # Rolling back NixOS doesn't roll back what new versions of the apps did
+          # to their databases. A snapshot of the state first is what does: btrbk's
+          # usual snapshots, taken now, under /mnt/btr-pool/snapshots.
+          preStart = lib.mkAfter ''
+            ${lib.getExe pkgs.btrbk} -c /etc/btrbk/local.conf snapshot
+          '';
+        };
       }
 
       (lib.mkIf (on "adguard") {
         services.adguardhome = {
           enable = true;
-          # Lists and clients added in its web UI survive restarts; these are merged in
+          # Settings and clients added in its web UI survive restarts. Lists set here
+          # (the filters and rewrites below) don't: each start replaces them with
+          # these, so further block lists go in this file, not the UI.
           mutableSettings = true;
           settings = {
             http.address = "0.0.0.0:${toString apps.adguard.port}";
@@ -225,15 +252,47 @@ in
                 send-on-resolved = true;
               };
             };
-            endpoints = lib.mapAttrsToList (_: a: {
-              name = a.title;
-              group = a.group;
-              url = "http://${a.upstream}${a.health}";
-              interval = "2m";
-              # Up is anything but a server error: many apps answer 401 or a redirect
-              conditions = [ "[STATUS] < 500" ];
-              alerts = lib.optional (on "ntfy") { type = "ntfy"; };
-            }) (lib.filterAttrs (n: _: n != "gatus") enabledApps);
+            endpoints =
+              lib.mapAttrsToList (_: a: {
+                name = a.title;
+                group = a.group;
+                url = "http://${a.upstream}${a.health}";
+                interval = "2m";
+                # Up is anything but a server error: many apps answer 401 or a redirect
+                conditions = [ "[STATUS] < 500" ];
+                alerts = lib.optional (on "ntfy") { type = "ntfy"; };
+              }) (lib.filterAttrs (n: _: n != "gatus") enabledApps)
+              # The checks above go straight to each app. These go the way people
+              # do: through DNS, Caddy and the certificate, which can each break
+              # while every app is fine.
+              ++ lib.optionals (cfg.domain != null) [
+                {
+                  name = "HTTPS and certificate";
+                  group = "System";
+                  url = "https://${cfg.domain}";
+                  interval = "10m";
+                  conditions = [
+                    "[STATUS] < 500"
+                    # Renewal starts 30 days out; 10 left means it has been failing
+                    "[CERTIFICATE_EXPIRATION] > 240h"
+                  ];
+                  alerts = lib.optional (on "ntfy") { type = "ntfy"; };
+                }
+              ]
+              ++ lib.optionals (cfg.domain != null && cfg.lanAddress != null && on "adguard") [
+                {
+                  name = "DNS at home";
+                  group = "System";
+                  url = "127.0.0.1";
+                  dns = {
+                    query-name = "homepage.${cfg.domain}";
+                    query-type = "A";
+                  };
+                  interval = "5m";
+                  conditions = [ "[BODY] == ${cfg.lanAddress}" ];
+                  alerts = lib.optional (on "ntfy") { type = "ntfy"; };
+                }
+              ];
           };
         };
       })
@@ -260,12 +319,100 @@ in
             notify.urls = lib.optional (on "ntfy") "ntfy://127.0.0.1:${toString apps.ntfy.port}/homelab?scheme=http";
           };
         };
-        # Short self-tests nightly and a long one on Saturdays; Scrutiny shows the results
+        # Short self-tests nightly and a long one on Saturdays; Scrutiny shows the
+        # results. A disk that has spun down is skipped rather than woken just to be
+        # asked how it is (`-n standby`), until the self-test wakes it anyway.
         services.smartd = {
           enable = true;
-          defaults.autodetected = "-a -o on -S on -s (S/../.././02|L/../../6/03)";
+          defaults.autodetected = "-a -o on -S on -s (S/../.././02|L/../../6/03) -n standby,q";
         };
       })
+
+      # Every alert above goes through ntfy on this machine, so if the machine itself
+      # dies, hangs or loses its connection, nothing says so. It checks in with an
+      # outside service every 5 minutes instead, which notifies when it stops:
+      # healthchecks.io (free), a check with a 5 minute period, its ping URL as
+      # heartbeat-url in secrets/home-server.yaml, and its alerts sent to the phone.
+      {
+        # One btrfs holds the store, every service's state, the snapshots, images
+        # and the games. Full, everything fails at once; so ntfy hears at 90%.
+        systemd.services.disk-space = lib.mkIf (on "ntfy") {
+          description = "Tell ntfy when a filesystem is nearly full";
+          path = [
+            pkgs.coreutils
+            pkgs.gawk
+            pkgs.curl
+          ];
+          serviceConfig.Type = "oneshot";
+          script = ''
+            df --output=pcent,target -x tmpfs -x devtmpfs -x efivarfs -x vfat -x fuse.mergerfs |
+              awk 'NR > 1 && $1 + 0 >= 90 { print $2 " is " $1 " full" }' |
+              while read -r line; do
+                curl -fsS -H "Title: Disk nearly full on ${hostName}" -H "Tags: warning" \
+                  --data-binary "$line" ${ntfyLocal}/homelab
+              done
+          '';
+          startAt = "hourly";
+        };
+
+        # Reads every block back against its checksum, so a failing NVMe shows up
+        # while the backups still hold a good copy
+        services.btrfs.autoScrub = {
+          enable = true;
+          fileSystems = [ "/mnt/btr-pool" ];
+          interval = "monthly";
+        };
+        systemd.services."btrfs-scrub@".onFailure = [ "notify-failure@%n.service" ];
+
+        # The server resolves names through public DNS, not through its own AdGuard
+        # (which the router hands out): if AdGuard were down, the upgrade, the
+        # certificate, the backups and ntfy would all fail with it
+        networking.nameservers = [
+          "9.9.9.9"
+          "1.1.1.1"
+        ];
+        networking.networkmanager.dns = "none";
+      }
+
+      (lib.mkIf cfg.heartbeat {
+        sops.secrets.heartbeat-url = { };
+        systemd.services.heartbeat = {
+          description = "Tell healthchecks.io the server is up";
+          path = [ pkgs.curl ];
+          serviceConfig.Type = "oneshot";
+          script = ''
+            curl -fsS -m 10 --retry 3 "$(<${config.sops.secrets.heartbeat-url.path})" > /dev/null
+          '';
+          startAt = "*:0/5";
+        };
+      })
+
+      # Beszel keeps a history of how busy the machine has been, which Gatus (up or
+      # down) and Scrutiny (disk health) don't. The hub is the web UI; the agent on
+      # the same machine reports to it once it knows the hub's public key
+      # (my.homelab.beszelKey).
+      (lib.mkIf (on "beszel") (
+        lib.mkMerge [
+          {
+            services.beszel.hub = {
+              enable = true;
+              host = "0.0.0.0";
+              port = apps.beszel.port;
+            };
+          }
+          (lib.mkIf (cfg.beszelKey != null) {
+            services.beszel.agent = {
+              enable = true;
+              environment = {
+                LISTEN = "127.0.0.1:45876";
+                KEY = cfg.beszelKey;
+              };
+              # The disks' SMART data, as Scrutiny reads it
+              smartmon.enable = true;
+            };
+          })
+        ]
+      ))
 
       (lib.mkIf (on "id") {
         # ENCRYPTION_KEY: `openssl rand -base64 32`
@@ -295,6 +442,7 @@ in
         systemd.tmpfiles.settings.btrbk."/mnt/btr-pool/snapshots".d = {
           mode = "0700";
         };
+        systemd.services.btrbk-local.onFailure = [ "notify-failure@%n.service" ];
         services.btrbk.instances.local = {
           onCalendar = "hourly";
           settings = {

@@ -12,7 +12,12 @@
 
 `update-flake-lock.yml` opens a PR with updated inputs every Monday.
 
-## Nixbot on the workstation (off, ready to turn on)
+## Nixbot on the workstation (parked)
+
+Kept for later but switched off at the source: its flake input is commented out in
+`flake.nix` and `modules/nixos/ci/nixbot.nix` isn't imported from
+`modules/nixos/default.nix`, so no host loads it. Uncomment both (and run
+`nix flake lock`) before the steps below.
 
 `modules/nixos/ci/nixbot.nix` runs [nixbot](https://github.com/Mic92/nixbot) on the
 workstation: it builds everything in `ciJobs` (every host, home, Arch system config
@@ -48,6 +53,7 @@ How it's set up:
    Watch the first build at `http://workstation`.
 3. On each host that should use the cache: `my.ci.useCache = true;` and
    `my.ci.cachePublicKey = "workstation-1:...";`. For home-server, also
-   `my.autoUpgrade.from = "nixbot";`. It then takes the latest successful build of
+   `my.autoUpgrade.from = "nixbot";`. It follows the same branch as the GitHub
+   source (`my.autoUpgrade.branch`, `server` for home-server). It then takes the latest successful build of
    `ciJobs.hosts.home-server` from the cache (`cached-nixos-rebuild`, from Foundry)
    instead of building.

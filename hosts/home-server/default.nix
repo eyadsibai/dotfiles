@@ -28,10 +28,10 @@
   # secrets.enable once secrets/home-server.yaml exists, then domain, vpn and backup.
   my.homelab.enable = true;
 
-  # RTX 2070, for Plex's transcoding (and anything with CUDA later). No display:
-  # the open kernel modules (Turing supports them) and the persistence daemon,
-  # which keeps the driver loaded between transcodes instead of initialising the
-  # card each time.
+  # RTX 2070, for Plex's transcoding and the games Wolf streams to the TVs
+  # (modules/nixos/homelab/gaming.nix). No display: the open kernel modules (Turing
+  # supports them) and the persistence daemon, which keeps the driver loaded
+  # between uses instead of initialising the card each time.
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.graphics.enable = true;
   hardware.nvidia = {
@@ -50,6 +50,13 @@
     "usbhid"
     "usb_storage"
     "sd_mod"
+    # Network drivers for the common onboard chips, for SSH in the initrd (below);
+    # only the one present loads. Check against nixos-generate-config's list once
+    # the hardware is known.
+    "r8169"
+    "igc"
+    "igb"
+    "e1000e"
   ];
   hardware.enableRedistributableFirmware = true;
   security.tpm2.enable = true;
@@ -79,7 +86,59 @@
   };
   security.pam.services.sudo.rssh = true;
 
+  my.server = true;
   my.autoUpgrade.enable = true;
+  # Not master: what the desktops have already run (`just promote`)
+  my.autoUpgrade.branch = "server";
+  # A new kernel or NVIDIA driver only takes effect after a reboot; until then Plex
+  # can't transcode (the driver's libraries no longer match the loaded module). So
+  # the nightly upgrade reboots when one changed, within 04:00-06:00. Turn on once
+  # a reboot has been seen to unlock the disk through the TPM by itself
+  # (docs/home-server.md, step 3): otherwise it would wait at the passphrase.
+  my.autoUpgrade.allowReboot = false;
+
+  # The CPU's microcode fixes. Both are listed until the hardware is known; each
+  # loads only on its own make of CPU.
+  hardware.cpu.intel.updateMicrocode = true;
+  hardware.cpu.amd.updateMicrocode = true;
+
+  # Nobody is at the console (from srvos' server profile): a failed mount or unit
+  # at boot carries on to SSH rather than waiting at an emergency shell; a kernel
+  # or systemd that stops responding is rebooted by the hardware watchdog; and it
+  # never sleeps
+  systemd.enableEmergencyMode = false;
+  systemd.settings.Manager = {
+    RuntimeWatchdogSec = "15s";
+    RebootWatchdogSec = "30s";
+  };
+  systemd.sleep.settings.Sleep = {
+    AllowSuspend = "no";
+    AllowHibernation = "no";
+    AllowHybridSleep = "no";
+    AllowSuspendThenHibernate = "no";
+  };
+
+  # When the TPM won't unlock the disk (after a firmware update, say), the boot
+  # stops at the passphrase. SSH in the initrd lets me type it from another machine
+  # at home: `ssh -p 2222 root@<its LAN address>`, then `systemd-tty-ask-password-agent`.
+  # It has a host key of its own, made at install (docs/home-server.md), because the
+  # initrd sits unencrypted on the boot partition. Port 2222 keeps its key apart
+  # from the real host's in known_hosts.
+  boot.initrd = {
+    systemd.network = {
+      enable = true;
+      networks."10-lan" = {
+        matchConfig.Type = "ether";
+        networkConfig.DHCP = "yes";
+      };
+    };
+    network.ssh = {
+      enable = true;
+      port = 2222;
+      hostKeys = [ "/persist/etc/ssh/initrd_ssh_host_ed25519_key" ];
+      authorizedKeyFiles = [ ../../modules/nixos/authorized-keys ];
+    };
+  };
 
   home-manager.users.${username}.home.stateVersion = "26.05";
 
