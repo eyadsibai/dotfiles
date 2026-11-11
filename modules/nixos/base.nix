@@ -8,7 +8,7 @@
   boot.loader.systemd-boot = {
     enable = true;
     editor = false; # no editing kernel parameters (e.g. init=/bin/sh) at the boot menu
-    configurationLimit = 10; # boot-menu rollback targets
+    configurationLimit = lib.mkDefault 10; # boot-menu rollback targets
   };
   boot.loader.efi.canTouchEfiVariables = true;
 

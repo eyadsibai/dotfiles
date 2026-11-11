@@ -62,6 +62,10 @@
     "nvidia_uvm"
     "nvidia_drm"
   ];
+  # That makes each initrd about 205 MB (the driver's firmware comes along), and the
+  # 511 MB ESP holds only two. Stale kernels are removed before new ones are written,
+  # so keeping two generations leaves room for a kernel bump; three would not.
+  boot.loader.systemd-boot.configurationLimit = 2;
 
   hardware.nvidia-container-toolkit.enable = true;
   # No global nixpkgs.config.cudaSupport: it only rebuilt Firefox and btop. CUDA is
