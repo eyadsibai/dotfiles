@@ -72,10 +72,6 @@
       set -gx FZF_CTRL_T_OPTS '--preview "bat --style=numbers --color=always --line-range=:300 {}"'
       set -gx FZF_ALT_C_OPTS '--preview "eza --tree --level=1 --icons --color=always {}"'
 
-      if test "$TERM" = xterm-kitty; or set -q KITTY_WINDOW_ID
-        alias ssh='kitten ssh'
-      end
-
       test -r ~/.config/secrets/env; and source ~/.config/secrets/env
     '';
     functions = {

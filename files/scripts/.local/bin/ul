@@ -1,22 +1,45 @@
 #!/usr/bin/env bash
-# On a host reached via kitten ssh: ul <laptop-files...> <remote-dest>
+# ul <laptop-files...> <dest>: copies files from the machine you're typing on to
+# <dest> here, from any terminal and inside herdr/tmux/zellij.
+set -euo pipefail
+(($# >= 2)) || { echo "usage: ul <laptop-files...> <dest>" >&2; exit 2; }
 host=$(hostname -s)
+dest=$(realpath -m -- "${@: -1}")
+srcs=("${@:1:$#-1}")
 
-# herdr (and other multiplexers) swallow kitty's file-transfer escape (OSC 5113);
-# put a laptop-side scp command on the clipboard via OSC 52 instead.
-if [[ -n $HERDR_ENV || -n $TMUX || -n $ZELLIJ ]]; then
-  (($# >= 2)) || { echo "usage: ul <laptop-files...> <remote-dest>" >&2; exit 2; }
-  dest=$(realpath -m -- "${@: -1}")
-  cmd="scp -r"
-  for f in "${@:1:$#-1}"; do
-    # This shell already expanded ~ to the remote home; give the laptop its own ~
-    [[ $f == "$HOME"/* ]] && cmd+=" ~/$(printf '%q' "${f#"$HOME"/}")" || cmd+=" $(printf '%q' "$f")"
-  done
-  cmd+=" $host:$(printf '%q' "$dest")"
-  printf '\e]52;c;%s\a' "$(printf '%s' "$cmd" | base64 -w0)"
-  echo "ul: kitten transfer doesn't work inside a multiplexer. Run this on the laptop (copied to clipboard):" >&2
-  echo "  $cmd" >&2
-  exit 1
+# This shell already expanded ~ to this machine's home; give the laptop its own
+# (a path without a leading / is relative to the home directory, for scp too)
+laptop_srcs=()
+for f in "${srcs[@]}"; do
+  if [[ $f == "$HOME"/* ]]; then laptop_srcs+=("${f#"$HOME"/}"); else laptop_srcs+=("$f"); fi
+done
+
+if [[ -z ${SSH_CONNECTION:-} ]]; then
+  echo "ul: not over ssh, so the files are already here; use cp" >&2
+  exit 2
 fi
 
-exec kitten transfer --direction=upload "$@"
+client=${SSH_CONNECTION%% *}
+scp_client=$client
+[[ $client != *:* ]] || scp_client="[$client]"
+back=(-o BatchMode=yes -o ConnectTimeout=3 -o StrictHostKeyChecking=accept-new)
+
+# Straight from the laptop with the agent it forwarded, when it accepts ssh
+if [[ -n ${SSH_AUTH_SOCK:-} ]] && ssh "${back[@]}" "$client" true 2>/dev/null; then
+  mkdir -p "$(dirname "$dest")"
+  exec scp -r "${back[@]}" -- "${laptop_srcs[@]/#/$scp_client:}" "$dest"
+fi
+
+# kitty's own transfer, which multiplexers swallow (they eat its OSC 5113 escape)
+if [[ ${TERM:-} == xterm-kitty && -z ${HERDR_ENV:-}${TMUX:-}${ZELLIJ:-} ]] && command -v kitten >/dev/null; then
+  exec kitten transfer --direction=upload "$@"
+fi
+
+# Otherwise the laptop pushes: put the scp command on its clipboard (OSC 52)
+cmd="scp -r"
+for f in "${laptop_srcs[@]}"; do cmd+=" $(printf '%q' "$f")"; done
+cmd+=" $host:$(printf '%q' "$dest")"
+printf '\e]52;c;%s\a' "$(printf '%s' "$cmd" | base64 | tr -d '\n')"
+echo "ul: the laptop doesn't accept ssh from here. Run this on it (copied to clipboard):" >&2
+echo "  $cmd" >&2
+exit 1

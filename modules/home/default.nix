@@ -6,6 +6,7 @@
     ./dev.nix
     ./onepassword.nix
     ./ssh.nix
+    ./transfer.nix
     ./herdr
     ./newsboat
     ./mpv

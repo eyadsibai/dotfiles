@@ -1,19 +1,42 @@
 #!/usr/bin/env bash
-# On a host reached via kitten ssh: dl <remote-files...> -> laptop ~/Downloads/from_<host>/
-# The ~ is quoted so kitten expands it on the laptop side, not the remote one.
+# dl <files...>: copies files from this machine to ~/Downloads/from_<host>/ on the
+# machine you're typing on, from any terminal and inside herdr/tmux/zellij.
+set -euo pipefail
+(($#)) || { echo "usage: dl <files...>" >&2; exit 2; }
 host=$(hostname -s)
+dest="Downloads/from_$host"
 
-# herdr (and other multiplexers) emulate their own terminal and swallow kitty's
-# file-transfer escape (OSC 5113), so kitten transfer can't reach the laptop.
-# They do forward OSC 52, so put a laptop-side scp command on the clipboard instead.
-if [[ -n $HERDR_ENV || -n $TMUX || -n $ZELLIJ ]]; then
-  cmd="mkdir -p ~/Downloads/from_$host && scp -r"
-  for f in "$@"; do cmd+=" $host:$(printf '%q' "$(realpath -- "$f")")"; done
-  cmd+=" ~/Downloads/from_$host/"
-  printf '\e]52;c;%s\a' "$(printf '%s' "$cmd" | base64 -w0)"
-  echo "dl: kitten transfer doesn't work inside a multiplexer. Run this on the laptop (copied to clipboard):" >&2
-  echo "  $cmd" >&2
-  exit 1
+# Not over ssh: the Downloads folder is this machine's own
+if [[ -z ${SSH_CONNECTION:-} ]]; then
+  mkdir -p ~/"$dest"
+  exec cp -r -- "$@" ~/"$dest"/
 fi
 
-exec kitten transfer "$@" "~/Downloads/from_$host/"
+# The laptop as ssh sees it; scp wants an IPv6 address in brackets
+client=${SSH_CONNECTION%% *}
+scp_client=$client
+[[ $client != *:* ]] || scp_client="[$client]"
+back=(-o BatchMode=yes -o ConnectTimeout=3 -o StrictHostKeyChecking=accept-new)
+
+# Straight back to the laptop with the agent it forwarded, when it accepts ssh
+# shellcheck disable=SC2029 # $dest is meant to expand here
+if [[ -n ${SSH_AUTH_SOCK:-} ]] && ssh "${back[@]}" "$client" "mkdir -p $dest" 2>/dev/null; then
+  exec scp -r "${back[@]}" -- "$@" "$scp_client:$dest/"
+fi
+
+# kitty's own transfer, which multiplexers swallow (they eat its OSC 5113 escape).
+# The ~ is quoted so kitten expands it on the laptop, not here.
+if [[ ${TERM:-} == xterm-kitty && -z ${HERDR_ENV:-}${TMUX:-}${ZELLIJ:-} ]] && command -v kitten >/dev/null; then
+  # shellcheck disable=SC2088
+  exec kitten transfer "$@" "~/$dest/"
+fi
+
+# Otherwise the laptop pulls: put the scp command on its clipboard (OSC 52 gets
+# through every terminal and multiplexer here)
+cmd="mkdir -p ~/$dest && scp -r"
+for f in "$@"; do cmd+=" $host:$(printf '%q' "$(realpath -- "$f")")"; done
+cmd+=" ~/$dest/"
+printf '\e]52;c;%s\a' "$(printf '%s' "$cmd" | base64 | tr -d '\n')"
+echo "dl: the laptop doesn't accept ssh from here. Run this on it (copied to clipboard):" >&2
+echo "  $cmd" >&2
+exit 1
