@@ -20,10 +20,10 @@ The services it runs, and setting them up after the install: [homelab.md](homela
   `server` branch rather than master: `just promote` moves it up to master once the
   desktops have run what's there, so a flake.lock update that breaks something
   breaks a desktop first. It only takes a commit signed with my SSH key that follows
-  from the last one it took. Merging a pull request in GitHub's web UI leaves a
-  commit signed by GitHub instead, which the server refuses (and says so on ntfy)
-  until I push a signed one on top: merge locally, e.g. the weekly flake.lock pull
-  request. Promote at least every few weeks, or it misses security fixes.
+  from the last one it took. Master's commits aren't signed, so `just promote` adds
+  one that is: master's files, signed through the 1Password SSH agent (one approval).
+  Anything pushed straight to `server` without it is refused, and ntfy says so.
+  Promote at least every few weeks, or it misses security fixes.
 - **Secure Boot** once its keys exist (`my.secureBoot`, steps below).
 - **Keeps going on its own**: a failed mount at boot carries on to SSH instead of an
   emergency shell nobody could log into, a hung kernel is rebooted by the hardware

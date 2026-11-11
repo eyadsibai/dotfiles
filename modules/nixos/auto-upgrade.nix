@@ -7,13 +7,12 @@
 # From GitHub, it upgrades only to a commit I signed (modules/common/signing-key.nix).
 # Whoever got push access to the repo, or into my GitHub account, would otherwise run
 # their code as root here by the next morning. A tip it won't take fails the upgrade,
-# which says so on ntfy, and the host stays as it is. Commits made in GitHub's web UI
-# (merging a pull request there) carry GitHub's signature, not mine, so changes are
-# merged locally and pushed.
+# which says so on ntfy, and the host stays as it is.
 #
 # home-server follows the `server` branch rather than master, so a flake.lock update
-# reaches it only after the desktops have run it: `just promote` moves `server` up to
-# master once they have.
+# reaches it only after the desktops have run it. Commits on master aren't signed
+# (1Password's signing kept failing); `just promote` adds one signed commit to
+# `server` with master's files, so only that one signature is needed.
 {
   config,
   options,

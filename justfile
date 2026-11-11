@@ -45,13 +45,29 @@ fmt:
 deploy name addr=name:
     NIX_SSHOPTS="-A" nix run --inputs-from . nixpkgs#nixos-rebuild-ng -- switch --flake .#{{name}} --target-host {{addr}} --sudo --ask-sudo-password
 
-# Let home-server's nightly upgrade take master (or a given commit): it follows the
-# `server` branch, moved up here once the desktops have run what's on master
+# Let home-server's nightly upgrade take master (or a given commit), once the desktops
+# have run it. The server follows the `server` branch and only takes commits signed
+# with my key, so this adds one there, holding that commit's files and following
+# from the last promote. The commits on master don't need signing.
 promote rev="origin/master":
+    #!/usr/bin/env bash
+    set -euo pipefail
     git fetch --quiet origin
-    git verify-commit {{rev}}
-    git log --oneline origin/server..{{rev}} 2>/dev/null || true
-    git push origin {{rev}}:refs/heads/server
+    rev=$(git rev-parse --verify "{{rev}}^{commit}")
+    short=$(git rev-parse --short "$rev")
+    parents=()
+    if prev=$(git rev-parse --verify --quiet origin/server); then
+        if git diff --quiet "$prev" "$rev"; then
+            echo "server already has $short's files"; exit 0
+        fi
+        parents=(-p "$prev")
+        git log --oneline --no-merges "$prev..$rev"
+    fi
+    # Signed through the SSH agent (1Password) with the key in modules/common
+    key=$(nix eval --raw -f modules/common/signing-key.nix)
+    commit=$(git -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen -c user.signingkey="key::$key" \
+        commit-tree -S "$rev^{tree}" "${parents[@]}" -p "$rev" -m "server: master at $short")
+    git push origin "$commit:refs/heads/server"
 
 # Delete old generations and garbage-collect the store
 clean:
