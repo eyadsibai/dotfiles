@@ -21,24 +21,6 @@ let
       "${home}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
     else
       "${home}/.1password/agent.sock";
-  # At the machine itself, or over SSH without a forwarded agent (then the local
-  # app is the only key source left; its prompt shows on this machine's screen)
-  opSshSign =
-    if isDarwin then
-      "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
-    else if isArch then
-      "/opt/1Password/op-ssh-sign" # pacman's 1password
-    else
-      "${pkgs._1password-gui}/bin/op-ssh-sign";
-  # op-ssh-sign asks this machine's 1Password app, whose prompt shows on this
-  # machine's screen. Over SSH with a forwarded agent, sign through that agent
-  # instead, so the 1Password you're sitting at approves it
-  signer = pkgs.writeShellScript "git-ssh-sign" ''
-    if [ -n "$SSH_CONNECTION" ] && [ -n "$SSH_AUTH_SOCK" ]; then
-      exec ${pkgs.openssh}/bin/ssh-keygen "$@"
-    fi
-    exec "${opSshSign}" "$@"
-  '';
 
   # Kept at a fixed path: an option name (the Match line) can't refer to the store
   useLocalAgent = ".ssh/use-local-1password-agent";
@@ -68,17 +50,10 @@ in
   };
   home.shellAliases.opr = "op run --";
 
-  # Sign commits with the same key, held in 1Password (the "id_rsa" item, an ed25519 key)
-  programs.git = {
-    signing = {
-      format = "ssh";
-      key = signingKey;
-      signByDefault = true;
-      signer = "${signer}";
-    };
-    # Lets `git log --show-signature` verify our own commits
-    settings.gpg.ssh.allowedSignersFile = "${config.xdg.configHome}/git/allowed_signers";
-  };
+  # Commits aren't signed: signing through 1Password kept failing when its approval
+  # prompt couldn't reach the app. Older commits were signed with this key (the "id_rsa"
+  # item, an ed25519 key), and this lets `git log --show-signature` still verify them.
+  programs.git.settings.gpg.ssh.allowedSignersFile = "${config.xdg.configHome}/git/allowed_signers";
   xdg.configFile."git/allowed_signers".text = "${useremail} ${signingKey}\n";
 
   # Start the app hidden at login so the agent is always there (a login item on macOS).
