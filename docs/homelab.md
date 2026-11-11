@@ -240,10 +240,10 @@ writes its own export (documents and their metadata) to `/var/lib/paperless/expo
 nightly, which is what its docs say to restore from. On the 1st of each month a part
 of the off-site backup is restored and checked, and ntfy hears if that fails.
 
-Before each nightly upgrade btrbk takes a snapshot of the state, because rolling NixOS
-back doesn't undo what a new version of an app did to its database. To go back:
+Before each deploy btrbk takes a snapshot of the state, because rolling NixOS back
+doesn't undo what a new version of an app did to its database. To go back:
 `ls /mnt/btr-pool/snapshots`, stop the app, and copy its folder back from the
-snapshot taken before the upgrade.
+snapshot taken before the deploy.
 
 The healthchecks.io check (`heartbeat-url`) emails or notifies when the server stops
 checking in for 5 minutes: the one alert that doesn't need the server to be up.
@@ -294,8 +294,7 @@ checking in for 5 minutes: the one alert that doesn't need the server to be up.
   temperature history, and can alert on thresholds.
 - **ntfy**: in the phone app, subscribe to `homelab` on the server's address. Failed
   backups (both copies and the database dump), snapshots, SnapRAID syncs and scrubs,
-  certificate renewals, nightly upgrades (including a master it refused as unsigned),
-  Wolf giving up, apps down for 6 minutes, and failing disks all land there.
+  certificate renewals, Wolf giving up, apps down for 6 minutes, and failing disks all land there.
 
 ## Games
 

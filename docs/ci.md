@@ -53,7 +53,6 @@ How it's set up:
    Watch the first build at `http://workstation`.
 3. On each host that should use the cache: `my.ci.useCache = true;` and
    `my.ci.cachePublicKey = "workstation-1:...";`. For home-server, also
-   `my.autoUpgrade.from = "nixbot";`. It follows the same branch as the GitHub
-   source (`my.autoUpgrade.branch`, `server` for home-server). It then takes the latest successful build of
+   `my.autoUpgrade.from = "nixbot";`. It then takes the latest successful build of
    `ciJobs.hosts.home-server` from the cache (`cached-nixos-rebuild`, from Foundry)
    instead of building.

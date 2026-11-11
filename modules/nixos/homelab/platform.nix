@@ -123,13 +123,16 @@ in
         # Both upgrade sources (GitHub and the CI's builds) run as nixos-upgrade
         systemd.services.nixos-upgrade = lib.mkIf config.my.autoUpgrade.enable {
           onFailure = [ "notify-failure@%n.service" ];
-          # Rolling back NixOS doesn't roll back what new versions of the apps did
-          # to their databases. A snapshot of the state first is what does: btrbk's
-          # usual snapshots, taken now, under /mnt/btr-pool/snapshots.
-          preStart = lib.mkAfter ''
-            ${lib.getExe pkgs.btrbk} -c /etc/btrbk/local.conf snapshot
-          '';
         };
+        # Rolling back NixOS doesn't roll back what new versions of the apps did to
+        # their databases. A snapshot of the state before each switch (a deploy or
+        # an upgrade) is what does: btrbk's usual snapshots, taken now, under
+        # /mnt/btr-pool/snapshots. If it can't be taken, the switch doesn't happen.
+        system.preSwitchChecks.snapshot = ''
+          case "$2" in
+            switch | test) ${lib.getExe pkgs.btrbk} -c /etc/btrbk/local.conf snapshot ;;
+          esac
+        '';
       }
 
       (lib.mkIf (on "adguard") {

@@ -16,18 +16,14 @@ The services it runs, and setting them up after the install: [homelab.md](homela
 - **No passwords.** Users come only from the config (`users.mutableUsers = false`), you
   log in with SSH keys, and sudo is approved through the forwarded SSH agent (`ssh -A`,
   so 1Password on the machine you're sitting at).
-- **Upgrades itself** every night at 04:00 from GitHub (`my.autoUpgrade`), from the
-  `server` branch rather than master: `just promote` moves it up to master once the
-  desktops have run what's there, so a flake.lock update that breaks something
-  breaks a desktop first. It only takes a commit signed with my SSH key that follows
-  from the last one it took. Master's commits aren't signed, so `just promote` adds
-  one that is: master's files, signed through the 1Password SSH agent (one approval).
-  Anything pushed straight to `server` without it is refused, and ntfy says so.
-  Promote at least every few weeks, or it misses security fixes.
+- **Updated by hand**: `just deploy home-server` builds the system here and switches
+  it over Tailscale, after a snapshot of the apps' state (homelab.md, Backups). It
+  says when a new kernel or NVIDIA driver needs a reboot. Nothing on the server
+  pulls code by itself, so only my SSH key can change it.
 - **Secure Boot** once its keys exist (`my.secureBoot`, steps below).
 - **Keeps going on its own**: a failed mount at boot carries on to SSH instead of an
   emergency shell nobody could log into, a hung kernel is rebooted by the hardware
-  watchdog, and it never sleeps. Upgrades take a snapshot first (homelab.md, Backups).
+  watchdog, and it never sleeps.
 
 ## 1. Prepare
 
@@ -105,9 +101,9 @@ passphrase, and it can be typed from another machine at home:
 TPM again afterwards. The initrd only has a network driver for common onboard chips
 (`hosts/home-server/default.nix`); check that list against `nixos-generate-config`'s.
 
-Once a reboot has unlocked by itself, set `my.autoUpgrade.allowReboot = true;` in
-`hosts/home-server/default.nix`: nightly upgrades that bring a new kernel or NVIDIA
-driver then reboot between 04:00 and 06:00 (Plex can't use the GPU until they do).
+Check that a reboot unlocks by itself before relying on it: from then on a deploy
+that brings a new kernel or NVIDIA driver can be finished with `sudo reboot` from
+anywhere (Plex can't use the GPU until then).
 
 ## 4. Secure Boot (optional, later)
 
@@ -120,7 +116,7 @@ matches the new state.
 
 ## Day to day
 
-`just deploy home-server` builds here and switches it over Tailscale. The nightly
-upgrade takes whatever signed commit is on `server`, so after `just promote` a change
-lands by the next morning without deploying. The first `just promote` creates the
-branch; until then the upgrade fails each night, saying so on ntfy.
+`just deploy home-server` builds here and switches it over Tailscale; deploy it after
+updating the desktops (`just update`, then `just switch`), so a flake.lock update that
+breaks something breaks a desktop first. Deploy at least every few weeks, or it
+misses security fixes.

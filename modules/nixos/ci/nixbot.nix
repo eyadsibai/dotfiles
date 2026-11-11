@@ -112,8 +112,8 @@ in
         inherit (config.my.autoUpgrade) dates;
         instance = "http://workstation";
         project = "pull_based/eyadsibai/dotfiles";
-        inherit (config.my.autoUpgrade) branch;
-        source = "git+https://github.com/eyadsibai/dotfiles?ref=${config.my.autoUpgrade.branch}";
+        branch = "master";
+        source = "git+https://github.com/eyadsibai/dotfiles?ref=master";
         job = "ciJobs.hosts.${config.networking.hostName}";
       };
       my.ci.useCache = true;

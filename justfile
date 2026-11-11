@@ -41,33 +41,12 @@ check:
 fmt:
     nix fmt
 
-# Build a NixOS host here and switch it over SSH (addr defaults to its Tailscale name)
+# Build a NixOS host here and switch it over SSH (addr defaults to its Tailscale name).
+# A new kernel, initrd or kernel modules (the NVIDIA driver among them) only take
+# effect after a reboot, so it says when one is due.
 deploy name addr=name:
     NIX_SSHOPTS="-A" nix run --inputs-from . nixpkgs#nixos-rebuild-ng -- switch --flake .#{{name}} --target-host {{addr}} --sudo --ask-sudo-password
-
-# Let home-server's nightly upgrade take master (or a given commit), once the desktops
-# have run it. The server follows the `server` branch and only takes commits signed
-# with my key, so this adds one there, holding that commit's files and following
-# from the last promote. The commits on master don't need signing.
-promote rev="origin/master":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    git fetch --quiet origin
-    rev=$(git rev-parse --verify "{{rev}}^{commit}")
-    short=$(git rev-parse --short "$rev")
-    parents=()
-    if prev=$(git rev-parse --verify --quiet origin/server); then
-        if git diff --quiet "$prev" "$rev"; then
-            echo "server already has $short's files"; exit 0
-        fi
-        parents=(-p "$prev")
-        git log --oneline --no-merges "$prev..$rev"
-    fi
-    # Signed through the SSH agent (1Password) with the key in modules/common
-    key=$(nix eval --raw -f modules/common/signing-key.nix)
-    commit=$(git -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen -c user.signingkey="key::$key" \
-        commit-tree -S "$rev^{tree}" "${parents[@]}" -p "$rev" -m "server: master at $short")
-    git push origin "$commit:refs/heads/server"
+    @ssh {{addr}} 'for f in kernel initrd kernel-modules; do [ "$(readlink /run/booted-system/$f)" = "$(readlink /run/current-system/$f)" ] || { echo "Reboot {{name}} to finish: its $f changed (ssh {{addr}} sudo reboot)"; break; }; done'
 
 # Delete old generations and garbage-collect the store
 clean:

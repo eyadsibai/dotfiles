@@ -11,7 +11,7 @@
     a machine nobody sits at (home-server): no printing, sound or 1Password app,
     and in Home Manager only the shell, CLI tools and SSH. Everything it installs
     has to come from the binary cache or build reliably, because a package that
-    fails to build stops its nightly upgrade
+    fails to build stops every deploy
   '';
 
   config.home-manager.users.${username}.imports =

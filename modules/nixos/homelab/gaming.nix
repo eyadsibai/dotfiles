@@ -56,7 +56,7 @@ let
   # of the kernel module that is loaded. The quickstart builds that volume by hand
   # and says to rebuild it after every driver update; here it is rebuilt whenever
   # the loaded driver's version differs from the one the volume was built for, so
-  # a nightly upgrade that brings a new driver needs nothing done after the reboot.
+  # an upgrade that brings a new driver needs nothing done after the reboot.
   driverVolume = pkgs.writeShellApplication {
     name = "wolf-nvidia-driver";
     runtimeInputs = [

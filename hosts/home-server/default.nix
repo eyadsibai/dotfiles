@@ -87,15 +87,9 @@
   security.pam.services.sudo.rssh = true;
 
   my.server = true;
-  my.autoUpgrade.enable = true;
-  # Not master: what the desktops have already run (`just promote`)
-  my.autoUpgrade.branch = "server";
-  # A new kernel or NVIDIA driver only takes effect after a reboot; until then Plex
-  # can't transcode (the driver's libraries no longer match the loaded module). So
-  # the nightly upgrade reboots when one changed, within 04:00-06:00. Turn on once
-  # a reboot has been seen to unlock the disk through the TPM by itself
-  # (docs/home-server.md, step 3): otherwise it would wait at the passphrase.
-  my.autoUpgrade.allowReboot = false;
+  # Updated with `just deploy home-server`, not on a timer from GitHub
+  # (my.autoUpgrade): a change reaches it when I deploy it, and nothing on it pulls
+  # code that only my GitHub account vouches for.
 
   # The CPU's microcode fixes. Both are listed until the hardware is known; each
   # loads only on its own make of CPU.

@@ -226,8 +226,7 @@ replace aside as `*.hm-backup`: go through them (`find ~ -name '*.hm-backup'`) a
 anything worth keeping into the repo. Then open a new terminal for the Nix `PATH`,
 `direnv allow` in the repo, and `systemctl --user enable --now tv-check.timer`.
 Finally sign in to the 1Password app at the machine and turn on Settings → Developer →
-"Use the SSH agent", or pushing to GitHub and `just promote`'s signature can't use
-the key.
+"Use the SSH agent", or pushing to GitHub can't use the key.
 
 ## More
 
