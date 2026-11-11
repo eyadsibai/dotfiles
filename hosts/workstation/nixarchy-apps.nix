@@ -2,5 +2,9 @@
 # are ~/.config/nixarchy/{apps,services,advanced,flatsnap}.nix and
 # this is regenerated from them on every apply.
 {
-  imports = [ ./nixarchy/apps.nix ./nixarchy/services.nix ./nixarchy/advanced.nix ];
+  imports = [
+    ./nixarchy/apps.nix
+    ./nixarchy/services.nix
+    ./nixarchy/advanced.nix
+  ];
 }
