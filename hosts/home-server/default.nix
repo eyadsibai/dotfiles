@@ -6,7 +6,7 @@
 #   - encrypted disk unlocked by the TPM; Secure Boot once its keys exist (disk.nix,
 #     modules/nixos/secure-boot.nix)
 #   - a root that starts empty on every boot, with state on its own subvolumes
-#   - upgrades itself nightly from GitHub (or from the self-hosted CI's builds)
+#   - updated from another machine with `just deploy`; nothing on it pulls code
 #   - sudo approved through the SSH agent (1Password), so it holds no password
 {
   inputs,

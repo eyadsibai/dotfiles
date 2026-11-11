@@ -3,7 +3,7 @@
 # this adds only the config every machine shares: shells, CLI tools, git, ssh, and the
 # files/ packages. The shared modules check `isArch` to leave the programs out (or
 # point Home Manager at pacman's copy, see pacman-bin.nix). Nix still installs its own
-# tooling (nh, nil, nixd, devenv) and Claude Code.
+# tooling (nh, nil, nixd, devenv), and spicetify and cava below.
 {
   config,
   lib,

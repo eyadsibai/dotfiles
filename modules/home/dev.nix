@@ -1,5 +1,6 @@
 # On Arch, pacman owns the programs (arch/<host>.packages) and this sets only their
-# config; Nix still installs its own tooling there (nil, nixd, devenv) and Claude Code.
+# config; Nix still installs its own tooling there (nil, nixd, devenv). Claude Code
+# comes from its own installer on every machine (programs.claude-code below).
 {
   config,
   inputs,

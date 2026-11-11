@@ -1,6 +1,6 @@
 {
   "bar": {
-    "background": "opaque",
+    "background": "glassy",
     "layout": {
       "center": [
         {
@@ -47,7 +47,7 @@
         },
         {
           "id": "eyad.meetplanner",
-          "meetingMinutes": 60
+          "meetingMinutes": 90
         }
       ],
       "centerEnd": [
@@ -127,7 +127,8 @@
     "position": "top"
   },
   "disabledPlugins": [
-    "omarchy.dock"
+    "omarchy.dock",
+    "omarchy.background"
   ],
   "dock": {
     "autohide": true,
