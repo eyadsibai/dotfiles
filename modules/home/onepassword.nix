@@ -28,9 +28,12 @@ in
 {
   programs.ssh = {
     settings."Match host * exec ~/${useLocalAgent}".IdentityAgent = ''"${agentSocket}"'';
-    # `ssh -A` forwards $SSH_AUTH_SOCK, which on a Mac is launchd's empty agent rather
-    # than 1Password's; name the socket so logging in to the workstation forwards it
-    settings."Host workstation" = lib.mkIf isDarwin { ForwardAgent = ''"${agentSocket}"''; };
+    # `ssh -A` forwards $SSH_AUTH_SOCK, which is launchd's empty agent on a Mac and
+    # gnome-keyring's on Omarchy, never 1Password's; name the socket so logging in to
+    # the workstation forwards it. Its own key below stays unforwarded, for unattended jobs.
+    settings."Host workstation workstation-ts" = {
+      ForwardAgent = ''"${agentSocket}"'';
+    };
   };
   home.file.${useLocalAgent} = {
     executable = true;
