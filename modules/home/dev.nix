@@ -31,11 +31,10 @@ in
     ]
     # JetBrains' JDK is built for Linux only
     ++ lib.optional (stdenv.hostPlatform.isLinux && !isArch) jetbrains.jdk
-    # The Macs get codex from Homebrew and uv from modules/darwin/apps.nix
+    # The Macs get uv from modules/darwin/apps.nix and codex from Homebrew. On NixOS codex
+    # comes from its own installer (~/.local/bin/codex), like Claude Code, so it updates
+    # itself the day a release is out instead of being compiled here on every nixpkgs bump.
     ++ lib.optionals (stdenv.hostPlatform.isLinux && !isArch) [
-      # Replaces Omarchy's "codex is not installed" stub. Built with an aws-lc fix
-      # from overlays/ until nixpkgs has one.
-      codex
       uv
       beads # `bd`: git-backed issue tracker for agents
       dolt # the database beads stores issues in
