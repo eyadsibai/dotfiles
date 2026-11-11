@@ -24,6 +24,10 @@
   systemd.targets.hibernate.enable = false;
   systemd.targets.hybrid-sleep.enable = false;
 
+  # Claude Code and codex come from their own installers in ~/.local/bin (modules/home/dev.nix);
+  # drover starts seats over non-interactive ssh, whose PATH lacks it otherwise
+  environment.localBinInPath = true;
+
   # 32 threads: up to 16 builds at once, 8 cores each. Most builds are tiny
   # (config files, wrappers), so many in parallel keeps the CPU busy; the rare
   # big compiles running together can oversubscribe, which 125 GB of RAM absorbs
