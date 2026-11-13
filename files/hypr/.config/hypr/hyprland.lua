@@ -67,3 +67,7 @@ o.window({ class = "^org\\.quickshell$", title = "^TV remote$" }, {
 o.window({ class = "^(Zoom|zoom)$", title = "negative:^(Zoom Workplace|Zoom Meeting|Meeting|Zoom)$" }, { float = true })
 -- No transparency on video (Omarchy's default rule only matches "zoom").
 o.window("^Zoom$", { tag = "-default-opacity", opacity = "1 1" })
+
+-- Rules only one machine wants live in files/host-<name>/.config/hypr/windows.lua.
+-- Loaded last so they win over everything above; skipped where the file is absent.
+require("default.hypr.require_optional").module("hypr.windows")

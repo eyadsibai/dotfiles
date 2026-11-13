@@ -141,6 +141,9 @@
   "plugins": [
     {
       "id": "omakade.guide"
+    },
+    {
+      "id": "io.voxtype.settings"
     }
   ],
   "version": 1

@@ -71,6 +71,167 @@ let
     '';
   };
 
+  # `transcribe [-b] [-l lang] <link or file>…`: the words of a video or a podcast
+  # episode as a text file. A link first gets the captions its site already has, which
+  # takes seconds: the uploader's own in the language spoken, else YouTube's recognition
+  # of it (its other automatic tracks are machine translations). Without captions, and
+  # for a file, Whisper listens instead, through voxtype with the flags omarchy-meetings
+  # gives it, so voxtype's own dictation settings (a remote Arabic model) stay out of
+  # it. The text lands beside a file, or in ~/Downloads under the name yt-dlp gives the
+  # download, so `,t` and `,s` on one video sit together. -b detaches and answers with
+  # notifications, for newsboat and the menu; -l says which language is spoken.
+  transcribe = pkgs.writeShellApplication {
+    name = "transcribe";
+    runtimeInputs =
+      with pkgs;
+      [
+        coreutils
+        gnugrep
+        jq
+        sqlite
+      ]
+      # flock
+      ++ lib.optional (!isDarwin) util-linux;
+    text = ''
+      ${notifyFn}
+      usage() { echo "usage: transcribe [-b] [-l lang] <link or file>…" >&2; exit 1; }
+      bg="" lang="" model=large-v3-turbo
+      while getopts bl: opt; do
+        case "$opt" in
+          b) bg=1 ;;
+          l) lang=$OPTARG ;;
+          *) usage ;;
+        esac
+      done
+      shift $((OPTIND - 1))
+      [ $# -gt 0 ] || usage
+      # Detach, so newsboat or the menu never waits on it
+      if [ -n "$bg" ] && [ -z "''${TRANSCRIBE_DETACHED:-}" ]; then
+        TRANSCRIBE_DETACHED=1 nohup "$0" -b ''${lang:+-l "$lang"} "$@" >/dev/null 2>&1 &
+        exit 0
+      fi
+      say() { if [ -n "$bg" ]; then notify "$@"; else echo "''${1%…}''${2:+: $2}" >&2; fi; }
+      tmp=$(mktemp -d)
+      trap 'rm -rf "$tmp"' EXIT
+      ytdlp() { ${exe pkgs.yt-dlp "yt-dlp"} --no-warnings --no-playlist --playlist-items 1 "$@"; }
+
+      # In newsboat a podcast episode is the address of its page; the audio is the
+      # enclosure its feed gave, which newsboat's cache remembers. Prints
+      # "<audio url><tab><title>" for a page it knows.
+      enclosure() {
+        local db="${config.xdg.dataHome}/newsboat/cache.db" q="'" url
+        [ -f "$db" ] || return 0
+        url=''${1//$q/$q$q}
+        sqlite3 -readonly -separator "$(printf '\t')" "$db" "select enclosure_url, title from rss_item
+          where url = '$url' and enclosure_type like 'audio/%' and enclosure_url like 'http%' limit 1;" 2>/dev/null || true
+      }
+
+      # Which caption track to take, as "subs <track>" or "auto <track>"; nothing when
+      # only machine translations are on offer. Reads yt-dlp's description of the video.
+      pick() {
+        jq -r --arg want "$lang" '
+          def json3: any(.value[]?; .ext == "json3");
+          ((.subtitles // {}) | with_entries(select(.key != "live_chat" and json3)) | keys) as $subs
+          | ((.automatic_captions // {}) | with_entries(select(json3)) | keys) as $auto
+          | ($auto | map(select(endswith("-orig"))) | first) as $orig
+          | ((if $want != "" then $want else .language // ($orig // "" | rtrimstr("-orig")) end)
+              | split("-")[0] // "") as $lang
+          | ($subs | map(select($lang != "" and (. == $lang or startswith($lang + "-")))) | first) as $own
+          | if $own then "subs \($own)"
+            elif $orig and ($lang == "" or ($orig | startswith($lang))) then "auto \($orig)"
+            elif $lang != "" and ($auto | index($lang)) then "auto \($lang)"
+            elif $want == "" and ($subs | length) > 0
+            then "subs \($subs | (map(select(startswith("en"))) | first) // first)"
+            else empty end
+        '
+      }
+
+      # captions <link> <subs|auto> <track>: the track as text, a paragraph a minute
+      captions() {
+        local flag=--write-subs
+        [ "$2" = auto ] && flag=--write-auto-subs
+        ytdlp -q --skip-download "$flag" --sub-langs "$3" --sub-format json3 -o "$work/captions" "$1" >&2 || return 1
+        jq -r '
+          def two: tostring | if length < 2 then "0" + . else . end;
+          def stamp: (. / 3600 | floor) as $h | (. % 3600 / 60 | floor) as $m
+            | (if $h > 0 then "\($h):\($m | two)" else "\($m)" end) + ":" + (. % 60 | two);
+          [.events[]? | select(.segs) | {t: ((.tStartMs // 0) / 1000 | floor), s: ([.segs[].utf8 // ""] | join(""))}]
+          | group_by(.t / 60 | floor)[]
+          | (map(.s) | join(" ") | gsub("\\s+"; " ") | sub("^ "; "") | sub(" $"; "")) as $text
+          | select($text != "")
+          | "[\(.[0].t | stamp)] \($text)\n"
+        ' "$work/captions.$3.json3" | fmt -w 100
+      }
+
+      # listen <audio or video file>: what Whisper hears in it. One at a time (flock),
+      # so several asked for at once queue instead of each loading the model.
+      listen() {
+        ${exe pkgs.ffmpeg "ffmpeg"} -nostdin -loglevel error -y -i "$1" -vn -ac 1 -ar 16000 -c:a pcm_s16le "$work/speech.wav" >&2 || return 1
+        flock "''${XDG_RUNTIME_DIR:-/tmp}/transcribe.lock" \
+          voxtype -q --engine whisper --model "$model" --whisper-mode local --language "''${lang:-auto}" \
+          transcribe "$work/speech.wav" 2>/dev/null |
+          grep -vE '^(Loading audio file|Audio format|Processing [0-9]+ samples|$)' | fmt -w 100
+      }
+      can_listen() {
+        command -v voxtype >/dev/null && return 0
+        say "Transcription failed" "$1 has no captions, and this machine has no voxtype to listen with"
+        return 1
+      }
+
+      one() {
+        local src=$1 link title name out how base enc file info track kind key
+        work=$(mktemp -d -p "$tmp")
+        if [ -f "$src" ]; then
+          title=$(basename "$src")
+          base=$title
+          out="$(dirname "$src")/''${base%.*}.txt"
+          [ ! -s "$out" ] || { say "Already transcribed" "$out"; echo "$out"; return 0; }
+          can_listen "$title" || return 1
+          say "Transcribing…" "$title"
+          listen "$src" >"$work/text" || { say "Transcription failed" "$title"; return 1; }
+          how="Whisper $model"
+        else
+          link=$src name=""
+          IFS=$'\t' read -r enc title <<<"$(enclosure "$src")" || true
+          if [ -n "$enc" ]; then link=$enc name=''${title//\//⧸}; fi
+          # One line with the name the download would get, one describing the video
+          if ! ytdlp --skip-download -o "%(title)s [%(id)s]" --print filename \
+            --print "%(.{title,language,subtitles,automatic_captions})j" "$link" >"$work/info" ||
+            ! { IFS= read -r file && IFS= read -r info; } <"$work/info"; then
+            say "Transcription failed" "yt-dlp can't read $src"
+            return 1
+          fi
+          if [ -z "$name" ]; then name=$file title=$(jq -r .title <<<"$info"); fi
+          out="$HOME/Downloads/$name.txt"
+          [ ! -s "$out" ] || { say "Already transcribed" "$out"; echo "$out"; return 0; }
+          mkdir -p "$HOME/Downloads"
+          say "Transcribing…" "$title"
+          track=$(pick <<<"$info")
+          read -r kind key <<<"$track" || true
+          if [ -n "$track" ] && captions "$link" "$kind" "$key" >"$work/text"; then
+            how="captions ($key)"
+            [ "$kind" = subs ] || how="automatic $how"
+          else
+            can_listen "$title" || return 1
+            say "No captions, so Whisper listens…" "$title"
+            ytdlp -q -f bestaudio/best -o "$work/audio.%(ext)s" "$link" >&2 ||
+              { say "Transcription failed" "yt-dlp can't download $src"; return 1; }
+            listen "$work"/audio.* >"$work/text" || { say "Transcription failed" "$title"; return 1; }
+            how="Whisper $model"
+          fi
+        fi
+        { printf '%s\n%s\n%s\n\n' "$title" "$src" "$how" && cat "$work/text"; } >"$out" ||
+          { say "Transcription failed" "can't write $out"; return 1; }
+        say "Transcript ready" "$(basename "$out")"
+        echo "$out"
+      }
+
+      rc=0
+      for arg in "$@"; do one "$arg" || rc=1; done
+      exit "$rc"
+    '';
+  };
+
   # Videos to mpv, images and PDFs fetched and opened in the default viewer (imv and
   # Evince on Omarchy), audio downloaded, everything else to the browser. With no
   # argument it takes the clipboard (Super+Alt+V on the Omarchy hosts).
@@ -230,10 +391,11 @@ let
     highlight article ":.*\\(link\\)$" cyan default
     highlight article ":.*\\(image\\)$" blue default
 
-    # , open · t download video · a download audio · v play in mpv · c copy link
+    # , open · t download video · a download audio · s transcript · v play in mpv · c copy link
     macro , open-in-browser
     macro t set browser "${lib.getExe qdl} video %u"; open-in-browser ; set browser ${lh}
     macro a set browser "${lib.getExe qdl} audio %u"; open-in-browser ; set browser ${lh}
+    macro s set browser "${lib.getExe transcribe} -b %u"; open-in-browser ; set browser ${lh}
     macro v set browser "setsid mpv"; open-in-browser ; set browser ${lh}
     macro c set browser "printf %s %u | ${copy}"; open-in-browser ; set browser ${lh}
     ${lib.optionalString isArch ''
@@ -335,6 +497,7 @@ let
         $'󰔂\tPlay on the TV'
         $'󰇚\tDownload video'
         $'󰎆\tDownload audio'
+        $'󰨖\tTranscribe'
         $'󰆏\tCopy link'
         $'󰖟\tOpen in browser'
         $'󰌹\tOpen with the default app'
@@ -351,6 +514,7 @@ let
           esac >/dev/null 2>&1 & ;;
         "Download video") ${lib.getExe qdl} video "$url" ;;
         "Download audio") ${lib.getExe qdl} audio "$url" ;;
+        "Transcribe") ${lib.getExe transcribe} -b "$url" ;;
         "Copy link") printf '%s' "$url" | wl-copy ;;
         "Open in browser") setsid omarchy-launch-browser "$url" >/dev/null 2>&1 & ;;
         "Open with the default app") ${lib.getExe linkhandler} "$url" ;;
@@ -361,7 +525,9 @@ let
 
   # Unread counts straight from the caches (newsboat's -x needs its lock, which an
   # open newsboat holds). `--bar` prints the Omarchy bar's command-module JSON: what
-  # came in over the last day, hidden when there's nothing.
+  # came in over the last day. With nothing new it prints nothing at all, which hides
+  # the widget; JSON with an empty "text" isn't hidden, because the bar (Omarchy
+  # 4.5.0) then falls back to showing the whole output as the label.
   newsboatUnread = pkgs.writeShellApplication {
     name = "newsboat-unread";
     runtimeInputs = with pkgs; [
@@ -380,6 +546,7 @@ let
         text=""
         [ "$an" -gt 0 ] && text="󰑫 $an"
         [ "$vn" -gt 0 ] && text="$text''${text:+  }󰗃 $vn"
+        [ -n "$text" ] || exit 0
         jq -cn --arg text "$text" --arg tooltip "Today: $an new articles, $vn new videos
       Unread: $at articles, $vt videos
       click: newsboat · right-click: newsboat-yt · middle-click: reload" '{$text, $tooltip}'
@@ -456,6 +623,7 @@ in
     rssadd
     ytadd
     qdl
+    transcribe
     linkhandler
     newsboatUnread
   ]

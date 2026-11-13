@@ -309,7 +309,8 @@ Small things in `modules/home/` I'd miss if they were gone:
 
 - **newsboat** with 269 feeds and 475 YouTube channels (`newsboat-yt`), vim keys, and macros
   to send a link to mpv, yt-dlp or `download_arxiv`; `rssadd` and `ytadd` subscribe to a
-  site or a channel. The feed lists are plain files linked into `~/.config`, so
+  site or a channel; `transcribe` turns a video or podcast episode into text (the site's
+  captions when it has them, Whisper otherwise). The feed lists are plain files linked into `~/.config`, so
   `rssadd <url>` edits the repo.
 - **herdr**, a tmux-style workspace manager for coding agents, with keys mirroring Omarchy's
   tmux config. Its config is linked from the repo too.
