@@ -27,16 +27,19 @@
                               TV when its keyboard is open, c toggles a mouse pointer
   lgtv pipe                   one connection driven from stdin, for the bar widget:
                               key NAME · move DX DY · click · scroll DY · text STR ·
-                              enter · del [N] · wake (screen back on); prints
-                              {"keyboard": bool}, {"app", "grid"} and {"power"} as they change. Text goes to Plex's, Prime's or Shahid's
-                              letter grid when one of them is on screen
+                              enter · del [N] · seek SECS · wake (screen back on); prints
+                              {"keyboard": bool}, {"app", "grid"}, {"power"} and
+                              {"playing"} as they change. Text goes to Plex's, Prime's
+                              or Shahid's letter grid when one of them is on screen.
+                              playing (and seek) is YouTube only: the video, its
+                              length and where it is, each second it plays
   lgtv cast <file|url>...     play videos on the TV (the cast service, DLNA)
   lgtv pair                   (re)pair; accept the prompt on the TV
   lgtv host                   print the TV's address
 
 Config and pairing key live in ~/.config/lgtv/. LGTV_HOST overrides the TV address.
 """
-import asyncio, json, os, re, socket, ssl, subprocess, sys, pathlib, time, uuid
+import asyncio, json, os, re, socket, ssl, subprocess, sys, pathlib, threading, time, uuid
 import urllib.parse, urllib.request
 
 CONF_DIR = pathlib.Path(os.environ.get("XDG_CONFIG_HOME", pathlib.Path.home() / ".config")) / "lgtv"
@@ -699,6 +702,7 @@ def youtube_id(s):
 DIAL_PORT = 36866
 YT_ORIGIN = {"Origin": "https://www.youtube.com"}
 LOUNGE = "https://www.youtube.com/api/lounge"
+YOUTUBE_APP = "youtube.leanback.v4"
 
 
 def http(url, data=None, headers=None, timeout=10):
@@ -708,22 +712,22 @@ def http(url, data=None, headers=None, timeout=10):
         return r.read().decode(errors="ignore")
 
 
+def dial_youtube(host):
+    """The YouTube app's DIAL state ("running", "stopped", ...) and its lounge screen id."""
+    xml = http(f"http://{host}:{DIAL_PORT}/apps/YouTube", headers=YT_ORIGIN, timeout=5)
+    m = re.search(r"<screenId>([^<]+)</screenId>", xml)
+    return re.search(r"<state>([^<]*)</state>", xml).group(1), m and m.group(1)
+
+
 def youtube_screen(host):
     """Start the YouTube app if needed; return its lounge screen id."""
-    url = f"http://{host}:{DIAL_PORT}/apps/YouTube"
-
-    def state():
-        xml = http(url, headers=YT_ORIGIN, timeout=5)
-        m = re.search(r"<screenId>([^<]+)</screenId>", xml)
-        return re.search(r"<state>([^<]*)</state>", xml).group(1), m and m.group(1)
-
     try:
-        st, screen = state()
+        st, screen = dial_youtube(host)
         if st != "running":
-            http(url, b"", headers=YT_ORIGIN, timeout=5)
+            http(f"http://{host}:{DIAL_PORT}/apps/YouTube", b"", headers=YT_ORIGIN, timeout=5)
             for _ in range(30):
                 time.sleep(1)
-                st, screen = state()
+                st, screen = dial_youtube(host)
                 if st == "running" and screen:
                     break
             time.sleep(5)  # let the app reach YouTube before it's told what to play
@@ -734,26 +738,158 @@ def youtube_screen(host):
     return screen
 
 
+def lounge_events(lines):
+    """The events in a lounge reply, as (number, name, data). A reply is pieces of
+    "<length>\\n<json list>", a list spread over several lines; a piece is taken as
+    whole once it parses, so it doesn't matter how the length counts non-ASCII text."""
+    piece = None
+    for line in lines:
+        line = line.rstrip("\r\n")
+        if piece is None:
+            if line.isdigit():
+                piece = []
+            continue
+        piece.append(line)
+        if not line.endswith("]"):
+            continue
+        try:
+            events = json.loads("\n".join(piece))
+        except ValueError:
+            continue
+        piece = None
+        for n, ev in events:
+            yield n, ev[0], ev[1] if len(ev) > 1 else None
+
+
+def lounge_bind(screen, capabilities, device=None):
+    """Link to a YouTube screen as a remote control. Returns the parameters every
+    request on the link carries, and the events it opens with."""
+    tok = json.loads(http(f"{LOUNGE}/pairing/get_lounge_token_batch", {"screen_ids": screen}))
+    q = {"device": "REMOTE_CONTROL", "id": device or str(uuid.uuid4()), "name": "lgtv", "app": "youtube-desktop",
+         "mdx-version": "3", "loungeIdToken": tok["screens"][0]["loungeToken"], "VER": "8", "v": "2",
+         "theme": "cl", "capabilities": capabilities, "ui": "", "TYPE": "", "CVER": "1", "zx": "x", "t": "1"}
+    raw = http(f"{LOUNGE}/bc/bind?" + urllib.parse.urlencode({**q, "RID": "1"}), {"count": "0"})
+    events = list(lounge_events(raw.splitlines()))
+    ids = {name: data for _, name, data in events}
+    q.update(SID=ids["c"], gsessionid=ids["S"])
+    return q, events
+
+
+def lounge_send(q, n, aid, command, **args):
+    """Send a link's nth command (from 0); aid is the last event received on it."""
+    http(f"{LOUNGE}/bc/bind?" + urllib.parse.urlencode({**q, "RID": str(n + 2), "AID": str(aid)}),
+         {"count": "1", "ofs": str(n), "req0__sc": command, **{f"req0_{k}": v for k, v in args.items()}})
+
+
 def cmd_youtube(args):
     if len(args) != 1:
         die("usage: lgtv youtube <url|id>")
     vid = youtube_id(args[0])
     screen = youtube_screen(tv_host())
     try:
-        tok = json.loads(http(f"{LOUNGE}/pairing/get_lounge_token_batch", {"screen_ids": screen}))
-        q = {"device": "REMOTE_CONTROL", "id": str(uuid.uuid4()), "name": "lgtv", "app": "youtube-desktop",
-             "mdx-version": "3", "loungeIdToken": tok["screens"][0]["loungeToken"], "VER": "8", "v": "2",
-             "theme": "cl", "capabilities": "que,dsdtr,atp", "ui": "", "TYPE": "", "CVER": "1", "zx": "x", "t": "1"}
-        bind = f"{LOUNGE}/bc/bind?"
-        raw = http(bind + urllib.parse.urlencode({**q, "RID": "1"}), {"count": "0"})
-        sid = re.search(r'"c","([^"]+)"', raw).group(1)
-        gsession = re.search(r'"S","([^"]+)"', raw).group(1)
-        http(bind + urllib.parse.urlencode({**q, "RID": "2", "SID": sid, "gsessionid": gsession, "AID": "5"}),
-             {"count": "1", "ofs": "0", "req0__sc": "setPlaylist", "req0_videoId": vid,
-              "req0_currentTime": "0", "req0_currentIndex": "0", "req0_videoIds": vid,
-              "req0_listId": "", "req0_audioOnly": "false"})
+        q, _ = lounge_bind(screen, "que,dsdtr,atp")
+        lounge_send(q, 0, 5, "setPlaylist", videoId=vid, currentTime="0", currentIndex="0",
+                    videoIds=vid, listId="", audioOnly="false")
     except (OSError, KeyError, IndexError, ValueError, AttributeError) as e:
         die(f"YouTube's lounge service refused the video ({e})")
+
+
+# ---------- what the YouTube app is playing ----------
+# The TV doesn't say how far into a video an app is. YouTube's lounge does, to
+# anything linked as a remote: the video, its length, and the position at each
+# play, pause and seek. It takes seeks back, too.
+
+YT_STATES = {"1": "playing", "2": "paused", "3": "buffering", "1081": "ad"}
+
+
+def youtube_title(vid):
+    """A video's title and channel, from YouTube's oEmbed; empty when it won't say."""
+    try:
+        d = json.loads(http("https://www.youtube.com/oembed?" + urllib.parse.urlencode(
+            {"format": "json", "url": f"https://www.youtube.com/watch?v={vid}"}), timeout=8))
+        return str(d.get("title") or "").strip(), str(d.get("author_name") or "").strip()
+    except (OSError, ValueError, AttributeError):
+        return "", ""
+
+
+class YouTubeLink(threading.Thread):
+    """A standing link to the TV's YouTube app that only watches and seeks. A thread,
+    since the lounge's event stream is one long blocking read; each event goes to
+    on_event(link, name, data).
+
+    It claims no capabilities. A remote that says it handles autoplay ("atp", as the
+    one playing a video does) takes autoplay over from the TV for as long as it's
+    linked; to this one the TV reports autoplay as none of its business.
+    """
+
+    def __init__(self, host, on_event):
+        super().__init__(daemon=True)
+        self.host, self.on_event = host, on_event
+        # One id per machine, so linking again replaces the last link instead of
+        # leaving the TV with another remote.
+        self.device = str(uuid.uuid5(uuid.NAMESPACE_DNS, socket.gethostname() + ".lgtv"))
+        self.gone = False  # set to stop following
+        self.q = None      # the link's request parameters, while there is one
+        self.aid = 0       # the last event received
+        self.sent = 0      # commands sent on this link
+        self.lock = threading.Lock()
+
+    def run(self):
+        wait = 5
+        while not self.gone:
+            began = time.monotonic()
+            try:
+                self.follow()
+            except (OSError, ValueError, KeyError, IndexError, AttributeError, TypeError):
+                pass
+            self.q = None
+            # The app may still be starting, or YouTube dropped the link. Each new link
+            # shows a notice on the TV, so one that keeps failing is retried ever less often.
+            if time.monotonic() - began > 60:
+                wait = 5
+            time.sleep(wait)
+            wait = min(wait * 2, 300)
+
+    def follow(self):
+        st, screen = dial_youtube(self.host)
+        if st != "running" or not screen:
+            return
+        q, events = lounge_bind(screen, "", self.device)
+        with self.lock:
+            self.q, self.sent = q, 0
+
+        def take(events):
+            for n, name, data in events:
+                self.aid = n
+                if not self.gone:
+                    self.on_event(self, name, data)
+
+        take(events)
+        while not self.gone:
+            began = time.monotonic()
+            url = f"{LOUNGE}/bc/bind?" + urllib.parse.urlencode(
+                {**q, "RID": "rpc", "AID": str(self.aid), "CI": "0", "TYPE": "xmlhttp"})
+            try:
+                with urllib.request.urlopen(url, timeout=120) as r:
+                    take(lounge_events(line.decode(errors="ignore") for line in r))
+            except TimeoutError:
+                continue  # nothing for two minutes (a paused video): listen again
+            # YouTube ends a stream every so often, and the next picks up where it
+            # stopped. One that ends at once means the link itself is gone.
+            if time.monotonic() - began < 2:
+                return
+
+    def send(self, command, **args):
+        """Send the app a command; False if there's no link or YouTube refused it."""
+        with self.lock:  # one at a time: each command says which one of the link's it is
+            if not self.q:
+                return False
+            try:
+                lounge_send(self.q, self.sent, self.aid, command, **args)
+            except OSError:
+                return False
+            self.sent += 1
+            return True
 
 
 def cmd_ytsearch(args):
@@ -1000,6 +1136,95 @@ async def cmd_pipe(tv, args):
             elif mid == "fg" and "appId" in payload and payload["appId"] != state["app"]:
                 state["app"] = payload["appId"]
                 emit(app=state["app"], grid=GRID_APPS.get(state["app"], ("",))[0])
+                yt_follow(state["app"] == YOUTUBE_APP)
+
+    # What YouTube is playing, for a playbar. Its reports come at each play, pause
+    # and seek; in between, the position is counted on from the last one.
+    yt = {"link": None, "ticker": None, "id": "", "title": "", "channel": "", "state": "",
+          "position": 0.0, "duration": 0.0, "rate": 1.0, "at": 0.0,
+          "reported": False}  # the position is YouTube's word, not where a seek was sent
+    said = {"playing": None}
+    jobs = set()  # asyncio only holds tasks weakly: keep them until they're done
+
+    def spawn(coro):
+        task = asyncio.create_task(coro)
+        jobs.add(task)
+        task.add_done_callback(jobs.discard)
+
+    def yt_position():
+        moved = (time.monotonic() - yt["at"]) * yt["rate"] if yt["state"] == "playing" else 0
+        return max(0.0, min(yt["position"] + moved, yt["duration"] or float("inf")))
+
+    def say_playing():
+        now = None
+        if yt["link"] and yt["id"] and yt["state"]:
+            now = {"app": "YouTube", "id": yt["id"], "title": yt["title"], "channel": yt["channel"],
+                   "state": yt["state"], "position": int(yt_position()), "duration": int(yt["duration"])}
+        if now != said["playing"]:
+            said["playing"] = now
+            emit(playing=now)
+
+    async def yt_title(link, vid):
+        title, channel = await asyncio.to_thread(youtube_title, vid)
+        if link is yt["link"] and vid == yt["id"]:
+            yt.update(title=title, channel=channel)
+            say_playing()
+
+    def yt_event(link, name, data):
+        if link is not yt["link"] or name not in ("nowPlaying", "onStateChange") or not isinstance(data, dict):
+            return  # from a link since dropped, or not about playback
+
+        def num(key):
+            try:
+                return float(data.get(key) or 0)
+            except ValueError:
+                return 0.0
+
+        if name == "nowPlaying" and data.get("videoId", "") != yt["id"]:
+            yt.update(id=data.get("videoId", ""), title="", channel="", state="", duration=0.0)
+            if yt["id"]:
+                spawn(yt_title(link, yt["id"]))
+        state_now, position, at = YT_STATES.get(data.get("state"), ""), num("currentTime"), time.monotonic()
+        # Two reports from one stretch of playing tell the speed it's playing at
+        if (yt["reported"] and state_now == yt["state"] == "playing"
+                and at - yt["at"] > 15 and position > yt["position"]):
+            rate = round((position - yt["position"]) / (at - yt["at"]) * 20) / 20
+            if 0.25 <= rate <= 3:
+                yt["rate"] = rate
+        yt.update(state=state_now, position=position, duration=num("duration") or yt["duration"],
+                  at=at, reported=True)
+        say_playing()
+
+    async def yt_tick(link):
+        """Say where the video is each second it plays. Every half minute ask YouTube
+        where it really is: that corrects the count, and gives the playing speed."""
+        n = 0
+        while True:
+            await asyncio.sleep(1)
+            say_playing()
+            n += 1
+            if n % 30 == 0 and yt["state"] == "playing":
+                spawn(asyncio.to_thread(link.send, "getNowPlaying"))
+
+    def from_link(*event):
+        try:
+            loop.call_soon_threadsafe(yt_event, *event)
+        except RuntimeError:
+            pass  # the pipe is closing
+
+    def yt_follow(on):
+        """Keep a link to the YouTube app while it's the app on screen."""
+        if on == bool(yt["link"]):
+            return
+        if yt["link"]:
+            yt["link"].gone = True
+            yt["ticker"].cancel()
+        yt.update(link=None, ticker=None, id="", state="")
+        if on:
+            yt["link"] = YouTubeLink(tv.host, from_link)
+            yt["link"].start()
+            yt["ticker"] = asyncio.create_task(yt_tick(yt["link"]))
+        say_playing()
 
     async def grid(first):
         """Type on the app's letter grid: gather what follows within a moment, walk once."""
@@ -1075,12 +1300,20 @@ async def cmd_pipe(tv, args):
                     await send("ssap://com.webos.service.ime/deleteCharacters", {"count": int(rest or 1)})
                 elif cmd == "wake" and state["power"] == "Screen Off":
                     await send("ssap://com.webos.service.tvpower/power/turnOnScreen", {"standbyMode": "active"})
+                elif cmd == "seek" and yt["link"] and yt["duration"]:
+                    secs = max(0.0, min(float(rest), yt["duration"]))
+                    # Count on from there at once; the TV's own report follows in a second or two
+                    yt.update(position=secs, at=time.monotonic(), reported=False)
+                    say_playing()
+                    spawn(asyncio.to_thread(yt["link"].send, "seekTo", newTime=str(int(secs))))
             except ValueError:
                 pass
             if watcher.done():
                 break  # the TV went away
     finally:
         watcher.cancel()
+        if yt["link"]:
+            yt["link"].gone = True
         await sock.close()
 
 

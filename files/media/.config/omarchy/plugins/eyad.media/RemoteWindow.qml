@@ -8,8 +8,9 @@ import qs.Commons as Commons
 import qs.Ui
 
 // The living-room remote: TV power, Sonos volume, scenes, then two tabs. Remote
-// is a touchpad for the TV's pointer, remote buttons, and a text box that types
-// into the TV's keyboard. Cast is what's playing and the video library.
+// is a touchpad for the TV's pointer, remote buttons, a text box that types
+// into the TV's keyboard, and a playbar while YouTube plays. Cast is what's
+// being cast and the video library.
 //
 // A floating window (Hyprland's rule puts it bottom-right and pins it): move it
 // with Super+drag or by dragging its header; Super+W closes it.
@@ -208,10 +209,28 @@ FloatingWindow {
   }
   function key(name) { send("key " + name) }
 
-  // One play/pause button. The TV doesn't report what's playing, so this
-  // remembers the last one sent; if it guesses wrong, a second press fixes it.
+  // One play/pause button. Only YouTube says whether it's playing (`playing`
+  // below), and then this follows it. For other apps it remembers the last one
+  // sent; if it guesses wrong, a second press fixes it.
   property bool paused: false
   function playPause() { key(paused ? "PLAY" : "PAUSE"); paused = !paused }
+
+  // What the TV's YouTube app is playing, from the pipe, or null: { title,
+  // channel, state, position, duration }, the last two in seconds. The TV
+  // doesn't say this for its apps; YouTube's own service does, so the playbar
+  // is YouTube's alone.
+  property var playing: null
+  readonly property string playState: playing ? playing.state : ""
+  readonly property int playPosition: playing ? playing.position : 0
+  readonly property int playDuration: playing ? playing.duration : 0
+  property int seekPreview: -1    // where the playbar is being dragged to
+  function seekTo(secs) {
+    seekPreview = -1
+    if (!playing) return
+    // Put the bar there now; the pipe's next line says where the TV really is
+    playing = Object.assign({}, playing, { position: secs })
+    send("seek " + secs)
+  }
 
   // Type the difference between what the TV has and what the box holds now.
   function syncText(now) {
@@ -251,6 +270,12 @@ FloatingWindow {
           if (m.grid !== undefined) { win.tvGrid = m.grid || ""; win.gridError = "" }
           if (m.grid_error !== undefined) win.gridError = m.grid_error || ""
           if (m.grid_left !== undefined) win.gridLeft = m.grid_left
+          if (m.playing !== undefined) {
+            // On a change only: the line that comes each second would otherwise
+            // undo a press of play/pause until the TV has caught up with it
+            if (m.playing && m.playing.state !== win.playState) win.paused = m.playing.state === "paused"
+            win.playing = m.playing
+          }
         } catch (e) {}
       }
     }
@@ -261,6 +286,7 @@ FloatingWindow {
       win.tvKeyboard = false
       win.tvGrid = ""
       win.gridLeft = 0
+      win.playing = null
       if (win.restarting) { win.restarting = false; if (win.visible) pipe.running = true; return }
       if (code !== 0) {
         var lines = String(pipeErr.text || "").trim().split("\n")
@@ -879,6 +905,58 @@ FloatingWindow {
                 foreground: win.foreground
                 fontFamily: win.fontFamily
                 onClicked: win.key(modelData.key)
+              }
+            }
+          }
+
+          // ---- what YouTube is playing: click or drag the bar to jump there ----
+          ColumnLayout {
+            visible: win.playing !== null
+            Layout.fillWidth: true
+            spacing: Style.space(2)
+
+            Text {
+              textFormat: Text.PlainText
+              Layout.fillWidth: true
+              elide: Text.ElideRight
+              text: {
+                var p = win.playing
+                if (!p) return ""
+                var glyph = p.state === "paused" ? "󰏤" : (p.state === "buffering" ? "󰑓" : "󰐊")
+                if (p.state === "ad") return glyph + "  An ad is playing"
+                return glyph + "  " + (p.title || p.app) + (p.channel ? " · " + p.channel : "")
+              }
+              color: win.foreground
+              font.family: win.fontFamily
+              font.pixelSize: Style.font.bodySmall
+            }
+            RowLayout {
+              visible: win.playDuration > 0 && win.playState !== "ad"
+              Layout.fillWidth: true
+              spacing: Style.space(8)
+              Text {
+                textFormat: Text.PlainText
+                text: win.svc.formatTime(win.seekPreview >= 0 ? win.seekPreview : win.playPosition)
+                color: win.seekPreview >= 0 ? win.accent : win.dim
+                font.family: win.fontFamily
+                font.pixelSize: Style.font.caption
+              }
+              PanelSlider {
+                Layout.fillWidth: true
+                minimum: 0
+                maximum: Math.max(1, win.playDuration)
+                step: 10
+                integer: true
+                value: win.playPosition
+                onMoved: function(v) { win.seekPreview = v }
+                onReleased: function(v) { win.seekTo(v) }
+              }
+              Text {
+                textFormat: Text.PlainText
+                text: win.svc.formatTime(win.playDuration)
+                color: win.dim
+                font.family: win.fontFamily
+                font.pixelSize: Style.font.caption
               }
             }
           }
