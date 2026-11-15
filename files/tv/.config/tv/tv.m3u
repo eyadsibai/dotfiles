@@ -53,7 +53,7 @@ https://shd-gcp-live.edgenextcdn.net/live/bitmovin-rashed-almajed/5acf573bde2dd6
 #EXTINF:-1 tvg-logo="https://shahid.mbc.net/mediaObject/b98b0635-c8ed-4a7c-9efa-5856e278f54b?type=png" group-title="Shahid - Music",Rabeh Saqer
 https://shd-amg-fast.edgenextcdn.net/tx004/playlist.m3u8
 #EXTINF:-1 group-title="Shahid - Music",Tarab
-https://shd-amg-fast-btpls.shahid.net/tx002/playlist.m3u8
+https://shd-amg-fast.edgenextcdn.net/tx002/playlist.m3u8
 #EXTINF:-1 tvg-logo="https://i.imgur.com/lF8UxvR.png" group-title="Shahid - Radio",MBC FM
 https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-fm/3f36f7db6086acf058dc51681c87f8ad/index.m3u8
 #EXTINF:-1 tvg-logo="https://i.imgur.com/JkDD3bK.png" group-title="Shahid - Radio",Panorama FM
@@ -160,9 +160,9 @@ https://live.aljawadain.org/live/aljawadaintv/playlist.m3u8
 #EXTINF:-1 tvg-id="AlSahatTV.ye@SD" tvg-logo="https://i.imgur.com/UVndAta.png" group-title="IPTV - Religious",Al-Sahat TV (720p)
 https://assahat.b-cdn.net/Assahat/assahatobs/index.m3u8
 #EXTINF:-1 tvg-id="AlSharqiya.iq@SD" tvg-logo="https://i.imgur.com/mJIG5IV.png" group-title="IPTV - General",Al-Sharqiya (1080p)
-https://5d94523502c2d.streamlock.net/home/mystream/playlist.m3u8
+http://185.9.2.18/chid_144/index.m3u8
 #EXTINF:-1 tvg-id="AlSharqiyaNews.iq@SD" tvg-logo="https://i.imgur.com/PeAcXB9.png" group-title="IPTV - News",Al-Sharqiya News (1080p)
-https://5d94523502c2d.streamlock.net/alsharqiyalive/mystream/playlist.m3u8
+https://indexforce.com/newshighres/mystream/playlist.m3u8
 #EXTINF:-1 tvg-id="AlhaqeqaAldawlia.jo@SD" tvg-logo="https://www.lyngsat.com/logo/tv/aa/alhaqeqa-aldawlia-jo.png" group-title="IPTV - News",Alhaqeqa Aldawlia (1080p) [Not 24/7]
 https://ghaasiflu.online/alhqeqa/index.m3u8
 #EXTINF:-1 tvg-id="AlHiwarTV.uk@SD" tvg-logo="https://i.imgur.com/UjOxwdd.png" group-title="IPTV - Education",Alhiwar TV (1080p) [Not 24/7]
@@ -199,7 +199,7 @@ https://cdn.bestream.io:19360/alqanat9/alqanat9.m3u8
 https://ktvlive.online/stream/hls/ch1.m3u8
 #EXTINF:-1 tvg-id="AltaghierTV.jo@SD" tvg-logo="https://i.imgur.com/YTyCBvB.png" group-title="IPTV - News",Altaghier TV (1080p)
 https://jmc-live.ercdn.net/altaghier/altaghier.m3u8
-#EXTINF:-1 tvg-id="Althania.sy@SD" tvg-logo="https://www.althania.tv/themes/custom/althania/assets/images/stv-logo.svg" group-title="IPTV - General",Althania (1080p)
+#EXTINF:-1 tvg-id="Althania.sy@SD" tvg-logo="https://www.althania.tv/themes/custom/althania/assets/images/stv-logo.svg" group-title="IPTV - General",Syria TV 2 (Althania) (1080p)
 https://live.kwikmotion.com/syriatv02live/syriatv02.smil/playlist.m3u8
 #EXTINF:-1 tvg-id="ALWifakNewsTV.lb@SD" tvg-logo="https://i.imgur.com/1vqhmNz.png" group-title="IPTV - News",ALWifak News TV (720p)
 http://alwifaklive.info:1935/live/myStream/playlist.m3u8
@@ -251,7 +251,7 @@ https://flu.systemnet.tv/CBCDrama/index.m3u8
 #EXTINF:-1 tvg-id="CBCSofra.eg@SD" tvg-logo="https://i.imgur.com/YAdk2WR.png" group-title="IPTV - Lifestyle",CBC Sofra (576p)
 https://flu.systemnet.tv/CBCSofra/index.m3u8
 #EXTINF:-1 tvg-id="CGTNArabic.cn@SD" tvg-logo="https://i.imgur.com/AkFFrS7.png" group-title="IPTV - News",CGTN Arabic (1080p) [Not 24/7]
-https://arabic-livews.cgtn.com/hls/LSveq57bErWLinBnxosqjisZ220802LSTefTAS9zc9mpU08y3np9TH220802cd/playlist.m3u8
+https://dash3.antik.sk/live/test_cgtn_arb_tizen/playlist.m3u8
 #EXTINF:-1 tvg-id="Ch4Teen.kw@SD" tvg-logo="https://i.imgur.com/pHpFGeg.png" group-title="IPTV - Religious",Ch4Teen
 https://ch14.tv/live/ch4teenclip/playlist.m3u8
 #EXTINF:-1 tvg-id="CharityTV.lb@SD" tvg-logo="https://i.imgur.com/U9z8WBY.png" group-title="IPTV - Religious",CharityTV (1080p) [Not 24/7]
@@ -477,7 +477,7 @@ http://45.63.116.205/hls/stream1.m3u8
 #EXTINF:-1 tvg-id="RotanaTarabJordanCityView.jo@SD" tvg-logo="https://i.imgur.com/NjgOBts.png" group-title="IPTV - Other",Rotana Tarab Jordan City View (720p) [Not 24/7]
 http://45.63.116.205/hls3/stream1.m3u8
 #EXTINF:-1 tvg-id="RoyaTV.jo@SD" tvg-logo="https://i.imgur.com/WX80rty.png" group-title="IPTV - General",Roya TV (1080p) [Not 24/7]
-https://royatv-live.daioncdn.net/royatv/royatv.m3u8
+https://live.kwikmotion.com/royatvpublic/royatv.smil/playlist.m3u8
 #EXTINF:-1 tvg-id="RTArabic.ru@SD" tvg-logo="https://i.imgur.com/G8vGrn1.png" group-title="IPTV - News",RT Arabic (1080p) [Geo-blocked]
 https://rt-arb.rttv.com/dvr/rtarab/playlist.m3u8
 #EXTINF:-1 tvg-id="SafeerTV.uk@SD" tvg-logo="https://image.roku.com/developer_channels/prod/8389e15af8fe49ac7c36d201c24ebf62fbe5b22897c2879ca26ae936e0ed308d.png" group-title="IPTV - Religious",Safeer TV (1080p)
@@ -707,8 +707,8 @@ https://live.nowtelly.com/now_arabic/live/playlist.m3u8
 https://ncdn.telewebion.ir/palestine/live/playlist.m3u8
 #EXTINF:-1 tvg-id="PeaceTVChinese.ae@SD" tvg-logo="https://github.com/fawazahmed0/tiger/raw/master/peace/chinese.jpg" group-title="IPTV - Religious",Peace TV Chinese (1080p)
 https://dzkyvlfyge.erbvr.com/PeaceTvChinese/index.m3u8
-#EXTINF:-1 tvg-id="Prime.sy@HD" tvg-logo="https://prime1tv.com/wp-content/uploads/2025/12/7-1.png" group-title="IPTV - General",Prime (1080p)
-https://mn-nl.mncdn.com/primetv/live/index.m3u8
+#EXTINF:-1 tvg-id="Prime.sy@HD" tvg-logo="https://prime1tv.com/wp-content/uploads/2025/12/7-1.png" group-title="IPTV - General",Prime (Syria) (1080p)
+https://cdn.bestream.io/prime/prime.m3u8
 #EXTINF:-1 tvg-id="QatarTVTheHolyQuran.qa@HD" tvg-logo="https://www.qmc.qa/img/LiveChannels/1ca67a44-9290-4b2a-8a16-d8c6e2260816.jpg" group-title="IPTV - Religious",Qatar TV The Holy Quran (1080p)
 https://qatartv.akamaized.net/hls/live/20000612/qtvquran/master.m3u8
 #EXTINF:-1 tvg-id="QBC.qa@HD" tvg-logo="https://www.qbc.news/_next/static/media/logo.0~2x9wpd284~a.svg" group-title="IPTV - Business",QBC (1080p)
@@ -1165,3 +1165,26 @@ https://imn-live.esite-lab.com/hls/iraqia-sports-1.m3u8
 #EXTINF:-1 tvg-logo="https://i.imgur.com/CsEElsJ.png" tvg-id="SharjahSports.ae@SD" group-title="IPTV - Sports",Sharjah Sports [Geo-blocked]
 https://svs.itworkscdn.net/smc4sportslive/smc4tv.smil/playlist.m3u8
 # <<< iptv-org-2026-10-06 <<<
+# >>> iptv-org-2026-11-15 (ten more Arabic channels from iptv-org, probed live from here; delete this block to undo) >>>
+#EXTINF:-1 tvg-logo="https://i.imgur.com/XjBIi0e.png" tvg-id="HyaTV.eg@SD" group-title="IPTV - Entertainment",Hya TV
+https://freem3u.xyz/api/live/play.m3u8?vid=187
+#EXTINF:-1 tvg-logo="https://i.imgur.com/68llVTZ.png" tvg-id="PalestineMubasher.ps@SD" group-title="IPTV - General",Palestine Mubasher
+#EXTVLCOPT:http-user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36
+https://pbc.furrera.ps/palestinelivehd/index.m3u8
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Cartoon_Network_Arabic_logo.png/960px-Cartoon_Network_Arabic_logo.png" tvg-id="CartoonNetworkArabic.ae@SD" group-title="IPTV - Kids",Cartoon Network Arabic
+http://149.100.11.252:8000/play/a056/index.m3u8
+#EXTINF:-1 tvg-logo="https://i.imgur.com/E84jnP8.png" tvg-id="NickelodeonArabia.ae@SD" group-title="IPTV - Kids",Nickelodeon Arabia
+http://85.237.89.159:3342/ar-s/Nickelodeon/index.m3u8
+#EXTINF:-1 tvg-logo="https://upload.wikimedia.org/wikipedia/commons/b/b9/IFILM.png" tvg-id="iFilmArabic.ir@SD" group-title="IPTV - Movies",iFilm Arabic
+https://live.presstv.co.uk/hls/ifilmar.m3u8
+#EXTINF:-1 tvg-logo="https://www.mtv.com.lb/images/header/mfm-logo.svg" tvg-id="mfm.lb@HD" group-title="IPTV - Music",mfm
+https://hms.pfs.gdn/hms/v1/broadcast/hlmvmp2hfriode891/playlist.m3u8
+#EXTINF:-1 tvg-logo="https://tv.elyssatv.com/logo.png" tvg-id="ElyssaTV.tn@HD" group-title="IPTV - News",Elyssa TV
+https://tv.elyssatv.com/live/master.m3u8
+#EXTINF:-1 tvg-logo="https://mahdawioun.tv/wp-content/uploads/2024/03/New-Logo-Color.png" tvg-id="MahdawiounTV.iq@HD" group-title="IPTV - Religious",MahdawiounTV [Geo-blocked]
+https://live.mahdawioun.tv/stream/mahdawioun/playlist.m3u8
+#EXTINF:-1 tvg-logo="https://i.imgur.com/m3PEldJ.png" tvg-id="MTA3AlArabia.uk@SD" group-title="IPTV - Religious",MTA3 Al-Arabia
+https://chlivemta1.akamaized.net/hls/live/2010556/mta3alarabia/playlist.m3u8
+#EXTINF:-1 tvg-logo="https://i.imgur.com/u02FSgI.png" tvg-id="ThaqalaynTV.tr@SD" group-title="IPTV - Religious",Thaqalayn TV
+http://62.60.207.173:8080/hls/thaqalayn/index.m3u8
+# <<< iptv-org-2026-11-15 <<<
