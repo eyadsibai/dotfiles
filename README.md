@@ -115,13 +115,14 @@ Pacman installs the system, Omarchy and every program, the CLI tools and shells 
 (`arch/<host>.packages`, `just arch-sync`); Home Manager writes only their config. Where a
 module can't be told to skip its program, it gets a link to pacman's copy
 (`modules/home/pacman-bin.nix`). Nix still installs its own tooling (nh, nil, nixd, devenv)
-and the two things that are easier from Nix than from Arch's repos, spicetify and cava.
+and cava, which is easier from Nix than from Arch's repos.
 mpv has one configuration everywhere; on Arch its binary and uosc come from pacman, as
 Nix's mpv can't reach the GPU there.
 
 Spotify follows the Omarchy theme through spicetify, and stays themed: a theme change, a
 new Spotify from pacman, and a fresh machine's first switch all apply it (the theme-set
-hook `10-spotify.sh`, re-run by the `spotify-theme` user service).
+hook `10-spotify.sh`, re-run by the `spotify-theme` user service). spicetify comes from
+the AUR, which has the release that knows a new Spotify the day it's made.
 
 The files in `files/` are linked to the checkout, not copied into the store, so editing
 `~/.config/hypr/bindings.lua` edits the repo. Where one of them replaces an Omarchy default,

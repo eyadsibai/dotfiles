@@ -3,7 +3,7 @@
 # this adds only the config every machine shares: shells, CLI tools, git, ssh, and the
 # files/ packages. The shared modules check `isArch` to leave the programs out (or
 # point Home Manager at pacman's copy, see pacman-bin.nix). Nix still installs its own
-# tooling (nh, nil, nixd, devenv), and spicetify and cava below.
+# tooling (nh, nil, nixd, devenv), and cava below.
 {
   config,
   lib,
@@ -57,9 +57,8 @@ in
 
   home.packages = with pkgs; [
     nh
-    # Not in Arch's repos (spicetify is AUR-only) or easier from Nix. Their
-    # colours come from the theme-set hooks (10-spotify.sh, 40-cava.sh).
-    spicetify-cli # Spotify themed from Omarchy; needs /opt/spotify writable
+    # Easier from Nix than from Arch's repos. Its colours come from the theme-set
+    # hook 40-cava.sh.
     cava # audio visualizer; also drives the bar's (eyad.cava)
   ];
   programs.man.package = null; # pacman's man-db
@@ -127,7 +126,10 @@ in
   # Spotify in the Omarchy theme, kept that way. The theme-set hook 10-spotify.sh does
   # the theming; this re-runs it (alone, with the current theme) when pacman installs
   # or upgrades Spotify, whose hook writes /run/spotify-updated (arch/spicetify.hook),
-  # and when a switch finds Spotify unthemed, e.g. on a new machine.
+  # and when a switch finds Spotify unthemed, e.g. on a new machine. spicetify itself
+  # comes from the AUR (arch/<host>.packages), like Spotify from pacman: it has to
+  # know each new Spotify, and the AUR has its releases the day they're made, while
+  # nixpkgs gets them later and only with a nixpkgs update.
   systemd.user.paths.spotify-theme = {
     Unit.Description = "Re-theme Spotify after pacman installs or upgrades it";
     Path.PathChanged = "/run/spotify-updated";

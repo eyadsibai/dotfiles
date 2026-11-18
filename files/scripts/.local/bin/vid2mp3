@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+# vid2mp3 [options] <videos...>: saves each video's audio as an MP3 beside it (talk.mkv
+# gives talk.mp3). `vid2mp3 --help` has the options.
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+usage: vid2mp3 [options] <videos...>
+
+Saves each video's audio as an MP3 beside it: talk.mkv gives talk.mp3.
+
+options:
+  -o, --output DIR    put the MP3s in DIR (made if missing), not beside the videos
+  -q, --quality N     variable bitrate, from 0 (best) to 9 (smallest);
+                      the default is 2, about 190 kbps
+  -b, --bitrate KBPS  constant bitrate instead, from 8 to 320
+  -f, --force         replace MP3s that already exist (they're skipped otherwise)
+  -h, --help          show this help
+
+examples:
+  vid2mp3 talk.mkv
+  vid2mp3 -b 320 -o ~/Music *.mp4
+EOF
+}
+
+say() { echo "vid2mp3: $*" >&2; }
+die() {
+  say "$*"
+  exit 2
+}
+need_value() { (($1 >= 2)) || die "$2 needs a value"; }
+
+outdir='' quality='' bitrate='' force=0
+files=()
+while (($#)); do
+  case $1 in
+    # --name=value is read as --name value
+    --*=*) set -- "${1%%=*}" "${1#*=}" "${@:2}" ;;
+    -h | --help) usage; exit 0 ;;
+    -f | --force) force=1; shift ;;
+    -o | --output) need_value $# "$1"; outdir=$2; shift 2 ;;
+    -q | --quality) need_value $# "$1"; quality=$2; shift 2 ;;
+    -b | --bitrate) need_value $# "$1"; bitrate=$2; shift 2 ;;
+    --) shift; files+=("$@"); break ;;
+    -?*) die "unknown option $1 (vid2mp3 --help lists them)" ;;
+    *) files+=("$1"); shift ;;
+  esac
+done
+((${#files[@]})) || { usage >&2; exit 2; }
+
+if [[ -n $bitrate ]]; then
+  [[ -z $quality ]] || die "--quality and --bitrate both set the size; give one"
+  kbps=${bitrate%[kK]}
+  [[ $kbps =~ ^[0-9]{1,3}$ ]] || die "--bitrate is in kbps, from 8 to 320, not '$bitrate'"
+  # 10# because a leading zero would make it octal
+  kbps=$((10#$kbps))
+  ((kbps >= 8 && kbps <= 320)) || die "--bitrate is in kbps, from 8 to 320, not '$bitrate'"
+  encode=(-b:a "${kbps}k")
+else
+  [[ ${quality:=2} == [0-9] ]] || die "--quality is a number from 0 to 9, not '$quality'"
+  encode=(-q:a "$quality")
+fi
+
+for tool in ffmpeg ffprobe; do
+  command -v "$tool" >/dev/null || die "$tool isn't installed"
+done
+[[ -z $outdir ]] || mkdir -p -- "$outdir"
+
+# ffmpeg writes to a .part file that gets its real name only once it's whole, so a
+# run that dies never leaves half an MP3 for the next run to skip as done
+part=''
+trap '[[ -z $part ]] || rm -f -- "$part"' EXIT
+# ffmpeg catches Ctrl-C and exits by itself, which bash takes as a reason to carry on
+# with the next video
+trap 'exit 130' INT
+
+failed=0
+fail() {
+  say "$*"
+  failed=$((failed + 1))
+}
+
+for f in "${files[@]}"; do
+  if [[ ! -f $f ]]; then
+    fail "$f: no such file"
+    continue
+  fi
+
+  # Only the file's own extension goes, not a dot further up the path, and a name
+  # that is all extension (.hidden) stays whole
+  name=${f##*/}
+  stem=${name%.*}
+  dir=${f%"$name"}
+  [[ -z $outdir ]] || dir=${outdir%/}/
+  out=$dir${stem:-$name}.mp3
+
+  if [[ $f -ef $out ]]; then
+    say "$f: already an MP3, skipped"
+    continue
+  fi
+  if [[ -e $out && $force == 0 ]]; then
+    say "$out: exists, skipped (--force replaces it)"
+    continue
+  fi
+
+  # Asked first because ffmpeg's own words for these two are hard to read. The file:
+  # stops ffmpeg taking a colon in a name for a protocol, or a leading dash for an
+  # option.
+  if ! audio=$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "file:$f" 2>/dev/null); then
+    fail "$f: not something ffmpeg can read"
+    continue
+  elif [[ -z $audio ]]; then
+    fail "$f: no audio track"
+    continue
+  fi
+
+  echo "$f -> $out" >&2
+  part=$out.part
+  # -nostdin: ffmpeg would otherwise eat the input of a loop that calls this
+  if ffmpeg -hide_banner -loglevel warning -stats -nostdin -y \
+    -i "file:$f" -vn "${encode[@]}" -f mp3 "file:$part"; then
+    mv -f -- "$part" "$out"
+  else
+    rm -f -- "$part"
+    fail "$f: ffmpeg failed"
+  fi
+  part=''
+done
+
+if ((failed)); then
+  ((${#files[@]} == 1)) || say "$failed of ${#files[@]} failed"
+  exit 1
+fi
