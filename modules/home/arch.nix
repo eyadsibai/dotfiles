@@ -14,6 +14,17 @@
 }:
 let
   themedStarship = "${config.xdg.stateHome}/omarchy-theme-apps/starship.toml";
+
+  # Everything the spotify-theme service applies besides the colours: the hook with its
+  # lists of extensions and apps, and files/spotify. The service notes this hash when it
+  # has run, so a switch can tell that any of it changed since.
+  spotifyInputs = builtins.hashString "sha256" (
+    lib.concatMapStrings (f: builtins.hashFile "sha256" f) (
+      [ ../../files/omarchy/.config/omarchy/hooks/theme-set.d/10-spotify.sh ]
+      ++ lib.filesystem.listFilesRecursive ../../files/spotify
+    )
+  );
+  spotifyApplied = "${config.xdg.stateHome}/spotify-theme/applied";
 in
 {
   imports = [
@@ -42,12 +53,13 @@ in
     "nvim"
     "omarchy"
     "scripts"
+    "spotify"
     "systemd"
     "tv"
   ];
 
   # The caches every machine uses, in ~/.config/nix/nix.conf. The daemon accepts
-  # them from me because /etc/nix/nix.conf (arch/nix.conf, written once by hand)
+  # them from me because /etc/nix/nix.conf (arch/nix.conf, kept by scripts/arch-system)
   # makes me a trusted user. The package only checks the file at build time;
   # pacman's nix is the one that runs.
   nix = {
@@ -124,9 +136,10 @@ in
   };
 
   # Spotify in the Omarchy theme, kept that way. The theme-set hook 10-spotify.sh does
-  # the theming; this re-runs it (alone, with the current theme) when pacman installs
-  # or upgrades Spotify, whose hook writes /run/spotify-updated (arch/spicetify.hook),
-  # and when a switch finds Spotify unthemed, e.g. on a new machine. spicetify itself
+  # the theming and turns on the extensions and apps it lists; this re-runs it (alone,
+  # with the current theme) when pacman installs or upgrades Spotify or spicetify,
+  # whose hook writes /run/spotify-updated (arch/spicetify.hook), and when a switch
+  # finds Spotify unthemed or the hook or files/spotify changed. spicetify itself
   # comes from the AUR (arch/<host>.packages), like Spotify from pacman: it has to
   # know each new Spotify, and the AUR has its releases the day they're made, while
   # nixpkgs gets them later and only with a nixpkgs update.
@@ -145,11 +158,15 @@ in
         "SPOTIFY_THEME_WAIT=1"
       ];
       ExecStart = "/usr/bin/bash %h/.config/omarchy/hooks/theme-set";
+      # Only after the hook succeeded, so a failed apply is tried again at the next switch
+      ExecStartPost = "/usr/bin/sh -c 'mkdir -p ${dirOf spotifyApplied} && echo ${spotifyInputs} > ${spotifyApplied}'";
     };
   };
   home.activation.spotifyTheme = lib.hm.dag.entryAfter [ "reloadSystemd" ] ''
-    if [ -d /opt/spotify/Apps ] &&
-      ! grep -qE '^current_theme *= *omarchy' "$HOME/.config/spicetify/config-xpui.ini" 2>/dev/null; then
+    if [ -d /opt/spotify/Apps ] && {
+      ! grep -qE '^current_theme *= *omarchy' "$HOME/.config/spicetify/config-xpui.ini" 2>/dev/null ||
+        [ "$(cat ${spotifyApplied} 2>/dev/null)" != ${spotifyInputs} ]
+    }; then
       run systemctl --user start --no-block spotify-theme.service || true
     fi
   '';

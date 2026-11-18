@@ -2,15 +2,20 @@
 # re-applies the Omarchy theme (modules/home/arch.nix).
 # Keeps Spotify patchable by spicetify (Spotify themed from Omarchy): installing
 # or upgrading the package resets /opt/spotify to root-only, and spicetify, run
-# as you, has to write there. Install once:
-#   sudo cp arch/spicetify.hook /etc/pacman.d/hooks/
+# as you, has to write there. A new spicetify or Marketplace re-applies the theme
+# too: on a new machine they arrive from the AUR after Spotify, and later a new
+# spicetify is often the release that knows a Spotify the old one couldn't patch.
+# `just switch` installs this file to /etc/pacman.d/hooks/ whenever it changes here
+# (scripts/arch-system).
 [Trigger]
 Operation = Install
 Operation = Upgrade
 Type = Package
 Target = spotify
+Target = spicetify-cli
+Target = spicetify-marketplace-bin
 
 [Action]
 Description = Letting spicetify patch Spotify...
 When = PostTransaction
-Exec = /usr/bin/sh -c 'chmod a+wr /opt/spotify && chmod -R a+wr /opt/spotify/Apps && date > /run/spotify-updated'
+Exec = /usr/bin/sh -c '[ -d /opt/spotify/Apps ] || exit 0; chmod a+wr /opt/spotify && chmod -R a+wr /opt/spotify/Apps && date > /run/spotify-updated'

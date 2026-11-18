@@ -3,7 +3,8 @@
 My machines in one flake: NixOS (workstation, eyad-nixos, home-server, the Mac VMs
 vm-fusion/vm-utm), nix-darwin (eyad-m3, eyad-mac), and Omarchy on Arch (vector, cachy:
 Home Manager only; the system stays pacman's, and arch/ has the two root-owned files,
-copied in once by hand). README.md is the overview; docs/ has the longer procedures.
+which `just switch` installs with sudo when they differ). README.md is the overview;
+docs/ has the longer procedures.
 
 ## Layout
 

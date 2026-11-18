@@ -14,6 +14,7 @@ default:
 # Build, show the package diff, then activate
 switch name=host:
     {{ if arch == "true" { "scripts/omarchy-links guard" } else { "true" } }}
+    {{ if arch == "true" { "scripts/arch-system" } else { "true" } }}
     {{nh}} switch . {{target}}{{name}}{{ if arch == "true" { " -b hm-backup" } else { "" } }}
 
 # Build and show the diff without activating
@@ -82,6 +83,11 @@ arch-preview name=host:
 [group('arch')]
 arch-backup name=host:
     @scripts/arch-preview {{name}} --backup
+
+# Arch: install the root-owned files (nix.conf, the Spotify hook) that differ from arch/; `just switch` runs it, and `--check` only lists them
+[group('arch')]
+arch-system *args:
+    @scripts/arch-system {{args}}
 
 # Arch: install what arch/<host>.packages lists and is missing (never removes)
 [group('arch')]

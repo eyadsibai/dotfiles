@@ -4,9 +4,30 @@
 # env exported by the parent theme-set hook; skip that env-less pass entirely.
 [[ -n "$primary_background" ]] || exit 0
 
+# What spicetify adds to Spotify besides the colours. The first four come with
+# spicetify; the rest are in files/spotify: alwaysPrivateSession.js is mine, and the two
+# .mjs are the community's, each a loader that fetches its current code when Spotify
+# starts. The lists are the whole truth: something enabled by hand with `spicetify
+# config` is gone at the next theme change. What's installed inside Spotify from the
+# Marketplace is the Marketplace's own and isn't touched.
+extensions=(
+    shuffle+.js             # "Play with Shuffle+" on a playlist or album: an unbiased shuffle
+    keyboardShortcut.js     # vim keys: j/k scroll, g/G top and bottom, f jumps to a link
+    fullAppDisplay.js       # the playing album over the whole window, for the TV
+    trashbin.js             # a song or artist thrown in is skipped from then on
+    alwaysPrivateSession.js # a private session, put back whenever Spotify ends it
+    spicy-lyrics.mjs        # Spicy Lyrics: animated word-by-word lyrics as the lyrics view
+    sort-play-loader.mjs    # Sort Play: sort a playlist by play count, release date and more
+)
+custom_apps=(
+    lyrics-plus  # synced lyrics from several sources
+    new-releases # what the artists I follow have released
+    marketplace  # the community's extensions, installed and updated inside Spotify
+)
+
 create_spicetify_styling() {
-    mkdir -p "$HOME/.config/spicetify/Themes/omarchy"
-cat > "$HOME/.config/spicetify/Themes/omarchy/user.css" << EOF
+    mkdir -p "$spicetify_dir/Themes/omarchy"
+cat > "$spicetify_dir/Themes/omarchy/user.css" << EOF
 :root,
 .encore-dark-theme,
 .encore-base-set,
@@ -28,6 +49,14 @@ cat > "$HOME/.config/spicetify/Themes/omarchy/user.css" << EOF
 .main-home-homeHeader {
     display: none !important;
 }
+/* The same three by where they sit, for a Spotify whose names spicetify doesn't know
+   yet (1.3.8): the bands Spotify colours from the cover art, behind the top of Home,
+   a playlist's header and its row of buttons. */
+.main-view-container__scroll-node-child > main > div > div[style*="background-color"]:first-child,
+.main-entityHeader-container > div[style*="background-color"]:first-child,
+.main-view-container__scroll-node-child > main > section > div[style*="background-color"] {
+    display: none !important;
+}
 .main-topBar-background,
 .main-home-filterChipsSection {
     background-color: var(--spice-main) !important;
@@ -35,9 +64,44 @@ cat > "$HOME/.config/spicetify/Themes/omarchy/user.css" << EOF
 EOF
 }
 
-change_spicetify_theme() {
-    spicetify config current_theme omarchy > /dev/null
-    spicetify config color_scheme base > /dev/null
+# The names from a list that are installed here, joined the way the config wants them.
+# A list written for every machine mustn't name what one of them lacks, and the
+# Marketplace arrives from the AUR after spicetify itself.
+installed() { # installed -e "${extensions[@]}" | installed -a "${custom_apps[@]}"
+    local kind=$1 name found=()
+    shift
+    for name in "$@"; do
+        spicetify path "$kind" "$name" > /dev/null 2>&1 && found+=("$name")
+    done
+    local IFS='|'
+    echo "${found[*]}"
+}
+
+# Writes one key of spicetify's config file directly. `spicetify config` can only add
+# to or take from the two lists, never replace them, and silently drops a value that
+# starts with a dash, as every launch flag does.
+set_key() { # set_key extensions "a.js|b.js"
+    local file=$spicetify_dir/config-xpui.ini
+    KEY=$1 VALUE=$2 awk '
+        $0 ~ "^" ENVIRON["KEY"] "[ \t]*=" { sub(/=.*/, ""); print $0 "= " ENVIRON["VALUE"]; next }
+        { print }
+    ' "$file" > "$file.new" && mv "$file.new" "$file"
+}
+
+configure_spicetify() {
+    # inject_css and replace_colors are the theme: with either off Spotify stays stock.
+    # spicetify's own update check only nags inside Spotify; pacman updates it here.
+    spicetify config \
+        current_theme omarchy color_scheme base \
+        inject_css 1 replace_colors 1 \
+        check_spicetify_update 0 > /dev/null
+
+    # spicetify starts Spotify itself after an apply, without the wrapper that reads
+    # spotify-flags.conf: without the same flags Spotify would come back under XWayland
+    set_key spotify_launch_flags "$(grep -vE '^(#|$)' "${XDG_CONFIG_HOME:-$HOME/.config}/spotify-flags.conf" 2> /dev/null | paste -sd '|')"
+
+    set_key extensions "$(installed -e "${extensions[@]}")"
+    set_key custom_apps "$(installed -a "${custom_apps[@]}")"
 }
 
 create_dynamic_theme() {
@@ -58,7 +122,7 @@ create_dynamic_theme() {
     color0E=${normal_magenta}
     color0F=${bright_red}
 
-cat > "$HOME/.config/spicetify/Themes/omarchy/color.ini" << EOF
+cat > "$spicetify_dir/Themes/omarchy/color.ini" << EOF
 [base]
 main                = ${color00}
 player              = ${color00}
@@ -83,9 +147,12 @@ if ! command -v spicetify >/dev/null 2>&1; then
     skipped "Spicetify"
 fi
 
+# Where spicetify keeps its config and themes (~/.config/spicetify unless told otherwise)
+spicetify_dir=$(dirname "$(spicetify -c)")
+
 create_spicetify_styling
 create_dynamic_theme
-change_spicetify_theme
+configure_spicetify
 
 # Spotify writes its prefs at its first launch, and spicetify won't start without the
 # file: an empty one does until then
@@ -106,7 +173,8 @@ apply_theme() {
 }
 
 # The spotify-theme service (modules/home/arch.nix: after pacman installs or upgrades
-# Spotify, or a switch finds it unthemed) waits for the result; a theme switch doesn't
+# Spotify or spicetify, or a switch finds it unthemed or this file changed) waits for
+# the result; a theme switch doesn't
 if [[ -n $SPOTIFY_THEME_WAIT ]]; then
     if ! apply_theme > /dev/null 2>&1; then
         warning "spicetify couldn't theme Spotify; try: spicetify restore backup apply"

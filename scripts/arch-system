@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# The two root-owned files an Arch machine needs from this repo, which Home Manager,
+# running as me, can't write. `just switch` runs this first: when both match the repo
+# it does nothing and asks for nothing; when one differs it shows the difference and
+# installs the repo's copy with sudo.
+#
+#   /etc/nix/nix.conf                    from arch/nix.conf
+#   /etc/pacman.d/hooks/spicetify.hook   from arch/spicetify.hook
+#
+# The hook opens /opt/spotify to spicetify only from Spotify's next install or upgrade
+# on, so a Spotify that was there before the hook is opened here.
+#
+# usage: arch-system [--check]   --check lists what differs and exits 1 if anything does
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+nix_conf=/etc/nix/nix.conf
+hook=/etc/pacman.d/hooks/spicetify.hook
+
+todo=()
+cmp -s arch/nix.conf "$nix_conf" || todo+=(nix.conf)
+cmp -s arch/spicetify.hook "$hook" || todo+=(spicetify.hook)
+if [[ -d /opt/spotify/Apps ]] && ! [[ -w /opt/spotify && -w /opt/spotify/Apps ]]; then
+  todo+=(spotify-writable)
+fi
+
+# What installing the repo's $1 over $2 changes
+show() {
+  if [[ -e $2 ]]; then
+    diff -u --label "$2 (now)" --label "$1" "$2" "$1" || true
+  else
+    echo "$2 is missing; $1 goes there"
+  fi
+}
+
+if [[ ${1:-} == --check ]]; then
+  for t in "${todo[@]}"; do echo "differs: $t"; done
+  [[ ${#todo[@]} -eq 0 ]]
+  exit
+fi
+[[ ${#todo[@]} -eq 0 ]] && exit 0
+
+for t in "${todo[@]}"; do
+  case $t in
+    nix.conf) show arch/nix.conf "$nix_conf" ;;
+    spicetify.hook) show arch/spicetify.hook "$hook" ;;
+    spotify-writable) echo "/opt/spotify isn't writable, so spicetify can't theme Spotify" ;;
+  esac
+done
+echo "sudo puts this right (${todo[*]}):"
+
+for t in "${todo[@]}"; do
+  case $t in
+    nix.conf)
+      sudo install -Dm644 arch/nix.conf "$nix_conf"
+      sudo systemctl restart nix-daemon
+      ;;
+    spicetify.hook)
+      sudo install -Dm644 arch/spicetify.hook "$hook"
+      ;;
+    spotify-writable)
+      sudo chmod a+wr /opt/spotify
+      sudo chmod -R a+wr /opt/spotify/Apps
+      ;;
+  esac
+done

@@ -106,10 +106,12 @@ features are modules you import, and the few custom options live under `my.*`
 ## Omarchy on Arch
 
 `vector` and `cachy` are `homeConfigurations` (`eyad@vector`, `eyad@cachy`): Home Manager
-without NixOS. The two root-owned files they need are copied in once by hand: `arch/nix.conf`
-(flakes, and me as a trusted user so my own `~/.config/nix/nix.conf`, written by Home
-Manager with the same caches as every other machine, is honoured) and the pacman hook
-`arch/spicetify.hook` that keeps Spotify patchable.
+without NixOS. The two root-owned files they need are `arch/nix.conf` (flakes, and me as a
+trusted user so my own `~/.config/nix/nix.conf`, written by Home Manager with the same
+caches as every other machine, is honoured) and the pacman hook `arch/spicetify.hook`
+that keeps Spotify patchable. `just switch` compares both with what's installed
+(`scripts/arch-system`) and asks for sudo only when one differs, after showing the
+difference.
 
 Pacman installs the system, Omarchy and every program, the CLI tools and shells included
 (`arch/<host>.packages`, `just arch-sync`); Home Manager writes only their config. Where a
@@ -120,9 +122,15 @@ mpv has one configuration everywhere; on Arch its binary and uosc come from pacm
 Nix's mpv can't reach the GPU there.
 
 Spotify follows the Omarchy theme through spicetify, and stays themed: a theme change, a
-new Spotify from pacman, and a fresh machine's first switch all apply it (the theme-set
-hook `10-spotify.sh`, re-run by the `spotify-theme` user service). spicetify comes from
-the AUR, which has the release that knows a new Spotify the day it's made.
+new Spotify or spicetify from pacman, and a fresh machine's first `just arch-sync` all
+apply it (the theme-set hook `10-spotify.sh`, re-run by the `spotify-theme` user service).
+spicetify comes from the AUR, which has the release that knows a new Spotify the day
+it's made. The same hook holds spicetify's settings and the two lists of what it adds:
+extensions (an unbiased shuffle, vim keys, the album over the whole window, a trash bin,
+and from `files/spotify`: `alwaysPrivateSession.js`, which keeps Spotify in a private
+session, and the loaders for Spicy Lyrics and Sort Play) and apps (lyrics, new releases,
+and the Marketplace for the community's extensions). Change a list and the next `just switch` applies it. Spotify runs natively
+on Wayland (`files/spotify/.config/spotify-flags.conf`), so it follows the monitor's scale.
 
 The files in `files/` are linked to the checkout, not copied into the store, so editing
 `~/.config/hypr/bindings.lua` edits the repo. Where one of them replaces an Omarchy default,
@@ -242,13 +250,13 @@ sudo pacman -S nix
 git clone git@github.com:eyadsibai/dotfiles.git ~/dev/dotfiles
 cd ~/dev/dotfiles
 sudo cp arch/nix.conf /etc/nix/nix.conf    # flakes, the caches, me as a trusted user
-sudo cp arch/spicetify.hook /etc/pacman.d/hooks/   # keeps Spotify patchable
 sudo systemctl enable --now nix-daemon.socket
 sudo systemctl restart nix-daemon
 
 cp -r hosts/vector hosts/$(hostname -s)    # new machine only: also add it to homeConfigurations
                                            # in flake.nix and give it a files/host-<name>
-nix develop -c just switch                 # just and nh come from the dev shell until then
+nix develop -c just switch                 # just and nh come from the dev shell until then;
+                                           # asks for sudo to install the Spotify pacman hook
 just arch-sync                             # pacman/AUR packages from arch/<host>.packages
 ```
 
