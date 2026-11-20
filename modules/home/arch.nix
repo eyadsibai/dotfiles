@@ -36,6 +36,10 @@ in
   home.homeDirectory = "/home/${username}";
   programs.home-manager.enable = true;
   targets.genericLinux.enable = true; # desktop entries and XDG paths for Nix's apps
+  # It would also link Nix's GPU drivers into /run, and until that's done with sudo
+  # every switch warns that the GPU isn't set up. Nothing Nix installs here draws
+  # with the GPU; pacman owns the programs that do.
+  targets.genericLinux.gpu.enable = false;
   # pacman owns the MIME database. Nix's copy sits ahead of it on XDG_DATA_DIRS and
   # keeps *.png claimed by image/apng, so gvfs sftp drops content-type and Strata
   # cannot open PNGs.
