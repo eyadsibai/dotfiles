@@ -21,9 +21,10 @@ Manager underneath all of them. About 7,600 lines of Nix, and every setting live
 
 My personal configuration, not a framework. The desktop is [Omarchy](https://omarchy.org),
 brought to NixOS by [nixarchy](https://github.com/olafkfreund/nixarchy), so the Nix machines
-look and behave exactly like the Arch ones I sit at: same Hyprland keybinds, same bar, same
-Tokyo Night. Everything in here is something I actually run, and the non-obvious parts are
-commented with the reason.
+start from the same desktop as the Arch ones I sit at: Omarchy's Hyprland keybinds, its bar,
+its Tokyo Night. What I've added on top (`files/`: my own bindings, theme hooks, bar widgets,
+the TV) is on the Arch machines only. Everything in here is something I actually run, and
+the non-obvious parts are commented with the reason.
 
 ## The machines
 
