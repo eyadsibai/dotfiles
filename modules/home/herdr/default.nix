@@ -1,8 +1,8 @@
 # herdr, the terminal workspace manager for AI coding agents, with keys mirroring
 # Omarchy's tmux config. The config is linked from this directory, so herdr's own
 # edits and `prefix+q` reloads work on the repo copy. On NixOS nixarchy installs
-# herdr itself (with its bar widget); the Macs get it here. The Arch machines keep
-# their own herdr config in files/host-<name>.
+# herdr itself (with its bar widget); the Macs get it here. The Arch machines share
+# a config of their own, files/herdr.
 {
   config,
   lib,

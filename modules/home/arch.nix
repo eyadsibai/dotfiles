@@ -46,6 +46,7 @@ in
     "alacritty"
     "foot"
     "ghostty"
+    "herdr"
     "kitty"
     "hypr"
     "lazygit"
