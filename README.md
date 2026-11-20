@@ -238,7 +238,7 @@ has the fix.
 | Chromium starts without Omarchy's bundled extensions (copy-url, yt-dlp, WhatsApp): Omarchy enables them through a flags file that Arch's launcher reads and nixpkgs' doesn't. | Flags built into the Chromium the Omarchy package installs; native-messaging hosts re-registered at every activation via a stable `/run/current-system` path. | [#1491](https://github.com/olafkfreund/nixarchy/issues/1491), fixed in main; workaround removed |
 | After an autologin boot the login keyring stays locked until some app asks for its password. | The lock screen's PAM service unlocks it, so the first unlock after boot opens the keyring. It stays encrypted. | [#1492](https://github.com/olafkfreund/nixarchy/issues/1492), fixed in main; workaround removed |
 | After a switch, a changed prompt stays stale until the next login or theme change: omatheme copies the new `starship.toml` but doesn't re-render from it. | An activation step runs `hyprchroma shell` after omatheme's own. | omatheme#60 |
-| Five Omarchy preinstalls aren't in nixarchy: Hype, Monologue, Signed, disktree, Superwhisper. | Packaged in `pkgs/` and installed for the user; Superwhisper also gets its user service and Omarchy bar panel. | not reported |
+| Superwhisper, an Omarchy preinstall, isn't in nixarchy. | Packaged in `pkgs/` and installed for the user, with its user service and Omarchy bar panel. | not reported |
 | nixi, nixarchy's beginner guide, brings in codex through codex-acp. nixpkgs' codex isn't in the binary cache, so it compiled here on every update, with about 3 GB of downloads. | Off: `services.nixi.enable = false`. | not reported |
 
 ## Setting up an Arch machine

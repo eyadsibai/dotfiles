@@ -1,14 +1,8 @@
-# Omarchy preinstalls that nixarchy doesn't carry: Hype, Monologue, Signed,
-# disktree and Superwhisper, packaged in pkgs/. Imported by modules/nixos/desktop.nix.
+# Superwhisper, an Omarchy preinstall that nixarchy doesn't carry, packaged in pkgs/.
+# Imported by modules/nixos/desktop.nix.
 { lib, pkgs, ... }:
 {
-  home.packages = with pkgs; [
-    hype
-    monologue
-    signed
-    disktree
-    superwhisper
-  ];
+  home.packages = [ pkgs.superwhisper ];
 
   # Superwhisper's daemon, as its Arch package installs it; Omarchy's dictation
   # keys reach it through omarchy-dictation-superwhisper. Not started with the
