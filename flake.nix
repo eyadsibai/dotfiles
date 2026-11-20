@@ -215,16 +215,30 @@
 
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
 
-      # `nix flake check` builds these; CI runs it with --no-build (evaluation only)
+      # What `just check` and CI's eval matrix (.github/workflows/check.yml) evaluate,
+      # without building: every configuration above, by the attribute whose derivation
+      # proves it evaluates, and the homelab test. Both read this list, so a new host
+      # is checked without being named anywhere else.
+      evalTargets =
+        map (name: "nixosConfigurations.${name}.config.system.build.toplevel") (
+          lib.attrNames self.nixosConfigurations
+        )
+        ++ map (name: "darwinConfigurations.${name}.config.system.build.toplevel") (
+          lib.attrNames self.darwinConfigurations
+        )
+        ++ map (name: ''homeConfigurations."${name}".activationPackage'') (
+          lib.attrNames self.homeConfigurations
+        )
+        ++ [ "checks.x86_64-linux.homelab" ];
+
+      # Built to test something: `nix build .#checks.x86_64-linux.<name> -L`
       checks.x86_64-linux =
         let
           pkgs = nixpkgs.legacyPackages.x86_64-linux;
         in
         {
-          workstation = self.nixosConfigurations.workstation.config.system.build.toplevel;
-          eyad-nixos = self.nixosConfigurations.eyad-nixos.config.system.build.toplevel;
-          home-server = self.nixosConfigurations.home-server.config.system.build.toplevel;
-          # Boots the homelab in a VM (tests/homelab.nix)
+          # Boots the homelab in a VM (tests/homelab.nix); CI runs it when the homelab
+          # or the inputs change (.github/workflows/homelab.yml)
           homelab = import ./tests/homelab.nix {
             pkgs = import nixpkgs {
               system = "x86_64-linux";
@@ -233,8 +247,6 @@
             };
             inherit inputs username useremail;
           };
-          vector = self.homeConfigurations."${username}@vector".activationPackage;
-          cachy = self.homeConfigurations."${username}@cachy".activationPackage;
           formatting = pkgs.runCommand "check-formatting" { } ''
             cp -r ${self} src && chmod -R +w src && cd src
             ${pkgs.lib.getExe pkgs.nixfmt-tree} --ci --tree-root .

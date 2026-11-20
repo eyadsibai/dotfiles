@@ -22,13 +22,9 @@ docs/ has the longer procedures.
 Nothing here can be switched from a session; check what can be checked:
 
 - `nix fmt` after editing Nix files (nixfmt-tree; CI rejects unformatted files).
-- Evaluate every configuration the change can reach. All of them:
-  ```sh
-  for a in nixosConfigurations.{workstation,eyad-nixos,home-server,vm-fusion,vm-utm}.config.system.build.toplevel \
-           darwinConfigurations.eyad-m3.config.system.build.toplevel \
-           'homeConfigurations."eyad@vector".activationPackage' 'homeConfigurations."eyad@cachy".activationPackage'
-  do nix eval --raw ".#$a.drvPath" >/dev/null || echo "FAILED: $a"; done
-  ```
+- Evaluate every configuration the change can reach. `just check` does all of them,
+  the homelab test and the formatting; the list is `evalTargets` in `flake.nix`, which
+  CI reads too. One alone: `nix eval --raw '.#<target>.drvPath' >/dev/null`.
 - On an Arch machine, build its own configs for real:
   `nix build --no-link '.#homeConfigurations."eyad@<host>".activationPackage'`.
 - New files must be known to git (`git add -N`) or the flake can't see them.

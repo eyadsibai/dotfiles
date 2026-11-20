@@ -4,13 +4,21 @@
 
 `.github/workflows/check.yml` runs on every push:
 
-- **eval**: every NixOS, macOS, and Home Manager configuration, without
-  building (the runners can't build CUDA or macOS).
+- **eval**: every NixOS, macOS, and Home Manager configuration and the homelab
+  test, without building (the runners can't build CUDA or macOS). The list is
+  `evalTargets` in `flake.nix`, the same one `just check` evaluates, so a new host
+  is picked up by itself.
 - **packages**: builds everything in `pkgs/`, so a re-released download with a new
   hash fails here instead of at the next switch.
 - **format**: `nix fmt -- --ci`.
 
-`update-flake-lock.yml` opens a PR with updated inputs every Monday.
+`homelab.yml` boots the homelab in a VM (`tests/homelab.nix`) when the homelab
+modules, the test, `flake.nix` or `flake.lock` change.
+
+`tv.yml` runs `files/tv`'s tests when they change.
+
+Inputs are updated by hand (`just update`), not by a scheduled PR: the lock moves
+most days anyway, and the weekly PRs were only ever closed.
 
 ## Nixbot on the workstation (parked)
 

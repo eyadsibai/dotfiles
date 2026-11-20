@@ -88,7 +88,7 @@ files/<package>/   plain config files mirroring ~, linked one by one (like stow)
                    lists the packages it wants, host-<name> last
 pkgs/, overlays/   packages not in nixpkgs (pkgs.<name> everywhere), fixes to nixpkgs
 scripts/           what the Arch and Omarchy `just` recipes run
-tests/             the homelab booted in a VM (a flake check)
+tests/             the homelab booted in a VM (a flake check, which CI runs)
 docs/              longer procedures: the Mac VMs, installing home-server, the homelab, CI
 omarchy-defaults/  the Omarchy default each file in files/ was last merged against
 arch/              the two root-owned files an Arch machine needs, and <host>.packages:
@@ -297,7 +297,7 @@ once for the dev shell, then:
 | `just vm-install <host> <ip>` | Mac: install `vm-fusion` or `vm-utm` on a VM booted from the NixOS ISO |
 | `just mac-copy <name> <user@ip>` | Mac: copy a Mac's built system to a new Mac before its first switch |
 | `just update [input...]` | update every flake input, or only the ones named |
-| `just check` | evaluates every host and checks formatting, without building |
+| `just check` | evaluates every host and the homelab test and checks formatting, without building |
 | `just fmt` | format the Nix files |
 | `just generations` | NixOS: list the system generations |
 | `just clean` | drop old generations, GC the store |
@@ -312,7 +312,7 @@ once for the dev shell, then:
 `host` defaults to the current machine; on Arch, `switch` and `build` act on the Home Manager
 configuration, and `switch` moves files it would replace aside as `*.hm-backup`. CI
 evaluates every host on every push, builds `pkgs/`, checks the formatting, and runs
-`files/tv`'s tests when they change; every Monday it opens a PR with updated flake inputs.
+`files/tv`'s tests and the homelab's VM test when what they cover changes.
 
 Small things in `modules/home/` I'd miss if they were gone:
 

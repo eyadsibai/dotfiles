@@ -33,10 +33,18 @@ vm name=host:
 update *inputs:
     nix flake update {{inputs}}
 
-# Evaluate every host and check formatting, without building (as CI does)
+# Evaluate every configuration and the homelab test (evalTargets in flake.nix, the list CI uses) and check formatting, without building
 check:
-    nix flake check --no-build
-    nix fmt -- --ci
+    #!/usr/bin/env bash
+    set -uo pipefail
+    targets=$(nix eval --raw .#evalTargets --apply 'builtins.concatStringsSep "\n"') || exit 1
+    failed=0
+    while IFS= read -r target; do
+      echo "eval $target"
+      nix eval --raw ".#$target.drvPath" >/dev/null || { echo "FAILED: $target"; failed=1; }
+    done <<<"$targets"
+    nix fmt -- --ci || failed=1
+    exit $failed
 
 # Format all Nix files
 fmt:

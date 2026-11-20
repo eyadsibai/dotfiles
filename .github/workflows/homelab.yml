@@ -1,0 +1,31 @@
+name: homelab
+
+# Boots the homelab in a VM (tests/homelab.nix) and checks what evaluation can't see:
+# the disks unlock and merge, SnapRAID syncs, the apps answer. Only when the homelab,
+# its test or the inputs change, as it takes far longer than the checks in check.yml.
+on:
+  push:
+    paths: ["modules/nixos/homelab/**", "modules/nixos/auto-upgrade.nix", "tests/**", "overlays/**", "flake.nix", "flake.lock", ".github/workflows/homelab.yml"]
+  pull_request:
+    paths: ["modules/nixos/homelab/**", "modules/nixos/auto-upgrade.nix", "tests/**", "overlays/**", "flake.nix", "flake.lock", ".github/workflows/homelab.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch supersedes a running test
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vm-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # The action opens /dev/kvm to the build users, which the test's VM needs
+      - uses: cachix/install-nix-action@v31
+      - run: nix build --no-link -L .#checks.x86_64-linux.homelab
