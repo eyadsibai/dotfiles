@@ -36,8 +36,8 @@ While TV runs, the Omarchy bar shows it (the `eyad.tv` plugin, `.config/omarchy/
 | `.local/share/icons/hicolor/scalable/apps/tv.svg` | Its icon |
 | `.config/tv/tv.m3u` | The channel playlist (or `$TV_M3U`). Yours to edit; the tools only read it |
 | `.config/systemd/user/tv-check.{service,timer}` | Weekly check that prunes and revives channels |
-| `tests/parsers.sh` | Checks that tv, tv-check and tv.lua parse the playlist the same way (not stowed) |
-| `tests/test_tv.py` | Offline regression tests for playlist updates, concurrent checks, launcher arguments and mpv state (not stowed) |
+| `tests/parsers.sh` | Checks that tv, tv-check and tv.lua parse the playlist the same way (not linked into `~`) |
+| `tests/test_tv.py` | Offline regression tests for playlist updates, concurrent checks, launcher arguments and mpv state (not linked into `~`) |
 
 ## Signed links
 
@@ -50,22 +50,22 @@ Some channels (Al Kass) only play with a short-lived token. Their entry keeps th
 
 ## Needs
 
-`mpv`, uosc for the grouped channel menu (Arch: `mpv-uosc`; without it the menu is mpv's flat playlist picker), `ffmpeg`, `uv`, and `stow` to install.
+`mpv`, uosc for the grouped channel menu (Arch: `mpv-uosc`; without it the menu is mpv's flat playlist picker), `ffmpeg` and `uv`.
 
 TV uses uosc whether or not the rest of mpv does. If the mpv config autoloads uosc (`scripts/uosc.lua` or `scripts/uosc/`), TV uses that copy. Otherwise `tv` loads the installed one for TV only (`$TV_UOSC`, default `/usr/share/mpv/scripts/uosc`) and turns off mpv's OSC and OSD bar, which uosc replaces. When uosc's icon font isn't in `~/.config/mpv/fonts`, `tv` points mpv at the package's fonts; without them every icon is drawn as its name (`chevron_right`).
 
 ## Install
 
-`tv` is a stow package like the others in this repo, linked from `~/dotfiles`. `.stow-local-ignore` keeps this README, `ruff.toml` and `tests/` out of `~`.
+`tv` is one of the packages in `files/`: Home Manager links each of its files into `~` from the checkout (`my.files` in `modules/home/arch.nix`), and `modules/home/files.nix` keeps this README, `ruff.toml` and `tests/` out of `~`.
 
 ```sh
-cd ~/dotfiles
-stow -n -v tv    # dry run
-stow tv          # link
-stow -D tv       # unlink
-stow -R tv       # after pulling: links new files, drops links to moved/deleted ones
+git add -N <new file>    # a new file is linked only once git knows it
+just arch-preview        # dry run: what a switch would add or replace in ~
+just switch              # links new files, drops links to moved or deleted ones
 systemctl --user enable --now tv-check.timer   # optional weekly prune and revive
 ```
+
+The folder still mirrors `~` the way stow expects, so outside this repo `stow tv` links it too (`.stow-local-ignore` keeps the same three out).
 
 Nothing writes to `tv.m3u`; add, edit or remove channels there and commit. The player plays `~/.local/state/tv/playing.m3u` instead: `tv.m3u` minus the pruned channels listed in `~/.local/state/tv/offline.m3u`. `tv` rebuilds it on every start, so edits to `tv.m3u` show up the next time you open TV. The weekly timer runs the same thing as:
 

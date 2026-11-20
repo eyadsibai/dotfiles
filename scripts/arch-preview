@@ -2,7 +2,7 @@
 # What `just switch` would do to ~ on an Arch machine, without doing it: builds the
 # host's Home Manager configuration and compares every file it manages with what's
 # in ~ now. With --backup, also archives each of those files that exists today
-# (stow links resolved to their contents) into ~/hm-before-<date>.tar.gz.
+# (links resolved to their contents) into ~/hm-before-<date>.tar.gz.
 #
 # usage: arch-preview <host> [--backup]
 set -euo pipefail
@@ -37,7 +37,7 @@ origin() {
   local p=$HOME/$1
   if [[ -L $p ]]; then
     case $(readlink -f "$p") in
-      "$HOME"/dotfiles/*) echo "stow link" ;;
+      "$PWD"/*) echo "link into this repo" ;;
       *) echo "link -> $(readlink "$p")" ;;
     esac
   else
@@ -69,7 +69,7 @@ fi
 
 if [[ $backup == --backup ]] && ((${#existing[@]})); then
   archive=$HOME/hm-before-$(date +%Y%m%d-%H%M%S).tar.gz
-  # --dereference: store what a stow link points at, not the link
+  # --dereference: store what a link points at, not the link
   (cd "$HOME" && tar --dereference -czf "$archive" "${existing[@]}")
   echo
   echo "Saved the ${#existing[@]} existing files to $archive"
