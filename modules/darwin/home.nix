@@ -1,5 +1,10 @@
 # Home Manager settings only the Macs use
-{ pkgs, ... }:
+{
+  lib,
+  osConfig,
+  pkgs,
+  ...
+}:
 {
   programs.zsh.initContent = ''
     export PATH="$HOME/.local/bin:$PATH"
@@ -31,8 +36,10 @@
   programs.bun.enable = true;
   programs.yt-dlp.enable = true;
   programs.lapce.enable = true;
+  # Homebrew installs zathura (homebrew.nix); this only writes its config
   programs.zathura = {
     enable = true;
+    package = null;
     options = {
       selection-clipboard = "clipboard";
       recolor = true;
@@ -59,6 +66,21 @@
       p = "print";
     };
   };
+  # Homebrew's zathura looks for plugins only in its own lib/zathura, which the tap
+  # leaves to be filled by hand and an upgrade of zathura empties again. Home Manager
+  # activates after Homebrew has run, so what it just installed is there to link.
+  home.activation.zathuraPlugins = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    zathura=${osConfig.homebrew.prefix}/opt/zathura
+    if [[ -d $zathura ]]; then
+      run mkdir -p "$zathura/lib/zathura"
+      for plugin in ${osConfig.homebrew.prefix}/opt/zathura-*/lib*.dylib; do
+        if [[ -f $plugin ]]; then
+          run ln -sf $VERBOSE_ARG "$plugin" "$zathura/lib/zathura/"
+        fi
+      done
+    fi
+  '';
+
   programs.kakoune.enable = true;
 
   programs.gpg = {

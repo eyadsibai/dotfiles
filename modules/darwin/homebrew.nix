@@ -22,6 +22,7 @@
 
     taps = [
       "colindean/fonts-nonfree"
+      "homebrew-zathura/zathura"
     ];
 
     brews = [
@@ -30,6 +31,14 @@
       "python"
       "gemini-cli"
       "opencode"
+      # The document viewer and its formats, the ones pacman installs on Arch; Nix
+      # would be its source on NixOS only. home.nix has its config and links the
+      # plugins where it looks for them.
+      "zathura"
+      "zathura-cb"
+      "zathura-djvu"
+      "zathura-pdf-mupdf"
+      "zathura-ps"
     ];
 
     casks = [
