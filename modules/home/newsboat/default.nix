@@ -575,7 +575,11 @@ let
     "application/atom+xml"
     "x-scheme-handler/feed"
   ];
-  xdgMime = if isArch then "/usr/bin/xdg-mime" else "${pkgs.xdg-utils}/bin/xdg-mime";
+  # Arch's xdg-mime is a shell script that looks for awk on PATH, and activation runs
+  # with Nix's own tools there and nothing from /usr/bin: without awk it can neither
+  # read the current handler nor set one. The nixpkgs one carries its own tools.
+  xdgMime =
+    if isArch then "env PATH=/usr/bin /usr/bin/xdg-mime" else "${pkgs.xdg-utils}/bin/xdg-mime";
 in
 {
   programs.newsboat = {
