@@ -167,12 +167,14 @@ in
       ExecStartPost = "/usr/bin/sh -c 'mkdir -p ${dirOf spotifyApplied} && echo ${spotifyInputs} > ${spotifyApplied}'";
     };
   };
+  # By its full path: activation runs with Nix's own tools on PATH and nothing from
+  # /usr/bin, so a bare `systemctl` isn't found and the service never starts.
   home.activation.spotifyTheme = lib.hm.dag.entryAfter [ "reloadSystemd" ] ''
     if [ -d /opt/spotify/Apps ] && {
       ! grep -qE '^current_theme *= *omarchy' "$HOME/.config/spicetify/config-xpui.ini" 2>/dev/null ||
         [ "$(cat ${spotifyApplied} 2>/dev/null)" != ${spotifyInputs} ]
     }; then
-      run systemctl --user start --no-block spotify-theme.service || true
+      run /usr/bin/systemctl --user start --no-block spotify-theme.service || true
     fi
   '';
 
