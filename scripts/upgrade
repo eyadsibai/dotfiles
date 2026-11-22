@@ -3,6 +3,7 @@
 # everything, the same command on NixOS, macOS and Arch. The steps a machine has no
 # use for are skipped, so on NixOS and macOS it comes down to inputs, switch, commit.
 #
+#   pull      git pull, when the remote has commits this checkout doesn't
 #   mirrors   Arch: put Omarchy's mirror back first if it's gone (else packages run ahead)
 #   system    Arch: omarchy update (pacman, the AUR, Omarchy itself and its migrations)
 #   links     Arch: adopt files a migration detached, mark migrations reviewed
@@ -18,7 +19,8 @@
 #
 # The commits take only the files this run changed. Whatever was already uncommitted
 # when it started (work in progress) is left as it was, so it doesn't end up in a
-# commit named after the update.
+# commit named after the update. What the pull brought is the other machines' work,
+# already committed, and stays out of them too.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit
 
@@ -40,6 +42,53 @@ dirty() {
 }
 # What a path holds now, to tell later whether it changed again
 fingerprint() { git hash-object --no-filters -- "$1" 2>/dev/null || echo gone; }
+
+# True while a merge or rebase is stopped half way, or has left files in conflict
+unfinished() {
+  local dir
+  dir=$(git rev-parse --git-dir)
+  [[ -e $dir/MERGE_HEAD || -d $dir/rebase-merge || -d $dir/rebase-apply ]] ||
+    [[ -n $(git diff --name-only --diff-filter=U) ]]
+}
+
+# 1. Pull, before anything below is measured: what the other machines pushed isn't
+# this run's work, so it belongs in neither the review nor the commits.
+if [[ -z ${UPGRADE_PULLED:-} ]] && upstream=$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null); then
+  step "git pull"
+  if ! git fetch --quiet; then
+    ask "Couldn't fetch from ${upstream%%/*}. Carry on with the checkout as it is?" false || exit 1
+  elif incoming=$(git log --oneline "HEAD..$upstream") && [[ -n $incoming ]]; then
+    echo "$upstream has $(wc -l <<<"$incoming") commit(s) this checkout doesn't:"
+    echo "$incoming"
+    if ask "Pull them?"; then
+      self=$(fingerprint scripts/upgrade)
+      # With no commits of its own the checkout only fast-forwards, which needs no
+      # stash: uncommitted work stays where it is (a stash can't hold a file added
+      # with `git add -N`), and a file both sides changed makes git refuse rather
+      # than leave conflict markers in a config that's linked live into ~. With
+      # commits of its own it's a plain `git pull`, which rebases or merges the way
+      # git is configured to.
+      if [[ -z $(git rev-list -1 "$upstream..HEAD") ]]; then
+        git merge --ff-only "$upstream"
+      else
+        git pull
+      fi
+      pulled=$?
+      if unfinished; then
+        echo "The pull stopped half way. Finish it (git status says how), then run just upgrade again."
+        exit 1
+      elif ((pulled)); then
+        ask "The pull failed. Carry on with the checkout as it is?" false || exit 1
+      elif [[ $(fingerprint scripts/upgrade) != "$self" ]]; then
+        # The rest of the run should be the new script's, beside the new scripts it calls
+        echo "The pull brought a newer scripts/upgrade; starting again with it."
+        UPGRADE_PULLED=1 exec scripts/upgrade
+      fi
+    fi
+  else
+    ok "Nothing new on $upstream."
+  fi
+fi
 
 start_head=$(git rev-parse HEAD)
 mapfile -d '' -t before < <(dirty)
@@ -109,20 +158,20 @@ if ((${#before[@]})); then
 fi
 
 if $arch; then
-  # 1. Mirrors: a reflector-rewritten mirrorlist lets Arch run ahead of what Omarchy built against
+  # 2. Mirrors: a reflector-rewritten mirrorlist lets Arch run ahead of what Omarchy built against
   if ! grep -q '^Server *= *https://stable-mirror\.omarchy\.org/' /etc/pacman.d/mirrorlist 2>/dev/null; then
     step "/etc/pacman.d/mirrorlist doesn't point at Omarchy's mirror"
     ask "Run omarchy-refresh-pacman first?" && omarchy-refresh-pacman
   fi
 
-  # 2. The system: Omarchy and every pacman and AUR package
+  # 3. The system: Omarchy and every pacman and AUR package
   step "omarchy update"
   if ask "Run omarchy update now?"; then
     echo "If it offers a reboot at the end, say no: this script offers one when it's done."
     omarchy update || { ask "omarchy update failed. Continue with the follow-up steps?" false || exit 1; }
   fi
 
-  # 3. Detached links and migrations that touched linked files
+  # 4. Detached links and migrations that touched linked files
   step "Linked files and migrations"
   links=$(scripts/omarchy-links check)
   echo "$links"
@@ -130,7 +179,7 @@ if $arch; then
     ask "Adopt them (copy into the repo, relink, mark migrations reviewed)?" && scripts/omarchy-links adopt
   fi
 
-  # 4. Upstream changes to defaults we override
+  # 5. Upstream changes to defaults we override
   step "Omarchy defaults you override"
   defaults=$(scripts/omarchy-defaults check)
   echo "$defaults"
@@ -150,7 +199,7 @@ if $arch; then
   fi
 fi
 
-# 5. Flake inputs. The lock is shared, so another machine may have moved it already:
+# 6. Flake inputs. The lock is shared, so another machine may have moved it already:
 # the question says how old it is, and after a pull there is often nothing to gain.
 step "Flake inputs"
 if [[ -n ${held[flake.lock]+was} ]]; then
@@ -162,7 +211,7 @@ if ask "Update flake.lock? ($age)"; then
   nix flake update || echo "nix flake update failed; see above."
 fi
 
-# 6. Review what landed in the repo. flake.lock is left out of the diff: it's all
+# 7. Review what landed in the repo. flake.lock is left out of the diff: it's all
 # hashes, and nix flake update has just said which inputs moved.
 sort_changes
 readable=()
@@ -177,7 +226,7 @@ if ((${#ours[@]} + ${#again[@]})); then
   fi
 fi
 
-# 7. Switch
+# 8. Switch
 step "just switch"
 switched=false
 if ask "Build and activate this machine's configuration now?"; then
@@ -186,7 +235,7 @@ if ask "Build and activate this machine's configuration now?"; then
   fi
 fi
 
-# 8. The package list. Only after a switch, which is what offers to install anything
+# 9. The package list. Only after a switch, which is what offers to install anything
 # the list has and the machine lacks; without one, rewriting would drop those.
 if $arch && $switched; then
   drift=$(scripts/arch-packages diff)
@@ -198,7 +247,7 @@ if $arch && $switched; then
   fi
 fi
 
-# 9. Commit what this run changed, and nothing that was already waiting. flake.lock
+# 10. Commit what this run changed, and nothing that was already waiting. flake.lock
 # goes first and alone, named after the inputs that moved, with each one's old and
 # new revision in the body: what a summary of the upstream changes is written from.
 sort_changes
@@ -238,7 +287,7 @@ if ((${#untouched[@]})); then
   echo "Still uncommitted from before the upgrade: ${#untouched[@]} file(s), as they were."
 fi
 
-# 10. Reboot when the running kernel is no longer the installed one
+# 11. Reboot when the running kernel is no longer the installed one
 if reboot_due; then
   step "The running kernel was replaced"
   ask "Reboot now?" false && systemctl reboot

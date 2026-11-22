@@ -18,7 +18,7 @@ switch name=host:
     {{nh}} switch . {{target}}{{name}}{{ if arch == "true" { " -b hm-backup" } else { "" } }}
     {{ if arch == "true" { "scripts/arch-packages install " + name } else { "true" } }}
 
-# Get the newest of everything, then switch; the same on every machine, asking at each step (Arch: `omarchy update` too)
+# Pull, get the newest of everything, then switch; the same on every machine, asking at each step (Arch: `omarchy update` too)
 upgrade:
     @scripts/upgrade
 

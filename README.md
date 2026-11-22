@@ -293,18 +293,18 @@ day needs:
 
 - **`just switch`** makes this machine match the repo, after editing it or pulling.
 - **`just upgrade`** gets the newest of everything and then switches. It asks before each
-  step and skips the ones a machine has no use for: on NixOS and macOS it's
+  step and skips the ones a machine has no use for: on NixOS and macOS it's `git pull`,
   `nix flake update`, the switch and a commit of `flake.lock`; on Arch `omarchy update`
-  and what follows it (detached links, changed defaults) come first, and the package
-  list is checked after. `flake.lock` is shared, so after upgrading one machine and
-  pushing, the others need only `git pull` and `just switch`; on an Arch machine run
-  `just upgrade` there too and say no to the flake update, since its pacman packages
-  are its own.
+  and what follows it (detached links, changed defaults) come after the pull, and the
+  package list is checked at the end. `flake.lock` is shared, so after upgrading one
+  machine and pushing, the others need only `git pull` and `just switch`; on an Arch
+  machine run `just upgrade` there too, which pulls the new lock itself, and say no to
+  the flake update, since its pacman packages are its own.
 
 | Command | Does |
 |---|---|
 | `just switch [host]` | build, show the package diff, activate; on Arch also the two root-owned files and any package `arch/<host>.packages` lists that's missing |
-| `just upgrade` | the newest of everything, then switch, commit and reboot if the kernel changed, asking before each (`scripts/upgrade`) |
+| `just upgrade` | pull, the newest of everything, then switch, commit and reboot if the kernel changed, asking before each (`scripts/upgrade`) |
 | `just build [host]` | build and show the diff only |
 | `just boot [host]` | NixOS: activate on next boot, for desktop or login changes |
 | `just vm [host]` | NixOS: boot the exact configuration in a throwaway QEMU VM (no NVIDIA) |
