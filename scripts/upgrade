@@ -61,6 +61,15 @@ if [[ -z ${UPGRADE_PULLED:-} ]] && upstream=$(git rev-parse --abbrev-ref '@{upst
     echo "$upstream has $(wc -l <<<"$incoming") commit(s) this checkout doesn't:"
     echo "$incoming"
     if ask "Pull them?"; then
+      # A lock left over from an earlier `nix flake update` that never got committed
+      # can't be pulled over: the fast-forward refuses, and a stashing pull leaves
+      # conflict markers in it. Nothing in it needs keeping, since the inputs step
+      # below moves the pulled lock forward again.
+      if [[ -n $(git status --porcelain -- flake.lock) ]] && ! git diff --quiet HEAD "$upstream" -- flake.lock; then
+        echo "flake.lock has uncommitted changes, and $upstream has a different one."
+        ask "Drop the local flake.lock and take the pulled one? (the inputs step updates it after)" &&
+          git checkout HEAD -- flake.lock
+      fi
       self=$(fingerprint scripts/upgrade)
       # With no commits of its own the checkout only fast-forwards, which needs no
       # stash: uncommitted work stays where it is (a stash can't hold a file added
