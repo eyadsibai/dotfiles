@@ -117,6 +117,6 @@ matches the new state.
 ## Day to day
 
 `just deploy home-server` builds here and switches it over Tailscale; deploy it after
-updating the desktops (`just update`, then `just switch`), so a flake.lock update that
+upgrading the desktops (`just upgrade`), so a flake.lock update that
 breaks something breaks a desktop first. Deploy at least every few weeks, or it
 misses security fixes.

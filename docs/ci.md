@@ -17,7 +17,7 @@ modules, the test, `flake.nix` or `flake.lock` change.
 
 `tv.yml` runs `files/tv`'s tests when they change.
 
-Inputs are updated by hand (`just update`), not by a scheduled PR: the lock moves
+Inputs are updated by hand (`just upgrade`), not by a scheduled PR: the lock moves
 most days anyway, and the weekly PRs were only ever closed.
 
 ## Nixbot on the workstation (parked)

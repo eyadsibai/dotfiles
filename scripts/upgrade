@@ -1,0 +1,247 @@
+#!/usr/bin/env bash
+# `just upgrade`: one interactive pass that brings this machine to the newest of
+# everything, the same command on NixOS, macOS and Arch. The steps a machine has no
+# use for are skipped, so on NixOS and macOS it comes down to inputs, switch, commit.
+#
+#   mirrors   Arch: put Omarchy's mirror back first if it's gone (else packages run ahead)
+#   system    Arch: omarchy update (pacman, the AUR, Omarchy itself and its migrations)
+#   links     Arch: adopt files a migration detached, mark migrations reviewed
+#   defaults  Arch: 3-way merge Omarchy's changes to defaults you override
+#   inputs    nix flake update: nixpkgs, Home Manager, nixarchy and the rest
+#   review    git diff of what landed in the repo
+#   switch    just switch (on Arch, refused while anything is still detached)
+#   packages  Arch: rewrite arch/<host>.packages if it no longer matches the machine
+#   commit    flake.lock on its own, then whatever else this run changed
+#   reboot    if the running kernel was replaced
+#
+# Each step asks first; a step with nothing to do is skipped without asking.
+#
+# The commits take only the files this run changed. Whatever was already uncommitted
+# when it started (work in progress) is left as it was, so it doesn't end up in a
+# commit named after the update.
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit
+
+step() { printf '\n\e[1;34m==> %s\e[0m\n' "$*"; }
+ask() { gum confirm "$1" ${2:+--default="$2"}; }
+ok() { printf '\e[32m%s\e[0m\n' "$*"; }
+
+# Omarchy on Arch: pacman owns the system, so there is more to update than the flake
+arch=false
+[[ -e /etc/arch-release ]] && arch=true
+host=$(hostname -s)
+
+# Paths with uncommitted changes, NUL-separated so any file name survives
+dirty() {
+  local entry
+  while IFS= read -r -d '' entry; do
+    printf '%s\0' "${entry:3}"
+  done < <(git status --porcelain -z --no-renames --untracked-files=all)
+}
+# What a path holds now, to tell later whether it changed again
+fingerprint() { git hash-object --no-filters -- "$1" 2>/dev/null || echo gone; }
+
+start_head=$(git rev-parse HEAD)
+mapfile -d '' -t before < <(dirty)
+declare -A held=()
+for path in "${before[@]}"; do held[$path]=$(fingerprint "$path"); done
+
+# Sorts what is uncommitted now into: ours (clean when this run started, so this run
+# changed it), again (changed before the run and again during it, so the two can't
+# be committed apart) and untouched (as it was at the start)
+sort_changes() {
+  local path
+  ours=() again=() untouched=()
+  while IFS= read -r -d '' path; do
+    if [[ -z ${held[$path]+was} ]]; then
+      ours+=("$path")
+    elif [[ $(fingerprint "$path") != "${held[$path]}" ]]; then
+      again+=("$path")
+    else
+      untouched+=("$path")
+    fi
+  done < <(dirty)
+}
+
+# One line for each direct input that flake.lock has moved since the run started:
+# "nixpkgs 1a2b3c4..5d6e7f8", or the name alone for an input locked by hash
+moved_inputs() {
+  jq -rn --slurpfile old <(git show "$start_head:flake.lock") --slurpfile new flake.lock '
+    def locks: . as $lock
+      | $lock.nodes[$lock.root].inputs | to_entries
+      | map(select(.value | type == "string") | .value = $lock.nodes[.value].locked)
+      | from_entries;
+    ($old[0] | locks) as $was
+    | $new[0] | locks | to_entries[]
+    | select($was[.key] != .value)
+    | if $was[.key].rev and .value.rev
+      then "\(.key) \($was[.key].rev[0:7])..\(.value.rev[0:7])"
+      else .key end'
+}
+
+# "a", "a and b", "a, b and c"
+join_names() {
+  local out=$1 i
+  for ((i = 2; i <= $#; i++)); do
+    if ((i == $#)); then out+=" and ${!i}"; else out+=", ${!i}"; fi
+  done
+  echo "$out"
+}
+
+# True when the kernel that's running is no longer the one installed
+reboot_due() {
+  local part
+  if [[ -e /run/booted-system ]]; then
+    # NixOS: a new kernel, initrd or kernel modules (the NVIDIA driver among them)
+    for part in kernel initrd kernel-modules; do
+      [[ $(readlink /run/booted-system/$part) == "$(readlink /run/current-system/$part)" ]] || return 0
+    done
+    return 1
+  fi
+  # Arch: pacman removed the running kernel's modules when it installed the new one
+  $arch && [[ ! -d /usr/lib/modules/$(uname -r) ]]
+}
+
+if ((${#before[@]})); then
+  step "The repo already has uncommitted changes"
+  git status --short
+  echo "These stay out of the upgrade's commits; only what changes from here on goes in."
+fi
+
+if $arch; then
+  # 1. Mirrors: a reflector-rewritten mirrorlist lets Arch run ahead of what Omarchy built against
+  if ! grep -q '^Server *= *https://stable-mirror\.omarchy\.org/' /etc/pacman.d/mirrorlist 2>/dev/null; then
+    step "/etc/pacman.d/mirrorlist doesn't point at Omarchy's mirror"
+    ask "Run omarchy-refresh-pacman first?" && omarchy-refresh-pacman
+  fi
+
+  # 2. The system: Omarchy and every pacman and AUR package
+  step "omarchy update"
+  if ask "Run omarchy update now?"; then
+    echo "If it offers a reboot at the end, say no: this script offers one when it's done."
+    omarchy update || { ask "omarchy update failed. Continue with the follow-up steps?" false || exit 1; }
+  fi
+
+  # 3. Detached links and migrations that touched linked files
+  step "Linked files and migrations"
+  links=$(scripts/omarchy-links check)
+  echo "$links"
+  if grep -qE '^(detached|migration)' <<<"$links"; then
+    ask "Adopt them (copy into the repo, relink, mark migrations reviewed)?" && scripts/omarchy-links adopt
+  fi
+
+  # 4. Upstream changes to defaults we override
+  step "Omarchy defaults you override"
+  defaults=$(scripts/omarchy-defaults check)
+  echo "$defaults"
+  if grep -q '^Omarchy changed' <<<"$defaults" && ask "Merge Omarchy's changes in?"; then
+    if ! scripts/omarchy-defaults merge; then
+      mapfile -t conflicted < <(git diff --name-only | xargs -r grep -l '^<<<<<<< ' --)
+      while ((${#conflicted[@]})); do
+        ask "Open the ${#conflicted[@]} conflicted file(s) in ${EDITOR:-nvim}?" || break
+        "${EDITOR:-nvim}" "${conflicted[@]}"
+        mapfile -t conflicted < <(printf '%s\n' "${conflicted[@]}" | xargs -r grep -l '^<<<<<<< ' --)
+      done
+      if ((${#conflicted[@]})); then
+        echo "Still conflicted: ${conflicted[*]}"
+        echo "Hyprland and the bar won't read a file with markers; fix these before switching or logging in again."
+      fi
+    fi
+  fi
+fi
+
+# 5. Flake inputs. The lock is shared, so another machine may have moved it already:
+# the question says how old it is, and after a pull there is often nothing to gain.
+step "Flake inputs"
+if [[ -n ${held[flake.lock]+was} ]]; then
+  age="it already has uncommitted changes"
+else
+  age="last committed $(git log -1 --format=%cr -- flake.lock)"
+fi
+if ask "Update flake.lock? ($age)"; then
+  nix flake update || echo "nix flake update failed; see above."
+fi
+
+# 6. Review what landed in the repo. flake.lock is left out of the diff: it's all
+# hashes, and nix flake update has just said which inputs moved.
+sort_changes
+readable=()
+for path in "${ours[@]}" "${again[@]}"; do
+  [[ $path == flake.lock ]] || readable+=("$path")
+done
+if ((${#ours[@]} + ${#again[@]})); then
+  step "Changes in the repo"
+  git status --short -- "${ours[@]}" "${again[@]}"
+  if ((${#readable[@]})) && ask "Show the full diff?"; then
+    git -c core.pager='less -R' diff -- "${readable[@]}"
+  fi
+fi
+
+# 7. Switch
+step "just switch"
+switched=false
+if ask "Build and activate this machine's configuration now?"; then
+  if ! $arch || scripts/omarchy-links guard; then
+    if just switch; then switched=true; else echo "The switch failed; see above."; fi
+  fi
+fi
+
+# 8. The package list. Only after a switch, which is what offers to install anything
+# the list has and the machine lacks; without one, rewriting would drop those.
+if $arch && $switched; then
+  drift=$(scripts/arch-packages diff)
+  if [[ -n $drift ]]; then
+    step "arch/$host.packages no longer matches what's installed"
+    echo "$drift"
+    echo "+ is installed and not listed; - is listed and not installed, or Omarchy's own now."
+    ask "Rewrite the list from this machine?" && scripts/arch-packages save
+  fi
+fi
+
+# 9. Commit what this run changed, and nothing that was already waiting. flake.lock
+# goes first and alone, named after the inputs that moved, with each one's old and
+# new revision in the body: what a summary of the upstream changes is written from.
+sort_changes
+rest=()
+lock_moved=false
+for path in "${ours[@]}"; do
+  if [[ $path == flake.lock ]]; then lock_moved=true; else rest+=("$path"); fi
+done
+if $lock_moved; then
+  step "Commit flake.lock"
+  moved=$(moved_inputs)
+  echo "$moved"
+  mapfile -t names < <(cut -d' ' -f1 <<<"$moved")
+  if [[ -n $moved ]]; then subject="flake: update $(join_names "${names[@]}")"; else subject="flake: update inputs"; fi
+  if ask "Commit it?" false; then
+    msg=$(gum input --width 80 --value "$subject" --placeholder "commit message")
+    [[ -n $msg ]] && git commit -m "$msg" ${moved:+-m "$moved"} -- flake.lock
+  fi
+fi
+if ((${#rest[@]})); then
+  step "Commit"
+  git status --short -- "${rest[@]}"
+  if ask "Commit these?" false; then
+    subject=""
+    $arch && subject="omarchy: follow the $(omarchy-version) update"
+    msg=$(gum input --width 80 --value "$subject" --placeholder "commit message")
+    [[ -n $msg ]] && git add -- "${rest[@]}" && git commit -m "$msg" -- "${rest[@]}"
+  fi
+elif ! $lock_moved && ((${#again[@]} == 0)) && [[ $(git rev-parse HEAD) == "$start_head" ]]; then
+  ok "The upgrade changed nothing in the repo."
+fi
+if ((${#again[@]})); then
+  echo "Changed before the upgrade and again during it, so left for you to commit:"
+  printf '  %s\n' "${again[@]}"
+fi
+if ((${#untouched[@]})); then
+  echo "Still uncommitted from before the upgrade: ${#untouched[@]} file(s), as they were."
+fi
+
+# 10. Reboot when the running kernel is no longer the installed one
+if reboot_due; then
+  step "The running kernel was replaced"
+  ask "Reboot now?" false && systemctl reboot
+fi
+
+ok "Done."

@@ -115,7 +115,8 @@ that keeps Spotify patchable. `just switch` compares both with what's installed
 difference.
 
 Pacman installs the system, Omarchy and every program, the CLI tools and shells included
-(`arch/<host>.packages`, `just arch-sync`); Home Manager writes only their config. Where a
+(`arch/<host>.packages`; `just switch` installs what it lists and the machine lacks,
+and never removes anything); Home Manager writes only their config. Where a
 module can't be told to skip its program, it gets a link to pacman's copy
 (`modules/home/pacman-bin.nix`). Nix still installs its own tooling (nh, nil, nixd, devenv)
 and cava, which is easier from Nix than from Arch's repos.
@@ -123,7 +124,7 @@ mpv has one configuration everywhere; on Arch its binary and uosc come from pacm
 Nix's mpv can't reach the GPU there.
 
 Spotify follows the Omarchy theme through spicetify, and stays themed: a theme change, a
-new Spotify or spicetify from pacman, and a fresh machine's first `just arch-sync` all
+new Spotify or spicetify from pacman, and a fresh machine's first `just switch` all
 apply it (the theme-set hook `10-spotify.sh`, re-run by the `spotify-theme` user service).
 spicetify comes from the AUR, which has the release that knows a new Spotify the day
 it's made. The same hook holds spicetify's settings and the two lists of what it adds:
@@ -170,7 +171,7 @@ search `~/Videos`, `~/Downloads` and `~/Movies`, paste a link, and manage the qu
 ## Decisions worth knowing
 
 - **nixarchy follows main.** Main runs ahead of the release tags and carries fixes they
-  don't have yet, so `just update` moves it with everything else. It's one maintainer's
+  don't have yet, so `just upgrade` moves it with everything else. It's one maintainer's
   project: `just vm` before switching a NixOS machine to a big jump.
 - **Only three binary caches are trusted:** `cache.nixos.org`, nix-community, and the
   community CUDA cache (through nixarchy's `cudaCache`, which only applies where the NVIDIA
@@ -257,8 +258,9 @@ sudo systemctl restart nix-daemon
 cp -r hosts/vector hosts/$(hostname -s)    # new machine only: also add it to homeConfigurations
                                            # in flake.nix and give it a files/host-<name>
 nix develop -c just switch                 # just and nh come from the dev shell until then;
-                                           # asks for sudo to install the Spotify pacman hook
-just arch-sync                             # pacman/AUR packages from arch/<host>.packages
+                                           # asks for sudo to install the Spotify pacman hook,
+                                           # then installs the pacman/AUR packages that
+                                           # arch/<host>.packages lists
 ```
 
 Arch's `nix` no longer has a `nix-users` group; the daemon socket is open to every
@@ -286,26 +288,37 @@ Finally sign in to the 1Password app at the machine and turn on Settings → Dev
 ## Day to day
 
 Clone to `~/dev/dotfiles` (the path `nh` and Omarchy's Update menu expect), `direnv allow`
-once for the dev shell, then:
+once for the dev shell. Two commands are the same on every machine, and are all a normal
+day needs:
+
+- **`just switch`** makes this machine match the repo, after editing it or pulling.
+- **`just upgrade`** gets the newest of everything and then switches. It asks before each
+  step and skips the ones a machine has no use for: on NixOS and macOS it's
+  `nix flake update`, the switch and a commit of `flake.lock`; on Arch `omarchy update`
+  and what follows it (detached links, changed defaults) come first, and the package
+  list is checked after. `flake.lock` is shared, so after upgrading one machine and
+  pushing, the others need only `git pull` and `just switch`; on an Arch machine run
+  `just upgrade` there too and say no to the flake update, since its pacman packages
+  are its own.
 
 | Command | Does |
 |---|---|
-| `just switch [host]` | build, show the package diff, activate (NixOS or macOS) |
+| `just switch [host]` | build, show the package diff, activate; on Arch also the two root-owned files and any package `arch/<host>.packages` lists that's missing |
+| `just upgrade` | the newest of everything, then switch, commit and reboot if the kernel changed, asking before each (`scripts/upgrade`) |
 | `just build [host]` | build and show the diff only |
 | `just boot [host]` | NixOS: activate on next boot, for desktop or login changes |
 | `just vm [host]` | NixOS: boot the exact configuration in a throwaway QEMU VM (no NVIDIA) |
 | `just deploy <host> [addr]` | NixOS: build a host here and switch it over SSH (Tailscale name by default), then say whether it needs a reboot; how home-server is updated |
 | `just vm-install <host> <ip>` | Mac: install `vm-fusion` or `vm-utm` on a VM booted from the NixOS ISO |
 | `just mac-copy <name> <user@ip>` | Mac: copy a Mac's built system to a new Mac before its first switch |
-| `just update [input...]` | update every flake input, or only the ones named |
+| `just update [input...]` | only move `flake.lock`, without switching: every input, or the ones named |
 | `just check` | evaluates every host and the homelab test and checks formatting, without building |
 | `just fmt` | format the Nix files |
 | `just generations` | NixOS: list the system generations |
 | `just clean` | drop old generations, GC the store |
 | `just secret <name>` | edit `secrets/<name>.yaml` |
 | `just arch-preview` / `arch-backup` | Arch: list every file in `~` a switch would replace or add, with diffs / and archive the existing ones first |
-| `just arch-sync` / `arch-save` | Arch: install what `arch/<host>.packages` lists / rewrite it from the machine |
-| `just omarchy-upgrade` | Arch: `omarchy update`, then adopt detached links, merge changed defaults, review the diff, switch, commit and reboot, asking before each |
+| `just arch-save` | Arch: rewrite `arch/<host>.packages` from what's installed, after installing or removing something by hand (`just upgrade` offers it when the two differ) |
 | `just omarchy-check` / `omarchy-merge` | see which overridden Omarchy defaults changed upstream / merge them in |
 | `just omarchy-links` / `omarchy-adopt` | Arch: list linked files an Omarchy update detached / copy them into the repo and relink them |
 | `just omarchy-diff [paths]` | diff my setup against stock Omarchy |

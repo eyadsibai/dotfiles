@@ -7,15 +7,20 @@ nh := if os() == "macos" { "nh darwin" } else if arch == "true" { "nh home" } el
 # nh names a NixOS/macOS host with -H, a Home Manager configuration with -c
 target := if arch == "true" { "-c " + env("USER") + "@" } else { "-H " }
 
-# List recipes
+# List recipes, in this file's order: the two for every day first
 default:
-    @just --list
+    @just --list --unsorted
 
-# Build, show the package diff, then activate
+# Make this machine match the repo: build, show the diff, activate (Arch: also installs what arch/<host>.packages has that's missing)
 switch name=host:
     {{ if arch == "true" { "scripts/omarchy-links guard" } else { "true" } }}
     {{ if arch == "true" { "scripts/arch-system" } else { "true" } }}
     {{nh}} switch . {{target}}{{name}}{{ if arch == "true" { " -b hm-backup" } else { "" } }}
+    {{ if arch == "true" { "scripts/arch-packages install " + name } else { "true" } }}
+
+# Get the newest of everything, then switch; the same on every machine, asking at each step (Arch: `omarchy update` too)
+upgrade:
+    @scripts/upgrade
 
 # Build and show the diff without activating
 build name=host:
@@ -29,7 +34,7 @@ boot name=host:
 vm name=host:
     nix run .#nixosConfigurations.{{name}}.config.system.build.vm
 
-# Update all flake inputs, nixarchy included (or only some: just update nixpkgs home-manager)
+# Only move flake.lock, without switching: every input, or the ones named (just update nixpkgs home-manager)
 update *inputs:
     nix flake update {{inputs}}
 
@@ -97,35 +102,10 @@ arch-backup name=host:
 arch-system *args:
     @scripts/arch-system {{args}}
 
-# Arch: install what arch/<host>.packages lists and is missing (never removes)
-[group('arch')]
-arch-sync name=host:
-    #!/usr/bin/env bash
-    set -uo pipefail
-    mapfile -t wanted < <(grep -Ev '^(#|$)' arch/{{name}}.packages)
-    # pacman -T counts what an installed package provides; yay --needed goes by name,
-    # so it would offer power-profiles-daemon over omarchy-power-profiles-daemon.
-    mapfile -t missing < <(pacman -T "${wanted[@]}")
-    if ((${#missing[@]} == 0)); then
-      echo "Everything in arch/{{name}}.packages is installed."
-      exit 0
-    fi
-    yay -S --needed "${missing[@]}"
-
-# Arch: rewrite arch/<host>.packages from what's installed, minus Omarchy's own lists
+# Arch: rewrite arch/<host>.packages from what's installed, minus Omarchy's own lists (`just switch` does the reverse)
 [group('arch')]
 arch-save name=host:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    omarchy=$(cat "${OMARCHY_PATH:-/usr/share/omarchy}"/install/*.packages | sed 's/#.*//' | tr -s ' \t' '\n' | sort -u)
-    { echo "# Installed on {{name}} beyond Omarchy's own lists; \`just arch-save\` rewrites this"
-      comm -23 <(pacman -Qqe | sort -u) <(echo "$omarchy"); } > arch/{{name}}.packages
-    git diff --stat arch/{{name}}.packages
-
-# Update Omarchy, then walk through links, defaults, diff, switch, commit and reboot, asking at each step
-[group('omarchy')]
-omarchy-upgrade:
-    @scripts/omarchy-upgrade
+    @scripts/arch-packages save {{name}}
 
 # Show which files in files/ override an Omarchy default that changed upstream
 [group('omarchy')]

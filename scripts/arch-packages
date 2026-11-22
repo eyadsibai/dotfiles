@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# arch/<host>.packages and the machine, in both directions. Pacman owns the programs on
+# an Arch machine; the list is what this one has beyond Omarchy's own lists.
+#
+#   install   install what the list has and the machine lacks, never removing anything.
+#             `just switch` runs it after Home Manager (whose spotify-theme unit a
+#             freshly installed Spotify needs), so a list that changed in the repo
+#             needs no command of its own. Nothing missing: no output, no questions.
+#   save      rewrite the list from what's installed (`just arch-save`)
+#   diff      what `save` would change: +added, -dropped, nothing when they agree
+#
+# usage: arch-packages install|save|diff [host]
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit
+
+cmd=${1:-}
+host=${2:-$(hostname -s)}
+list=arch/$host.packages
+
+listed() {
+  [[ -f $list ]] || return 0
+  grep -Ev '^(#|$)' "$list"
+}
+
+# Explicitly installed, minus what Omarchy installs on every machine. Fails rather than
+# answer without Omarchy's lists, which would put all of Omarchy into ours.
+installed() {
+  local omarchy explicit
+  omarchy=$(cat "${OMARCHY_PATH:-/usr/share/omarchy}"/install/*.packages | sed 's/#.*//' | tr -s ' \t' '\n' | sort -u) || return 1
+  explicit=$(pacman -Qqe | sort -u) || return 1
+  comm -23 <(echo "$explicit") <(echo "$omarchy")
+}
+
+changes() {
+  local now
+  now=$(installed) || return 1
+  comm -13 <(listed | sort -u) <(echo "$now") | sed 's/^/+/'
+  comm -23 <(listed | sort -u) <(echo "$now") | sed 's/^/-/'
+}
+
+case $cmd in
+  install)
+    mapfile -t wanted < <(listed)
+    ((${#wanted[@]})) || exit 0
+    # pacman -T counts what an installed package provides; yay --needed goes by name,
+    # so it would offer power-profiles-daemon over omarchy-power-profiles-daemon.
+    mapfile -t missing < <(pacman -T "${wanted[@]}")
+    if ((${#missing[@]})); then
+      echo "$list has ${#missing[@]} package(s) this machine lacks: ${missing[*]}"
+      if [[ -t 0 ]]; then
+        yay -S --needed "${missing[@]}" ||
+          echo "Not installed. The next switch offers them again; delete them from $list to stop that."
+      else
+        echo "No terminal to ask in, so they wait for the next switch."
+      fi
+    fi
+    mapfile -t unlisted < <(changes 2>/dev/null | sed -n 's/^+//p')
+    if ((${#unlisted[@]})); then
+      echo "Installed but not in $list: ${unlisted[*]} (\`just arch-save\` records them)"
+    fi
+    # A package that didn't install shouldn't fail the switch that has already happened
+    exit 0
+    ;;
+  save)
+    now=$(installed) || { echo "Couldn't read what's installed; $list is untouched." >&2; exit 1; }
+    {
+      echo "# Installed on $host beyond Omarchy's own lists; \`just arch-save\` rewrites this"
+      [[ -z $now ]] || echo "$now"
+    } > "$list"
+    git diff --stat -- "$list"
+    ;;
+  diff)
+    changes
+    ;;
+  *)
+    echo "usage: arch-packages install|save|diff [host]" >&2
+    exit 2
+    ;;
+esac
