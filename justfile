@@ -11,7 +11,7 @@ target := if arch == "true" { "-c " + env("USER") + "@" } else { "-H " }
 default:
     @just --list --unsorted
 
-# Make this machine match the repo: build, show the diff, activate (Arch: also installs what arch/<host>.packages has that's missing)
+# Make this machine match the repo: build, show the diff, activate (Arch: also installs what arch/<host>.packages has that's missing, then asks about each package installed and not listed)
 switch name=host:
     {{ if arch == "true" { "scripts/omarchy-links guard" } else { "true" } }}
     {{ if arch == "true" { "scripts/arch-system" } else { "true" } }}
@@ -106,6 +106,11 @@ arch-system *args:
 [group('arch')]
 arch-save name=host:
     @scripts/arch-packages save {{name}}
+
+# Arch: go through what's installed and not in arch/<host>.packages, one at a time: add, uninstall or leave (`just switch` asks too)
+[group('arch')]
+arch-review name=host:
+    @scripts/arch-packages review {{name}}
 
 # List every Omarchy default that changed since I last went through them, overridden here or not (--diff shows the diffs)
 [group('omarchy')]

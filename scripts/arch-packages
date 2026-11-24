@@ -6,10 +6,15 @@
 #             `just switch` runs it after Home Manager (whose spotify-theme unit a
 #             freshly installed Spotify needs), so a list that changed in the repo
 #             needs no command of its own. Nothing missing: no output, no questions.
+#             Then it goes through what's installed and not listed, one package at a
+#             time (`review`).
+#   review    for each package installed and not listed: what it is, when it came, and
+#             why the list lacks it (never in it, or which commit took it out); then add
+#             it to the list, uninstall it, or leave it to be asked again next switch
 #   save      rewrite the list from what's installed (`just arch-save`)
 #   diff      what `save` would change: +added, -dropped, nothing when they agree
 #
-# usage: arch-packages install|save|diff [host]
+# usage: arch-packages install|review|save|diff [host]
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit
 
@@ -38,6 +43,70 @@ changes() {
   comm -23 <(listed | sort -u) <(echo "$now") | sed 's/^/-/'
 }
 
+header() { echo "# Installed on $host beyond Omarchy's own lists; \`just arch-save\` rewrites this"; }
+
+add_to_list() {
+  local body
+  # Merged in rather than re-sorted: the list may have been sorted under another locale,
+  # and a full sort would move lines that have nothing to do with this package.
+  body=$(sort -m <(listed) <(echo "$1")) || return 1
+  { header; echo "$body"; } > "$list"
+}
+
+pacman_field() { LC_ALL=C pacman -Qi "$1" | sed -n "s/^$2 *: //p"; }
+
+# Why the list lacks a package: the last commit that touched its line took it out, and
+# with no such commit it was installed by hand and never recorded.
+why_unlisted() {
+  local p=$1 re line other
+  # Package names are letters, digits and @._+-; of those only . and + mean anything in a regex
+  re=${p//./\\.}
+  re=${re//+/\\+}
+  line=$(git log -1 --format='%h %s (%cr)' -G "^$re\$" -- "$list")
+  if [[ -n $line ]]; then
+    echo "  taken out of $list by $line"
+  else
+    echo "  never in $list: installed by hand on this machine"
+  fi
+  for other in arch/*.packages; do
+    [[ $other == "$list" ]] && continue
+    grep -qxF "$p" "$other" && echo "  $(basename "$other" .packages) lists it"
+  done
+}
+
+review() {
+  local unlisted p desc date needed choice
+  mapfile -t unlisted < <(changes 2>/dev/null | sed -n 's/^+//p')
+  ((${#unlisted[@]})) || return 0
+  if [[ ! -t 0 ]]; then
+    echo "Installed but not in $list: ${unlisted[*]} (\`just arch-review\` goes through them)"
+    return 0
+  fi
+  echo
+  echo "${#unlisted[@]} package(s) installed and not in $list:"
+  for p in "${unlisted[@]}"; do
+    desc=$(pacman_field "$p" Description)
+    date=$(pacman_field "$p" 'Install Date')
+    date=$(date -d "$date" +%F 2>/dev/null || echo "$date")
+    needed=$(pacman_field "$p" 'Required By')
+    echo
+    printf '\e[1m%s\e[0m  %s\n' "$p" "$desc"
+    echo "  installed $date"
+    why_unlisted "$p"
+    [[ $needed == None ]] || echo "  needed by $needed, so pacman won't uninstall it alone"
+    # Esc or Ctrl-C stops the review; whatever is left is asked about next switch
+    choice=$(gum choose --header "$p:" "Add to $list" "Uninstall (sudo pacman -Rns)" "Leave for now") || {
+      echo "Review stopped; the rest are asked about next switch."
+      return 0
+    }
+    case $choice in
+      Add*) add_to_list "$p" && echo "  added to $list" ;;
+      Uninstall*) sudo pacman -Rns "$p" || echo "  not uninstalled" ;;
+      *) echo "  left; asked again next switch" ;;
+    esac
+  done
+}
+
 case $cmd in
   install)
     mapfile -t wanted < <(listed)
@@ -54,17 +123,17 @@ case $cmd in
         echo "No terminal to ask in, so they wait for the next switch."
       fi
     fi
-    mapfile -t unlisted < <(changes 2>/dev/null | sed -n 's/^+//p')
-    if ((${#unlisted[@]})); then
-      echo "Installed but not in $list: ${unlisted[*]} (\`just arch-save\` records them)"
-    fi
+    review
     # A package that didn't install shouldn't fail the switch that has already happened
     exit 0
+    ;;
+  review)
+    review
     ;;
   save)
     now=$(installed) || { echo "Couldn't read what's installed; $list is untouched." >&2; exit 1; }
     {
-      echo "# Installed on $host beyond Omarchy's own lists; \`just arch-save\` rewrites this"
+      header
       [[ -z $now ]] || echo "$now"
     } > "$list"
     git diff --stat -- "$list"
@@ -73,7 +142,7 @@ case $cmd in
     changes
     ;;
   *)
-    echo "usage: arch-packages install|save|diff [host]" >&2
+    echo "usage: arch-packages install|review|save|diff [host]" >&2
     exit 2
     ;;
 esac
