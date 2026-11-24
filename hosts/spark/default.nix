@@ -1,6 +1,9 @@
 # NVIDIA DGX Spark (GB10, arm64), on the Ubuntu NVIDIA ships it with: where the models
 # run, reached over ssh. Home Manager only. Ubuntu owns the system; apt has few of the
 # CLI tools and old ones, so unlike on the Arch machines Nix installs the programs here.
+# What apt still has to install (drivers, services, libraries, vendors' desktop apps) is
+# apt/spark.packages; a switch points out anything both have (scripts/apt-packages).
+{ pkgs, ... }:
 {
   # The shared set (modules/home/default.nix) without what needs a desk in front of it:
   # no mpv, no newsboat
@@ -17,6 +20,12 @@
   ];
 
   my.files = [ "host-spark" ];
+
+  # Programs that were apt's here and are Nix's now, beyond the shared set
+  home.packages = [
+    pkgs.nodejs_22 # the version NodeSource's apt repository had installed
+    pkgs.xclip # micro's clipboard
+  ];
 
   # Ubuntu owns the GPU drivers and the MIME database, and nothing Nix installs here
   # draws with the GPU. Left on, the first has every switch warn until sudo links

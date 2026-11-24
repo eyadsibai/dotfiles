@@ -5,7 +5,8 @@ vm-fusion/vm-utm), nix-darwin (eyad-m3, eyad-mac), and Omarchy on Arch (vector, 
 Home Manager only; the system stays pacman's, and arch/ has the two root-owned files
 and each host's firewall rules, which `just switch` puts in place with sudo when they
 differ) and Ubuntu (spark, the DGX: Home Manager only as well, but Nix installs the
-programs). README.md is the overview; docs/ has the longer procedures.
+programs, and apt/ lists the little apt still does). README.md is the overview; docs/
+has the longer procedures.
 
 ## Layout
 

@@ -96,6 +96,7 @@ omarchy-defaults/  the Omarchy default each file in files/ was last merged again
 arch/              the two root-owned files an Arch machine needs, <host>.packages: what
                    it has installed beyond Omarchy's own lists, and <host>.ufw: what its
                    firewall lets in beyond Omarchy's rules
+apt/               <host>.packages: what I've installed with apt on spark on top of the image
 secrets/           sops-encrypted, recipients in .sops.yaml
 ```
 
@@ -306,6 +307,14 @@ Ubuntu's `~/.bashrc`, `~/.profile`, `~/.zshrc` and the hand-written `~/.ssh/conf
 as `*.hm-backup`; what installers had appended to them is in `hosts/spark`. spark has no
 key of its own, so pushing from it (and `ssh` from it to the others) needs an agent
 forwarded from the machine you came from.
+
+apt keeps what Nix can't provide or shouldn't: drivers, services, libraries to build
+against, desktop apps from a vendor's repository. What I've installed with it on top of
+the image is `apt/spark.packages`, read from apt's own history (`scripts/apt-packages`).
+After Home Manager, `just switch` installs what the list has and the machine lacks, then
+asks about each package I've installed since that isn't listed, and about any whose
+commands Nix installs as well, so a program ends up in one place: add it to
+`hosts/spark` and let the review uninstall apt's copy.
 
 ## More
 

@@ -1,0 +1,12 @@
+# Installed on spark with apt on top of the image, by me; `just apt-save` rewrites this
+apt-transport-https
+claude-desktop
+daemon
+ddcutil
+fonts-symbola
+google-chrome-stable
+kitty-terminfo
+libfuse2t64
+libomp-dev
+nvidia-firmware-580-580.159.03
+tailscale

@@ -1,0 +1,219 @@
+#!/usr/bin/env bash
+# apt/<host>.packages and the machine, where Ubuntu owns the system and Nix installs my
+# programs (spark). The list is what I've installed with apt on top of the image, which
+# should be only what Nix can't provide or shouldn't: drivers, services, libraries to
+# build against, desktop apps from a vendor's repository. A program belongs in Nix
+# (hosts/<host>), so the review points out any that both have installed.
+#
+#   install   install what the list has and the machine lacks, never removing anything.
+#             `just switch` runs it after Home Manager. Nothing missing: no output, no
+#             questions. Then it goes through what needs deciding (`review`).
+#   review    one package at a time:
+#             - installed with apt by me and not listed: add it to the list, uninstall
+#               it, or leave it to be asked again next switch. One whose commands Nix
+#               installs too is a duplicate, and uninstalling comes first
+#             - listed, and Nix has since come to install its commands too: uninstall
+#               apt's copy and take it off the list, or leave it
+#             It also names what a standalone installer put in ~/.local/bin that Nix
+#             installs as well; those aren't apt's to remove.
+#   save      rewrite the list from what I've installed (`just apt-save`)
+#   diff      what `save` would change: +added, -dropped, nothing when they agree
+#
+# "By me" is read from apt's own history: the packages an install named, not what it
+# pulled in, when someone ran it with sudo. What the image and other installers put
+# there carries no Requested-By. apt keeps that history for a year, which is one more
+# reason the list is kept here.
+#
+# usage: apt-packages install|review|save|diff [host]
+set -uo pipefail
+cd "$(dirname "$0")/.." || exit
+
+cmd=${1:-}
+host=${2:-$(hostname -s)}
+list=apt/$host.packages
+
+listed() {
+  [[ -f $list ]] || return 0
+  grep -Ev '^(#|$)' "$list"
+}
+
+is_installed() { [[ $(dpkg-query -W -f='${db:Status-Abbrev}' "$1" 2>/dev/null) == ii* ]]; }
+
+# What I asked apt to install that is still here
+mine() {
+  local f p
+  {
+    for f in /var/log/apt/history.log.*.gz; do
+      [[ -e $f ]] && gzip -dc "$f"
+    done
+    cat /var/log/apt/history.log 2>/dev/null
+  } | awk '
+    /^Start-Date:/ { asked = 0; installs = "" }
+    /^Requested-By:/ { asked = 1 }
+    /^Install:/ { installs = substr($0, 10) }
+    /^End-Date:/ {
+      if (asked && installs != "") {
+        n = split(installs, entry, /\), /)
+        for (i = 1; i <= n; i++)
+          if (entry[i] !~ /automatic/) { sub(/[: ].*/, "", entry[i]); print entry[i] }
+      }
+    }' | sort -u | while read -r p; do
+    if is_installed "$p"; then echo "$p"; fi
+  done
+}
+
+# Where Home Manager's profile has Nix's programs
+nix_bin() {
+  local d
+  for d in "$HOME/.nix-profile/bin" "${XDG_STATE_HOME:-$HOME/.local/state}/nix/profile/bin"; do
+    if [[ -d $d ]]; then
+      echo "$d"
+      return
+    fi
+  done
+}
+
+# The commands of apt's package $1 that Nix installs as well, on one line
+also_in_nix() {
+  local bin f
+  bin=$(nix_bin)
+  [[ -n $bin ]] || return 0
+  dpkg -L "$1" 2>/dev/null | grep -E '/s?bin/[^/]+$' | while read -r f; do
+    if [[ -e $bin/${f##*/} ]]; then echo "${f##*/}"; fi
+  done | sort -u | paste -sd' '
+}
+
+# Commands a standalone installer put in ~/.local/bin that Nix installs as well. Only
+# named: they aren't apt's to remove. Links are mine, from files/.
+standalone() {
+  local bin f names=()
+  bin=$(nix_bin)
+  [[ -n $bin ]] || return 0
+  for f in "$HOME"/.local/bin/*; do
+    if [[ -f $f && -x $f && ! -L $f && -e $bin/${f##*/} ]]; then names+=("${f##*/}"); fi
+  done
+  if ((${#names[@]})); then
+    echo "In ~/.local/bin from their own installers, and installed by Nix as well: ${names[*]}"
+  fi
+}
+
+changes() {
+  local p
+  comm -13 <(listed | sort -u) <(mine) | sed 's/^/+/'
+  listed | while read -r p; do
+    is_installed "$p" || echo "-$p"
+  done
+}
+
+header() { echo "# Installed on $host with apt on top of the image, by me; \`just apt-save\` rewrites this"; }
+
+write_list() {
+  {
+    header
+    [[ -z $1 ]] || echo "$1"
+  } > "$list"
+}
+
+add_to_list() { write_list "$(sort -m <(listed) <(echo "$1"))"; }
+drop_from_list() { write_list "$(listed | grep -vxF "$1")"; }
+
+review() {
+  local unlisted dupes=() p also choice
+  mapfile -t unlisted < <(comm -13 <(listed | sort -u) <(mine))
+  while read -r p; do
+    if [[ -n $(also_in_nix "$p") ]]; then dupes+=("$p"); fi
+  done < <(listed)
+  if [[ ! -t 0 ]]; then
+    if ((${#unlisted[@]})); then
+      echo "Installed with apt and not in $list: ${unlisted[*]} (\`just apt-review\` goes through them)"
+    fi
+    if ((${#dupes[@]})); then
+      echo "In $list, and installed by Nix as well: ${dupes[*]} (\`just apt-review\`)"
+    fi
+    standalone
+    return 0
+  fi
+  for p in "${unlisted[@]}"; do
+    also=$(also_in_nix "$p")
+    echo
+    printf '\e[1m%s\e[0m  %s\n' "$p" "$(dpkg-query -W -f='${binary:Summary}' "$p" 2>/dev/null)"
+    echo "  installed with apt and not in $list"
+    # Esc or Ctrl-C stops the review; whatever is left is asked about next switch
+    if [[ -n $also ]]; then
+      echo "  Nix installs $also as well, so this copy is a duplicate"
+      choice=$(gum choose --header "$p:" "Uninstall (sudo apt-get remove)" "Add to $list anyway" "Leave for now")
+    else
+      choice=$(gum choose --header "$p:" "Add to $list" "Uninstall (sudo apt-get remove)" "Leave for now")
+    fi || {
+      echo "Review stopped; the rest are asked about next switch."
+      return 0
+    }
+    case $choice in
+      Add*) add_to_list "$p" && echo "  added to $list" ;;
+      Uninstall*) sudo apt-get remove "$p" || echo "  not uninstalled" ;;
+      *) echo "  left; asked again next switch" ;;
+    esac
+  done
+  for p in "${dupes[@]}"; do
+    echo
+    printf '\e[1m%s\e[0m  %s\n' "$p" "$(dpkg-query -W -f='${binary:Summary}' "$p" 2>/dev/null)"
+    echo "  in $list, and Nix installs $(also_in_nix "$p") as well"
+    choice=$(gum choose --header "$p:" "Uninstall apt's copy and take it off $list" "Leave for now") || {
+      echo "Review stopped; the rest are asked about next switch."
+      return 0
+    }
+    case $choice in
+      Uninstall*)
+        if sudo apt-get remove "$p"; then
+          drop_from_list "$p" && echo "  off $list"
+        else
+          echo "  not uninstalled"
+        fi
+        ;;
+      *) echo "  left; asked again next switch" ;;
+    esac
+  done
+  standalone
+}
+
+case $cmd in
+  install)
+    missing=()
+    while read -r p; do
+      is_installed "$p" || missing+=("$p")
+    done < <(listed)
+    if ((${#missing[@]})); then
+      echo "$list has ${#missing[@]} package(s) this machine lacks: ${missing[*]}"
+      if [[ -t 0 ]]; then
+        sudo apt-get install "${missing[@]}" ||
+          echo "Not installed. The next switch offers them again; delete them from $list to stop that."
+      else
+        echo "No terminal to ask in, so they wait for the next switch."
+      fi
+    fi
+    review
+    # A package that didn't install shouldn't fail the switch that has already happened
+    exit 0
+    ;;
+  review)
+    review
+    ;;
+  save)
+    # What I installed, and what was added to the list by hand and is still here
+    now=$({
+      mine
+      listed | while read -r p; do
+        if is_installed "$p"; then echo "$p"; fi
+      done
+    } | sort -u)
+    write_list "$now"
+    git diff --stat -- "$list"
+    ;;
+  diff)
+    changes
+    ;;
+  *)
+    echo "usage: apt-packages install|review|save|diff [host]" >&2
+    exit 2
+    ;;
+esac

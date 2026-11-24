@@ -4,6 +4,8 @@ host := `hostname -s`
 arch := path_exists("/etc/arch-release")
 # Home Manager only (homeConfigurations.<user>@<host>): a Linux that isn't NixOS, so the Arch machines and spark
 home := if os() == "macos" { "false" } else if path_exists("/etc/NIXOS") == "true" { "false" } else { "true" }
+# Ubuntu (spark), where Nix installs my programs and apt only what's in apt/<host>.packages
+apt := path_exists("/usr/bin/apt-get")
 # `nh os` on NixOS, `nh darwin` on macOS, `nh home` where Home Manager is on its own
 nh := if os() == "macos" { "nh darwin" } else if home == "true" { "nh home" } else { "nh os" }
 # nh names a NixOS/macOS host with -H, a Home Manager configuration with -c
@@ -18,7 +20,7 @@ switch name=host:
     {{ if arch == "true" { "scripts/omarchy-links guard" } else { "true" } }}
     {{ if home == "true" { "scripts/arch-system" } else { "true" } }}
     {{nh}} switch . {{target}}{{name}}{{ if home == "true" { " -b hm-backup" } else { "" } }}
-    {{ if arch == "true" { "scripts/arch-packages install " + name } else { "true" } }}
+    {{ if arch == "true" { "scripts/arch-packages install " + name } else if apt == "true" { "scripts/apt-packages install " + name } else { "true" } }}
 
 # Pull, get the newest of everything, then switch; the same on every machine, asking at each step (Arch: `omarchy update` too)
 upgrade:
@@ -113,6 +115,16 @@ arch-save name=host:
 [group('arch')]
 arch-review name=host:
     @scripts/arch-packages review {{name}}
+
+# spark: rewrite apt/<host>.packages from what I've installed with apt on top of the image (`just switch` does the reverse)
+[group('apt')]
+apt-save name=host:
+    @scripts/apt-packages save {{name}}
+
+# spark: go through what apt has that isn't in apt/<host>.packages, or that Nix installs too, one at a time (`just switch` asks too)
+[group('apt')]
+apt-review name=host:
+    @scripts/apt-packages review {{name}}
 
 # List every Omarchy default that changed since I last went through them, overridden here or not (--diff shows the diffs)
 [group('omarchy')]
