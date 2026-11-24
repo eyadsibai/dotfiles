@@ -146,27 +146,52 @@
           ];
         };
 
-      # Omarchy on Arch: Home Manager on its own, the system stays pacman's
-      mkArch =
+      # Home Manager on its own, on a machine whose system another distribution owns
+      mkHome =
+        {
+          system,
+          isArch,
+          base,
+        }:
         hostDir:
         home-manager.lib.homeManagerConfiguration {
           pkgs = import nixpkgs {
-            system = "x86_64-linux";
+            inherit system overlays;
             config.allowUnfree = true;
-            inherit overlays;
           };
           extraSpecialArgs = {
-            inherit inputs username useremail;
+            inherit
+              inputs
+              username
+              useremail
+              isArch
+              ;
             hostname = baseNameOf hostDir;
             repoDir = "/home/${username}/dev/dotfiles";
-            isArch = true;
           };
           modules = [
-            ./modules/home/arch.nix
+            base
             hostDir
             nix-index-database.homeModules.nix-index
             { programs.nix-index-database.comma.enable = true; }
           ];
+        };
+
+      # Omarchy on Arch: the system and the programs stay pacman's
+      mkArch = mkHome {
+        system = "x86_64-linux";
+        isArch = true;
+        base = ./modules/home/arch.nix;
+      };
+
+      # Any other Linux: the system stays the distribution's, and Nix installs the
+      # programs as it does on NixOS. The host file picks the shared modules it wants.
+      mkLinux =
+        system:
+        mkHome {
+          inherit system;
+          isArch = false;
+          base = ./modules/home/standalone.nix;
         };
 
       forAllSystems = lib.genAttrs [
@@ -201,6 +226,7 @@
       homeConfigurations = {
         "${username}@vector" = mkArch ./hosts/vector; # Dell XPS 14, Omarchy on Arch
         "${username}@cachy" = mkArch ./hosts/cachy; # desktop, Omarchy on Arch
+        "${username}@spark" = mkLinux "aarch64-linux" ./hosts/spark; # NVIDIA DGX Spark, Ubuntu
       };
 
       darwinConfigurations = {

@@ -6,8 +6,7 @@ let
   # The LAN addresses are what the router hands out today and have to stay reserved
   # there; if one moves, that machine is simply reached over the tailnet again. The
   # tailnet side is an address too, because cachy doesn't take the tailnet's DNS.
-  # spark and desktop aren't built from this repo: spark's ~/.ssh/config is written by
-  # hand from this table, and desktop (Windows) is only ever connected to.
+  # desktop (Windows) isn't built from this repo and is only ever connected to.
   machines = {
     vector = {
       lan = "192.168.8.194";

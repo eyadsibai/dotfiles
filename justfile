@@ -1,11 +1,13 @@
 # Host to build: this machine's name unless given, e.g. `just build eyad-nixos`
 host := `hostname -s`
-# Omarchy on Arch: Home Manager only (homeConfigurations.<user>@<host>)
+# Omarchy on Arch, which has steps of its own: Omarchy's links, pacman's packages
 arch := path_exists("/etc/arch-release")
-# `nh os` on NixOS, `nh darwin` on macOS, `nh home` on Arch
-nh := if os() == "macos" { "nh darwin" } else if arch == "true" { "nh home" } else { "nh os" }
+# Home Manager only (homeConfigurations.<user>@<host>): a Linux that isn't NixOS, so the Arch machines and spark
+home := if os() == "macos" { "false" } else if path_exists("/etc/NIXOS") == "true" { "false" } else { "true" }
+# `nh os` on NixOS, `nh darwin` on macOS, `nh home` where Home Manager is on its own
+nh := if os() == "macos" { "nh darwin" } else if home == "true" { "nh home" } else { "nh os" }
 # nh names a NixOS/macOS host with -H, a Home Manager configuration with -c
-target := if arch == "true" { "-c " + env("USER") + "@" } else { "-H " }
+target := if home == "true" { "-c " + env("USER") + "@" } else { "-H " }
 
 # List recipes, in this file's order: the two for every day first
 default:
@@ -14,8 +16,8 @@ default:
 # Make this machine match the repo: build, show the diff, activate (Arch: also installs what arch/<host>.packages has that's missing, then asks about each package installed and not listed)
 switch name=host:
     {{ if arch == "true" { "scripts/omarchy-links guard" } else { "true" } }}
-    {{ if arch == "true" { "scripts/arch-system" } else { "true" } }}
-    {{nh}} switch . {{target}}{{name}}{{ if arch == "true" { " -b hm-backup" } else { "" } }}
+    {{ if home == "true" { "scripts/arch-system" } else { "true" } }}
+    {{nh}} switch . {{target}}{{name}}{{ if home == "true" { " -b hm-backup" } else { "" } }}
     {{ if arch == "true" { "scripts/arch-packages install " + name } else { "true" } }}
 
 # Pull, get the newest of everything, then switch; the same on every machine, asking at each step (Arch: `omarchy update` too)
@@ -97,7 +99,7 @@ arch-preview name=host:
 arch-backup name=host:
     @scripts/arch-preview {{name}} --backup
 
-# Arch: install the root-owned files (nix.conf, the Spotify hook) that differ from arch/ and add the firewall rules arch/<host>.ufw lists that are missing; `just switch` runs it, and `--check` only lists them
+# Arch and spark: install the root-owned files (nix.conf, on Arch the Spotify hook) that differ from arch/ and add the firewall rules arch/<host>.ufw lists that are missing; `just switch` runs it, and `--check` only lists them
 [group('arch')]
 arch-system *args:
     @scripts/arch-system {{args}}

@@ -9,7 +9,6 @@
   lib,
   pkgs,
   repoDir,
-  username,
   ...
 }:
 let
@@ -28,17 +27,14 @@ let
 in
 {
   imports = [
+    ./standalone.nix
     ./default.nix
     ./files.nix
   ];
 
-  home.username = username;
-  home.homeDirectory = "/home/${username}";
-  programs.home-manager.enable = true;
-  targets.genericLinux.enable = true; # desktop entries and XDG paths for Nix's apps
-  # It would also link Nix's GPU drivers into /run, and until that's done with sudo
-  # every switch warns that the GPU isn't set up. Nothing Nix installs here draws
-  # with the GPU; pacman owns the programs that do.
+  # genericLinux (standalone.nix) would also link Nix's GPU drivers into /run, and
+  # until that's done with sudo every switch warns that the GPU isn't set up. Nothing
+  # Nix installs here draws with the GPU; pacman owns the programs that do.
   targets.genericLinux.gpu.enable = false;
   # pacman owns the MIME database. Nix's copy sits ahead of it on XDG_DATA_DIRS and
   # keeps *.png claimed by image/apng, so gvfs sftp drops content-type and Strata
@@ -63,20 +59,10 @@ in
     "tv"
   ];
 
-  # The caches every machine uses, in ~/.config/nix/nix.conf. The daemon accepts
-  # them from me because /etc/nix/nix.conf (arch/nix.conf, kept by scripts/arch-system)
-  # makes me a trusted user. The package only checks the file at build time;
-  # pacman's nix is the one that runs.
-  nix = {
-    package = pkgs.nix;
-    settings = { inherit (import ../common/caches.nix) substituters trusted-public-keys; };
-  };
-
-  home.packages = with pkgs; [
-    nh
+  home.packages = [
     # Easier from Nix than from Arch's repos. Its colours come from the theme-set
     # hook 40-cava.sh.
-    cava # audio visualizer; also drives the bar's (eyad.cava)
+    pkgs.cava # audio visualizer; also drives the bar's (eyad.cava)
   ];
   programs.man.package = null; # pacman's man-db
 

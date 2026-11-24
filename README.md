@@ -35,11 +35,12 @@ the non-obvious parts are commented with the reason.
 | `eyad-m3`, `eyad-mac` | macOS · Apple Silicon | One configuration, two names. macOS defaults, Homebrew casks managed declaratively, a Linux builder VM, Rosetta. |
 | `vector` | Omarchy on Arch · Dell XPS 14 (2026) | The laptop I carry. Arch and Omarchy own the system; Home Manager on its own adds the shell, CLI, git and the files in `files/`. |
 | `cachy` | Omarchy on Arch · desktop | Reached remotely for development. Same as `vector`, with fish as the interactive shell. |
+| `spark` | Ubuntu · NVIDIA DGX Spark (arm64) | Where the models run, reached over ssh. Ubuntu owns the system; Home Manager on its own adds the shell, CLI, git and ssh setup, and Nix installs the programs to go with it, since apt has few of them ([Setting up spark](#setting-up-spark)). |
 | `vm-fusion`, `vm-utm` | NixOS · aarch64 VM on the Macs | A full GNOME desktop that runs full screen on a Mac, for dev work in Linux while the Mac keeps its apps ([Mitchell Hashimoto's setup](https://github.com/mitchellh/nixos-config)). One for VMware Fusion, one for UTM; see [A NixOS VM on the Mac](docs/mac-vm.md). |
 | `home-server` | NixOS | Not installed yet. It will replace the Unraid box: backups and data, Plex, and the long list of homelab services that go with them. Encrypted and unlocked by the TPM, a root wiped on every boot, updated from here with `just deploy` ([docs/home-server.md](docs/home-server.md)). |
 
-The large models run on a DGX Spark, which isn't managed here; the workstation keeps the
-small ones.
+The large models run on `spark`, where only my own setup is managed from here, not the
+system or the model stack; the workstation keeps the small ones.
 
 ## How it's put together
 
@@ -283,6 +284,28 @@ anything worth keeping into the repo. Then open a new terminal for the Nix `PATH
 `direnv allow` in the repo, and `systemctl --user enable --now tv-check.timer`.
 Finally sign in to the 1Password app at the machine and turn on Settings → Developer →
 "Use the SSH agent", or pushing to GitHub can't use the key.
+
+## Setting up spark
+
+Ubuntu as NVIDIA ships it, then Nix from its own installer (apt's is too old), then Home
+Manager on its own as on the Arch machines. The difference is who installs the programs:
+there is no pacman list here, so Nix does, as on NixOS (`mkLinux` in `flake.nix`;
+`hosts/spark` picks the shared modules, leaving out what needs a desk).
+
+```bash
+sh <(curl -L https://nixos.org/nix/install) --daemon    # then open a new shell
+git clone https://github.com/eyadsibai/dotfiles.git ~/dev/dotfiles
+cd ~/dev/dotfiles
+sudo cp arch/nix.conf /etc/nix/nix.conf    # flakes, the caches, me as a trusted user
+sudo systemctl restart nix-daemon
+nix develop -c just switch                 # just and nh come from the dev shell until then
+```
+
+The first switch downloads about 2 GB and compiles only a few small things. It moves
+Ubuntu's `~/.bashrc`, `~/.profile`, `~/.zshrc` and the hand-written `~/.ssh/config` aside
+as `*.hm-backup`; what installers had appended to them is in `hosts/spark`. spark has no
+key of its own, so pushing from it (and `ssh` from it to the others) needs an agent
+forwarded from the machine you came from.
 
 ## More
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# What an Arch machine needs from this repo that only root can put in place, which Home
-# Manager, running as me, can't: two files, and the firewall rules of a host that lists
-# any. `just switch` runs this first: when it all matches the repo it does nothing and
-# asks for nothing; when something differs it shows the difference and puts it right
-# with sudo.
+# What a machine with Home Manager on its own (the Arch ones, and spark on Ubuntu) needs
+# from this repo that only root can put in place, which Home Manager, running as me,
+# can't: two files, and the firewall rules of a host that lists any. `just switch` runs
+# this first: when it all matches the repo it does nothing and asks for nothing; when
+# something differs it shows the difference and puts it right with sudo.
 #
 #   /etc/nix/nix.conf                    from arch/nix.conf
-#   /etc/pacman.d/hooks/spicetify.hook   from arch/spicetify.hook
+#   /etc/pacman.d/hooks/spicetify.hook   from arch/spicetify.hook, on Arch only
 #   ufw's rules                          from arch/<host>.ufw, for a host that has one
 #
 # The hook opens /opt/spotify to spicetify only from Spotify's next install or upgrade
@@ -25,7 +25,10 @@ ufw_rules=/etc/ufw/user.rules
 
 todo=()
 cmp -s arch/nix.conf "$nix_conf" || todo+=(nix.conf)
-cmp -s arch/spicetify.hook "$hook" || todo+=(spicetify.hook)
+# A pacman hook is no use where there's no pacman to run it
+if [[ -e /etc/arch-release ]]; then
+  cmp -s arch/spicetify.hook "$hook" || todo+=(spicetify.hook)
+fi
 if [[ -d /opt/spotify/Apps ]] && ! [[ -w /opt/spotify && -w /opt/spotify/Apps ]]; then
   todo+=(spotify-writable)
 fi
