@@ -1,0 +1,30 @@
+[tools]
+bun = "latest"
+"cargo:zoetrope" = "latest"
+deno = "latest"
+dotnet = "latest"
+glow = "latest"
+go = "latest"
+herdr = "latest"
+java = "latest"
+opentofu = "1.13.2"
+pnpm = "12.15.0"
+ruby = "latest"
+scala = "latest"
+scala-cli = "latest"
+"github:zenbu-labs/terminal-browser" = { version = "latest", version_prefix = "v", strip_components = 1, bin_path = "bin" }
+git-cliff = "latest"
+
+[settings]
+idiomatic_version_file_enable_tools = ["ruby"]
+minimum_release_age_excludes = ["claude", "codex"]
+
+[settings.ruby]
+compile = false
+
+[settings.upgrade]
+#[settings]
+#idiomatic_version_file_enable_tools = ["ruby"]
+
+#[settings.ruby]
+

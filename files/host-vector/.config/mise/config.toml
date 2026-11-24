@@ -1,0 +1,13 @@
+[tools]
+crush = "0.100.0" # TODO: back to "latest" once mise ships aqua-registry #62157 (cosign identity for >=0.98.0)
+databricks-cli = "latest"
+dotnet = "latest"
+gitleaks = "8.30.1"
+java = "latest"
+"npm:@alibaba-group/open-code-review" = { version = "latest", trust_policy_excludes = "@alibaba-group/open-code-review" }
+"npm:@jetbrains/junie" = { version = "latest", allow_builds = ["@jetbrains/junie"], allow_low_downloads = true }
+"npm:coderabbit" = { version = "latest", allow_builds = ["coderabbit"], allow_low_downloads = true }
+osv-scanner = "2.7.0"
+uv = "latest"
+
+[settings.upgrade]
