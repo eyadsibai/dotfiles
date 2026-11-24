@@ -178,6 +178,21 @@ in
     fi
   '';
 
+  # The keys allowed to log in here, the same list the NixOS hosts get (users.nix).
+  # Copied, not linked: sshd's StrictModes refuses a file whose real path passes
+  # through /nix/store, which is group-writable. Whatever was there before the first
+  # switch is kept once as authorized_keys.pre-hm.
+  home.activation.authorizedKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    keys="$HOME/.ssh/authorized_keys"
+    if ! cmp -s ${../nixos/authorized-keys} "$keys"; then
+      run install -d -m700 "$HOME/.ssh"
+      if [ -e "$keys" ] && [ ! -e "$keys.pre-hm" ]; then
+        run cp -p "$keys" "$keys.pre-hm"
+      fi
+      run install -m600 ${../nixos/authorized-keys} "$keys"
+    fi
+  '';
+
   programs.bash.initExtra = ''
     bwunlock() { export BW_SESSION=$(bw unlock --raw); }
     gh-relogin() {

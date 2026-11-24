@@ -1,4 +1,5 @@
-# Key-only SSH, reachable on the LAN and Tailscale; authorized keys are in ./authorized-keys
+# Key-only SSH, reachable on the LAN and Tailscale; authorized keys are in ./authorized-keys,
+# which the Arch hosts install too (modules/home/arch.nix)
 {
   services.openssh = {
     enable = true;
