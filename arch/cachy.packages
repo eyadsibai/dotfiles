@@ -49,6 +49,7 @@ carapace-bin
 catimg
 cava
 chafa
+clang
 claude-desktop
 cloudflare-speed-cli
 cloudflared
@@ -149,6 +150,7 @@ kdeconnect
 kew
 kitty
 kooha
+lazydocker
 lazyjournal-bin
 lib32-mesa
 lib32-opencl-mesa
@@ -167,6 +169,7 @@ links
 linux
 linux-firmware-qcom
 llmfit
+llvm
 lmstudio-bin
 logrotate
 lsb-release
@@ -225,6 +228,7 @@ opendesktop-fonts
 openlogi-bin
 openspec
 openssh
+owe-lockfeed
 oxipng
 pacsea-bin
 pam-u2f

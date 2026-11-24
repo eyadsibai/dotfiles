@@ -100,10 +100,12 @@ in
 
   # That copy is made at theme changes, so rebuild it whenever starship.toml may have
   # changed. Without the hook, link the plain config so STARSHIP_CONFIG never dangles.
+  # The hook is written for a login shell's PATH (its Zen step needs awk), and
+  # activation has only Nix's own tools there, so /usr/bin goes first.
   home.activation.themedStarship = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     hook="$HOME/.config/omarchy/hooks/theme-set.d/60-omarchy-theme-apps.sh"
     if [ -x "$hook" ]; then
-      run "$hook"
+      run env PATH="/usr/bin:$PATH" "$hook"
     else
       run mkdir -p "$(dirname "${themedStarship}")"
       run ln -sfn "$HOME/.config/starship.toml" "${themedStarship}"
