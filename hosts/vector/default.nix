@@ -9,18 +9,11 @@
   home.file.".config/hyprmoncfg/profiles".source =
     config.lib.file.mkOutOfStoreSymlink "${repoDir}/files/hyprmoncfg/.config/hyprmoncfg/profiles";
 
-  # My own machines, reached from here over Tailscale; they get this laptop's 1Password
-  # agent, named because `ForwardAgent yes` would forward gnome-keyring's instead
+  # My own machines get this laptop's 1Password agent, named because `ForwardAgent yes`
+  # would forward gnome-keyring's instead (where they're reached: modules/home/home-lan.nix)
   programs.ssh.settings = {
-    "Host cachy" = {
-      HostName = "cachy";
-      ForwardAgent = "~/.1password/agent.sock";
-    };
-    "Host desktop" = {
-      HostName = "desktop";
-      User = "eyada";
-      ForwardAgent = "~/.1password/agent.sock";
-    };
+    "Host cachy".ForwardAgent = "~/.1password/agent.sock";
+    "Host desktop".ForwardAgent = "~/.1password/agent.sock";
   };
   home.stateVersion = "26.05";
 }

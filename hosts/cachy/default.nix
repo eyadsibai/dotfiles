@@ -21,9 +21,10 @@
     fi
   '';
 
-  # The DGX, the workstation and Azure DevOps, as reached from here. Order matters for
-  # the DGX: the direct-cable Match has to come after `dgx` names it and before the
-  # tailnet fallback sets HostName.
+  # The DGX, the workstation's extra names and Azure DevOps, as reached from here (the
+  # workstation itself: modules/home/home-lan.nix). Order matters for the DGX: the
+  # direct-cable Match has to come after `dgx` names it and before the tailnet fallback
+  # sets HostName.
   programs.ssh = {
     includes = [ "~/.config/NVIDIA/Sync/config/ssh_config" ];
     settings = {
@@ -45,7 +46,6 @@
         IdentityFile = "~/.ssh/id_rsa_azure";
         IdentitiesOnly = "yes";
       };
-      "Host workstation".HostName = "workstation.local";
       "Host workstation-ts" = {
         HostName = "100.115.116.117";
         HostKeyAlias = "workstation.local";

@@ -101,6 +101,7 @@
         let
           specialArgs = {
             inherit inputs username useremail;
+            hostname = baseNameOf hostDir;
             repoDir = "/home/${username}/dev/dotfiles";
             isArch = false;
           };
@@ -156,6 +157,7 @@
           };
           extraSpecialArgs = {
             inherit inputs username useremail;
+            hostname = baseNameOf hostDir;
             repoDir = "/home/${username}/dev/dotfiles";
             isArch = true;
           };
