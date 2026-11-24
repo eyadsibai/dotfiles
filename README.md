@@ -92,8 +92,9 @@ scripts/           what the Arch and Omarchy `just` recipes run
 tests/             the homelab booted in a VM (a flake check, which CI runs)
 docs/              longer procedures: the Mac VMs, installing home-server, the homelab, CI
 omarchy-defaults/  the Omarchy default each file in files/ was last merged against
-arch/              the two root-owned files an Arch machine needs, and <host>.packages:
-                   what it has installed beyond Omarchy's own lists
+arch/              the two root-owned files an Arch machine needs, <host>.packages: what
+                   it has installed beyond Omarchy's own lists, and <host>.ufw: what its
+                   firewall lets in beyond Omarchy's rules
 secrets/           sops-encrypted, recipients in .sops.yaml
 ```
 
@@ -112,7 +113,9 @@ trusted user so my own `~/.config/nix/nix.conf`, written by Home Manager with th
 caches as every other machine, is honoured) and the pacman hook `arch/spicetify.hook`
 that keeps Spotify patchable. `just switch` compares both with what's installed
 (`scripts/arch-system`) and asks for sudo only when one differs, after showing the
-difference.
+difference. The same script keeps the firewall: `arch/<host>.ufw` lists what a machine
+lets in beyond Omarchy's rules (vector: sshd from the home LAN), and a rule that's listed
+and missing is added, never one removed.
 
 Pacman installs the system, Omarchy and every program, the CLI tools and shells included
 (`arch/<host>.packages`; `just switch` installs what it lists and the machine lacks,
@@ -313,7 +316,7 @@ day needs:
 
 | Command | Does |
 |---|---|
-| `just switch [host]` | build, show the package diff, activate; on Arch also the two root-owned files and any package `arch/<host>.packages` lists that's missing |
+| `just switch [host]` | build, show the package diff, activate; on Arch also the two root-owned files, and any firewall rule `arch/<host>.ufw` or package `arch/<host>.packages` lists that's missing |
 | `just upgrade` | pull, the newest of everything, then switch, commit and reboot if the kernel changed, asking before each (`scripts/upgrade`) |
 | `just build [host]` | build and show the diff only |
 | `just boot [host]` | NixOS: activate on next boot, for desktop or login changes |

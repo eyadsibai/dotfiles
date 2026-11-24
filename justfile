@@ -97,7 +97,7 @@ arch-preview name=host:
 arch-backup name=host:
     @scripts/arch-preview {{name}} --backup
 
-# Arch: install the root-owned files (nix.conf, the Spotify hook) that differ from arch/; `just switch` runs it, and `--check` only lists them
+# Arch: install the root-owned files (nix.conf, the Spotify hook) that differ from arch/ and add the firewall rules arch/<host>.ufw lists that are missing; `just switch` runs it, and `--check` only lists them
 [group('arch')]
 arch-system *args:
     @scripts/arch-system {{args}}

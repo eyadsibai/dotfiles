@@ -1,0 +1,10 @@
+# What vector's firewall lets in beyond Omarchy's own rules, one per line:
+#
+#   <tcp|udp> <port> <from>
+#
+# `just switch` adds what's listed here and missing (scripts/arch-system). It never
+# removes a rule: dropping a line here means `sudo ufw delete allow ...` as well.
+
+# sshd, for the machines at home, which try this one on the LAN before the tailnet
+# (modules/home/home-lan.nix). Any other network numbered like home's is let in too.
+tcp 22 192.168.8.0/24

@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
-# The two root-owned files an Arch machine needs from this repo, which Home Manager,
-# running as me, can't write. `just switch` runs this first: when both match the repo
-# it does nothing and asks for nothing; when one differs it shows the difference and
-# installs the repo's copy with sudo.
+# What an Arch machine needs from this repo that only root can put in place, which Home
+# Manager, running as me, can't: two files, and the firewall rules of a host that lists
+# any. `just switch` runs this first: when it all matches the repo it does nothing and
+# asks for nothing; when something differs it shows the difference and puts it right
+# with sudo.
 #
 #   /etc/nix/nix.conf                    from arch/nix.conf
 #   /etc/pacman.d/hooks/spicetify.hook   from arch/spicetify.hook
+#   ufw's rules                          from arch/<host>.ufw, for a host that has one
 #
 # The hook opens /opt/spotify to spicetify only from Spotify's next install or upgrade
 # on, so a Spotify that was there before the hook is opened here.
+#
+# The firewall only gains rules: one that's listed and missing is added, none is removed.
 #
 # usage: arch-system [--check]   --check lists what differs and exits 1 if anything does
 set -euo pipefail
@@ -16,6 +20,8 @@ cd "$(dirname "$0")/.."
 
 nix_conf=/etc/nix/nix.conf
 hook=/etc/pacman.d/hooks/spicetify.hook
+ufw_list=arch/$(hostname -s).ufw
+ufw_rules=/etc/ufw/user.rules
 
 todo=()
 cmp -s arch/nix.conf "$nix_conf" || todo+=(nix.conf)
@@ -23,6 +29,18 @@ cmp -s arch/spicetify.hook "$hook" || todo+=(spicetify.hook)
 if [[ -d /opt/spotify/Apps ]] && ! [[ -w /opt/spotify && -w /opt/spotify/Apps ]]; then
   todo+=(spotify-writable)
 fi
+
+# The lines of arch/<host>.ufw ("<tcp|udp> <port> <from>") that ufw has no rule for,
+# going by its own record of them, which takes no root to read
+missing_rules=()
+if [[ -f $ufw_list ]] && command -v ufw >/dev/null; then
+  have=$(sed -n 's/^### tuple ### //p' "$ufw_rules" 2>/dev/null | sed 's/ comment=.*//') || true
+  while read -r proto port from; do
+    grep -qxF "allow $proto $port 0.0.0.0/0 any $from in" <<<"$have" ||
+      missing_rules+=("$proto $port $from")
+  done < <(grep -Ev '^[[:space:]]*(#|$)' "$ufw_list")
+fi
+[[ ${#missing_rules[@]} -eq 0 ]] || todo+=(firewall)
 
 # What installing the repo's $1 over $2 changes
 show() {
@@ -45,6 +63,12 @@ for t in "${todo[@]}"; do
     nix.conf) show arch/nix.conf "$nix_conf" ;;
     spicetify.hook) show arch/spicetify.hook "$hook" ;;
     spotify-writable) echo "/opt/spotify isn't writable, so spicetify can't theme Spotify" ;;
+    firewall)
+      for rule in "${missing_rules[@]}"; do
+        read -r proto port from <<<"$rule"
+        echo "the firewall doesn't let in $proto port $port from $from ($ufw_list)"
+      done
+      ;;
   esac
 done
 echo "sudo puts this right (${todo[*]}):"
@@ -61,6 +85,12 @@ for t in "${todo[@]}"; do
     spotify-writable)
       sudo chmod a+wr /opt/spotify
       sudo chmod -R a+wr /opt/spotify/Apps
+      ;;
+    firewall)
+      for rule in "${missing_rules[@]}"; do
+        read -r proto port from <<<"$rule"
+        sudo ufw allow from "$from" to any port "$port" proto "$proto"
+      done
       ;;
   esac
 done
