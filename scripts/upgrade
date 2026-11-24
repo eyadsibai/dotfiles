@@ -156,8 +156,10 @@ reboot_due() {
     done
     return 1
   fi
-  # Arch: pacman removed the running kernel's modules when it installed the new one
-  $arch && [[ ! -d /usr/lib/modules/$(uname -r) ]]
+  # Arch: pacman no longer owns the running kernel. Its modules directory proves
+  # nothing: Omarchy's pacman hook puts it back after the upgrade, so the running
+  # kernel can still load modules until the reboot.
+  $arch && ! pacman -Qqo "/usr/lib/modules/$(uname -r)/modules.builtin" &>/dev/null
 }
 
 if ((${#before[@]})); then
