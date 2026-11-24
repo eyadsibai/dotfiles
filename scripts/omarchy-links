@@ -41,11 +41,22 @@ for rel in "${linked[@]}"; do
     continue
   fi
   if [[ $mode == adopt || $mode == relink ]]; then
+    # Uncommitted edits in the repo's copy that the live file lacks would vanish
+    # here with nothing to show for it, so the old copy goes into git's object
+    # store first (git keeps an unreachable object for two weeks).
+    if ! cmp -s -- "$live" "$source" && ! git diff --quiet -- "$source"; then
+      echo "replaced  ${source#"$repo"/} had uncommitted edits; the old copy: git cat-file -p $(git hash-object -w -- "$source")"
+    fi
     cp -- "$live" "$source"
     ln -sfn -- "$link" "$live"
     echo "adopted   ~/$rel -> ${source#"$repo"/}"
   else
-    cmp -s -- "$live" "$source" && note="same as the repo" || note="differs from ${source#"$repo"/}"
+    if cmp -s -- "$live" "$source"; then
+      note="same as the repo"
+    else
+      note="differs from ${source#"$repo"/}"
+      git diff --quiet -- "$source" || note+=", which has uncommitted edits"
+    fi
     echo "detached  ~/$rel  (a plain file now, $note)"
   fi
 done
