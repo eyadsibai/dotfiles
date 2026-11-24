@@ -1,20 +1,69 @@
 #!/usr/bin/env bash
-# Keeps the files in files/ that replace an Omarchy default in step with upstream.
+# What an Omarchy update changed in its default configs, shown as diffs, and the way
+# to take the changes I want into my own.
 #
-# omarchy-defaults/<path> holds the Omarchy default each override was last merged
-# against. When an Omarchy update changes $OMARCHY_PATH/config/<path>, `merge` applies
-# only Omarchy's change to our copy (git merge-file: ours, the old default, the new
-# one) and records the new default; `check` just lists what would merge.
+# Omarchy keeps two trees of defaults under $OMARCHY_PATH:
+#
+#   config/   Templates, copied to ~/.config once at install. Omarchy leaves my copy
+#             alone afterwards, so a change here reaches me only if I take it.
+#   default/  Omarchy's own. Whatever my config sources from here (Hyprland, bash) is
+#             in effect as soon as the update lands: nothing to merge, only to know.
+#
+# A change is measured from the default as it was when I last dealt with it. For a
+# template that a file in files/ replaces, that copy is omarchy-defaults/<path> in the
+# repo: the merged file is shared by every machine, so what it was merged against has
+# to be too. For everything else it is this machine's own, under
+# ~/.local/state/dotfiles/omarchy-defaults, and each diff I've dealt with is kept in
+# history/<version>.diff beside it.
+#
+#   check [--diff]  list what changed, with the diffs if asked; nothing is decided
+#   review          one change at a time: Omarchy's diff, then merge it into mine
+#                   (3-way, so only Omarchy's change is applied), keep mine, or decide
+#                   later. What's left for later comes up again at the next review.
+#   init            only record what has no record yet, as it is now: this machine's
+#                   copy, and the default under a file newly added to files/. `just
+#                   upgrade` runs it before the update, so the update's changes show.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 mode=${1:-check}
-defaults=${OMARCHY_PATH:-/usr/share/omarchy}/config
-version=$(omarchy-version)
-changed=0 conflicts=0
+case $mode in
+  check | review | init) ;;
+  *)
+    echo "usage: omarchy-defaults [check [--diff] | review | init]" >&2
+    exit 2
+    ;;
+esac
 
-# The recorded defaults are shared by every machine; one still on an older Omarchy
-# would merge its older defaults backwards over the newer ones
+omarchy=${OMARCHY_PATH:-/usr/share/omarchy}
+config=${XDG_CONFIG_HOME:-$HOME/.config}
+state=${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/omarchy-defaults
+version=$(omarchy-version)
+
+# Every default Omarchy ships as text, as config/<path> or default/<path>. The
+# translations are left out: they change with each release and configure nothing.
+shipped() {
+  (
+    cd "$omarchy" || exit 0
+    # grep -I passes over binaries, and finds no line to match in an empty file
+    find config default -type f ! -path 'default/i18n/*' ! -empty -exec grep -Il '' {} + 2>/dev/null || true
+    find config default -type f ! -path 'default/i18n/*' -empty 2>/dev/null || true
+  ) | sort
+}
+
+# A machine with no record yet: the defaults as they are become the starting point.
+# This comes before an update, or the update's own changes would be the starting point.
+if [[ ! -f $state/initialized ]]; then
+  mkdir -p "$state"
+  while IFS= read -r key; do
+    install -D -m 644 "$omarchy/$key" "$state/$key"
+  done < <(shipped)
+  echo "$version" >"$state/initialized"
+  echo "No record of Omarchy's defaults on this machine yet: $version's are the starting point."
+fi
+
+# The defaults recorded in the repo are shared by every machine; one still on an older
+# Omarchy would merge its older defaults backwards over the newer ones
 recorded=$(cat omarchy-defaults/VERSION 2>/dev/null || echo 0)
 # 4.5.0-rc3 sorts before 4.5.0 once written 4.5.0~rc3
 if [[ $(printf '%s\n' "${recorded/-/\~}" "${version/-/\~}" | sort -V | head -1) != "${recorded/-/\~}" ]]; then
@@ -22,36 +71,299 @@ if [[ $(printf '%s\n' "${recorded/-/\~}" "${version/-/\~}" | sort -V | head -1) 
   exit 0
 fi
 
-while IFS= read -r ours; do
-  rel=${ours#files/*/.config/}
-  new=$defaults/$rel
-  base=omarchy-defaults/$rel
-  [[ -f $new ]] || continue
-  if [[ ! -f $base ]]; then
-    # First sight of this file: today's default becomes the starting point
-    [[ $mode == merge ]] && install -D -m 644 "$new" "$base"
-    continue
-  fi
-  cmp -s "$base" "$new" && continue
-  changed=1
-  if [[ $mode == check ]]; then
-    echo "Omarchy changed $rel  (override: $ours)"
-    continue
-  fi
-  if git merge-file -L "$ours" -L "omarchy before" -L "omarchy $version" "$ours" "$base" "$new"; then
-    echo "merged    $ours"
-  else
-    echo "CONFLICT  $ours  (look for <<<<<<< markers)"
-    conflicts=1
-  fi
-  install -m 644 "$new" "$base"
-done < <(find files/*/.config -type f | sort)
+# Every default there is now, or was when last dealt with
+keys() {
+  {
+    shipped
+    (cd "$state" && find config default -type f 2>/dev/null || true)
+    find omarchy-defaults -type f ! -name VERSION -printf 'config/%P\n' 2>/dev/null || true
+  } | sort -u
+}
 
-[[ $mode == merge ]] && mkdir -p omarchy-defaults && echo "$version" > omarchy-defaults/VERSION
+# For one default, sets: where Omarchy's copy ($new) and the remembered one ($base)
+# are, the files of mine its change could be merged into ($targets), the ones it can
+# be compared with ($mine), and what happened to it ($status)
+look() {
+  key=$1
+  local tree=${key%%/*} rel=${key#*/} live f
+  new=$omarchy/$key base=$state/$key
+  targets=() mine=() where=""
+  if [[ $tree == config ]]; then
+    live=$config/$rel
+    for f in files/*/.config/"$rel"; do
+      if [[ -f $f ]]; then targets+=("$f"); fi
+    done
+    if ((${#targets[@]})); then
+      base=omarchy-defaults/$rel
+      mine=("${targets[@]}")
+      where=${targets[*]%%/.config/*}
+    elif [[ -L $live ]]; then
+      mine=("$live")
+      if [[ $(readlink -f -- "$live") == /nix/store/* ]]; then
+        where="yours comes from a Nix module"
+      else
+        where="yours is a link to somewhere else"
+      fi
+    elif [[ -f $live ]]; then
+      targets=("$live") mine=("$live")
+      where="yours is in ~/.config, not in the repo"
+    else
+      where="you don't have it"
+    fi
+  fi
+  if [[ ! -f $new ]]; then
+    if [[ -f $base ]]; then status=removed; else status=same; fi
+  elif [[ -f $base ]]; then
+    if cmp -s -- "$base" "$new"; then status=same; else status=changed; fi
+  elif [[ $base == omarchy-defaults/* ]]; then
+    # A file of mine over a default that was never recorded: there's no telling
+    # which default it was written against, so today's is where it starts
+    status=unrecorded
+  else
+    status=new
+  fi
+}
+
+# Omarchy's change to the default looked at: the remembered copy against today's
+upstream_diff() {
+  local old=$base now=$new
+  [[ -f $old ]] || old=/dev/null
+  [[ -f $now ]] || now=/dev/null
+  diff -u --label "omarchy before: $key" --label "omarchy $version: $key" -- "$old" "$now" || true
+}
+
+# "+3 -1": how big that change is
+size() {
+  local old=$base now=$new
+  [[ -f $old ]] || old=/dev/null
+  [[ -f $now ]] || now=/dev/null
+  { diff -- "$old" "$now" || true; } | awk '/^>/{a++} /^</{r++} END{printf "+%d -%d", a, r}'
+}
+
+# Coloured where there's a tool for it, and paged only when longer than the screen
+show() {
+  if [[ ! -t 1 ]]; then
+    cat
+  elif command -v delta >/dev/null; then
+    { delta --paging=never | less -RFX; } || true
+  elif command -v bat >/dev/null; then
+    { bat --language=diff --style=plain --color=always --paging=never | less -RFX; } || true
+  else
+    less -RFX || true
+  fi
+}
+
+# One change dealt with: Omarchy's diff goes into this machine's history, and the
+# default as it is now is what the next change is measured from
+record() {
+  mkdir -p "$state/history"
+  upstream_diff >>"$state/history/$version.diff"
+  if [[ -f $new ]]; then
+    install -D -m 644 "$new" "$base"
+    [[ $base == "$state/$key" ]] || install -D -m 644 "$new" "$state/$key"
+  else
+    rm -f -- "$base" "$state/$key"
+  fi
+  if [[ $base == omarchy-defaults/* ]]; then repo_changed=true; fi
+}
+
+repo_changed=false
+pending=()
+while IFS= read -r k; do
+  look "$k"
+  case $status in
+    same) ;;
+    unrecorded)
+      if [[ $mode != check ]]; then
+        install -D -m 644 "$new" "$base"
+        repo_changed=true
+        echo "recorded  ${key#*/}: no default was on record for it, so today's is where it starts"
+      fi
+      ;;
+    *) pending+=("$k") ;;
+  esac
+done < <(keys)
+
+# The version the repo's defaults were last recorded from, for the check above
+finish() {
+  if $repo_changed; then
+    echo "$version" >omarchy-defaults/VERSION
+  fi
+}
+
+if [[ $mode == init ]]; then
+  finish
+  exit 0
+fi
+
+if ((${#pending[@]} == 0)); then
+  finish
+  echo "No Omarchy default has changed since you last went through them ($version)."
+  exit 0
+fi
+
+echo "Omarchy $version changed ${#pending[@]} default(s) since you last went through them."
+for tree in config default; do
+  heading=true
+  for k in "${pending[@]}"; do
+    [[ $k == "$tree"/* ]] || continue
+    if $heading; then
+      heading=false
+      echo
+      if [[ $tree == config ]]; then
+        echo "Templates (config/): yours stays as it is until you take the change"
+      else
+        echo "Omarchy's own (default/): already in effect wherever your config sources them"
+      fi
+    fi
+    look "$k"
+    line=$(printf '  %-8s %-46s %-9s %s' "$status" "${key#*/}" "$(size)" "$where")
+    echo "${line%"${line##*[! ]}"}"
+  done
+done
 
 if [[ $mode == check ]]; then
-  ((changed)) && echo "Run \`just omarchy-merge\` to bring these in." || echo "No Omarchy defaults changed under your overrides."
-elif ((conflicts)); then
-  echo "Resolve the conflicts before the next login: Hyprland and the bar won't read a file with markers."
+  echo
+  if [[ ${2:-} == --diff ]]; then
+    for k in "${pending[@]}"; do
+      look "$k"
+      upstream_diff
+      echo
+    done | show
+  else
+    echo "\`just omarchy-check --diff\` shows the diffs; \`just omarchy-review\` goes through them."
+  fi
+  exit 0
+fi
+
+# From here on: review. A prompt that is closed (Esc, Ctrl-C, no terminal) ends it,
+# and everything not yet dealt with stays for the next one.
+choose() { gum choose --header "$1" "${@:2}"; }
+
+took=0 kept=0 stopped=false
+conflicted=()
+
+# Applies Omarchy's change to one file of mine
+merge_into() {
+  if cmp -s -- "$1" "$base"; then
+    # Still the old default word for word, so the new one simply takes its place
+    cat -- "$new" >"$1"
+    echo "updated   $1"
+  elif git merge-file -L "$1" -L "omarchy before" -L "omarchy $version" "$1" "$base" "$new"; then
+    echo "merged    $1"
+  else
+    echo "CONFLICT  $1  (look for <<<<<<< markers)"
+    conflicted+=("$1")
+  fi
+}
+
+for k in "${pending[@]}"; do
+  [[ $k == config/* ]] || continue
+  $stopped && break
+  look "$k"
+  rel=${key#*/}
+  printf '\n\e[1m%s\e[0m  %s, %s\n' "$rel" "$status" "$where"
+  upstream_diff | show
+
+  options=()
+  if [[ $status == changed ]] && ((${#targets[@]})); then
+    options+=("Merge Omarchy's change into mine")
+  fi
+  if [[ $status != removed ]]; then
+    if ((${#mine[@]})); then
+      options+=("Compare mine with the new default")
+    else
+      options+=("Copy it to ~/.config")
+    fi
+  fi
+  if ((${#mine[@]})); then options+=("Keep mine as it is"); else options+=("Seen, leave it out"); fi
+  options+=("Decide later")
+
+  while true; do
+    if ! answer=$(choose "$rel" "${options[@]}"); then
+      stopped=true
+      break
+    fi
+    case $answer in
+      Merge*)
+        for f in "${targets[@]}"; do merge_into "$f"; done
+        record
+        took=$((took + 1))
+        break
+        ;;
+      Copy*)
+        install -D -m 644 "$new" "$config/$rel"
+        echo "copied    ~/.config/$rel"
+        record
+        took=$((took + 1))
+        break
+        ;;
+      Compare*)
+        for f in "${mine[@]}"; do
+          diff -u --label "omarchy $version: $rel" --label "mine: $f" -- "$new" "$f" || true
+        done | show
+        ;;
+      Keep* | Seen*)
+        record
+        kept=$((kept + 1))
+        break
+        ;;
+      *) break ;;
+    esac
+  done
+done
+
+own=()
+for k in "${pending[@]}"; do
+  if [[ $k == default/* ]]; then own+=("$k"); fi
+done
+if ((${#own[@]})) && ! $stopped; then
+  printf '\n\e[1m%s\e[0m\n' "Omarchy's own defaults: ${#own[@]} changed"
+  echo "Nothing to merge: what your config sources from default/ is already in effect."
+  echo "To opt out of one of these, override it in your own config."
+  while true; do
+    if ! answer=$(choose "Omarchy's own defaults (${#own[@]})" "Show the diffs" "Seen" "Decide later"); then
+      stopped=true
+      break
+    fi
+    case $answer in
+      Show*)
+        for k in "${own[@]}"; do
+          look "$k"
+          upstream_diff
+          echo
+        done | show
+        ;;
+      Seen)
+        for k in "${own[@]}"; do
+          look "$k"
+          record
+        done
+        kept=$((kept + ${#own[@]}))
+        break
+        ;;
+      *) break ;;
+    esac
+  done
+fi
+
+finish
+
+# $EDITOR can carry arguments: Omarchy sets it to "omarchy-launch-editor --inline"
+read -ra editor <<<"${EDITOR:-nvim}"
+while ((${#conflicted[@]})); do
+  gum confirm "Open the ${#conflicted[@]} conflicted file(s) in ${editor[0]}?" || break
+  "${editor[@]}" "${conflicted[@]}" || break
+  mapfile -t conflicted < <(grep -l '^<<<<<<< ' -- "${conflicted[@]}" || true)
+done
+
+echo
+echo "Took $took, kept $kept as they were, left $((${#pending[@]} - took - kept)) for later."
+if ((${#conflicted[@]})); then
+  echo "Still conflicted: ${conflicted[*]}"
+  echo "Hyprland and the bar won't read a file with markers: resolve these before the next login."
   exit 1
+fi
+if $repo_changed; then
+  echo "The repo changed: look over git diff, then commit."
 fi

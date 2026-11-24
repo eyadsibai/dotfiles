@@ -19,14 +19,14 @@ fi
 # critical "config reverted by update" on every single update. The snapshot in
 # ~/.local/state/waybar-custom/ is left in place as an archive of the old bar.
 
-# Omarchy defaults that changed under a file the dotfiles repo overrides. Nothing is
-# touched here: `just omarchy-merge` brings the changes in, for review with git diff.
+# Omarchy defaults this update changed, whether the dotfiles repo overrides them or
+# not. Nothing is touched here: `just omarchy-review` shows each diff and merges in
+# the ones I want (`just upgrade` runs it as a step).
 repo=$HOME/dev/dotfiles
 if [[ -x $repo/scripts/omarchy-defaults ]]; then
-  changed=$("$repo/scripts/omarchy-defaults" check 2>/dev/null | grep '^Omarchy changed')
-  [[ -n $changed ]] && notify-send "Omarchy changed defaults you override" "$changed
-
-Run: just omarchy-merge"
+  changed=$("$repo/scripts/omarchy-defaults" check 2>/dev/null | grep -m1 '^Omarchy .* changed')
+  [[ -n $changed ]] && notify-send "$changed" "Read them: just omarchy-check --diff
+Go through them: just omarchy-review"
 fi
 
 # Linked files a migration replaced with a plain file (the next switch would revert

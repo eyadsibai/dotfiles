@@ -139,11 +139,15 @@ The files in `files/` are linked to the checkout, not copied into the store, so 
 Omarchy updates can't silently overwrite it or leave it behind:
 
 - Anything Omarchy writes into a linked file lands in the repo and shows up in `git diff`.
-- `omarchy-defaults/` keeps the default each file was last merged against. After
-  `omarchy update`, the post-update hook says when one of those defaults changed;
-  `just omarchy-merge` applies only Omarchy's change to my version (a 3-way merge,
-  conflicts marked), and refuses to run on a machine with an older Omarchy than the
-  recorded one.
+- `omarchy-defaults/` keeps the default each file was last merged against, and each
+  machine keeps the rest of Omarchy's defaults as it last saw them: the templates I don't
+  override, and Omarchy's own `default/` tree that Hyprland and bash source. After
+  `omarchy update` the post-update hook says how many changed, and `just omarchy-check
+  --diff` shows them. `just omarchy-review` (a step of `just upgrade`) goes through them
+  one at a time: Omarchy's diff, then merge it into my version (3-way, so only Omarchy's
+  change is applied, conflicts marked), keep mine, or decide later, which brings it up
+  again next time. It refuses to run on a machine with an older Omarchy than the recorded
+  one.
 - A file Omarchy replaces instead of writing through loses its link. The bar's
   `shell.json` does on every change in Settings, so a user path unit copies it back into
   the repo and relinks it; `just omarchy-links` lists any other, and `just omarchy-adopt`
@@ -319,7 +323,7 @@ day needs:
 | `just secret <name>` | edit `secrets/<name>.yaml` |
 | `just arch-preview` / `arch-backup` | Arch: list every file in `~` a switch would replace or add, with diffs / and archive the existing ones first |
 | `just arch-save` | Arch: rewrite `arch/<host>.packages` from what's installed, after installing or removing something by hand (`just upgrade` offers it when the two differ) |
-| `just omarchy-check` / `omarchy-merge` | see which overridden Omarchy defaults changed upstream / merge them in |
+| `just omarchy-check [--diff]` / `omarchy-review` | list every Omarchy default that changed since I last went through them (with the diffs) / go through them, merging in the ones I want |
 | `just omarchy-links` / `omarchy-adopt` | Arch: list linked files an Omarchy update detached / copy them into the repo and relink them |
 | `just omarchy-diff [paths]` | diff my setup against stock Omarchy |
 

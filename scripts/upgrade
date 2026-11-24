@@ -7,7 +7,7 @@
 #   mirrors   Arch: put Omarchy's mirror back first if it's gone (else packages run ahead)
 #   system    Arch: omarchy update (pacman, the AUR, Omarchy itself and its migrations)
 #   links     Arch: adopt files a migration detached, mark migrations reviewed
-#   defaults  Arch: 3-way merge Omarchy's changes to defaults you override
+#   defaults  Arch: each default the update changed, as a diff, to merge in or leave
 #   inputs    nix flake update: nixpkgs, Home Manager, nixarchy and the rest
 #   review    git diff of what landed in the repo
 #   switch    just switch (on Arch, refused while anything is still detached)
@@ -178,6 +178,9 @@ if $arch; then
   # 3. The system: Omarchy and every pacman and AUR package
   step "omarchy update"
   if ask "Run omarchy update now?"; then
+    # Wherever no default is on record yet, the one from before the update is taken
+    # now, so the review below has something to measure the update against
+    scripts/omarchy-defaults init
     echo "If it offers a reboot at the end, say no: this script offers one when it's done."
     omarchy update || { ask "omarchy update failed. Continue with the follow-up steps?" false || exit 1; }
   fi
@@ -190,24 +193,11 @@ if $arch; then
     ask "Adopt them (copy into the repo, relink, mark migrations reviewed)?" && scripts/omarchy-links adopt
   fi
 
-  # 5. Upstream changes to defaults we override
-  step "Omarchy defaults you override"
-  defaults=$(scripts/omarchy-defaults check)
-  echo "$defaults"
-  if grep -q '^Omarchy changed' <<<"$defaults" && ask "Merge Omarchy's changes in?"; then
-    if ! scripts/omarchy-defaults merge; then
-      mapfile -t conflicted < <(git diff --name-only | xargs -r grep -l '^<<<<<<< ' --)
-      while ((${#conflicted[@]})); do
-        ask "Open the ${#conflicted[@]} conflicted file(s) in ${EDITOR:-nvim}?" || break
-        "${EDITOR:-nvim}" "${conflicted[@]}"
-        mapfile -t conflicted < <(printf '%s\n' "${conflicted[@]}" | xargs -r grep -l '^<<<<<<< ' --)
-      done
-      if ((${#conflicted[@]})); then
-        echo "Still conflicted: ${conflicted[*]}"
-        echo "Hyprland and the bar won't read a file with markers; fix these before switching or logging in again."
-      fi
-    fi
-  fi
+  # 5. Every default the update changed, overridden here or not: its diff, then the
+  # choice to merge it into mine, keep mine, or leave it for the next run. Conflicts
+  # are opened and reported there.
+  step "Omarchy's defaults"
+  scripts/omarchy-defaults review
 fi
 
 # 6. Flake inputs. The lock is shared, so another machine may have moved it already:

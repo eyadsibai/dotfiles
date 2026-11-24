@@ -107,10 +107,10 @@ arch-system *args:
 arch-save name=host:
     @scripts/arch-packages save {{name}}
 
-# Show which files in files/ override an Omarchy default that changed upstream
+# List every Omarchy default that changed since I last went through them, overridden here or not (--diff shows the diffs)
 [group('omarchy')]
-omarchy-check:
-    @scripts/omarchy-defaults check
+omarchy-check *args:
+    @scripts/omarchy-defaults check {{args}}
 
 # Diff my setup against stock Omarchy, every template (--stat for the summary, or name paths: hypr kitty)
 [group('omarchy')]
@@ -127,7 +127,7 @@ omarchy-links:
 omarchy-adopt:
     @scripts/omarchy-links adopt
 
-# Bring upstream changes to those defaults into your versions (3-way merge, git diff to review)
+# Go through those changes one at a time: Omarchy's diff, then merge it into mine (3-way), keep mine, or decide later
 [group('omarchy')]
-omarchy-merge:
-    @scripts/omarchy-defaults merge
+omarchy-review:
+    @scripts/omarchy-defaults review
