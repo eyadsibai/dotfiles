@@ -152,6 +152,12 @@ Omarchy updates can't silently overwrite it or leave it behind:
   `shell.json` does on every change in Settings, so a user path unit copies it back into
   the repo and relinks it; `just omarchy-links` lists any other, and `just omarchy-adopt`
   takes them in.
+- Monitors on vector belong to [hyprmoncfg](https://hyprmoncfg.dev): its panel in the bar
+  (the `crmne.hyprmoncfg` plugin) saves a profile per place, and its daemon applies the one
+  that matches the screens connected, on plugging in, closing the lid and waking. The
+  profiles are `files/hyprmoncfg`, linked as a whole folder so a saved one lands in the
+  repo. The layout it generates stays out of it (`~/.config/hypr/hyprmoncfg-monitors.lua`,
+  loaded by the last line of `hyprland.lua`, which does nothing where the file is absent).
 
 ## TV and the living room
 

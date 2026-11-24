@@ -71,3 +71,10 @@ o.window("^Zoom$", { tag = "-default-opacity", opacity = "1 1" })
 -- Rules only one machine wants live in files/host-<name>/.config/hypr/windows.lua.
 -- Loaded last so they win over everything above; skipped where the file is absent.
 require("default.hypr.require_optional").module("hypr.windows")
+
+-- hyprmoncfg (the monitor profiles on vector) keeps the two lines below at the very end
+-- of this file, and puts them back there if anything is added after them. They load
+-- the layout it generated, and do nothing on a machine without one.
+
+-- Added by hyprmoncfg: its generated monitor rules load last, so nothing before this can override the applied layout.
+do local path = (os.getenv("XDG_CONFIG_HOME") or os.getenv("HOME") .. "/.config") .. "/hypr/hyprmoncfg-monitors.lua"; local file = io.open(path, "r"); if file then file:close(); dofile(path) end end
