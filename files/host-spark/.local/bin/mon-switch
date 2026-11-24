@@ -1,0 +1,9 @@
+#!/bin/bash
+# ~/.local/bin/mon-switch
+case "$1" in
+  usbc)    CODE=0x1b ;;
+  omarchy) CODE=0x11 ;;
+  spark)   CODE=0x12 ;;
+  *) exit 1 ;;
+esac
+ddcutil setvcp 60 $CODE --noverify
