@@ -81,7 +81,6 @@ ghostty-terminfo
 git-filter-repo
 gitui
 glances
-gliff
 go
 google-chrome
 google-cloud-cli
@@ -128,7 +127,6 @@ libvirt
 libwnck3
 links
 linux
-linux-firmware-qcom
 llmfit
 lmstudio-bin
 logrotate
@@ -209,7 +207,6 @@ remind
 remmina
 rocm-smi-lib
 rsync
-rtkit
 ruby-concurrent
 rustup
 s-nail
@@ -223,7 +220,6 @@ speech-dispatcher
 spotify-player
 sshfs
 superfile
-superwhisper-bin
 sysfsutils
 telegram-desktop
 texinfo
@@ -246,7 +242,6 @@ upscayl-bin
 usb_modeswitch
 usbutils
 usql-bin
-v4l2loopback-dkms
 virt-manager
 virt-viewer
 visidata
