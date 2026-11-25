@@ -5,9 +5,9 @@ name: homelab
 # its test or the inputs change, as it takes far longer than the checks in check.yml.
 on:
   push:
-    paths: ["modules/nixos/homelab/**", "modules/nixos/auto-upgrade.nix", "tests/**", "overlays/**", "flake.nix", "flake.lock", ".github/workflows/homelab.yml"]
+    paths: ["modules/nixos/homelab/**", "tests/**", "overlays/**", "flake.nix", "flake.lock", ".github/workflows/homelab.yml"]
   pull_request:
-    paths: ["modules/nixos/homelab/**", "modules/nixos/auto-upgrade.nix", "tests/**", "overlays/**", "flake.nix", "flake.lock", ".github/workflows/homelab.yml"]
+    paths: ["modules/nixos/homelab/**", "tests/**", "overlays/**", "flake.nix", "flake.lock", ".github/workflows/homelab.yml"]
   workflow_dispatch:
 
 permissions:

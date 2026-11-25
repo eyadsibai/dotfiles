@@ -32,11 +32,7 @@
     ./base.nix
     ./fonts.nix
     ./ssh.nix
-    # Off unless a host turns them on: my.autoUpgrade, my.secureBoot
-    ./auto-upgrade.nix
+    # Off unless a host turns it on: my.secureBoot
     ./secure-boot.nix
-    # The self-hosted CI (my.ci) is parked: kept for later, but not loaded by every
-    # host while nothing uses it. docs/ci.md says how to bring it back.
-    # ./ci/nixbot.nix
   ];
 }
