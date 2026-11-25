@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154  # palette variables are exported by parent theme-set hook
 
 # Guard: omarchy-hook runs this dir a second time without the color env exported
 # by the parent theme-set hook; skip that env-less pass entirely.

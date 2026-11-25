@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154  # palette variables are exported by parent theme-set hook
 
 # Guard: omarchy-hook (May 2026+) runs this dir a second time without the color
 # env exported by the parent theme-set hook; skip that env-less pass entirely.
@@ -106,21 +107,11 @@ configure_spicetify() {
 
 create_dynamic_theme() {
     color00=${primary_background}
-    color01=${normal_black}
     color02=${bright_black}
     color03=${normal_white}
-    color04=${bright_white}
-    color05=${primary_foreground}
-    color06=${bright_white}
     color07=${bright_white}
     color08=${normal_red}
-    color09=${normal_yellow}
-    color0A=${bright_yellow}
     color0B=${normal_green}
-    color0C=${normal_cyan}
-    color0D=${normal_blue}
-    color0E=${normal_magenta}
-    color0F=${bright_red}
 
 cat > "$spicetify_dir/Themes/omarchy/color.ini" << EOF
 [base]

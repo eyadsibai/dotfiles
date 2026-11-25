@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154  # palette variables are exported by parent theme-set hook
 
 # Guard: omarchy-hook (May 2026+) runs this dir a second time without the color
 # env exported by the parent theme-set hook; skip that env-less pass entirely.
@@ -12,7 +13,7 @@ possible_paths=(
     "$HOME/.config/equibop/themes"
     "/var/lib/flatpak/app/com.discordapp.Discord/themes"
     "/var/lib/flatpak/app/dev.vencord.Vesktop/themes"
-    "/var/lib/flatpak/app/io.github.equicord.equibop/themes",
+    "/var/lib/flatpak/app/io.github.equicord.equibop/themes"
     "$HOME/.var/app/dev.vencord.Vesktop/config/vesktop/themes"
 )
 
@@ -72,7 +73,7 @@ check_for_theme() {
                 if [[ -f "$path/vencord.theme.css" ]]; then
                     rm "$path/vencord.theme.css"
                 fi
-                cp -f $HOME/.local/state/omarchy/current/theme/vencord.theme.css "$path/vencord.theme.css"
+                cp -f "$HOME/.local/state/omarchy/current/theme/vencord.theme.css" "$path/vencord.theme.css"
             fi
 
             for file in "$path"/*; do

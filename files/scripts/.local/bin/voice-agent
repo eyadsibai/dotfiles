@@ -46,6 +46,7 @@ speak() {
   rate=$(jq -r .audio.sample_rate "$voice.json")
   hush
   # Its own process group, so the next F10 press can cut the whole pipeline off.
+  # shellcheck disable=SC2016
   setsid bash -c 'piper -m "$1" --output-raw 2>/dev/null <<<"$2" |
     pw-cat --playback --raw --rate "$3" --channels 1 --format s16 -' _ "$voice" "$1" "$rate" &
   echo $! >"$runtime/speech.pid"

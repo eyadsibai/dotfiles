@@ -7,12 +7,11 @@ import math
 import os
 import re
 import sys
-from datetime import datetime, time, timedelta, timezone
+from datetime import UTC, datetime, time, timedelta
 from functools import cache
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-UTC = timezone.utc
 MINUTE_MS = 60_000
 LOCALTIME = "/etc/localtime"
 ZONEINFO = Path("/usr/share/zoneinfo")
@@ -208,7 +207,7 @@ def snapshot(request):
     # A copied meeting can end after midnight; cover that horizon too.
     instants = [start + timedelta(minutes=i) for i in range(minute_count + duration + 1)]
     common = [True] * minute_count
-    for row, tz, plan in zip(rows, tzs, schedules):
+    for row, tz, plan in zip(rows, tzs, schedules, strict=True):
         local_now = now.astimezone(tz)
         row.update(offsetMin=offset(local_now), abbr=local_now.tzname(), periods=[])
         if plan is None:

@@ -25,7 +25,15 @@
 Not available on Samsung: notify, screen. Config and token live in ~/.config/samsungtv/.
 SAMSUNGTV_HOST overrides the TV address.
 """
-import ipaddress, json, logging, os, pathlib, re, socket, subprocess, sys
+import ipaddress
+import json
+import logging
+import os
+import pathlib
+import re
+import socket
+import subprocess
+import sys
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
@@ -102,7 +110,7 @@ def keys(*names):
 
 
 def dlna(*args):
-    r = subprocess.run(["dlna", *args], text=True)
+    r = subprocess.run(["dlna", *args], text=True, check=False)
     if r.returncode:
         sys.exit(r.returncode)
 
@@ -115,7 +123,7 @@ def cmd_find(args):
     probe.connect(("192.0.2.1", 9))
     net = ipaddress.ip_network(probe.getsockname()[0] + "/24", strict=False)
     with ThreadPoolExecutor(64) as pool:
-        found = [(str(ip), i) for ip, i in zip(net.hosts(), pool.map(lambda ip: device_info(str(ip), 1.5), net.hosts()))
+        found = [(str(ip), i) for ip, i in zip(net.hosts(), pool.map(lambda ip: device_info(str(ip), 1.5), net.hosts()), strict=True)
                  if i and "Samsung" in json.dumps(i)]
     if not found:
         print("no Samsung TV found (it must be on, and on the same network)")
@@ -281,7 +289,8 @@ REMOTE_KEYS = {"\x1b[A": "KEY_UP", "\x1b[B": "KEY_DOWN", "\x1b[C": "KEY_RIGHT", 
 
 
 def cmd_remote(args):
-    import termios, tty
+    import termios
+    import tty
     if not sys.stdin.isatty():
         die("remote needs a terminal")
     print(REMOTE_HELP)
@@ -317,7 +326,7 @@ COMMANDS = {
     "remote": cmd_remote,
     "cast": lambda a: os.execvp("cast", ["cast", "play", *a]) if a else die("usage: samsungtv cast <file|url>..."),
     "notify": unsupported("notify"), "screen": unsupported("screen on/off"),
-    **{m: (lambda k: lambda a: keys(k))(k) for m, k in MEDIA_KEYS.items()},
+    **{m: (lambda a, key=k: keys(key)) for m, k in MEDIA_KEYS.items()},
 }
 
 

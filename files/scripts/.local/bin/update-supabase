@@ -18,7 +18,6 @@ case "$(uname -m)" in
   *) echo "update-supabase: unsupported arch '$(uname -m)'" >&2; exit 1 ;;
 esac
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"   # linux / darwin
-ASSET_GLOB="supabase_*_${OS}_${ARCH}.tar.gz"
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "update-supabase: '$1' is required" >&2; exit 1; }; }
 need curl

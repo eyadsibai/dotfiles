@@ -153,7 +153,8 @@ def main():
                            PATH=str(work / "bin") + os.pathsep + environment["PATH"])
         try:
             output = subprocess.run([shutil.which("qs") or "qs", "-p", str(work), "--no-color"], env=environment,
-                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=20).stdout
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=20,
+                                    check=False).stdout
             print(output) if os.environ.get("PLANNER_DEBUG") else None
         except subprocess.TimeoutExpired as error:
             output = error.stdout.decode() if isinstance(error.stdout, bytes) else error.stdout or ""

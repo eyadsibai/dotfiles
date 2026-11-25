@@ -91,9 +91,11 @@ if ((ENCRYPT)) && ! command -v age >/dev/null; then
 	exit 1
 fi
 
-readonly STAMP="$(date +%Y%m%d-%H%M%S)"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+readonly STAMP
 readonly NAME="claude-config-${STAMP}"
-readonly STAGE="$(mktemp -d "${TMPDIR:-/tmp}/${NAME}.XXXXXX")"
+STAGE="$(mktemp -d "${TMPDIR:-/tmp}/${NAME}.XXXXXX")"
+readonly STAGE
 trap 'rm -rf "$STAGE"' EXIT
 
 readonly ROOT="${STAGE}/${NAME}"
@@ -213,7 +215,8 @@ print(f"  kept {len(out)} top-level keys, {len(projects)} project entries "
 PY
 	note "  ~/.claude.json -> config keys only (caches, telemetry, machineID stripped)"
 else
-	SKIPPED+=("~/.claude.json (absent)")
+	# shellcheck disable=SC2088  # literal display path
+	SKIPPED+=('~/.claude.json (absent)')
 fi
 
 # --- Credentials, only on request ------------------------------------------
@@ -222,7 +225,8 @@ if ((INCLUDE_CREDENTIALS)); then
 	note "Credentials (INCLUDED -- archive is sensitive):"
 	copy_into "${CLAUDE_DIR}/.credentials.json" ".claude"
 else
-	SKIPPED+=("~/.claude/.credentials.json (excluded by default)")
+	# shellcheck disable=SC2088  # literal display path
+	SKIPPED+=('~/.claude/.credentials.json (excluded by default)')
 	SKIPPED+=("oauthAccount / userID / machineID in ~/.claude.json (stripped)")
 fi
 
@@ -444,7 +448,11 @@ prune_dest="deleted"
 if ((KEEP > 0)); then
 	while IFS= read -r old; do
 		if command -v trash >/dev/null; then
-			trash "$old" >/dev/null 2>&1 && prune_dest="trashed" || rm -f "$old"
+			if trash "$old" >/dev/null 2>&1; then
+				prune_dest="trashed"
+			else
+				rm -f "$old"
+			fi
 		else
 			rm -f "$old"
 		fi

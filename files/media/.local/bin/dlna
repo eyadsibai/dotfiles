@@ -14,8 +14,19 @@ The TV fetches the file from this machine on TCP port $DLNA_PORT (default 8765) 
 answers discovery on UDP to the same port, so a firewall must allow both:
   sudo ufw allow from <tv-ip> to any port 8765      (or just: media firewall)
 """
-import glob, http.server, mimetypes, os, re, signal, socket, sys, threading, time
-import urllib.error, urllib.parse, urllib.request
+import glob
+import http.server
+import mimetypes
+import os
+import re
+import signal
+import socket
+import sys
+import threading
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from xml.sax.saxutils import escape
 
 PORT = int(os.environ.get("DLNA_PORT", "8765"))
@@ -41,7 +52,7 @@ def find_service(host, st):
     s.sendto(req, (host, 1900))
     try:
         data = s.recv(4096).decode(errors="ignore")
-    except socket.timeout:
+    except TimeoutError:
         s.close()
         die(f"{host} didn't answer DLNA discovery. Is the TV on? If it is, the firewall is\n"
             f"probably dropping the reply. Fix it once with:  media firewall")
@@ -100,7 +111,10 @@ def secs(t):
 def position(ctrl):
     """(elapsed, total) in seconds, either None when unknown."""
     xml = soap(ctrl, AVT, "GetPositionInfo", {"InstanceID": 0}, timeout=5, soft=True) or ""
-    get = lambda tag: (re.search(f"<{tag}>([^<]*)</{tag}>", xml) or [None, ""])[1]
+
+    def get(tag):
+        return (re.search(f"<{tag}>([^<]*)</{tag}>", xml) or [None, ""])[1]
+
     return secs(get("RelTime")), secs(get("TrackDuration"))
 
 
@@ -161,7 +175,8 @@ def make_handler(path, mime, subs=None, subs_url=None):
                     pass
 
         def _subs(self, body):
-            data = open(subs, "rb").read()
+            with open(subs, "rb") as f:
+                data = f.read()
             self.send_response(200)
             self.send_header("Content-Type", "text/srt")
             self.send_header("Content-Length", str(len(data)))
@@ -196,9 +211,9 @@ def cast(host, path, subs=None):
     subs = subs or find_subs(path)
     signal.signal(signal.SIGTERM, interrupt)  # the bar widget stops a cast with SIGTERM
     mime = mimetypes.guess_type(path)[0] or "video/mp4"
-    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    probe.connect((host, 9))
-    my_ip = probe.getsockname()[0]
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+        probe.connect((host, 9))
+        my_ip = probe.getsockname()[0]
     name = os.path.basename(path)
     url = f"http://{my_ip}:{PORT}/{urllib.parse.quote(name)}"
     subs_url = f"http://{my_ip}:{PORT}/subtitles.srt" if subs else None

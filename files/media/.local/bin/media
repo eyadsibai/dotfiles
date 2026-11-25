@@ -51,32 +51,30 @@ wait_tv() {
 # Firewall rules casting needs. The TV fetches files from us over TCP and answers DLNA
 # discovery over UDP from a random port, which ufw's connection tracking doesn't match.
 # dlna and cast listen on one port for both.
-# Each entry: "<ufw rule spec>|<user.rules tuple>|<what>".
-fw_rules() {
-  local tv="$1" cast_port="${DLNA_PORT:-8765}"
-  echo "from $tv to any port $cast_port|allow any $cast_port 0.0.0.0/0 any $tv in|media cast (tcp+udp $cast_port)"
-}
-
 firewall() {
-  local action="${1:-add}" tv spec tuple what missing=0
-  command -v ufw >/dev/null && systemctl is-active -q ufw || { echo "ufw isn't running, so nothing is blocked."; return; }
+  local action="${1:-add}" tv cast_port="${DLNA_PORT:-8765}" tuple what missing=0
+  if ! command -v ufw >/dev/null || ! systemctl is-active -q ufw; then
+    echo "ufw isn't running, so nothing is blocked."
+    return
+  fi
   tv="$("$TV" host)" || die "can't tell the TV's address"
   [[ -r /etc/ufw/user.rules ]] || die "can't read /etc/ufw/user.rules to check the rules"
   local rules; rules="$(grep '^### tuple' /etc/ufw/user.rules)"
   if grep -qF "allow any any 0.0.0.0/0 any $tv in" <<<"$rules"; then
     echo "the firewall already allows everything from $tv"; return
   fi
-  while IFS='|' read -r spec tuple what; do
-    if grep -qF " $tuple" <<<"$rules"; then
-      if [[ $action == remove ]]; then
-        echo "removing: $what"; eval "sudo ufw delete allow $spec"
-      else
-        echo "ok:       $what"
-      fi
-    elif [[ $action != remove ]]; then
-      echo "adding:   $what"; eval "sudo ufw allow $spec comment \"media: $what\"" >/dev/null && missing=1
+  local -a spec=(from "$tv" to any port "$cast_port")
+  tuple="allow any $cast_port 0.0.0.0/0 any $tv in"
+  what="media cast (tcp+udp $cast_port)"
+  if grep -qF " $tuple" <<<"$rules"; then
+    if [[ $action == remove ]]; then
+      echo "removing: $what"; sudo ufw delete allow "${spec[@]}"
+    else
+      echo "ok:       $what"
     fi
-  done < <(fw_rules "$tv")
+  elif [[ $action != remove ]]; then
+    echo "adding:   $what"; sudo ufw allow "${spec[@]}" comment "media: $what" >/dev/null && missing=1
+  fi
   [[ $action == remove || $missing == 0 ]] || echo "done. $tv can now reach this machine for casting."
 }
 
@@ -93,10 +91,13 @@ scene_list() {
 # and an unreachable one is reported, not fatal.
 status_json() {
   local tmp; tmp="$(mktemp -d)"
-  { "$TV" status >"$tmp/tv" 2>/dev/null; echo $? >"$tmp/tv.rc"; } &
-  { sonos "$SONOS" volume >"$tmp/vol" 2>/dev/null; } &
-  { sonos "$SONOS" mute >"$tmp/mute" 2>/dev/null; } &
-  { sonos "$SONOS" playback >"$tmp/play" 2>/dev/null; } &
+  # Expand $tmp now: a local variable is out of scope when the trap runs under `set -u`.
+  # shellcheck disable=SC2064
+  trap "rm -rf $(printf '%q' "$tmp")" EXIT
+  { rc=0; "$TV" status >"$tmp/tv" 2>/dev/null || rc=$?; echo "$rc" >"$tmp/tv.rc"; } &
+  { sonos "$SONOS" volume >"$tmp/vol" 2>/dev/null || true; } &
+  { sonos "$SONOS" mute >"$tmp/mute" 2>/dev/null || true; } &
+  { sonos "$SONOS" playback >"$tmp/play" 2>/dev/null || true; } &
   wait
   field() { sed -n "s/^$1: *//p" "$tmp/tv" | head -1 | sed 's/ *$//'; }
   local tvvol; tvvol="$(field volume)"
@@ -120,7 +121,6 @@ status_json() {
       },
       scenes: ($scenes | split("\n") | map(select(. != "") | split("\t") | {name: .[0], description: (.[1] // "")}))
     }'
-  rm -rf "$tmp"
 }
 
 # Videos under MEDIA_VIDEO_DIRS, newest first, as JSON rows for the bar widget.
@@ -150,12 +150,17 @@ videos_json() {
 
 run_scene() {
   local file="$SCENES/$1" line
+  local -a args
   while IFS= read -r line || [[ -n $line ]]; do
     line="${line%%#*}"
     [[ -z ${line// } ]] && continue
     echo "> media $line"
-    eval "set -- $line"
-    main "$@"
+    if [[ $line == *[\'\"]* ]]; then
+      mapfile -d '' -t args < <(python3 -c 'import shlex, sys; sys.stdout.buffer.write(b"".join(a.encode() + b"\0" for a in shlex.split(sys.argv[1])))' "$line")
+    else
+      read -ra args <<<"$line"
+    fi
+    main "${args[@]}"
   done <"$file"
 }
 
@@ -185,7 +190,7 @@ main() {
     gui)     omarchy-shell eyad.media caster ;;
     wait-tv) wait_tv "$@" ;;
     firewall) [[ ${1:-add} == @(add|remove) ]] || die "usage: media firewall [remove]"; firewall "${1:-add}" ;;
-    scenes)  ls "$SCENES" 2>/dev/null ;;
+    scenes)  [[ -d $SCENES ]] && ls "$SCENES" || true ;;
     *)       [[ -f $SCENES/$cmd ]] || die "unknown command or scene '$cmd' (media --help, media scenes)"
              run_scene "$cmd" ;;
   esac

@@ -12,7 +12,6 @@ import subprocess
 import sys
 import time
 
-import soco
 from soco.discovery import by_name
 
 ROOM = "Living Room"
@@ -28,7 +27,7 @@ def log(*a):
 def find_sink():
     """Return (node id, volume 0..1) of the RAOP sink, or None if it isn't there."""
     try:
-        out = subprocess.run(["pw-dump"], capture_output=True, text=True, timeout=5).stdout
+        out = subprocess.run(["pw-dump"], capture_output=True, text=True, timeout=5, check=True).stdout
         for obj in json.loads(out):
             if obj.get("type") != "PipeWire:Interface:Node":
                 continue
@@ -36,7 +35,7 @@ def find_sink():
             if props.get("node.name", "").startswith(SINK_PREFIX):
                 nid = obj["id"]
                 vol = subprocess.run(["wpctl", "get-volume", str(nid)],
-                                     capture_output=True, text=True, timeout=5).stdout
+                                     capture_output=True, text=True, timeout=5, check=True).stdout
                 # "Volume: 0.50" or "Volume: 0.50 [MUTED]"
                 return nid, float(vol.split()[1])
     except Exception as e:
@@ -89,7 +88,7 @@ def main():
             continue
         target = spk / 100
         if abs(target - sink_vol) > 0.005:
-            subprocess.run(["wpctl", "set-volume", str(nid), f"{target:.2f}"], timeout=5)
+            subprocess.run(["wpctl", "set-volume", str(nid), f"{target:.2f}"], timeout=5, check=False)
             last_sink = target
             log(f"speaker -> {spk}, sink updated")
 

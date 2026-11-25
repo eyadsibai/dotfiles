@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154  # palette variables are exported by parent theme-set hook
 
 # Guard: omarchy-hook (May 2026+) runs this dir a second time without the color
 # env exported by the parent theme-set hook; skip that env-less pass entirely.
@@ -11,21 +12,14 @@ if ! command -v qt6ct >/dev/null 2>&1; then
 fi
 
 base00=$normal_black
-base01=$(change_shade $normal_black 5)
-base02=$(change_shade $normal_black 10)
-base03=$(change_shade $normal_black 15)
-base04=$(change_shade $normal_black 20)
+base01=$(change_shade "$normal_black" 5)
+base02=$(change_shade "$normal_black" 10)
+base03=$(change_shade "$normal_black" 15)
+base04=$(change_shade "$normal_black" 20)
 base05=$primary_foreground
-base06=$(change_shade $primary_foreground -5)
-base07=$(change_shade $primary_foreground -10)
+base06=$(change_shade "$primary_foreground" -5)
 base08=$normal_red
 base09=$normal_yellow
-base0A=$bright_yellow
-base0B=$normal_green
-base0C=$normal_cyan
-base0D=$normal_blue
-base0E=$normal_magenta
-base0F=$bright_red
 
 if [ ! -f "$new_qt_file" ]; then
 cat > "$new_qt_file" << EOF

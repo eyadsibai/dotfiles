@@ -39,8 +39,20 @@
 
 Config and pairing key live in ~/.config/lgtv/. LGTV_HOST overrides the TV address.
 """
-import asyncio, json, os, re, socket, ssl, subprocess, sys, pathlib, threading, time, uuid
-import urllib.parse, urllib.request
+import asyncio
+import json
+import os
+import pathlib
+import re
+import socket
+import ssl
+import subprocess
+import sys
+import threading
+import time
+import urllib.parse
+import urllib.request
+import uuid
 
 CONF_DIR = pathlib.Path(os.environ.get("XDG_CONFIG_HOME", pathlib.Path.home() / ".config")) / "lgtv"
 KEYFILE = CONF_DIR / "client-key"
@@ -89,7 +101,7 @@ def tv_host():
         return os.environ["LGTV_HOST"]
     try:
         out = subprocess.run(["avahi-resolve", "-4", "-n", MDNS_NAME],
-                             capture_output=True, text=True, timeout=5).stdout.split()
+                             capture_output=True, text=True, timeout=5, check=False).stdout.split()
         if len(out) > 1:
             return out[1]
     except Exception:
@@ -106,7 +118,7 @@ def remember(host):
     conf["host"] = host
     try:
         m = re.search(r"lladdr ([0-9a-f:]{17})",
-                      subprocess.run(["ip", "neigh", "show", host], capture_output=True, text=True).stdout)
+                      subprocess.run(["ip", "neigh", "show", host], capture_output=True, text=True, check=False).stdout)
         if m:
             conf["mac"] = m.group(1)
     except Exception:
@@ -133,7 +145,7 @@ class TV:
         try:
             self.ws = await websockets.connect(f"wss://{self.host}:3001", ssl=no_verify_ssl(),
                                                open_timeout=8, max_size=None)
-        except (OSError, asyncio.TimeoutError) as e:
+        except (OSError, TimeoutError) as e:
             die(f"TV at {self.host} not reachable ({e}). Is it on? Try: lgtv on")
         await self._register()
         remember(self.host)
@@ -151,7 +163,7 @@ class TV:
         while True:
             try:
                 msg = json.loads(await asyncio.wait_for(self.ws.recv(), 120))
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 die("pairing prompt not accepted on the TV (timed out)")
             if msg.get("type") == "registered":
                 CONF_DIR.mkdir(parents=True, exist_ok=True)
@@ -403,9 +415,9 @@ async def tv_screenshot(call):
         try:
             uri = (await call("ssap://tv/executeOneShot"))["imageUri"]
             data = await asyncio.to_thread(
-                lambda: urllib.request.urlopen(uri, context=no_verify_ssl(), timeout=5).read())
+                lambda u=uri: urllib.request.urlopen(u, context=no_verify_ssl(), timeout=5).read())
             return Image.open(io.BytesIO(data)).convert("RGB")
-        except (OSError, asyncio.TimeoutError):
+        except (OSError, TimeoutError):
             if attempt == 2:
                 raise
             await asyncio.sleep(0.5)
@@ -585,7 +597,7 @@ async def tv_keyboard_open(tv):
             widget = msg.get("payload", {}).get("currentWidget") if msg.get("id") == "kbdcheck" else None
             if isinstance(widget, dict) and "focus" in widget:
                 return bool(widget["focus"])
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return False
 
 
@@ -896,7 +908,7 @@ def cmd_ytsearch(args):
     if not args:
         die("usage: lgtv ytsearch <query>")
     r = subprocess.run(["yt-dlp", "--flat-playlist", "-J", "--no-warnings", "ytsearch15:" + " ".join(args)],
-                       capture_output=True, text=True, timeout=60)
+                       capture_output=True, text=True, timeout=60, check=False)
     if r.returncode != 0:
         die((r.stderr.strip().splitlines() or ["yt-dlp failed"])[-1])
     for e in json.loads(r.stdout).get("entries", []):
@@ -955,7 +967,8 @@ MOUSE_TOKENS = re.compile(r"\x1b\[1;2([ABCD])|\x1b\[([ABCD])|\x1b\[([56])~|\x1b|
 
 
 async def cmd_remote(tv, args):
-    import termios, tty
+    import termios
+    import tty
     if not sys.stdin.isatty():
         die("remote needs a terminal")
     print(REMOTE_HELP)
@@ -1232,7 +1245,7 @@ async def cmd_pipe(tv, args):
         while True:
             try:
                 nxt = await asyncio.wait_for(reader.readline(), 0.35)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 break
             c, _, a = nxt.decode(errors="ignore").rstrip("\n").partition(" ")
             if c == "text" and a:
@@ -1245,11 +1258,11 @@ async def cmd_pipe(tv, args):
         # A busy TV can miss a screenshot or lose the highlight for a moment: try what's
         # left again rather than let the TV fall behind the box without a word
         units = grid_units(ops)
-        for attempt in range(3):
+        for _attempt in range(3):
             try:
                 err = await grid_type(call, sock, state["app"], units,
                                       lambda left: emit(grid_left=left))
-            except (OSError, asyncio.TimeoutError, KeyError, ValueError) as e:
+            except (OSError, TimeoutError, KeyError, ValueError) as e:
                 err = f"couldn't read the TV's screen ({e})"
             if not err or not units:
                 break
@@ -1351,8 +1364,9 @@ COMMANDS = {
     "mute": lambda tv, a: cmd_mute(tv, a, True), "unmute": lambda tv, a: cmd_mute(tv, a, False),
     "off": cmd_off, "screen": cmd_screen, "input": cmd_input, "hdmi": cmd_input,
     "apps": cmd_apps, "app": cmd_app, "open": cmd_open,
-    "notify": cmd_notify, "key": cmd_key, "type": cmd_type, "gridtype": cmd_gridtype, "remote": cmd_remote, "pipe": cmd_pipe, "pair": cmd_pair,
-    **{m: (lambda m: lambda tv, a: cmd_media(tv, a, m))(m) for m in MEDIA},
+    "notify": cmd_notify, "key": cmd_key, "type": cmd_type, "gridtype": cmd_gridtype,
+    "remote": cmd_remote, "pipe": cmd_pipe, "pair": cmd_pair,
+    **{m: (lambda tv, a, action=m: cmd_media(tv, a, action)) for m in MEDIA},
 }
 
 
