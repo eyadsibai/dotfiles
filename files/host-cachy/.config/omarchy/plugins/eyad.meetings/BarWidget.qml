@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
 import "lib/Meetings.js" as Meetings
 
@@ -35,7 +36,7 @@ BarWidget {
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  readonly property color fg: bar ? bar.foreground : Color.foreground
+  readonly property color fg: bar ? bar.foreground : Commons.Color.foreground
   readonly property color dim: Qt.darker(fg, 1.45)
   readonly property color faint: Qt.darker(fg, 1.9)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
@@ -167,7 +168,7 @@ BarWidget {
                 text: "Record"
                 iconText: "\uf111"
                 foreground: root.fg
-                accent: Color.urgent
+                accent: Commons.Color.urgent
                 selected: true
                 tooltipText: "Start transcribing (Enter)"
                 onClicked: root.startFromField()
@@ -200,8 +201,8 @@ BarWidget {
             height: visible ? liveCol.implicitHeight + Style.space(16) : 0
             radius: Style.cornerRadius
             readonly property bool paused: root.info.state === "paused"
-            color: Util.alpha(paused ? root.fg : Color.urgent, paused ? 0.06 : 0.12)
-            border.color: Util.alpha(paused ? root.fg : Color.urgent, 0.35)
+            color: Util.alpha(paused ? root.fg : Commons.Color.urgent, paused ? 0.06 : 0.12)
+            border.color: Util.alpha(paused ? root.fg : Commons.Color.urgent, 0.35)
             border.width: 1
 
             Column {
@@ -217,7 +218,7 @@ BarWidget {
                   width: Style.space(8)
                   height: width
                   radius: width / 2
-                  color: root.info.state === "paused" ? root.dim : Color.urgent
+                  color: root.info.state === "paused" ? root.dim : Commons.Color.urgent
                   SequentialAnimation on opacity {
                     running: root.popupOpen && root.info.state === "recording"
                     loops: Animation.Infinite
@@ -228,7 +229,7 @@ BarWidget {
                 }
                 Text {
                   text: (root.info.state === "paused" ? "PAUSED" : "RECORDING") + " · " + root.info.text
-                  color: root.info.state === "paused" ? root.dim : Color.urgent
+                  color: root.info.state === "paused" ? root.dim : Commons.Color.urgent
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.caption
                   font.bold: true
@@ -284,7 +285,7 @@ BarWidget {
               width: column.width
               height: issueRow.implicitHeight + Style.space(12)
               radius: Style.cornerRadius
-              readonly property color tone: modelData.severity === "error" ? Color.urgent : Color.accent
+              readonly property color tone: modelData.severity === "error" ? Commons.Color.urgent : Commons.Color.accent
               color: Util.alpha(tone, 0.10)
               border.color: Util.alpha(tone, 0.4)
               border.width: 1
@@ -324,7 +325,7 @@ BarWidget {
             visible: !!root.service && root.service.lastError !== "" && !root.recording
             width: parent.width
             text: root.service ? root.service.lastError : ""
-            color: Color.urgent
+            color: Commons.Color.urgent
             font.family: root.fontFamily
             font.pixelSize: Style.font.caption
             wrapMode: Text.WordWrap
@@ -428,7 +429,7 @@ BarWidget {
                     : row.transcribing ? Meetings.fmtWhen(Meetings.parseTime(row.modelData.startedAt), root.service.nowMs) + " · transcribing…"
                     : row.summarizing ? Meetings.meetingMeta(row.modelData, root.service.nowMs) + " · summarizing…"
                     : Meetings.meetingMeta(row.modelData, root.service.nowMs)
-                  color: row.live ? Color.urgent : root.faint
+                  color: row.live ? Commons.Color.urgent : root.faint
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.caption
                   elide: Text.ElideRight
@@ -447,7 +448,7 @@ BarWidget {
                   visible: row.hasSpeech
                   iconText: row.summarizing ? "\uf110" : (row.modelData.hasSummary ? "\uf15c" : "\uf0d0")
                   tooltipText: row.summarizing ? "Summarizing…" : row.modelData.hasSummary ? "Open summary" : "Summarize with Claude"
-                  foreground: row.modelData.hasSummary ? Color.accent : root.dim
+                  foreground: row.modelData.hasSummary ? Commons.Color.accent : root.dim
                   fontSize: Style.font.bodySmall
                   onClicked: {
                     if (row.summarizing) return
@@ -466,7 +467,7 @@ BarWidget {
                 PanelActionButton {
                   iconText: "\uf1f8"
                   tooltipText: row.confirming ? "Click again to delete the recording (notes files stay)" : "Delete recording"
-                  foreground: row.confirming ? Color.urgent : root.faint
+                  foreground: row.confirming ? Commons.Color.urgent : root.faint
                   fontSize: Style.font.bodySmall
                   onClicked: {
                     if (row.confirming) {

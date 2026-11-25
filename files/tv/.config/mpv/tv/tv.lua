@@ -62,6 +62,10 @@ local utils = require 'mp.utils'
 
 local state_home = os.getenv('XDG_STATE_HOME')
 if not state_home or state_home == '' then state_home = '~/.local/state' end
+local runtime_home = os.getenv('XDG_RUNTIME_DIR')
+local default_runtime_dir = (runtime_home and runtime_home ~= '')
+    and (runtime_home .. '/tv')
+    or ('/tmp/tv-' .. (os.getenv('USER') or 'user'))
 
 local o = {
     playlist = '',
@@ -75,7 +79,7 @@ local o = {
     theme_file = '~/.local/state/omarchy/current/theme/colors.toml',
     favorites_file = state_home .. '/tv/favorites',
     recent_file = state_home .. '/tv/recent',
-    runtime_dir = (os.getenv('XDG_RUNTIME_DIR') or '/tmp') .. '/tv',
+    runtime_dir = default_runtime_dir,
     logo_dir = '~/.cache/tv/logos',
     pip = false,       -- the corner TV (tv --pip)
     launcher = 'tv',   -- the tv launcher, for messages to the other TV
@@ -109,6 +113,21 @@ local function open_for_write(path)
         end
     end
     return f
+end
+
+-- Replace state files via a sibling temp file so bar readers never see a
+-- half-written JSON payload.
+local function write_atomic(path, content)
+    local tmp = path .. '.tmp.' .. tostring(mp.get_property_number('pid') or 0)
+    local f = open_for_write(tmp)
+    if not f then return false end
+    local ok = f:write(content)
+    f:close()
+    if not ok or not os.rename(tmp, path) then
+        os.remove(tmp)
+        return false
+    end
+    return true
 end
 
 -- ---------------------------------------------------------------------------
@@ -629,9 +648,7 @@ local function write_now()
     if not url or pos < 0 then return end
     local c = channel_info(url, current.title)
     local where = c.category .. (c.language and (' · ' .. c.language) or '')
-    local f = open_for_write(now_file())
-    if not f then return end
-    f:write(utils.format_json({
+    write_atomic(now_file(), utils.format_json({
         pid = mp.get_property_number('pid'), number = pos + 1, name = c.name,
         -- `tv --ctl` reaches whichever player holds this role through it
         socket = expand(mp.get_property('input-ipc-server') or '') or '',
@@ -640,8 +657,7 @@ local function write_now()
         text = '󰔂 ' .. (pos + 1) .. ' ' .. utf8_cut(c.name, 16),
         tooltip = c.name .. (favorites[url] and ' ★' or '') .. '\n' .. where
             .. '\nclick: channels · right-click: next · middle-click: last channel',
-    }), '\n')
-    f:close()
+    }) .. '\n')
 end
 
 -- Every channel for the bar's search, with favorites and recent channels by number.
@@ -662,10 +678,10 @@ local function write_channels()
     for _, url in ipairs(recent) do
         if number_of[url] then recents[#recents + 1] = number_of[url] end
     end
-    local f = open_for_write(expand(o.runtime_dir) .. '/channels.json')
-    if not f then return end
-    f:write(utils.format_json({ channels = list, favorites = favs, recent = recents }), '\n')
-    f:close()
+    write_atomic(
+        expand(o.runtime_dir) .. '/channels.json',
+        utils.format_json({ channels = list, favorites = favs, recent = recents }) .. '\n'
+    )
 end
 
 -- Only our own: after a swap the other TV may have written this role's file.
@@ -1023,7 +1039,7 @@ end
 mp.add_key_binding('ENTER', 'tv-enter', enter)
 mp.add_key_binding('KP_ENTER', 'tv-kp-enter', enter)
 mp.add_key_binding('c', 'tv-channels', open_channel_menu)
--- Bound here rather than in input.conf so they come with `stow tv` and stay out of
+-- Bound here rather than in input.conf so TV stays self-contained and out of
 -- normal playback (mpv's default PGUP/PGDWN seek chapters).
 mp.add_key_binding('PGUP', 'tv-prev', function() mp.command('playlist-prev') end)
 mp.add_key_binding('PGDWN', 'tv-next', function() mp.command('playlist-next') end)

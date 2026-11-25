@@ -61,6 +61,7 @@ change_shade() {
 
 restart_scripts=()
 restart_file=$(mktemp)
+trap 'rm -f "$restart_file"' EXIT
 export restart_file
 require_restart() {
     echo "$1" >> "$restart_file"

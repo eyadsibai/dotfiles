@@ -24,19 +24,19 @@ in
       nixd
       devenv # per-project environments: devenv.nix + `use devenv` in .envrc
     ]
-    # On Arch: make from base-devel, coderabbit from its own installer (~/.local/bin),
-    # codex from mise, and the rest from pacman
+    # Universal runtimes and standalone dev tooling across non-Arch hosts (Arch gets
+    # make, uv and node from pacman, coderabbit from ~/.local/bin or mise). Project
+    # language SDKs (Go, Rust, JDK, Ruby, PHP, R, TeX, etc.) live in each repo's devenv.nix.
     ++ lib.optionals (!isArch) [
       gnumake
+      uv
+      nodejs
       pkgs.coderabbit # `coderabbit`/`cr`: AI review of local changes
     ]
-    # JetBrains' JDK is built for Linux only
-    ++ lib.optional (stdenv.hostPlatform.isLinux && !isArch) jetbrains.jdk
-    # The Macs get uv from modules/darwin/apps.nix and codex from Homebrew. On NixOS codex
-    # comes from its own installer (~/.local/bin/codex), like Claude Code, so it updates
-    # itself the day a release is out instead of being compiled here on every nixpkgs bump.
+    # On NixOS codex comes from its own installer (~/.local/bin/codex), like Claude Code,
+    # so it updates itself the day a release is out instead of compiling here on every bump;
+    # the Macs get codex from Homebrew.
     ++ lib.optionals (stdenv.hostPlatform.isLinux && !isArch) [
-      uv
       beads # `bd`: git-backed issue tracker for agents
       dolt # the database beads stores issues in
       trash-cli # `trash`: delete to the freedesktop trash instead of rm

@@ -10,12 +10,12 @@ create_dynamic_theme() {
 cat > "$new_zed_file" << EOF
     {
       "\$schema": "https://zed.dev/schema/themes/v0.1.0.json",
-      "name": "Omarchyy",
+      "name": "Omarchy",
       "author": "@bypass_",
       "themes": [
         {
           "name": "Omarchy",
-          "appearance": "dark",
+          "appearance": "${theme_mode:-dark}",
           "style": {
             "background": "#${primary_background}90",
             "editor.background": "#${primary_background}90",

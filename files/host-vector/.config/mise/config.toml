@@ -1,13 +1,12 @@
+# Standalone ad-hoc CLIs not packaged by pacman; uv and node come from pacman,
+# and project language SDKs live in each repo's devenv.nix.
 [tools]
 crush = "latest" # TODO: back to "latest" once mise ships aqua-registry #62157 (cosign identity for >=0.98.0)
 databricks-cli = "latest"
-dotnet = "latest"
 gitleaks = "latest"
-java = "latest"
 "npm:@alibaba-group/open-code-review" = { version = "latest", trust_policy_excludes = "@alibaba-group/open-code-review" }
 "npm:@jetbrains/junie" = { version = "latest", allow_builds = ["@jetbrains/junie"], allow_low_downloads = true }
 "npm:coderabbit" = { version = "latest", allow_builds = ["coderabbit"], allow_low_downloads = true }
 osv-scanner = "latest"
-uv = "latest"
 
 [settings.upgrade]

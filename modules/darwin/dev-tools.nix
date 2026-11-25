@@ -5,7 +5,6 @@
     statix
     atuin
     curlFull
-    R
   ];
 
   programs.gnupg.agent.enable = true;

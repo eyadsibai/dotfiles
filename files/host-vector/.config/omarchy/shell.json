@@ -71,9 +71,6 @@
           "id": "omarchy.tray"
         },
         {
-          "id": "community.shoxjaxon.snippets"
-        },
-        {
           "id": "37signals.hey"
         },
         {
@@ -130,8 +127,7 @@
     "position": "top"
   },
   "disabledPlugins": [
-    "omarchy.dock",
-    "omarchy.background"
+    "omarchy.dock"
   ],
   "dock": {
     "autohide": true,
@@ -147,6 +143,9 @@
     },
     {
       "id": "io.voxtype.settings"
+    },
+    {
+      "id": "eyad.agy-quota"
     }
   ],
   "version": 1

@@ -20,15 +20,48 @@ let
 
   paste = if isDarwin then "pbpaste" else "${pkgs.wl-clipboard}/bin/wl-paste --no-newline";
   notifySend = if isArch then "notify-send" else "${pkgs.libnotify}/bin/notify-send";
-  # `notify <title> [body]` for the scripts below
+  # `notify <title> [body]` for the scripts below; pass values via argv on Darwin
+  # so quotes or escapes in feed titles never break AppleScript.
   notifyFn =
     if isDarwin then
       ''
-        notify() { osascript -e "display notification \"''${2:-}\" with title \"$1\"" >/dev/null 2>&1 || true; }
+        notify() {
+          osascript -e 'on run argv' \
+            -e 'display notification (item 2 of argv) with title (item 1 of argv)' \
+            -e 'end run' "$1" "''${2:-}" >/dev/null 2>&1 || true
+        }
       ''
     else
       ''
         notify() { ${notifySend} -a newsboat "$@" >/dev/null 2>&1 || true; }
+      '';
+
+  # Detach a GUI viewer or player (macOS doesn't ship setsid).
+  detachFn =
+    if isDarwin then
+      ''
+        detach() { nohup "$@" </dev/null >/dev/null 2>&1 & }
+      ''
+    else
+      ''
+        detach() { setsid "$@" >/dev/null 2>&1 & }
+      '';
+
+  # Serialize local Whisper runs; macOS doesn't ship util-linux's flock.
+  withLockFn =
+    if isDarwin then
+      ''
+        with_lock() {
+          local lock="''${TMPDIR:-/tmp}/transcribe.lock.d" rc=0
+          while ! mkdir "$lock" 2>/dev/null; do sleep 0.5; done
+          "$@" || rc=$?
+          rmdir "$lock" 2>/dev/null || true
+          return "$rc"
+        }
+      ''
+    else
+      ''
+        with_lock() { flock "''${XDG_RUNTIME_DIR:-/tmp}/transcribe.lock" "$@"; }
       '';
 
   # `qdl video|audio|file <url>`: download into ~/Downloads in the background, with a
@@ -94,6 +127,7 @@ let
       ++ lib.optional (!isDarwin) util-linux;
     text = ''
       ${notifyFn}
+      ${withLockFn}
       usage() { echo "usage: transcribe [-b] [-l lang] <link or file>…" >&2; exit 1; }
       bg="" lang="" model=large-v3-turbo
       while getopts bl: opt; do
@@ -163,11 +197,11 @@ let
         ' "$work/captions.$3.json3" | fmt -w 100
       }
 
-      # listen <audio or video file>: what Whisper hears in it. One at a time (flock),
+      # listen <audio or video file>: what Whisper hears in it. One at a time,
       # so several asked for at once queue instead of each loading the model.
       listen() {
         ${exe pkgs.ffmpeg "ffmpeg"} -nostdin -loglevel error -y -i "$1" -vn -ac 1 -ar 16000 -c:a pcm_s16le "$work/speech.wav" >&2 || return 1
-        flock "''${XDG_RUNTIME_DIR:-/tmp}/transcribe.lock" \
+        with_lock \
           voxtype -q --engine whisper --model "$model" --whisper-mode local --language "''${lang:-auto}" \
           transcribe "$work/speech.wav" 2>/dev/null |
           grep -vE '^(Loading audio file|Audio format|Processing [0-9]+ samples|$)' | fmt -w 100
@@ -242,24 +276,25 @@ let
       coreutils
     ];
     text = ''
+      ${detachFn}
       url=''${1:-$(${paste} 2>/dev/null || true)}
       [ -n "$url" ] || exit 1
       if [ -e "$url" ]; then
-        setsid ${opener} "$url" >/dev/null 2>&1 &
+        detach ${opener} "$url"
         exit 0
       fi
       case "$url" in
         *mkv|*webm|*mp4|*youtube.com/watch*|*youtube.com/playlist*|*youtube.com/shorts/*|*youtu.be*|*vimeo.com/*|*twitch.tv/*)
-          setsid mpv --quiet "$url" >/dev/null 2>&1 & ;;
+          detach ${exe pkgs.mpv "mpv"} --quiet "$url" ;;
         *.png|*.jpg|*.jpe|*.jpeg|*.gif|*.webp|*.pdf|*.cbz|*.cbr|*.png\?*|*.jpg\?*|*.jpeg\?*|*.webp\?*|*.pdf\?*)
           dir=''${XDG_RUNTIME_DIR:-/tmp}/linkhandler
           mkdir -p "$dir"
           f="$dir/$(basename "''${url%%\?*}")"
-          (curl -fsSL -o "$f" "$url" && setsid ${opener} "$f") >/dev/null 2>&1 & ;;
+          (curl -fsSL -o "$f" "$url" && detach ${opener} "$f") >/dev/null 2>&1 & ;;
         *mp3|*flac|*opus|*m4a|*ogg|*mp3?source*)
           ${lib.getExe qdl} file "$url" ;;
         *)
-          setsid ${opener} "$url" >/dev/null 2>&1 & ;;
+          detach ${opener} "$url" ;;
       esac
     '';
   };
@@ -268,20 +303,31 @@ let
   downloadArxiv = pkgs.writeShellApplication {
     name = "download_arxiv";
     runtimeInputs = with pkgs; [
-      wget
+      curl
       gnugrep
+      gnused
       coreutils
     ];
     text = ''
+      url=''${1:?usage: download_arxiv <url>}
       echo; echo "Path of output directory? Default = (~/arxiv)"
       read -r outdir
       outdir=''${outdir:-$HOME/arxiv}
       mkdir -p "$outdir"
-      pdf_url=$(wget -qO- "$1" | grep "pdf_url" | cut -d "=" -f3 | cut -d '"' -f2)
+      id=$(printf '%s\n' "$url" | sed -nE 's|^https?://([^/]+\.)?arxiv\.org/(abs|pdf|html)/([^/?#]+).*|\3|p')
+      id=''${id%.pdf}
+      if [ -n "$id" ]; then
+        pdf_url="https://arxiv.org/pdf/$id.pdf"
+      else
+        pdf_url=$(curl -fsSL "$url" |
+          grep -oiE "<meta[^>]+name=[\"']citation_pdf_url[\"'][^>]+>" |
+          sed -nE "s/.*content=[\"']([^\"']+)[\"'].*/\1/p" | head -1 || true)
+      fi
+      [ -n "$pdf_url" ] || { echo "No PDF URL found for $url" >&2; exit 1; }
       echo; echo "Name of file? (Excluding '.pdf')"
       read -r name
       out="$outdir/$(date +%Y_%m_%d)-$name.pdf"
-      wget -q "$pdf_url" -O "$out"
+      curl -fsSL -o "$out" "$pdf_url"
       ${opener} "$out"
     '';
   };
@@ -308,10 +354,12 @@ let
             id=$(printf '%s' "$page" |
               grep -oE '<link rel="canonical" href="https://www.youtube.com/channel/UC[A-Za-z0-9_-]{22}' |
               head -1 | grep -oE 'UC[A-Za-z0-9_-]{22}' || true)
-            # A video page: follow its channel's @handle link
+            # A video page: follow its channel's @handle link once
             handle=$(printf '%s' "$page" | grep -oE '<link itemprop="url" href="https?://www.youtube.com/@[^"]+' |
               head -1 | grep -oE '@[^"]+' || true)
-            if [ -z "$id" ] && [ -n "$handle" ]; then exec "$0" "$handle"; fi
+            if [ -z "$id" ] && [ -n "$handle" ] && [ -z "''${YTADD_FOLLOWED:-}" ]; then
+              YTADD_FOLLOWED=1 exec "$0" "$handle"
+            fi
           fi ;;
       esac
       [ -n "''${id:-}" ] || { echo "No channel id found for $arg" >&2; exit 1; }
@@ -396,7 +444,12 @@ let
     macro t set browser "${lib.getExe qdl} video %u"; open-in-browser ; set browser ${lh}
     macro a set browser "${lib.getExe qdl} audio %u"; open-in-browser ; set browser ${lh}
     macro s set browser "${lib.getExe transcribe} -b %u"; open-in-browser ; set browser ${lh}
-    macro v set browser "setsid mpv"; open-in-browser ; set browser ${lh}
+    macro v set browser "${
+      if isDarwin then
+        "nohup ${exe pkgs.mpv "mpv"} %u </dev/null >/dev/null 2>&1 &"
+      else
+        "setsid ${exe pkgs.mpv "mpv"}"
+    }"; open-in-browser ; set browser ${lh}
     macro c set browser "printf %s %u | ${copy}"; open-in-browser ; set browser ${lh}
     ${lib.optionalString isArch ''
       # d: pick what to do with it from a menu

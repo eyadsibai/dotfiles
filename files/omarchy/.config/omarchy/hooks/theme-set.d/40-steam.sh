@@ -96,39 +96,43 @@ cat > "$output_file" << EOF
 }
 EOF
 
-adwaita_location=$HOME/.local/share/steam-adwaita
-font_path=$(fc-list $(omarchy-font-current) file | grep -ioP '.*\.ttf' | head -n 1)
+adwaita_location="$HOME/.local/share/steam-adwaita"
 
 install_steam_theme() {
     if [[ ! -d "$adwaita_location" ]]; then
-        git clone https://github.com/tkashkin/Adwaita-for-Steam $adwaita_location > /dev/null 2>&1
+        if ! git clone https://github.com/tkashkin/Adwaita-for-Steam "$adwaita_location" > /dev/null 2>&1; then
+            warning "Could not clone Adwaita-for-Steam (offline?); skipping Steam theme."
+            exit 0
+        fi
     fi
 }
 modify_steam_theme() {
-    if [[ ! -d "$adwaita_location/adwaita/colorthemes/omarchy" ]]; then
-        mkdir $adwaita_location/adwaita/colorthemes/omarchy/
-    fi
+    mkdir -p "$adwaita_location/adwaita/colorthemes/omarchy"
 }
 modify_install_script() {
     if ! grep -q "omarchy" "$adwaita_location/install.py"; then
-        sed -i.bak 's/\("cantarell"\)/\1, "omarchy"/' $adwaita_location/install.py
+        sed -i 's/\("cantarell"\)/\1, "omarchy"/' "$adwaita_location/install.py"
     fi
 }
 
 install_steam_theme
+if [[ ! -f "$adwaita_location/install.py" ]]; then
+    warning "Steam theme checkout at $adwaita_location is incomplete; skipping."
+    exit 0
+fi
 modify_steam_theme
 modify_install_script
 
-if [[ ! -d $adwaita_location ]]; then
-    warning "Steam theme installation failed!"
-    exit 1
-fi
-
 cp -p -f "$output_file" "$adwaita_location/adwaita/colorthemes/omarchy/omarchy.css"
 
-cd $adwaita_location && ./install.py \
-    --color-theme omarchy \
-    --extras library/hide_whats_new > /dev/null 2>&1
+(
+    cd "$adwaita_location" && ./install.py \
+        --color-theme omarchy \
+        --extras library/hide_whats_new > /dev/null 2>&1
+) || {
+    warning "Adwaita-for-Steam install.py failed; skipping."
+    exit 0
+}
 
 require_restart "steam"
 success "Steam theme updated!"

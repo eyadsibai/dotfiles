@@ -189,12 +189,12 @@ if [ ! -d "$gtk4_dir" ]; then
 fi
 
 if [ -f "$output_file" ]; then
-    if [ ! -f "$gtk3_dir/gtk.css.backup" ]; then
+    if [ -f "$gtk3_file" ] && [ ! -f "$gtk3_dir/gtk.css.backup" ]; then
         cp "$gtk3_file" "$gtk3_dir/gtk.css.backup"
     fi
     cp -f "$output_file" "$gtk3_file"
 
-    if [ ! -f "$gtk4_dir/gtk.css.backup" ]; then
+    if [ -f "$gtk4_file" ] && [ ! -f "$gtk4_dir/gtk.css.backup" ]; then
         cp "$gtk4_file" "$gtk4_dir/gtk.css.backup"
     fi
     cp -f "$output_file" "$gtk4_file"

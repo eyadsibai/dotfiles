@@ -26,14 +26,30 @@ Panel {
   readonly property color dim: Qt.darker(foreground, 1.55)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
   readonly property string tvGlyph: "\u{f07f4}"   // television-classic; the living room's is the flat TV
-  readonly property string runDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/tv"
+  readonly property string runDir: {
+    var xdg = Quickshell.env("XDG_RUNTIME_DIR")
+    return xdg ? xdg + "/tv" : "/tmp/tv-" + (Quickshell.env("USER") || "user")
+  }
 
-  property var now: null          // the playing channel, from `tv --bar`; null: TV isn't running
-  property var pip: null          // the corner TV's, from `tv --bar --pip`
+  property var now: null          // the playing channel; null: TV isn't running
+  property var pip: null          // the corner TV's
+  property var _nowFileData: null
+  property var _pipFileData: null
+  property int _deadNowPid: -1
+  property int _deadPipPid: -1
   readonly property string pipGlyph: "\u{eb7f}"
   property var lists: ({ channels: [], favorites: [], recent: [] })
   readonly property bool running: now !== null || pip !== null
   readonly property int resultLimit: 12
+
+  function parseRole(text) {
+    try {
+      var data = JSON.parse(String(text || ""))
+      return data && typeof data === "object" && data.pid ? data : null
+    } catch (e) {
+      return null
+    }
+  }
 
   function ctl(args) { Quickshell.execDetached(["tv", "--ctl"].concat(args)) }
   function play(n) { ctl(["play", String(n)]); root.close() }
@@ -76,31 +92,81 @@ Panel {
 
   onOpenedChanged: if (opened) {
     search.text = ""
+    nowFile.reload()
+    pipFile.reload()
     channelsFile.reload()
     Qt.callLater(function() { search.forceActiveFocus() })
   }
 
-  // Is TV running, and on what? `tv --bar` checks the player is alive.
+  // Watch now.json / pip.json in-process instead of spawning a shell every 3s
+  // while TV is closed. `tv --bar` only runs while a role file exists, to drop
+  // stale files left behind by a crashed mpv.
+  FileView {
+    id: nowFile
+    path: root.runDir + "/now.json"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: reload()
+    onLoaded: {
+      var d = root.parseRole(text())
+      root._nowFileData = d
+      if (d && d.pid !== root._deadNowPid) root.now = d
+      else if (!d) { root._deadNowPid = -1; root.now = null }
+    }
+    onLoadFailed: { root._nowFileData = null; root._deadNowPid = -1; root.now = null }
+  }
+  FileView {
+    id: pipFile
+    path: root.runDir + "/pip.json"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: reload()
+    onLoaded: {
+      var d = root.parseRole(text())
+      root._pipFileData = d
+      if (d && d.pid !== root._deadPipPid) root.pip = d
+      else if (!d) { root._deadPipPid = -1; root.pip = null }
+    }
+    onLoadFailed: { root._deadPipPid = -1; root._pipFileData = null; root.pip = null }
+  }
   Process {
-    id: poll
-    // First line: the main TV, the rest: the corner one (either may be empty).
+    id: aliveCheck
     command: ["sh", "-c", "tv --bar; echo; tv --bar --pip"]
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: {
         var lines = text.split("\n")
         var main = lines[0].trim(), corner = lines.slice(1).join("").trim()
-        try { root.now = main === "" ? null : JSON.parse(main) } catch (e) { root.now = null }
-        try { root.pip = corner === "" ? null : JSON.parse(corner) } catch (e) { root.pip = null }
+        if (main === "") {
+          if (root._nowFileData && root._nowFileData.pid) root._deadNowPid = root._nowFileData.pid
+          root.now = null
+        } else {
+          root._deadNowPid = -1
+          try { root.now = JSON.parse(main) } catch (e) { root.now = null }
+        }
+        if (corner === "") {
+          if (root._pipFileData && root._pipFileData.pid) root._deadPipPid = root._pipFileData.pid
+          root.pip = null
+        } else {
+          root._deadPipPid = -1
+          try { root.pip = JSON.parse(corner) } catch (e) { root.pip = null }
+        }
       }
     }
   }
+  // tv.lua replaces role files atomically, which inotify on the file path can
+  // miss; in-process reloads cost no subprocesses when TV isn't running.
   Timer {
     interval: root.opened ? 1000 : 3000
     repeat: true
     running: true
     triggeredOnStart: true
-    onTriggered: if (!poll.running) poll.running = true
+    onTriggered: {
+      nowFile.reload()
+      pipFile.reload()
+      if ((root.now !== null || root.pip !== null) && !aliveCheck.running)
+        aliveCheck.running = true
+    }
   }
 
   FileView {

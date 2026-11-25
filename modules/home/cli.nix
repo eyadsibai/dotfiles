@@ -128,10 +128,75 @@ in
     # man pages through bat (above): colours, and its pager's search
     MANPAGER = "sh -c 'col -bx | bat -l man -p'";
     MANROFFOPT = "-c";
+    # ripgrep doesn't read ~/.ripgreprc unless told where it lives
+    RIPGREP_CONFIG_PATH = "$HOME/.ripgreprc";
   }
   // lib.optionalAttrs isArch {
     NNN_BMS = nnnList nnn.bookmarks;
     NNN_PLUG = nnnList nnn.mappings;
+  };
+  home.file = {
+    ".ripgreprc".text = ''
+      --smart-case
+      --hidden
+      --follow
+      --glob=!.git/
+      --glob=!node_modules/
+      --glob=!.venv/
+      --glob=!__pycache__/
+      --glob=!target/
+      --glob=!dist/
+      --glob=!.next/
+      --max-columns=200
+      --max-columns-preview
+    '';
+    ".fdignore".text = ''
+      .git/
+      node_modules/
+      .venv/
+      __pycache__/
+      target/
+      dist/
+      .next/
+      .cache/
+      .gradle/
+      build/
+      .DS_Store
+      *.pyc
+    '';
+    ".inputrc".text = ''
+      set completion-ignore-case on
+      set completion-prefix-display-length 2
+      set show-all-if-ambiguous on
+      set show-all-if-unmodified on
+
+      # Arrow keys match what you've typed so far against your command history
+      "\e[A": history-search-backward
+      "\e[B": history-search-forward
+      "\e[C": forward-char
+      "\e[D": backward-char
+
+      # Immediately add a trailing slash when autocompleting symlinks to directories
+      set mark-symlinked-directories on
+
+      # Do not autocomplete hidden files unless the pattern explicitly begins with a dot
+      set match-hidden-files off
+
+      # Show all autocomplete results at once
+      set page-completions off
+
+      # If there are more than 200 possible completions for a word, ask to show them all
+      set completion-query-items 200
+
+      # Show extra file information when completing, like `ls -F` does
+      set visible-stats on
+
+      # Look at text after the cursor when completing (Readline in Bash 4+)
+      set skip-completed-text on
+
+      # Coloring for Bash 4 tab completions.
+      set colored-stats on
+    '';
   };
   xdg.configFile."nnn/plugins" = lib.mkIf isArch { source = nnn.src; };
 

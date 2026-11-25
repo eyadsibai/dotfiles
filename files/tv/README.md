@@ -65,8 +65,6 @@ just switch              # links new files, drops links to moved or deleted ones
 systemctl --user enable --now tv-check.timer   # optional weekly prune and revive
 ```
 
-The folder still mirrors `~` the way stow expects, so outside this repo `stow tv` links it too (`.stow-local-ignore` keeps the same three out).
-
 Nothing writes to `tv.m3u`; add, edit or remove channels there and commit. The player plays `~/.local/state/tv/playing.m3u` instead: `tv.m3u` minus the pruned channels listed in `~/.local/state/tv/offline.m3u`. `tv` rebuilds it on every start, so edits to `tv.m3u` show up the next time you open TV. The weekly timer runs the same thing as:
 
 ```sh
@@ -81,12 +79,12 @@ Only one `tv-check` check runs at a time; an overlapping one exits with an error
 
 ## Development
 
-The checks live at the repo root (`.pre-commit-config.yaml`, `.github/workflows/tv.yml`) and only look at `tv/`. From `~/dotfiles`:
+The checks live at the repo root (`.pre-commit-config.yaml`) and only look at `files/tv/`. From the repo root:
 
 ```sh
 uvx pre-commit install     # shellcheck, ruff, parser and regression tests on every commit
 uvx pre-commit run -a      # same checks by hand (CI runs these too)
-uv run --no-project --python '>=3.12' python -B -m unittest discover -s tv/tests -v
+uv run --no-project --python '>=3.12' python -B -m unittest discover -s files/tv/tests -v
 ```
 
 Regression tests use temporary directories and a fake `ffprobe`; they never probe live streams. With mpv installed, they also exercise Lua state handling using local audio. CI installs mpv so these integration tests run there too.

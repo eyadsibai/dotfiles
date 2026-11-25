@@ -33,6 +33,7 @@
   fileSystems."/".options = [ "noatime" ];
 
   hardware.enableRedistributableFirmware = true;
+  hardware.cpu.amd.updateMicrocode = true;
   hardware.trackpoint.enable = true;
   hardware.bluetooth = {
     enable = true;
@@ -42,7 +43,6 @@
   # and nixarchy otherwise each pick TLP vs power-profiles-daemon from the other
   services.tlp.enable = false;
   services.power-profiles-daemon.enable = true;
-  services.thermald.enable = true;
   services.fwupd.enable = true;
   services.fstrim.enable = true;
   services.libinput.touchpad.disableWhileTyping = true;

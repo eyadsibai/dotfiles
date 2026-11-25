@@ -179,7 +179,7 @@ Item {
   }
 
   function openFolder() {
-    Quickshell.execDetached(["sh", "-c", 'dir="$1"; dir="${dir/#\\~/$HOME}"; mkdir -p "$dir" && xdg-open "$dir"', "_", notesDir])
+    Quickshell.execDetached(["bash", "-c", 'dir="$1"; dir="${dir/#\\~/$HOME}"; mkdir -p "$dir" && xdg-open "$dir"', "_", notesDir])
   }
 
   function copyTranscript(meeting) {

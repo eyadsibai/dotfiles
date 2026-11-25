@@ -178,11 +178,6 @@ Item {
     return Math.max(1, Math.round(bytes / 1024)) + " KB"
   }
 
-  function openRemote() {
-    Quickshell.execDetached(["setsid", "uwsm-app", "--", "xdg-terminal-exec",
-      "--app-id=org.omarchy.terminal", "--title=TV remote", "-e", "media", "tv", "remote"])
-  }
-
   Timer {
     interval: (root.fastPolling ? 5 : root.refreshIntervalSec) * 1000
     repeat: true
@@ -233,11 +228,20 @@ Item {
   // GTK file chooser for videos outside the usual folders.
   Process {
     id: browseProcess
+    property bool exited: false
     command: ["zenity", "--file-selection", "--title=Cast a video",
       "--file-filter=Videos | *.mp4 *.mkv *.webm *.mov *.m4v *.avi *.ts *.MP4 *.MKV *.MOV",
       "--file-filter=All files | *"]
     stdout: StdioCollector { id: browseOut; waitForEnd: true }
+    onRunningChanged: {
+      if (running) exited = false
+      // A missing zenity binary never emits onExited.
+      else if (!exited) Qt.callLater(function() {
+        if (!browseProcess.exited) root.lastError = "Install zenity to browse for videos"
+      })
+    }
     onExited: function(code) {
+      exited = true
       var path = String(browseOut.text || "").trim()
       if (code === 0 && path !== "") root.cast(path)
     }

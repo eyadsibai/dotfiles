@@ -10,24 +10,35 @@ if ! command -v firefox >/dev/null 2>&1; then
     skipped "Firefox"
 fi
 
+profiles_ini="$HOME/.mozilla/firefox/profiles.ini"
+if [[ ! -f "$profiles_ini" ]]; then
+    skipped "Firefox profile"
+fi
+
 find_default_profile() {
     awk -F= '
         /^\[Install/ { in_install=1 }
         in_install && /^Default=/ { print $2; exit }
-    ' "$HOME/.mozilla/firefox/profiles.ini"
+    ' "$profiles_ini"
 }
-default_profile="$HOME/.mozilla/firefox/$(find_default_profile)"
+rel_profile=$(find_default_profile)
+default_profile="$HOME/.mozilla/firefox/$rel_profile"
+if [[ -z "$rel_profile" || ! -d "$default_profile" ]]; then
+    skipped "Firefox profile"
+fi
 
+# Set via user.js so Firefox applies it on startup without racing with prefs.js.
 enable_userchrome() {
-    local prefs_file="$default_profile/prefs.js"
+    local user_js="$default_profile/user.js"
     local pref_name="toolkit.legacyUserProfileCustomizations.stylesheets"
+    local pref_line="user_pref(\"$pref_name\", true);"
 
-    if grep -q "user_pref(\"$pref_name\"" "$prefs_file"; then
-        if grep -q "user_pref(\"$pref_name\", false)" "$prefs_file"; then
-            sed -i.bak "s/user_pref(\"$pref_name\", false);/user_pref(\"$pref_name\", true);/" "$prefs_file"
+    if [[ -f "$user_js" ]] && grep -q "user_pref(\"$pref_name\"" "$user_js"; then
+        if grep -q "user_pref(\"$pref_name\", false)" "$user_js"; then
+            sed -i "s/user_pref(\"$pref_name\", false);/$pref_line/" "$user_js"
         fi
     else
-        echo "user_pref(\"$pref_name\", true);" >> "$prefs_file"
+        echo "$pref_line" >> "$user_js"
     fi
 }
 enable_userchrome

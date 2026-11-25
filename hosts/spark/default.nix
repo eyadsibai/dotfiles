@@ -22,8 +22,8 @@
   my.files = [ "host-spark" ];
 
   # Programs that were apt's here and are Nix's now, beyond the shared set
+  # (uv and nodejs come from modules/home/dev.nix)
   home.packages = [
-    pkgs.nodejs_22 # the version NodeSource's apt repository had installed
     pkgs.xclip # micro's clipboard
   ];
 

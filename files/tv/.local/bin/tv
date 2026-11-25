@@ -38,7 +38,11 @@ PLAYLIST="${TV_M3U:-${XDG_CONFIG_HOME:-$HOME/.config}/tv/tv.m3u}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/tv"
 LAST_FILE="$STATE_DIR/last"
 
-RUN_DIR="${XDG_RUNTIME_DIR:-/tmp}/tv"
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+  RUN_DIR="$XDG_RUNTIME_DIR/tv"
+else
+  RUN_DIR="/tmp/tv-${USER:-$(id -u)}"
+fi
 # Each player gets its own socket, named after its pid ($$: exec keeps it). Roles
 # can swap between the two players, so the role files (now.json, pip.json) say
 # whose socket is whose.
@@ -269,7 +273,7 @@ if [ -n "$PIP" ] && pip_sock="$(role_socket pip)"; then
   fi
 fi
 
-# Load the [tv] profile here rather than from mpv.conf, so installing is just `stow tv`.
+# Load the [tv] profile here rather than from mpv.conf, so mpv.conf stays untouched.
 args=("--include=~~/tv/tv.conf" --profile=tv "--playlist=$PLAYING")
 # For `tv --ctl`; one TV at a time owns it.
 mkdir -p "$RUN_DIR"

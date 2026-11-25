@@ -45,16 +45,9 @@
     jjui
     lazyjj
 
-    # languages & tooling
-    uv
-    nodejs
+    # search & diagrams (uv and nodejs come from modules/home/dev.nix; project SDKs use devenv)
     ast-grep
-    luarocks
-    lua5_1
     fd
-    go
-    php
-    texliveBasic
     mermaid-cli
   ];
 }

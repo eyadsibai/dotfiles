@@ -27,8 +27,6 @@
 
     brews = [
       "helix"
-      "rustup"
-      "python"
       "gemini-cli"
       "opencode"
       # The document viewer and its formats, the ones pacman installs on Arch; Nix

@@ -215,8 +215,11 @@ search `~/Videos`, `~/Downloads` and `~/Movies`, paste a link, and manage the qu
   Code runs through nix-ld.
 - **Homebrew with `cleanup = "zap"`.** On the Macs, anything not in `homebrew.nix` is
   removed on the next switch. The list *is* the Mac.
-- **Toolchains belong to projects, not machines.** Each repo has a `devenv.nix`; the
-  system ships `devenv`, direnv and the editors, nothing else.
+- **Two-tier toolchains: universal runtimes global, project SDKs in `devenv`.** Machines
+  ship `devenv`, `direnv`, the editors, and the two runtimes needed outside project folders
+  (`uv` and `node`, plus `mise` on Arch for ad-hoc standalone CLIs not in pacman). Language
+  SDKs and heavy toolchains (Go, Rust, Java, .NET, Ruby, Scala, PHP, R, TeX, project-pinned
+  Python/Node) live in each repo's `devenv.nix`.
 
 ## Keys live in 1Password
 

@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Commons
+import qs.Commons as Commons
 import qs.Ui
 import "lib/Meetings.js" as Meetings
 
@@ -49,13 +50,13 @@ BarWidget {
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
-  readonly property color fg: bar ? bar.foreground : Color.foreground
+  readonly property color fg: bar ? bar.foreground : Commons.Color.foreground
   readonly property color dim: Qt.darker(fg, 1.45)
   readonly property color faint: Qt.darker(fg, 1.9)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
   // Theme colours shared with the web app: you (accent), the call (blue), speakers.
   readonly property var tc: service && service.themeColors ? service.themeColors : Meetings.parsePalette("")
-  readonly property color micColor: Color.accent
+  readonly property color micColor: Commons.Color.accent
   readonly property color callColor: tc.call
   readonly property color amber: tc.amber
   readonly property real gap: Style.space(8)
@@ -208,7 +209,7 @@ BarWidget {
                 id: appButton
                 text: "Open app ↗"
                 foreground: root.fg
-                accent: Color.accent
+                accent: Commons.Color.accent
                 tooltipText: "All meetings, playback, editing and Claude"
                 onClicked: { root.service.openApp(); root.close() }
               }
@@ -258,8 +259,8 @@ BarWidget {
             Button {
               text: "Record    ⏎"
               iconText: ""
-              foreground: Color.urgent
-              accent: Color.urgent
+              foreground: Commons.Color.urgent
+              accent: Commons.Color.urgent
               bordered: true
               tooltipText: "Start recording (Enter)"
               onClicked: root.startFromField()
@@ -269,7 +270,7 @@ BarWidget {
           // ---- Recording in progress
           Card {
             visible: root.recording
-            tone: root.paused ? root.amber : Color.urgent
+            tone: root.paused ? root.amber : Commons.Color.urgent
             strength: root.paused ? 0.07 : 0.11
             height: visible ? liveCol.implicitHeight + Style.space(20) : 0
 
@@ -291,7 +292,7 @@ BarWidget {
                   width: Style.space(9)
                   height: width
                   radius: width / 2
-                  color: root.paused ? root.amber : Color.urgent
+                  color: root.paused ? root.amber : Commons.Color.urgent
                   SequentialAnimation on opacity {
                     running: root.popupOpen && root.info.state === "recording"
                     loops: Animation.Infinite
@@ -335,7 +336,7 @@ BarWidget {
                 visible: !!root.service && root.service.liveLines.length > 0
                 height: visible ? captionText.implicitHeight + Style.space(14) : 0
                 radius: Math.max(Style.cornerRadius, Style.space(6))
-                color: Util.alpha(Color.background, 0.55)
+                color: Util.alpha(Commons.Color.background, 0.55)
                 Text {
                   id: captionText
                   anchors.fill: parent
@@ -364,8 +365,8 @@ BarWidget {
                 Button {
                   text: "Stop and save"
                   iconText: ""
-                  foreground: Color.urgent
-                  accent: Color.urgent
+                  foreground: Commons.Color.urgent
+                  accent: Commons.Color.urgent
                   bordered: true
                   tooltipText: "s"
                   onClicked: { root.stopRecording(); root.close() }
@@ -383,8 +384,8 @@ BarWidget {
                 width: parent.width
                 height: Math.max(Style.space(56), notesEdit.contentHeight + Style.space(14))
                 radius: Math.max(Style.cornerRadius, Style.space(6))
-                color: Util.alpha(Color.background, 0.55)
-                border.color: notesEdit.activeFocus ? Util.alpha(Color.accent, 0.6) : Util.alpha(root.fg, 0.12)
+                color: Util.alpha(Commons.Color.background, 0.55)
+                border.color: notesEdit.activeFocus ? Util.alpha(Commons.Color.accent, 0.6) : Util.alpha(root.fg, 0.12)
                 border.width: 1
                 TextEdit {
                   id: notesEdit
@@ -453,7 +454,7 @@ BarWidget {
                   width: parent.width * 0.3
                   height: parent.height
                   radius: parent.radius
-                  color: Color.accent
+                  color: Commons.Color.accent
                   NumberAnimation on x {
                     running: root.popupOpen && procTrack.visible
                     from: -procTrack.width * 0.3
@@ -479,7 +480,7 @@ BarWidget {
             id: ready
             readonly property var meeting: root.service ? root.service.justFinished : null
             visible: !root.recording && !!meeting
-            tone: Color.accent
+            tone: Commons.Color.accent
             strength: 0.10
             height: visible ? readyCol.implicitHeight + Style.space(20) : 0
 
@@ -537,7 +538,7 @@ BarWidget {
                 Button {
                   text: "Open"
                   foreground: root.fg
-                  accent: Color.accent
+                  accent: Commons.Color.accent
                   selected: true
                   onClicked: { root.service.openViewer(ready.meeting.id); root.service.dismissFinished(); root.close() }
                 }
@@ -562,7 +563,7 @@ BarWidget {
               id: issue
               required property var modelData
               width: column.width
-              tone: modelData.severity === "error" ? Color.urgent : root.amber
+              tone: modelData.severity === "error" ? Commons.Color.urgent : root.amber
               strength: 0.10
               height: issueRow.implicitHeight + Style.space(14)
 
@@ -601,7 +602,7 @@ BarWidget {
             visible: !!root.service && root.service.lastError !== "" && !root.recording
             width: parent.width
             text: root.service ? root.service.lastError : ""
-            color: Color.urgent
+            color: Commons.Color.urgent
             font.family: root.fontFamily
             font.pixelSize: Style.font.caption
             wrapMode: Text.WordWrap
@@ -739,7 +740,7 @@ BarWidget {
                     : row.transcribing ? Meetings.fmtWhen(Meetings.parseTime(row.modelData.startedAt), root.service.nowMs) + " · transcribing…"
                     : row.summarizing ? Meetings.meetingMeta(row.modelData, root.service.nowMs) + " · summarizing…"
                     : Meetings.meetingMeta(row.modelData, root.service.nowMs) + (row.modelData.review ? " · " + row.modelData.review + " to check" : "")
-                  color: row.live ? Color.urgent : root.faint
+                  color: row.live ? Commons.Color.urgent : root.faint
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.caption
                   elide: Text.ElideRight
@@ -778,7 +779,7 @@ BarWidget {
                   visible: row.hasSpeech
                   iconText: row.summarizing ? "" : (row.modelData.hasSummary ? "" : "")
                   tooltipText: row.summarizing ? "Summarizing…" : row.modelData.hasSummary ? "Open summary" : "Summarize with Claude"
-                  foreground: row.modelData.hasSummary ? Color.accent : root.dim
+                  foreground: row.modelData.hasSummary ? Commons.Color.accent : root.dim
                   fontSize: Style.font.bodySmall
                   onClicked: {
                     if (row.summarizing) return
@@ -797,7 +798,7 @@ BarWidget {
                 PanelActionButton {
                   iconText: ""
                   tooltipText: row.confirming ? "Click again to delete the recording (notes files stay)" : "Delete recording"
-                  foreground: row.confirming ? Color.urgent : root.faint
+                  foreground: row.confirming ? Commons.Color.urgent : root.faint
                   fontSize: Style.font.bodySmall
                   onClicked: {
                     if (row.confirming) {
