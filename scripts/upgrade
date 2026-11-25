@@ -13,6 +13,7 @@
 #   inputs    nix flake update: nixpkgs, Home Manager, nixarchy and the rest
 #   review    git diff of what landed in the repo
 #   switch    just switch (on Arch, refused while anything is still detached)
+#   mise      mise prune --yes: drop old or removed mise tool versions (where mise is installed)
 #   packages  Arch: rewrite arch/<host>.packages if it no longer matches the machine
 #             Ubuntu: rewrite apt/<host>.packages if it no longer matches the machine
 #   commit    flake.lock on its own, then whatever else this run changed
@@ -256,7 +257,15 @@ if ask "Build and activate this machine's configuration now?"; then
   fi
 fi
 
-# 9. The package list. Only after a switch, which is what offers to install anything
+# 9. Prune unused mise tool versions and stale tracked-config links (after switch so
+# tools removed from ~/.config/mise/config.toml are cleaned up alongside older versions
+# left behind by `omarchy update`).
+if command -v mise >/dev/null; then
+  step "mise prune"
+  mise prune --yes || echo "mise prune failed; see above."
+fi
+
+# 10. The package list. Only after a switch, which is what offers to install anything
 # the list has and the machine lacks; without one, rewriting would drop those.
 if $arch && $switched; then
   drift=$(scripts/arch-packages diff)
@@ -276,7 +285,7 @@ elif $apt && $switched; then
   fi
 fi
 
-# 10. Commit what this run changed, and nothing that was already waiting. flake.lock
+# 11. Commit what this run changed, and nothing that was already waiting. flake.lock
 # goes first and alone, named after the inputs that moved, with each one's old and
 # new revision in the body: what a summary of the upstream changes is written from.
 sort_changes
@@ -316,7 +325,7 @@ if ((${#untouched[@]})); then
   echo "Still uncommitted from before the upgrade: ${#untouched[@]} file(s), as they were."
 fi
 
-# 11. Reboot when the running kernel is no longer the installed one
+# 12. Reboot when the running kernel is no longer the installed one
 if reboot_due; then
   step "The running kernel was replaced"
   ask "Reboot now?" false && systemctl reboot
