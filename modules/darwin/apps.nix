@@ -15,7 +15,6 @@
     spotify-player
     losslesscut-bin
     ffmpeg-full
-    feh
     diff-pdf
     imagemagick
     ghostscript
@@ -25,6 +24,7 @@
     cointop
 
     # utilities
+    bashInteractive # macOS ships Bash 3.2; repo scripts like scripts/upgrade use Bash 4+
     m-cli
     appcleaner
     localsend

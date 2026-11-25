@@ -50,8 +50,11 @@ in
     '') blockedHosts
   );
 
-  # Allow downloaded signed apps through the application firewall
-  networking.applicationFirewall.allowSignedApp = true;
+  # Enable the application firewall and allow downloaded signed apps through
+  networking.applicationFirewall = {
+    enable = true;
+    allowSignedApp = true;
+  };
 
   system.defaults = {
     menuExtraClock.Show24Hour = true;
@@ -123,26 +126,19 @@ in
       "com.apple.sound.beep.volume" = 0.0;
     };
 
-    spaces.spans-displays = true;
+    spaces.spans-displays = false;
 
     CustomUserPreferences = {
       ".GlobalPreferences".AppleSpacesSwitchOnActivate = true;
       NSGlobalDomain.WebKitDeveloperExtras = true;
       "com.apple.finder" = {
-        ShowExternalHardDrivesOnDesktop = true;
-        ShowHardDrivesOnDesktop = true;
-        ShowMountedServersOnDesktop = true;
-        ShowRemovableMediaOnDesktop = true;
         _FXSortFoldersFirst = true;
-        FXDefaultSearchScope = "SCcf";
       };
       # No .DS_Store files on network and USB volumes
       "com.apple.desktopservices" = {
         DSDontWriteNetworkStores = true;
         DSDontWriteUSBStores = true;
       };
-      # NOTE: contradicts spaces.spans-displays = true above (kept from the old config)
-      "com.apple.spaces"."spans-displays" = 0;
       "com.apple.WindowManager" = {
         EnableStandardClickToShowDesktop = 0;
         StandardHideDesktopIcons = 0;

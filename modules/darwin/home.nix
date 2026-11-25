@@ -2,7 +2,6 @@
 {
   lib,
   osConfig,
-  pkgs,
   ...
 }:
 {
@@ -21,20 +20,12 @@
     }
   ];
 
-  programs.delta = {
-    enable = true;
-    enableGitIntegration = true;
-    options.features = "side-by-side";
-  };
-
   programs.yazi = {
     enable = true;
     shellWrapperName = "y"; # the new default; silences the warning
   };
   programs.lazygit.enable = true;
   programs.zoxide.enable = true;
-  programs.bun.enable = true;
-  programs.yt-dlp.enable = true;
   programs.lapce.enable = true;
   # Homebrew installs zathura (homebrew.nix); this only writes its config
   programs.zathura = {
