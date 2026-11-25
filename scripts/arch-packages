@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
-# arch/<host>.packages and the machine, in both directions. Pacman owns the programs on
-# an Arch machine; the list is what this one has beyond Omarchy's own lists.
+# arch/common.packages + arch/<host>.packages and the machine, in both directions.
+# Pacman owns the programs on an Arch machine; the lists hold what this one has beyond
+# Omarchy's own lists.
 #
-#   install   install what the list has and the machine lacks, never removing anything.
-#             `just switch` runs it after Home Manager (whose spotify-theme unit a
-#             freshly installed Spotify needs), so a list that changed in the repo
-#             needs no command of its own. Nothing missing: no output, no questions.
-#             Then it goes through what's installed and not listed, one package at a
-#             time (`review`).
-#   review    for each package installed and not listed: what it is, when it came, and
-#             why the list lacks it (never in it, or which commit took it out); then add
-#             it to the list, uninstall it, or leave it to be asked again next switch
-#   save      rewrite the list from what's installed (`just arch-save`)
-#   diff      what `save` would change: +added, -dropped, nothing when they agree
+#   install   sync listed packages with this machine: offers to install packages never
+#             installed here, asks about listed packages that were removed or replaced
+#             (remove from list, move to other hosts, or reinstall), then goes through
+#             what's installed and not listed (`review`). `just switch` runs this after
+#             Home Manager. Nothing out of sync: no output, no questions.
+#   review    walk through every difference one package at a time:
+#             - listed but removed, replaced, or now in Omarchy's own list
+#             - installed and not listed (add to host/common list, uninstall, or leave)
+#   save      rewrite arch/<host>.packages from what's installed beyond Omarchy's lists
+#             and arch/common.packages (`just arch-save`)
+#   diff      what the lists and machine disagree on: +unlisted, -not installed
 #
 # usage: arch-packages install|review|save|diff [host]
 set -uo pipefail
@@ -20,40 +21,108 @@ cd "$(dirname "$0")/.." || exit
 
 cmd=${1:-}
 host=${2:-$(hostname -s)}
+common=arch/common.packages
 list=arch/$host.packages
 
+# Pin C collation so sort and comm always agree regardless of host locale.
+csort() { LC_ALL=C sort "$@"; }
+ccomm() { LC_ALL=C comm "$@"; }
+
+listed_file() {
+  [[ -f $1 ]] || return 0
+  grep -Ev '^(#|$)' "$1"
+}
+
+in_file() { [[ -f $1 ]] && grep -qxF "$2" "$1"; }
+
 listed() {
-  [[ -f $list ]] || return 0
-  grep -Ev '^(#|$)' "$list"
+  {
+    listed_file "$common"
+    listed_file "$list"
+  } | csort -u
+}
+
+omarchy_packages() {
+  cat "${OMARCHY_PATH:-/usr/share/omarchy}"/install/*.packages | sed 's/#.*//' | tr -s ' \t' '\n' | csort -u
 }
 
 # Explicitly installed, minus what Omarchy installs on every machine. Fails rather than
 # answer without Omarchy's lists, which would put all of Omarchy into ours.
 installed() {
   local omarchy explicit
-  omarchy=$(cat "${OMARCHY_PATH:-/usr/share/omarchy}"/install/*.packages | sed 's/#.*//' | tr -s ' \t' '\n' | sort -u) || return 1
-  explicit=$(pacman -Qqe | sort -u) || return 1
-  comm -23 <(echo "$explicit") <(echo "$omarchy")
+  omarchy=$(omarchy_packages) || return 1
+  explicit=$(pacman -Qqe | csort -u) || return 1
+  ccomm -23 <(echo "$explicit") <(echo "$omarchy")
 }
 
 changes() {
   local now
   now=$(installed) || return 1
-  comm -13 <(listed | sort -u) <(echo "$now") | sed 's/^/+/'
-  comm -23 <(listed | sort -u) <(echo "$now") | sed 's/^/-/'
+  ccomm -13 <(listed) <(echo "$now") | sed 's/^/+/'
+  ccomm -23 <(listed) <(echo "$now") | sed 's/^/-/'
 }
 
-header() { echo "# Installed on $host beyond Omarchy's own lists; \`just arch-save\` rewrites this"; }
+common_header() { echo "# Shared across Arch hosts beyond Omarchy's own lists"; }
 
-add_to_list() {
-  local body
-  # Merged in rather than re-sorted: the list may have been sorted under another locale,
-  # and a full sort would move lines that have nothing to do with this package.
-  body=$(sort -m <(listed) <(echo "$1")) || return 1
-  { header; echo "$body"; } > "$list"
+write_file() {
+  local target=$1 body=$2 hdr h
+  if [[ $target == "$common" ]]; then
+    hdr=$(common_header)
+  else
+    h=$(basename "$target" .packages)
+    hdr="# Installed on $h beyond Omarchy's own lists and arch/common.packages; \`just arch-save\` rewrites this"
+  fi
+  {
+    echo "$hdr"
+    [[ -z $body ]] || echo "$body"
+  } > "$target"
 }
 
-pacman_field() { LC_ALL=C pacman -Qi "$1" | sed -n "s/^$2 *: //p"; }
+add_to_file() {
+  local target=$1 pkg=$2 body
+  body=$(csort -u <(listed_file "$target") <(echo "$pkg")) || return 1
+  write_file "$target" "$body"
+}
+
+drop_from_file() {
+  local target=$1 pkg=$2 body
+  body=$(listed_file "$target" | grep -vxF "$pkg" || true)
+  write_file "$target" "$body"
+}
+
+other_host_lists() {
+  local other
+  for other in arch/*.packages; do
+    [[ -f $other && $other != "$list" && $other != "$common" ]] || continue
+    echo "$other"
+  done
+}
+
+move_common_to_others() {
+  local pkg=$1 other
+  while IFS= read -r other; do
+    add_to_file "$other" "$pkg" || return 1
+  done < <(other_host_lists)
+  drop_from_file "$common" "$pkg"
+}
+
+add_to_list() { add_to_file "$list" "$1"; }
+
+pacman_field() { LC_ALL=C pacman -Qi "$1" 2>/dev/null | sed -n "s/^$2 *: //p"; }
+
+# Last removal of $1 from pacman's log: "<date> <version>", or empty if never removed here
+removed_info() {
+  [[ -r /var/log/pacman.log ]] || return 0
+  awk -v pkg="$1" '
+    $2 == "[ALPM]" && $3 == "removed" && $4 == pkg {
+      date = substr($1, 2, 10)
+      ver = $5
+      gsub(/[()]/, "", ver)
+      out = date " " ver
+    }
+    END { if (out != "") print out }
+  ' /var/log/pacman.log
+}
 
 # Why the list lacks a package: the last commit that touched its line took it out, and
 # with no such commit it was installed by hand and never recorded.
@@ -62,19 +131,210 @@ why_unlisted() {
   # Package names are letters, digits and @._+-; of those only . and + mean anything in a regex
   re=${p//./\\.}
   re=${re//+/\\+}
-  line=$(git log -1 --format='%h %s (%cr)' -G "^$re\$" -- "$list")
+  line=$(git log -1 --format='%h %s (%cr)' -G "^$re\$" -- "$list" "$common")
   if [[ -n $line ]]; then
-    echo "  taken out of $list by $line"
+    echo "  taken out of the package list by $line"
   else
-    echo "  never in $list: installed by hand on this machine"
+    echo "  never in $list or $common: installed by hand on this machine"
   fi
   for other in arch/*.packages; do
-    [[ $other == "$list" ]] && continue
+    [[ $other == "$list" || $other == "$common" ]] && continue
     grep -qxF "$p" "$other" && echo "  $(basename "$other" .packages) lists it"
   done
 }
 
-review() {
+why_listed() {
+  local p=$1 re line
+  re=${p//./\\.}
+  re=${re//+/\\+}
+  line=$(git log -1 --format='%h %s (%cr)' -G "^$re\$" -- "$list" "$common")
+  [[ -n $line ]] && echo "  listed in commit $line"
+}
+
+# Prompt for one listed package that is no longer in `installed` (either genuinely missing,
+# replaced by a provider, absorbed into Omarchy's lists, or demoted to a dependency).
+# Appends to the caller's `to_install` array when the user chooses to install it.
+review_one_dropped() {
+  local p=$1 mode=$2
+  local in_common=false in_host=false where=""
+  local removed="" rdate="" rver="" providers="" omarchy_list=""
+  local -a other_hosts=() opts=()
+  local other_names="" choice
+
+  in_file "$common" "$p" && in_common=true
+  in_file "$list" "$p" && in_host=true
+  if $in_common && $in_host; then
+    where="$common and $list"
+  elif $in_common; then
+    where="$common"
+  else
+    where="$list"
+  fi
+
+  mapfile -t other_hosts < <(other_host_lists)
+  if ((${#other_hosts[@]})); then
+    other_names=$(printf '%s\n' "${other_hosts[@]}" | sed 's|^arch/||; s|\.packages$||' | paste -sd',' | sed 's/,/, /g')
+  fi
+
+  removed=$(removed_info "$p")
+  if [[ -n $removed ]]; then
+    read -r rdate rver <<<"$removed"
+  fi
+
+  echo
+  printf '\e[1m%s\e[0m  (in %s)\n' "$p" "$where"
+  if [[ $mode == satisfied ]]; then
+    omarchy_list=$(omarchy_packages 2>/dev/null || true)
+    if [[ -n $omarchy_list ]] && grep -qxF "$p" <<<"$omarchy_list"; then
+      echo "  now in Omarchy's own package list (no longer needs listing here)"
+    elif pacman -Qq "$p" &>/dev/null; then
+      echo "  still installed as a dependency (not explicitly installed)"
+    else
+      providers=$(pacman_field "$p" Name | paste -sd',' | sed 's/,/, /g')
+      if [[ -n $rdate ]]; then
+        echo "  removed on $rdate (was $rver); provided by ${providers:-another package}"
+      else
+        echo "  not installed by name; provided by ${providers:-another package}"
+      fi
+    fi
+  else
+    if [[ -n $rdate ]]; then
+      echo "  removed on $rdate (was $rver)"
+    else
+      echo "  never installed on this machine"
+      why_listed "$p"
+    fi
+  fi
+
+  # Default first choice matches the most likely intent: remove if uninstalled/replaced,
+  # install if it was never installed on this machine.
+  if [[ $mode == missing && -z $rdate ]]; then
+    opts+=("Install (yay -S)")
+  fi
+  if $in_common; then
+    opts+=("Remove from $common (all hosts)")
+    if ((${#other_hosts[@]})); then
+      opts+=("Move to other hosts only ($other_names)")
+    fi
+  else
+    opts+=("Remove from $list")
+  fi
+  if [[ $mode == missing && -n $rdate ]]; then
+    opts+=("Install (yay -S)")
+  fi
+  opts+=("Leave for now")
+
+  choice=$(gum choose --header "$p:" "${opts[@]}") || {
+    echo "Review stopped; the rest are asked about next switch."
+    return 1
+  }
+  case $choice in
+    "Install (yay -S)")
+      to_install+=("$p")
+      echo "  queued to install"
+      ;;
+    "Move to other hosts only"*)
+      move_common_to_others "$p" && echo "  moved out of $common to $other_names"
+      $in_host && drop_from_file "$list" "$p"
+      ;;
+    "Remove from $common"*)
+      drop_from_file "$common" "$p" && echo "  removed from $common"
+      $in_host && drop_from_file "$list" "$p" && echo "  removed from $list"
+      ;;
+    "Remove from $list")
+      drop_from_file "$list" "$p" && echo "  removed from $list"
+      ;;
+    *)
+      echo "  left; asked again next switch"
+      ;;
+  esac
+}
+
+# Handle packages listed in common/host files that are no longer in `installed`.
+# When $1 == batch-new, packages never removed here can be installed in one confirmation
+# (keeps a fresh machine's first `just switch` to a single prompt).
+review_dropped() {
+  local batch_new=${1:-}
+  local p
+  local -a dropped=() satisfied=() removed_here=() never_installed=() to_install=()
+
+  mapfile -t dropped < <(changes 2>/dev/null | sed -n 's/^-//p')
+  ((${#dropped[@]})) || return 0
+
+  for p in "${dropped[@]}"; do
+    if pacman -T "$p" >/dev/null 2>&1; then
+      satisfied+=("$p")
+    elif [[ -n $(removed_info "$p") ]]; then
+      removed_here+=("$p")
+    else
+      never_installed+=("$p")
+    fi
+  done
+
+  if [[ ! -t 0 ]]; then
+    if ((${#never_installed[@]})); then
+      echo "Listed and never installed here: ${never_installed[*]} (run interactively or \`just arch-review\`)"
+    fi
+    if ((${#removed_here[@]})); then
+      echo "Listed but removed from this machine: ${removed_here[*]} (\`just arch-review\`)"
+    fi
+    if ((${#satisfied[@]})); then
+      echo "Listed but replaced or now in Omarchy's list: ${satisfied[*]} (\`just arch-review\`)"
+    fi
+    return 0
+  fi
+
+  if ((${#never_installed[@]})); then
+    if [[ $batch_new == batch-new ]]; then
+      echo
+      echo "${#never_installed[@]} listed package(s) never installed on $host: ${never_installed[*]}"
+      local bulk
+      bulk=$(gum choose --header "New packages from the repo:" \
+        "Install all (${#never_installed[@]}) with yay -S" \
+        "Review one by one" \
+        "Skip for now") || bulk="Skip for now"
+      case $bulk in
+        "Install all"*) to_install+=("${never_installed[@]}") ;;
+        "Review one by one")
+          for p in "${never_installed[@]}"; do
+            review_one_dropped "$p" missing || return 0
+          done
+          ;;
+        *) echo "  skipped; asked again next switch" ;;
+      esac
+    else
+      echo
+      echo "${#never_installed[@]} listed package(s) not installed on $host:"
+      for p in "${never_installed[@]}"; do
+        review_one_dropped "$p" missing || return 0
+      done
+    fi
+  fi
+
+  if ((${#removed_here[@]})); then
+    echo
+    echo "${#removed_here[@]} listed package(s) were uninstalled from $host:"
+    for p in "${removed_here[@]}"; do
+      review_one_dropped "$p" missing || return 0
+    done
+  fi
+
+  if ((${#satisfied[@]})); then
+    echo
+    echo "${#satisfied[@]} listed package(s) were replaced or absorbed:"
+    for p in "${satisfied[@]}"; do
+      review_one_dropped "$p" satisfied || return 0
+    done
+  fi
+
+  if ((${#to_install[@]})); then
+    echo
+    yay -S --needed "${to_install[@]}" ||
+      echo "Not installed. The next switch offers them again; remove them from the list to stop that."
+  fi
+}
+
+review_unlisted() {
   local unlisted p desc date needed choice
   mapfile -t unlisted < <(changes 2>/dev/null | sed -n 's/^+//p')
   ((${#unlisted[@]})) || return 0
@@ -95,11 +355,12 @@ review() {
     why_unlisted "$p"
     [[ $needed == None ]] || echo "  needed by $needed, so pacman won't uninstall it alone"
     # Esc or Ctrl-C stops the review; whatever is left is asked about next switch
-    choice=$(gum choose --header "$p:" "Add to $list" "Uninstall (sudo pacman -Rns)" "Leave for now") || {
+    choice=$(gum choose --header "$p:" "Add to $list" "Add to $common" "Uninstall (sudo pacman -Rns)" "Leave for now") || {
       echo "Review stopped; the rest are asked about next switch."
       return 0
     }
     case $choice in
+      "Add to $common") add_to_file "$common" "$p" && echo "  added to $common" ;;
       Add*) add_to_list "$p" && echo "  added to $list" ;;
       Uninstall*) sudo pacman -Rns "$p" || echo "  not uninstalled" ;;
       *) echo "  left; asked again next switch" ;;
@@ -109,33 +370,20 @@ review() {
 
 case $cmd in
   install)
-    mapfile -t wanted < <(listed)
-    ((${#wanted[@]})) || exit 0
-    # pacman -T counts what an installed package provides; yay --needed goes by name,
-    # so it would offer power-profiles-daemon over omarchy-power-profiles-daemon.
-    mapfile -t missing < <(pacman -T "${wanted[@]}")
-    if ((${#missing[@]})); then
-      echo "$list has ${#missing[@]} package(s) this machine lacks: ${missing[*]}"
-      if [[ -t 0 ]]; then
-        yay -S --needed "${missing[@]}" ||
-          echo "Not installed. The next switch offers them again; delete them from $list to stop that."
-      else
-        echo "No terminal to ask in, so they wait for the next switch."
-      fi
-    fi
-    review
+    review_dropped batch-new
+    review_unlisted
     # A package that didn't install shouldn't fail the switch that has already happened
     exit 0
     ;;
   review)
-    review
+    review_dropped
+    review_unlisted
     ;;
   save)
     now=$(installed) || { echo "Couldn't read what's installed; $list is untouched." >&2; exit 1; }
-    {
-      header
-      [[ -z $now ]] || echo "$now"
-    } > "$list"
+    # Keep shared packages in arch/common.packages and write only host-specific deltas here.
+    delta=$(ccomm -23 <(echo "$now") <(listed_file "$common" | csort -u))
+    write_file "$list" "$delta"
     git diff --stat -- "$list"
     ;;
   diff)

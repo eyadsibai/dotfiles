@@ -6,7 +6,7 @@
 # too: on a new machine they arrive from the AUR after Spotify, and later a new
 # spicetify is often the release that knows a Spotify the old one couldn't patch.
 # `just switch` installs this file to /etc/pacman.d/hooks/ whenever it changes here
-# (scripts/arch-system).
+# (scripts/host-system).
 [Trigger]
 Operation = Install
 Operation = Upgrade
@@ -18,4 +18,4 @@ Target = spicetify-marketplace-bin
 [Action]
 Description = Letting spicetify patch Spotify...
 When = PostTransaction
-Exec = /usr/bin/sh -c '[ -d /opt/spotify/Apps ] || exit 0; chmod a+wr /opt/spotify && chmod -R a+wr /opt/spotify/Apps && date > /run/spotify-updated'
+Exec = /usr/bin/sh -c '[ -d /opt/spotify/Apps ] || exit 0; chgrp eyad /opt/spotify && chmod g+rwx,o-w /opt/spotify && chgrp -R eyad /opt/spotify/Apps && chmod -R g+rwX,o-w /opt/spotify/Apps && date > /run/spotify-updated'

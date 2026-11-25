@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 # `just upgrade`: one interactive pass that brings this machine to the newest of
-# everything, the same command on NixOS, macOS and Arch. The steps a machine has no
-# use for are skipped, so on NixOS and macOS it comes down to inputs, switch, commit.
+# everything, the same command on NixOS, macOS, Arch and Ubuntu (spark). The steps a
+# machine has no use for are skipped, so on NixOS and macOS it comes down to inputs,
+# switch, commit.
 #
 #   pull      git pull, when the remote has commits this checkout doesn't
 #   mirrors   Arch: put Omarchy's mirror back first if it's gone (else packages run ahead)
 #   system    Arch: omarchy update (pacman, the AUR, Omarchy itself and its migrations)
+#             Ubuntu: apt-get update && upgrade
 #   links     Arch: adopt files a migration detached, mark migrations reviewed
 #   defaults  Arch: each default the update changed, as a diff, to merge in or leave
 #   inputs    nix flake update: nixpkgs, Home Manager, nixarchy and the rest
 #   review    git diff of what landed in the repo
 #   switch    just switch (on Arch, refused while anything is still detached)
 #   packages  Arch: rewrite arch/<host>.packages if it no longer matches the machine
+#             Ubuntu: rewrite apt/<host>.packages if it no longer matches the machine
 #   commit    flake.lock on its own, then whatever else this run changed
 #   reboot    if the running kernel was replaced
 #
@@ -28,9 +31,12 @@ step() { printf '\n\e[1;34m==> %s\e[0m\n' "$*"; }
 ask() { gum confirm "$1" ${2:+--default="$2"}; }
 ok() { printf '\e[32m%s\e[0m\n' "$*"; }
 
-# Omarchy on Arch: pacman owns the system, so there is more to update than the flake
+# Omarchy on Arch: pacman owns the system, so there is more to update than the flake.
+# Ubuntu (spark): apt owns the base OS and drivers, while Nix installs my programs.
 arch=false
 [[ -e /etc/arch-release ]] && arch=true
+apt=false
+[[ -x /usr/bin/apt-get ]] && apt=true
 host=$(hostname -s)
 
 # Paths with uncommitted changes, NUL-separated so any file name survives
@@ -156,6 +162,11 @@ reboot_due() {
     done
     return 1
   fi
+  if $apt; then
+    # Ubuntu writes this stamp when an apt upgrade replaces the kernel or core libraries
+    [[ -f /var/run/reboot-required ]]
+    return
+  fi
   # Arch: pacman no longer owns the running kernel. Its modules directory proves
   # nothing: Omarchy's pacman hook puts it back after the upgrade, so the running
   # kernel can still load modules until the reboot.
@@ -198,6 +209,15 @@ if $arch; then
   # are opened and reported there.
   step "Omarchy's defaults"
   scripts/omarchy-defaults review
+fi
+
+if $apt; then
+  step "apt upgrade"
+  if ask "Run sudo apt-get update && sudo apt-get upgrade now?"; then
+    if ! { sudo apt-get update && sudo apt-get upgrade; }; then
+      ask "apt-get upgrade failed. Continue with the follow-up steps?" false || exit 1
+    fi
+  fi
 fi
 
 # 6. Flake inputs. The lock is shared, so another machine may have moved it already:
@@ -245,6 +265,14 @@ if $arch && $switched; then
     echo "$drift"
     echo "+ is installed and not listed; - is listed and not installed, or Omarchy's own now."
     ask "Rewrite the list from this machine?" && scripts/arch-packages save
+  fi
+elif $apt && $switched; then
+  drift=$(scripts/apt-packages diff)
+  if [[ -n $drift ]]; then
+    step "apt/$host.packages no longer matches what's installed"
+    echo "$drift"
+    echo "+ is installed and not listed; - is listed and not installed."
+    ask "Rewrite the list from this machine?" && scripts/apt-packages save
   fi
 fi
 

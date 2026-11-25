@@ -2,7 +2,7 @@
 #
 #   <tcp|udp> <port> <from>
 #
-# `just switch` adds what's listed here and missing (scripts/arch-system). It never
+# `just switch` adds what's listed here and missing (scripts/host-system). It never
 # removes a rule: dropping a line here means `sudo ufw delete allow ...` as well.
 
 # sshd, for the machines at home, which try this one on the LAN before the tailnet

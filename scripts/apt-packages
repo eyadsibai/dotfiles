@@ -32,6 +32,10 @@ cmd=${1:-}
 host=${2:-$(hostname -s)}
 list=apt/$host.packages
 
+# Pin C collation so sort and comm always agree regardless of host locale.
+csort() { LC_ALL=C sort "$@"; }
+ccomm() { LC_ALL=C comm "$@"; }
+
 listed() {
   [[ -f $list ]] || return 0
   grep -Ev '^(#|$)' "$list"
@@ -57,7 +61,7 @@ mine() {
         for (i = 1; i <= n; i++)
           if (entry[i] !~ /automatic/) { sub(/[: ].*/, "", entry[i]); print entry[i] }
       }
-    }' | sort -u | while read -r p; do
+    }' | csort -u | while read -r p; do
     if is_installed "$p"; then echo "$p"; fi
   done
 }
@@ -80,7 +84,7 @@ also_in_nix() {
   [[ -n $bin ]] || return 0
   dpkg -L "$1" 2>/dev/null | grep -E '/s?bin/[^/]+$' | while read -r f; do
     if [[ -e $bin/${f##*/} ]]; then echo "${f##*/}"; fi
-  done | sort -u | paste -sd' '
+  done | csort -u | paste -sd' '
 }
 
 # Commands a standalone installer put in ~/.local/bin that Nix installs as well. Only
@@ -99,7 +103,7 @@ standalone() {
 
 changes() {
   local p
-  comm -13 <(listed | sort -u) <(mine) | sed 's/^/+/'
+  ccomm -13 <(listed | csort -u) <(mine) | sed 's/^/+/'
   listed | while read -r p; do
     is_installed "$p" || echo "-$p"
   done
@@ -114,12 +118,128 @@ write_list() {
   } > "$list"
 }
 
-add_to_list() { write_list "$(sort -m <(listed) <(echo "$1"))"; }
-drop_from_list() { write_list "$(listed | grep -vxF "$1")"; }
+# Last removal/purge date of $1 from apt's history logs, or empty if never removed here
+removed_date() {
+  local f
+  {
+    for f in /var/log/apt/history.log.*.gz; do
+      [[ -e $f ]] && gzip -dc "$f"
+    done
+    cat /var/log/apt/history.log 2>/dev/null
+  } | awk -v pkg="$1" '
+    /^Start-Date:/ { date = $2 }
+    /^(Remove|Purge):/ {
+      line = substr($0, index($0, ":") + 2)
+      n = split(line, entry, /\), /)
+      for (i = 1; i <= n; i++) {
+        name = entry[i]
+        sub(/[: ].*/, "", name)
+        if (name == pkg) out = date
+      }
+    }
+    END { if (out != "") print out }
+  '
+}
+
+add_to_list() { write_list "$(csort -u <(listed) <(echo "$1"))"; }
+drop_from_list() { write_list "$(listed | grep -vxF "$1" || true)"; }
+
+review_one_missing() {
+  local p=$1 rdate choice
+  local -a opts=()
+  rdate=$(removed_date "$p")
+  echo
+  printf '\e[1m%s\e[0m  (in %s)\n' "$p" "$list"
+  if [[ -n $rdate ]]; then
+    echo "  removed with apt on $rdate"
+    opts=("Remove from $list" "Install (sudo apt-get install)" "Leave for now")
+  else
+    echo "  not installed on this machine"
+    opts=("Install (sudo apt-get install)" "Remove from $list" "Leave for now")
+  fi
+  choice=$(gum choose --header "$p:" "${opts[@]}") || {
+    echo "Review stopped; the rest are asked about next switch."
+    return 1
+  }
+  case $choice in
+    Install*)
+      to_install+=("$p")
+      echo "  queued to install"
+      ;;
+    Remove*) drop_from_list "$p" && echo "  removed from $list" ;;
+    *) echo "  left; asked again next switch" ;;
+  esac
+}
+
+review_missing() {
+  local batch_new=${1:-} p
+  local -a removed_here=() never_installed=() to_install=()
+  while read -r p; do
+    if ! is_installed "$p"; then
+      if [[ -n $(removed_date "$p") ]]; then
+        removed_here+=("$p")
+      else
+        never_installed+=("$p")
+      fi
+    fi
+  done < <(listed)
+  ((${#removed_here[@]} + ${#never_installed[@]})) || return 0
+
+  if [[ ! -t 0 ]]; then
+    if ((${#never_installed[@]})); then
+      echo "$list has ${#never_installed[@]} package(s) never installed here: ${never_installed[*]}"
+    fi
+    if ((${#removed_here[@]})); then
+      echo "In $list but removed with apt: ${removed_here[*]} (\`just apt-review\`)"
+    fi
+    return 0
+  fi
+
+  if ((${#never_installed[@]})); then
+    if [[ $batch_new == batch-new ]]; then
+      echo
+      echo "$list has ${#never_installed[@]} package(s) never installed here: ${never_installed[*]}"
+      local bulk
+      bulk=$(gum choose --header "New apt packages from the repo:" \
+        "Install all (${#never_installed[@]}) with sudo apt-get install" \
+        "Review one by one" \
+        "Skip for now") || bulk="Skip for now"
+      case $bulk in
+        "Install all"*) to_install+=("${never_installed[@]}") ;;
+        "Review one by one")
+          for p in "${never_installed[@]}"; do
+            review_one_missing "$p" || return 0
+          done
+          ;;
+        *) echo "  skipped; asked again next switch" ;;
+      esac
+    else
+      echo
+      echo "${#never_installed[@]} listed package(s) not installed on $host:"
+      for p in "${never_installed[@]}"; do
+        review_one_missing "$p" || return 0
+      done
+    fi
+  fi
+
+  if ((${#removed_here[@]})); then
+    echo
+    echo "${#removed_here[@]} listed package(s) were uninstalled with apt:"
+    for p in "${removed_here[@]}"; do
+      review_one_missing "$p" || return 0
+    done
+  fi
+
+  if ((${#to_install[@]})); then
+    echo
+    sudo apt-get install "${to_install[@]}" ||
+      echo "Not installed. The next switch offers them again; remove them from $list to stop that."
+  fi
+}
 
 review() {
   local unlisted dupes=() p also choice
-  mapfile -t unlisted < <(comm -13 <(listed | sort -u) <(mine))
+  mapfile -t unlisted < <(ccomm -13 <(listed | csort -u) <(mine))
   while read -r p; do
     if [[ -n $(also_in_nix "$p") ]]; then dupes+=("$p"); fi
   done < <(listed)
@@ -178,24 +298,13 @@ review() {
 
 case $cmd in
   install)
-    missing=()
-    while read -r p; do
-      is_installed "$p" || missing+=("$p")
-    done < <(listed)
-    if ((${#missing[@]})); then
-      echo "$list has ${#missing[@]} package(s) this machine lacks: ${missing[*]}"
-      if [[ -t 0 ]]; then
-        sudo apt-get install "${missing[@]}" ||
-          echo "Not installed. The next switch offers them again; delete them from $list to stop that."
-      else
-        echo "No terminal to ask in, so they wait for the next switch."
-      fi
-    fi
+    review_missing batch-new
     review
     # A package that didn't install shouldn't fail the switch that has already happened
     exit 0
     ;;
   review)
+    review_missing
     review
     ;;
   save)
@@ -205,7 +314,7 @@ case $cmd in
       listed | while read -r p; do
         if is_installed "$p"; then echo "$p"; fi
       done
-    } | sort -u)
+    } | csort -u)
     write_list "$now"
     git diff --stat -- "$list"
     ;;

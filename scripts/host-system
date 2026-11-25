@@ -14,7 +14,7 @@
 #
 # The firewall only gains rules: one that's listed and missing is added, none is removed.
 #
-# usage: arch-system [--check]   --check lists what differs and exits 1 if anything does
+# usage: host-system [--check]   --check lists what differs and exits 1 if anything does
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -22,6 +22,7 @@ nix_conf=/etc/nix/nix.conf
 hook=/etc/pacman.d/hooks/spicetify.hook
 ufw_list=arch/$(hostname -s).ufw
 ufw_rules=/etc/ufw/user.rules
+user_group=$(id -gn)
 
 todo=()
 cmp -s arch/nix.conf "$nix_conf" || todo+=(nix.conf)
@@ -29,7 +30,12 @@ cmp -s arch/nix.conf "$nix_conf" || todo+=(nix.conf)
 if [[ -e /etc/arch-release ]]; then
   cmp -s arch/spicetify.hook "$hook" || todo+=(spicetify.hook)
 fi
-if [[ -d /opt/spotify/Apps ]] && ! [[ -w /opt/spotify && -w /opt/spotify/Apps ]]; then
+if [[ -d /opt/spotify/Apps ]] && {
+  ! [[ -w /opt/spotify && -w /opt/spotify/Apps ]] ||
+    [[ $(stat -c '%G' /opt/spotify) != "$user_group" ]] ||
+    (( (8#$(stat -c '%a' /opt/spotify) & 8#002) != 0 )) ||
+    (( (8#$(stat -c '%a' /opt/spotify/Apps) & 8#002) != 0 ))
+}; then
   todo+=(spotify-writable)
 fi
 
@@ -65,7 +71,7 @@ for t in "${todo[@]}"; do
   case $t in
     nix.conf) show arch/nix.conf "$nix_conf" ;;
     spicetify.hook) show arch/spicetify.hook "$hook" ;;
-    spotify-writable) echo "/opt/spotify isn't writable, so spicetify can't theme Spotify" ;;
+    spotify-writable) echo "/opt/spotify needs group $user_group write access (without world write) so spicetify can theme Spotify" ;;
     firewall)
       for rule in "${missing_rules[@]}"; do
         read -r proto port from <<<"$rule"
@@ -86,8 +92,10 @@ for t in "${todo[@]}"; do
       sudo install -Dm644 arch/spicetify.hook "$hook"
       ;;
     spotify-writable)
-      sudo chmod a+wr /opt/spotify
-      sudo chmod -R a+wr /opt/spotify/Apps
+      sudo chgrp "$user_group" /opt/spotify
+      sudo chmod g+rwx,o-w /opt/spotify
+      sudo chgrp -R "$user_group" /opt/spotify/Apps
+      sudo chmod -R g+rwX,o-w /opt/spotify/Apps
       ;;
     firewall)
       for rule in "${missing_rules[@]}"; do

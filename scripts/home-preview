@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# What `just switch` would do to ~ on an Arch machine, without doing it: builds the
-# host's Home Manager configuration and compares every file it manages with what's
-# in ~ now. With --backup, also archives each of those files that exists today
-# (links resolved to their contents) into ~/hm-before-<date>.tar.gz.
+# What `just switch` would do to ~ on a standalone Home Manager machine (Arch or
+# Ubuntu/spark), without doing it: builds the host's Home Manager configuration and
+# compares every file it manages with what's in ~ now. With --backup, also archives
+# each of those files that exists today (links resolved to their contents) into
+# ~/hm-before-<date>.tar.gz.
 #
-# usage: arch-preview <host> [--backup]
+# usage: home-preview <host> [--backup]
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-host=${1:?usage: arch-preview <host> [--backup]}
+host=${1:?usage: home-preview <host> [--backup]}
 backup=${2:-}
 
 echo "Building $USER@$host ..."
@@ -47,17 +48,17 @@ origin() {
 
 echo
 echo "== Changes content (${#changed[@]}); the current version is kept as <name>.hm-backup"
-for rel in "${changed[@]}"; do printf '  %-60s %s\n' "~/$rel" "$(origin "$rel")"; done
+for rel in "${changed[@]}"; do printf '  ~/%-58s %s\n' "$rel" "$(origin "$rel")"; done
 echo
 echo "== Same content, becomes a Home Manager link (${#same[@]})"
-for rel in "${same[@]}"; do printf '  %-60s %s\n' "~/$rel" "$(origin "$rel")"; done
+for rel in "${same[@]}"; do printf '  ~/%-58s %s\n' "$rel" "$(origin "$rel")"; done
 echo
 echo "== New (${#new[@]})"
 for rel in "${new[@]}"; do echo "  ~/$rel"; done
 
 echo
 echo "== Nix packages added to PATH"
-ls "$(readlink -f "$out/home-path")/bin" | column -c "${COLUMNS:-100}"
+(cd "$(readlink -f "$out/home-path")/bin" && printf '%s\n' *) | column -c "${COLUMNS:-100}"
 
 if ((${#changed[@]})); then
   echo
