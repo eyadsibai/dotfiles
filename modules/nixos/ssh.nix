@@ -7,7 +7,7 @@
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
       PermitRootLogin = "no";
-      X11Forwarding = true;
+      X11Forwarding = false;
     };
   };
 

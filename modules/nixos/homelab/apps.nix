@@ -12,7 +12,7 @@
 }:
 let
   cfg = config.my.homelab;
-  apps = cfg.apps;
+  inherit (cfg) apps;
   inherit (homelab) on shareMedia;
 
   # Signing in through Pocket ID needs it running at its https address

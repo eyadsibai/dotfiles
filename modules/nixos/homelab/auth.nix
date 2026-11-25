@@ -20,7 +20,7 @@
 }:
 let
   cfg = config.my.homelab;
-  apps = cfg.apps;
+  inherit (cfg) apps;
   inherit (homelab) on;
   id = apps.id.url;
 in

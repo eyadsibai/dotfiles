@@ -25,7 +25,7 @@
 }:
 let
   cfg = config.my.homelab;
-  apps = cfg.apps;
+  inherit (cfg) apps;
   inherit (homelab) on;
   nvidia = config.hardware.nvidia.enabled;
 
@@ -214,7 +214,7 @@ in
           requires = [ "podman.socket" ] ++ lib.optional nvidia "wolf-nvidia-driver.service";
           after = [ "podman.socket" ] ++ lib.optional nvidia "wolf-nvidia-driver.service";
           # Never write pairings and saves into a root that the next boot wipes
-          unitConfig.RequiresMountsFor = "/etc/wolf";
+          unitConfig.RequiresMountsFor = [ "/etc/wolf" ];
           # Only once restarting has stopped helping
           onFailure = [ "notify-failure@%n.service" ];
           serviceConfig.RestartSec = 5;

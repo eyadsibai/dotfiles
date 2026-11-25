@@ -26,7 +26,11 @@
   # The services (modules/nixos/homelab, docs/homelab.md). Next steps, as they're
   # decided: storage.dataDisks/parityDisks from `ls -l /dev/disk/by-id`, then
   # secrets.enable once secrets/home-server.yaml exists, then domain, vpn and backup.
-  my.homelab.enable = true;
+  my.homelab = {
+    enable = true;
+    # Top-level LUKS btrfs volume created by disk.nix, for scrubs and snapshots
+    btrfsPool.device = "/dev/mapper/crypted";
+  };
 
   # RTX 2070, for Plex's transcoding and the games Wolf streams to the TVs
   # (modules/nixos/homelab/gaming.nix). No display: the open kernel modules (Turing
@@ -41,6 +45,22 @@
   };
 
   networking.hostName = "home-server";
+  # Headless server on Ethernet: systemd-networkd instead of NetworkManager.
+  # Ignore DHCP DNS so platform.nix's public resolvers stay active and the server
+  # never depends on its own AdGuard Home.
+  networking.networkmanager.enable = false;
+  networking.useDHCP = false;
+  networking.useNetworkd = true;
+  systemd.network = {
+    enable = true;
+    networks."10-lan" = {
+      matchConfig.Type = "ether";
+      networkConfig.DHCP = "yes";
+      dhcpV4Config.UseDNS = false;
+      dhcpV6Config.UseDNS = false;
+      ipv6AcceptRAConfig.UseDNS = false;
+    };
+  };
   nixpkgs.hostPlatform = "x86_64-linux";
 
   boot.initrd.availableKernelModules = [
@@ -87,9 +107,8 @@
   security.pam.services.sudo.rssh = true;
 
   my.server = true;
-  # Updated with `just deploy home-server`, not on a timer from GitHub
-  # (my.autoUpgrade): a change reaches it when I deploy it, and nothing on it pulls
-  # code that only my GitHub account vouches for.
+  # Updated with `just deploy home-server`, not on a timer: a change reaches it
+  # when I deploy it, and nothing on it pulls code automatically.
 
   # The CPU's microcode fixes. Both are listed until the hardware is known; each
   # loads only on its own make of CPU.

@@ -35,7 +35,6 @@ pkgs.testers.runNixOSTest {
       imports = [
         inputs.sops-nix.nixosModules.sops
         inputs.impermanence.nixosModules.impermanence
-        ../modules/nixos/auto-upgrade.nix
         ../modules/nixos/homelab
       ];
 

@@ -15,9 +15,8 @@
 }:
 let
   cfg = config.my.homelab;
-  apps = cfg.apps;
+  inherit (cfg) apps vpn;
   inherit (homelab) on shareMedia;
-  vpn = cfg.vpn;
   hostName = config.networking.hostName;
 in
 {
@@ -77,7 +76,7 @@ in
         vpnNamespaces.wg = {
           enable = true;
           wireguardConfigFile = config.sops.secrets."vpn/wireguard.conf".path;
-          accessibleFrom = cfg.lanSubnets ++ [ "100.64.0.0/10" ];
+          allowedIngress = cfg.lanSubnets ++ [ "100.64.0.0/10" ];
           portMappings = [
             {
               from = apps.qbittorrent.port;

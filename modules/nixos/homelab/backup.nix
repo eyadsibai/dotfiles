@@ -62,18 +62,15 @@ let
 
   # The apps keep SQLite databases in /var/lib (Plex, the *arr apps, Pocket ID,
   # Gatus) and write them while they run; a copy read file by file during a write is
-  # torn. So each backup reads read-only btrfs snapshots of the state subvolumes,
-  # taken just before it, mounted in its place so the paths in the backup stay
-  # /var/lib, /persist and /home. The snapshots go when the backup ends.
-  snapshotted = {
-    var-lib = "/var/lib";
-    persist = "/persist";
-    home = "/home";
-  };
+  # torn. So when my.homelab.btrfsPool is set, each backup reads read-only btrfs
+  # snapshots of the state subvolumes, taken just before it and bind-mounted in
+  # place so the paths in the backup stay /var/lib, /persist and /home. The
+  # snapshots go when the backup ends.
+  pool = cfg.btrfsPool;
   snapshotUnits =
     name:
     let
-      dir = "/mnt/btr-pool/restic/${name}";
+      dir = "${pool.mountPoint}/restic/${name}";
       unit = "restic-snapshot-${name}";
     in
     {
@@ -82,7 +79,7 @@ let
         after = lib.optional pg "postgresqlBackup.service";
         path = [ pkgs.btrfs-progs ];
         unitConfig = {
-          RequiresMountsFor = [ "/mnt/btr-pool" ];
+          RequiresMountsFor = [ pool.mountPoint ];
           # Stopped, and the snapshots deleted, once the backup no longer needs them
           StopWhenUnneeded = true;
         };
@@ -92,13 +89,13 @@ let
         };
         script = ''
           mkdir -p ${dir}
-          for sub in ${toString (lib.attrNames snapshotted)}; do
+          for sub in ${toString (lib.attrNames pool.subvolumes)}; do
             [[ -e ${dir}/$sub ]] && btrfs subvolume delete ${dir}/$sub
-            btrfs subvolume snapshot -r /mnt/btr-pool/$sub ${dir}/$sub
+            btrfs subvolume snapshot -r ${pool.mountPoint}/$sub ${dir}/$sub
           done
         '';
         preStop = ''
-          for sub in ${toString (lib.attrNames snapshotted)}; do
+          for sub in ${toString (lib.attrNames pool.subvolumes)}; do
             [[ -e ${dir}/$sub ]] && btrfs subvolume delete ${dir}/$sub || true
           done
         '';
@@ -108,7 +105,7 @@ let
         after = [ "${unit}.service" ];
         serviceConfig.BindReadOnlyPaths = lib.mapAttrsToList (
           sub: path: "${dir}/${sub}:${path}"
-        ) snapshotted;
+        ) pool.subvolumes;
       };
     };
 in
@@ -197,9 +194,9 @@ in
           startAt = "*-*-01 05:00:00";
         };
       }
-      (snapshotUnits "homelab")
+      (lib.mkIf (pool != null) (snapshotUnits "homelab"))
 
-      (lib.mkIf hasDisks (snapshotUnits "local"))
+      (lib.mkIf (hasDisks && pool != null) (snapshotUnits "local"))
       (lib.mkIf hasDisks {
         # Fewer old versions than off-site: this one is for getting back last
         # night's state quickly, the other for going back further
@@ -218,7 +215,7 @@ in
         systemd.services.restic-backups-local = {
           after = lib.optional pg "postgresqlBackup.service";
           # Never into the NVMe's /data if the disks failed to mount
-          unitConfig.RequiresMountsFor = "/data";
+          unitConfig.RequiresMountsFor = [ "/data" ];
           onFailure = [ "notify-failure@%n.service" ];
         };
 

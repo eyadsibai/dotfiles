@@ -23,7 +23,7 @@
 }:
 let
   cfg = config.my.homelab;
-  apps = cfg.apps;
+  inherit (cfg) apps;
   inherit (homelab) on shareMedia;
 
   # For the wiring below: the apps Prowlarr feeds, their API version, and the
@@ -268,7 +268,7 @@ in
       # connection is added if one of that name isn't there yet, so changes made in
       # the UIs afterwards stay. qBittorrent is still added by hand: its password is
       # set in its own UI.
-      (lib.mkIf (cfg.secrets.enable && on "prowlarr") {
+      (lib.mkIf (cfg.secrets.enable && (on "prowlarr" || on "sabnzbd")) {
         systemd.services.arr-wiring = {
           description = "Connect Prowlarr, the *arr apps and SABnzbd";
           wantedBy = [ "multi-user.target" ];
@@ -284,16 +284,24 @@ in
             RemainAfterExit = true;
           };
           script = ''
-            key() { tr -d '\n' < "/run/secrets/$1/api-key"; }
-
             # api <app> <port> <version> <method> <path> [body]
+            # Feed the API key via curl -K and POST bodies via stdin so secrets stay out of argv.
             api() {
-              curl -fsS --retry 30 --retry-delay 4 --retry-all-errors \
-                -H "X-Api-Key: $(key "$1")" -H 'Content-Type: application/json' \
-                -X "$4" "http://127.0.0.1:$2/api/$3/$5" ''${6:+--data-binary "$6"}
+              local key_file="/run/secrets/$1/api-key"
+              if [[ -n ''${6:-} ]]; then
+                printf '%s' "$6" | curl -fsS --retry 30 --retry-delay 4 --retry-all-errors \
+                  -K <(printf 'header = "X-Api-Key: %s"\n' "$(tr -d '\n' < "$key_file")") \
+                  -H 'Content-Type: application/json' \
+                  -X "$4" "http://127.0.0.1:$2/api/$3/$5" --data-binary @-
+              else
+                curl -fsS --retry 30 --retry-delay 4 --retry-all-errors \
+                  -K <(printf 'header = "X-Api-Key: %s"\n' "$(tr -d '\n' < "$key_file")") \
+                  -H 'Content-Type: application/json' \
+                  -X "$4" "http://127.0.0.1:$2/api/$3/$5"
+              fi
             }
 
-            # ensure <app> <port> <version> <endpoint> <name> <implementation> <field values as JSON>
+            # ensure <app> <port> <version> <endpoint> <name> <implementation> <set-json-file>
             # Fills the app's own template for that implementation, so only the
             # fields that matter are named here
             ensure() {
@@ -301,23 +309,23 @@ in
                 echo "$1: $5 is already there"
                 return
               fi
-              body=$(api "$1" "$2" "$3" GET "$4/schema" | jq --arg n "$5" --arg impl "$6" --argjson set "$7" '
+              body=$(api "$1" "$2" "$3" GET "$4/schema" | jq --arg n "$5" --arg impl "$6" --slurpfile set "$7" '
                 first(.[] | select(.implementation == $impl))
                 | .name = $n | .enable = true
-                | .fields |= map(if $set[.name] != null then .value = $set[.name] else . end)')
+                | .fields |= map(if $set[0][.name] != null then .value = $set[0][.name] else . end)')
               api "$1" "$2" "$3" POST "$4" "$body" > /dev/null
               echo "$1: added $5"
             }
 
             ${lib.concatMapStrings (
               a:
-              lib.optionalString (on a) ''
+              lib.optionalString (on a && on "prowlarr") ''
                 ensure prowlarr ${toString apps.prowlarr.port} v1 applications ${apps.${a}.title} ${apps.${a}.title} \
-                  "$(jq -n --arg k "$(key ${a})" '{prowlarrUrl: "http://127.0.0.1:${toString apps.prowlarr.port}", baseUrl: "http://127.0.0.1:${toString apps.${a}.port}", apiKey: $k}')"
+                  <(jq -n --rawfile k "/run/secrets/${a}/api-key" '{prowlarrUrl: "http://127.0.0.1:${toString apps.prowlarr.port}", baseUrl: "http://127.0.0.1:${toString apps.${a}.port}", apiKey: ($k | rtrimstr("\n"))}')
               ''
               + lib.optionalString (on a && on "sabnzbd") ''
                 ensure ${a} ${toString apps.${a}.port} ${apiVersion.${a}} downloadclient SABnzbd Sabnzbd \
-                  "$(jq -n --arg k "$(key sabnzbd)" '{host: "127.0.0.1", port: ${toString apps.sabnzbd.port}, apiKey: $k, ${category.${a}}: "${categoryName.${a}}"}')"
+                  <(jq -n --rawfile k "/run/secrets/sabnzbd/api-key" '{host: "127.0.0.1", port: ${toString apps.sabnzbd.port}, apiKey: ($k | rtrimstr("\n")), ${category.${a}}: "${categoryName.${a}}"}')
               ''
             ) arrs}
           '';

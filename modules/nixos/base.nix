@@ -16,11 +16,11 @@
   i18n.defaultLocale = "en_US.UTF-8";
   services.xserver.xkb.layout = "us";
 
-  networking.networkmanager.enable = true;
+  networking.networkmanager.enable = lib.mkDefault true;
 
-  # Let local users reboot / power off without a password
+  # Let local desktop users reboot / power off without a password
   security.polkit.enable = true;
-  security.polkit.extraConfig = ''
+  security.polkit.extraConfig = lib.mkIf (!config.my.server) ''
     polkit.addRule(function(action, subject) {
       if (
         subject.isInGroup("users")
@@ -53,14 +53,15 @@
   };
 
   programs.zsh.enable = true;
+  # Desktop/interactive conveniences: skip on headless servers (my.server)
   # Run unpatched dynamic binaries (e.g. downloaded tools, pip wheels)
-  programs.nix-ld.enable = true;
+  programs.nix-ld.enable = !config.my.server;
   # GPG agent for signing/encryption only; SSH keys come from 1Password's agent,
   # which SSH finds through ~/.ssh/config (modules/home/onepassword.nix)
-  programs.gnupg.agent.enable = true;
+  programs.gnupg.agent.enable = !config.my.server;
 
   # Populate /bin and /usr/bin for scripts with hard-coded paths
-  services.envfs.enable = true;
+  services.envfs.enable = !config.my.server;
 
   # Minimal toolset for root; everything else is per-user in Home Manager
   environment.systemPackages = [ pkgs.git ];

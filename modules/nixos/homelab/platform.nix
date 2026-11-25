@@ -14,7 +14,7 @@
 }:
 let
   cfg = config.my.homelab;
-  apps = cfg.apps;
+  inherit (cfg) apps;
   inherit (homelab) on;
   enabledApps = lib.filterAttrs (_: a: a.enable) apps;
   hostName = config.networking.hostName;
@@ -39,14 +39,50 @@ let
     ++ lib.filter (g: !lib.elem g groupOrder) (lib.attrNames byGroup);
 in
 {
-  options.my.homelab.beszelKey = lib.mkOption {
-    type = lib.types.nullOr lib.types.str;
-    default = null;
-    example = "ssh-ed25519 AAAA...";
-    description = ''
-      The Beszel hub's public key, from its "Add system" dialog (host 127.0.0.1,
-      port 45876). Not secret: it only lets the hub prove itself to the agent.
-    '';
+  options.my.homelab = {
+    beszelKey = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "ssh-ed25519 AAAA...";
+      description = ''
+        The Beszel hub's public key, from its "Add system" dialog (host 127.0.0.1,
+        port 45876). Not secret: it only lets the hub prove itself to the agent.
+      '';
+    };
+
+    btrfsPool = lib.mkOption {
+      type = lib.types.nullOr (
+        lib.types.submodule {
+          options = {
+            device = lib.mkOption {
+              type = lib.types.str;
+              example = "/dev/mapper/crypted";
+              description = "Block device holding the top-level btrfs filesystem.";
+            };
+            mountPoint = lib.mkOption {
+              type = lib.types.str;
+              default = "/mnt/btr-pool";
+              description = "Where the top-level btrfs volume (subvol=/) is mounted for scrubs, btrbk, and restic snapshots.";
+            };
+            subvolumes = lib.mkOption {
+              type = lib.types.attrsOf lib.types.str;
+              default = {
+                var-lib = "/var/lib";
+                home = "/home";
+                persist = "/persist";
+              };
+              description = "Subvolume names under the top-level pool mapped to their live mount paths.";
+            };
+          };
+        }
+      );
+      default = null;
+      description = ''
+        Top-level btrfs pool containing the state subvolumes. When set, mounts it,
+        runs monthly scrubs, takes hourly and pre-switch btrbk snapshots, and snapshots
+        the subvolumes read-only before restic backups.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable (
@@ -120,19 +156,6 @@ in
                 --data-binary @- ${ntfyLocal}/homelab
           '';
         };
-        # Both upgrade sources (GitHub and the CI's builds) run as nixos-upgrade
-        systemd.services.nixos-upgrade = lib.mkIf config.my.autoUpgrade.enable {
-          onFailure = [ "notify-failure@%n.service" ];
-        };
-        # Rolling back NixOS doesn't roll back what new versions of the apps did to
-        # their databases. A snapshot of the state before each switch (a deploy or
-        # an upgrade) is what does: btrbk's usual snapshots, taken now, under
-        # /mnt/btr-pool/snapshots. If it can't be taken, the switch doesn't happen.
-        system.preSwitchChecks.snapshot = ''
-          case "$2" in
-            switch | test) ${lib.getExe pkgs.btrbk} -c /etc/btrbk/local.conf snapshot ;;
-          esac
-        '';
       }
 
       (lib.mkIf (on "adguard") {
@@ -168,7 +191,7 @@ in
             # public record points them at the tailnet address (docs/homelab.md).
             filtering.rewrites = lib.optionals (cfg.domain != null && cfg.lanAddress != null) [
               {
-                domain = cfg.domain;
+                inherit (cfg) domain;
                 answer = cfg.lanAddress;
                 enabled = true;
               }
@@ -258,7 +281,7 @@ in
             endpoints =
               lib.mapAttrsToList (_: a: {
                 name = a.title;
-                group = a.group;
+                inherit (a) group;
                 url = "http://${a.upstream}${a.health}";
                 interval = "2m";
                 # Up is anything but a server error: many apps answer 401 or a redirect
@@ -358,15 +381,6 @@ in
           startAt = "hourly";
         };
 
-        # Reads every block back against its checksum, so a failing NVMe shows up
-        # while the backups still hold a good copy
-        services.btrfs.autoScrub = {
-          enable = true;
-          fileSystems = [ "/mnt/btr-pool" ];
-          interval = "monthly";
-        };
-        systemd.services."btrfs-scrub@".onFailure = [ "notify-failure@%n.service" ];
-
         # The server resolves names through public DNS, not through its own AdGuard
         # (which the router hands out): if AdGuard were down, the upgrade, the
         # certificate, the backups and ntfy would all fail with it
@@ -374,7 +388,7 @@ in
           "9.9.9.9"
           "1.1.1.1"
         ];
-        networking.networkmanager.dns = "none";
+        networking.networkmanager.dns = lib.mkIf config.networking.networkmanager.enable "none";
       }
 
       (lib.mkIf cfg.heartbeat {
@@ -384,7 +398,8 @@ in
           path = [ pkgs.curl ];
           serviceConfig.Type = "oneshot";
           script = ''
-            curl -fsS -m 10 --retry 3 "$(<${config.sops.secrets.heartbeat-url.path})" > /dev/null
+            printf 'url = "%s"\n' "$(tr -d '\n' < "${config.sops.secrets.heartbeat-url.path}")" |
+              curl -fsS -m 10 --retry 3 -K - > /dev/null
           '';
           startAt = "*:0/5";
         };
@@ -431,37 +446,63 @@ in
         };
       })
 
-      # Hourly snapshots of the state subvolumes, kept 2 days, then daily for 2 weeks
-      # and weekly for 6. The top level is mounted at /mnt/btr-pool for btrbk to see them.
-      {
-        fileSystems."/mnt/btr-pool" = {
-          device = "/dev/mapper/crypted";
-          fsType = "btrfs";
-          options = [
-            "subvol=/"
-            "noatime"
-          ];
-        };
-        systemd.tmpfiles.settings.btrbk."/mnt/btr-pool/snapshots".d = {
-          mode = "0700";
-        };
-        systemd.services.btrbk-local.onFailure = [ "notify-failure@%n.service" ];
-        services.btrbk.instances.local = {
-          onCalendar = "hourly";
-          settings = {
-            snapshot_preserve_min = "2d";
-            snapshot_preserve = "14d 6w";
-            volume."/mnt/btr-pool" = {
-              snapshot_dir = "snapshots";
-              subvolume = {
-                var-lib = { };
-                home = { };
-                persist = { };
+      # Hourly and pre-switch snapshots plus monthly scrubs of the state subvolumes.
+      # The top level is mounted at pool.mountPoint for btrbk, scrub, and restic.
+      (lib.mkIf (cfg.btrfsPool != null) (
+        let
+          pool = cfg.btrfsPool;
+        in
+        {
+          # Rolling back NixOS doesn't roll back what new versions of the apps did to
+          # their databases. A snapshot of the state before each switch (a deploy or
+          # an upgrade) is what does: btrbk's usual snapshots, taken now, under
+          # ${pool.mountPoint}/snapshots. If it can't be taken, the switch doesn't happen.
+          system.preSwitchChecks.snapshot = ''
+            case "$2" in
+              switch | test) ${lib.getExe pkgs.btrbk} -c /etc/btrbk/local.conf snapshot ;;
+            esac
+          '';
+
+          # Reads every block back against its checksum, so a failing NVMe shows up
+          # while the backups still hold a good copy
+          services.btrfs.autoScrub = {
+            enable = true;
+            fileSystems = [ pool.mountPoint ];
+            interval = "monthly";
+          };
+          systemd.services."btrfs-scrub@".onFailure = [ "notify-failure@%n.service" ];
+
+          fileSystems = lib.optionalAttrs (pool != null) {
+            ${pool.mountPoint} = {
+              inherit (pool) device;
+              fsType = "btrfs";
+              options = [
+                "subvol=/"
+                "noatime"
+              ];
+            };
+          };
+          systemd.tmpfiles.settings.btrbk = lib.optionalAttrs (pool != null) {
+            "${pool.mountPoint}/snapshots".d = {
+              mode = "0700";
+            };
+          };
+          systemd.services.btrbk-local.onFailure = [ "notify-failure@%n.service" ];
+          services.btrbk.instances.local = {
+            onCalendar = "hourly";
+            settings = {
+              snapshot_preserve_min = "2d";
+              snapshot_preserve = "14d 6w";
+              volume = lib.optionalAttrs (pool != null) {
+                ${pool.mountPoint} = {
+                  snapshot_dir = "snapshots";
+                  subvolume = lib.mapAttrs (_: _: { }) pool.subvolumes;
+                };
               };
             };
           };
-        };
-      }
+        }
+      ))
     ]
   );
 }

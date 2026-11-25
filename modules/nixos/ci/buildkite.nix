@@ -34,10 +34,8 @@ in
   services.buildkite-agents = lib.genAttrs agents (_: {
     tokenPath = config.sops.secrets.buildkite-agent-token.path;
     privateSshKeyPath = config.sops.secrets.buildkite-ssh-key.path;
-    extraGroups = [
-      "docker"
-      secretsGroup
-    ];
+    # Only join the docker group when rootful Docker is on; rootless Docker has no docker group.
+    extraGroups = lib.optional config.virtualisation.docker.enable "docker" ++ [ secretsGroup ];
     tags = {
       queue = "integration";
       os = "nixos";

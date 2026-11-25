@@ -28,12 +28,12 @@ let
   dataMounts = map mountOf (lib.attrNames st.dataDisks);
   allDisks = st.dataDisks // st.parityDisks;
   encrypted = lib.filterAttrs (name: _: !lib.elem name st.plainDisks) allDisks;
-  keyFile = st.keyFile;
+  inherit (st) keyFile;
   diskMounts = lib.mapAttrs' (
     name: device:
     lib.nameValuePair (mountOf name) {
       device = if encrypted ? ${name} then "/dev/mapper/disk-${name}" else device;
-      fsType = st.fsType;
+      inherit (st) fsType;
       # A missing or failed disk shouldn't stop the machine from booting
       options = [
         "nofail"
@@ -119,8 +119,13 @@ let
       pkgs.gawk
     ];
     text = ''
-      # diff exits non-zero whenever a sync is due, which is most nights
-      removed=$(snapraid diff 2>/dev/null | awk '$2 == "removed" { print $1 }' || true)
+      # diff exits 0 (clean) or 2 (sync due); any other code is a real error and must abort.
+      out=$(snapraid diff 2>&1) && rc=0 || rc=$?
+      if (( rc != 0 && rc != 2 )); then
+        echo "$out" >&2
+        exit "$rc"
+      fi
+      removed=$(awk '$2 == "removed" { print $1 }' <<<"$out")
       if (( ''${removed:-0} > ${toString st.deleteThreshold} )); then
         echo "$removed files deleted since the last sync (limit ${toString st.deleteThreshold}): not syncing. Check with 'snapraid diff', then 'sudo snapraid sync' if it was meant." >&2
         exit 1
@@ -145,7 +150,9 @@ let
     qbittorrent = s.qbittorrent.enable;
     sabnzbd = s.sabnzbd.enable;
     samba-smbd = s.samba.enable;
+    podman-wolf = config.virtualisation.oci-containers.containers ? wolf;
     restic-backups-homelab = s.restic.backups ? homelab;
+    restic-backups-local = s.restic.backups ? local;
   };
 
   # The disks themselves, from their first partitions' names: spin-down and the

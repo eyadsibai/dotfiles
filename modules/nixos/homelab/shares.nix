@@ -9,7 +9,6 @@
 {
   config,
   lib,
-  pkgs,
   username,
   ...
 }:
@@ -94,16 +93,18 @@ in
         };
       }
       // lib.optionalAttrs paperless {
+        # Write as the paperless user so Paperless can ingest and delete scans
+        # without making its consumption directory world-writable.
         scans = {
           path = config.services.paperless.consumptionDir;
           "valid users" = username;
           "read only" = "no";
-          "create mask" = "0666";
+          "force user" = config.services.paperless.user;
+          "create mask" = "0660";
+          "directory mask" = "0770";
         };
       };
     };
-    # Paperless runs as its own user and has to read and then delete what I save
-    services.paperless.consumptionDirIsPublic = lib.mkIf paperless true;
 
     # Samba's own password database, set from the secret before it starts
     systemd.services.samba-password = {

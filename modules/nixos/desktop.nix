@@ -105,7 +105,7 @@ in
         # Later logins went through the greeter and are left alone.
         xdg.configFile."omarchy/hooks/post-boot.d/10-lock-after-autologin" = lib.mkIf cfg.autoLogin {
           text = ''
-            marker="/tmp/omarchy-autolock-$USER-$(cat /proc/sys/kernel/random/boot_id)"
+            marker="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/omarchy-autolock"
             [[ -e $marker ]] && exit 0
             touch "$marker"
             for _ in $(seq 30); do
