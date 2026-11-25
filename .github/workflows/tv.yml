@@ -2,9 +2,9 @@ name: tv
 
 on:
   push:
-    paths: ["files/tv/**", ".pre-commit-config.yaml", ".github/workflows/tv.yml"]
+    paths: ["files/tv/**", ".pre-commit-config.yaml", "ruff.toml", ".github/workflows/tv.yml"]
   pull_request:
-    paths: ["files/tv/**", ".pre-commit-config.yaml", ".github/workflows/tv.yml"]
+    paths: ["files/tv/**", ".pre-commit-config.yaml", "ruff.toml", ".github/workflows/tv.yml"]
 
 permissions:
   contents: read

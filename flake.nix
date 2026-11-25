@@ -14,7 +14,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixos-hardware.url = "github:NixOS/nixos-hardware";
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     nix-index-database = {
       url = "github:nix-community/nix-index-database";
@@ -52,12 +55,6 @@
     # through WireGuard (modules/nixos/homelab/downloads.nix). No inputs of its own.
     vpn-confinement.url = "github:Maroka-chan/VPN-Confinement";
 
-    # Self-hosted CI on the workstation, parked (modules/nixos/ci/nixbot.nix, docs/ci.md)
-    # nixbot = {
-    #   url = "github:Mic92/nixbot";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
-
     # Omarchy's desktop packaged for NixOS. Follows main, which runs ahead of the
     # release tags; `just update` moves it along with everything else.
     nixarchy = {
@@ -67,6 +64,13 @@
       inputs.sops-nix.follows = "sops-nix";
       inputs.nix-index-database.follows = "nix-index-database";
       inputs.nixos-hardware.follows = "nixos-hardware";
+      inputs.disko.follows = "disko";
+      # Hyprland comes from nixpkgs (modules/nixos/desktop.nix), so dedupe its nixpkgs
+      # copy and the extra home-manager copies pulled by nixarchy's sub-flakes.
+      inputs.hyprland.inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nix-skills.inputs.home-manager.follows = "home-manager";
+      inputs.nixarchy-voice.inputs.home-manager.follows = "home-manager";
+      inputs.zen-browser.inputs.home-manager.follows = "home-manager";
     };
   };
 
@@ -234,13 +238,6 @@
         eyad-mac = mkDarwin "eyad-mac";
       };
 
-      # What the self-hosted CI builds (nixbot.toml; modules/nixos/ci/nixbot.nix)
-      ciJobs = {
-        hosts = lib.mapAttrs (_: c: c.config.system.build.toplevel) self.nixosConfigurations;
-        homes = lib.mapAttrs (_: c: c.activationPackage) self.homeConfigurations;
-        pkgs = self.packages.x86_64-linux;
-      };
-
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
 
       # What `just check` and CI's eval matrix (.github/workflows/check.yml) evaluate,
@@ -257,7 +254,11 @@
         ++ map (name: ''homeConfigurations."${name}".activationPackage'') (
           lib.attrNames self.homeConfigurations
         )
-        ++ [ "checks.x86_64-linux.homelab" ];
+        ++ [
+          "checks.x86_64-linux.homelab"
+          "checks.x86_64-linux.home-server-full-eval"
+          "checks.x86_64-linux.arch-caches-sync"
+        ];
 
       # Built to test something: `nix build .#checks.x86_64-linux.<name> -L`
       checks.x86_64-linux =
@@ -275,6 +276,50 @@
             };
             inherit inputs username useremail;
           };
+          # Evaluates home-server with every off-by-default stage turned on (domain,
+          # secrets, VPN, backups, Samba shares, auth, SnapRAID disks, Secure Boot)
+          # so nixpkgs option renames break CI before those stages are enabled for real.
+          home-server-full-eval =
+            (self.nixosConfigurations.home-server.extendModules {
+              modules = [
+                {
+                  my.secureBoot.enable = true;
+                  # Synthetic eval check: secrets/home-server.yaml doesn't exist yet.
+                  sops.validateSopsFiles = false;
+                  my.homelab = {
+                    domain = "home.example.com";
+                    acmeEmail = "test@example.com";
+                    lanAddress = "192.168.8.10";
+                    beszelKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI000000000000000000000000000000000000000000";
+                    secrets = {
+                      enable = true;
+                      file = ./flake.nix;
+                    };
+                    vpn.enable = true;
+                    backup.enable = true;
+                    shares.enable = true;
+                    apps.auth.enable = true;
+                    storage = {
+                      dataDisks.disk1 = "/dev/disk/by-id/dummy-disk1-part1";
+                      parityDisks.parity1 = "/dev/disk/by-id/dummy-parity1-part1";
+                    };
+                  };
+                }
+              ];
+            }).config.system.build.toplevel;
+          # Keeps root-owned arch/nix.conf aligned with modules/common/caches.nix.
+          arch-caches-sync =
+            let
+              caches = import ./modules/common/caches.nix;
+              conf = builtins.readFile ./arch/nix.conf;
+              expectedSubs = "substituters = ${lib.concatStringsSep " " caches.substituters}";
+              expectedKeys = "trusted-public-keys = ${lib.concatStringsSep " " caches.trusted-public-keys}";
+            in
+            assert lib.assertMsg (lib.hasInfix expectedSubs conf)
+              "arch/nix.conf substituters drifted from modules/common/caches.nix";
+            assert lib.assertMsg (lib.hasInfix expectedKeys conf)
+              "arch/nix.conf trusted-public-keys drifted from modules/common/caches.nix";
+            pkgs.runCommand "arch-caches-sync" { } "touch $out";
           formatting = pkgs.runCommand "check-formatting" { } ''
             cp -r ${self} src && chmod -R +w src && cd src
             ${pkgs.lib.getExe pkgs.nixfmt-tree} --ci --tree-root .
@@ -285,8 +330,13 @@
       devShells = forAllSystems (system: {
         default = nixpkgs.legacyPackages.${system}.mkShellNoCC {
           packages = with nixpkgs.legacyPackages.${system}; [
+            bashInteractive # macOS ships Bash 3.2; repo scripts use Bash 4+
             nixfmt
             nixd
+            statix
+            deadnix
+            shellcheck
+            ruff
             just
             nixos-anywhere # `just vm-install`
             nh

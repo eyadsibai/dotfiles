@@ -1,0 +1,3 @@
+# Flat dotted attribute paths (services.a = ...; services.b = ...;) are standard NixOS style.
+disabled = ["repeated_keys"]
+ignore = ["hosts/eyad-nixos/hardware-configuration.nix"]

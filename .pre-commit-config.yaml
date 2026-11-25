@@ -1,17 +1,22 @@
 # Install with: uvx pre-commit install
-# Only files/tv has checks; every hook is limited to it.
+# Shell and Python linters cover the whole repo (excluding upstream snapshots in
+# omarchy-defaults/); TV and plugin test hooks stay scoped to their trees.
 repos:
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1
     hooks:
       - id: shellcheck
-        files: ^files/tv/
+        exclude: ^(\.envrc$|omarchy-defaults/)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.9
     hooks:
       - id: ruff-check
+        exclude: ^omarchy-defaults/
+      - id: ruff-check
+        alias: ruff-check-uv-scripts
+        name: ruff-check (uv scripts)
         # tv-check is a uv script: no .py extension and a uv shebang
-        files: ^files/tv/(\.local/bin/tv-check|tests/.*\.py)$
+        files: ^files/tv/\.local/bin/tv-check$
         types_or: [file]
   - repo: local
     hooks:
@@ -26,4 +31,10 @@ repos:
         entry: uv run --no-project --python ">=3.12" python -B -m unittest discover -s files/tv/tests -v
         language: system
         files: ^(files/tv/(\.local/bin/tv(-check)?|\.config/mpv/tv/.*|tests/.*)|\.pre-commit-config\.yaml)$
+        pass_filenames: false
+      - id: meetplanner
+        name: meetplanner unit tests
+        entry: python3 -B -m unittest discover -s files/omarchy/.config/omarchy/plugins/eyad.meetplanner/tests -v
+        language: system
+        files: ^files/omarchy/\.config/omarchy/plugins/eyad\.meetplanner/
         pass_filenames: false

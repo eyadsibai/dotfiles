@@ -56,11 +56,11 @@ TV uses uosc whether or not the rest of mpv does. If the mpv config autoloads uo
 
 ## Install
 
-`tv` is one of the packages in `files/`: Home Manager links each of its files into `~` from the checkout (`my.files` in `modules/home/arch.nix`), and `modules/home/files.nix` keeps this README, `ruff.toml` and `tests/` out of `~`.
+`tv` is one of the packages in `files/`: Home Manager links each of its files into `~` from the checkout (`my.files` in `modules/home/arch.nix`), and `modules/home/files.nix` keeps this README and `tests/` out of `~`.
 
 ```sh
 git add -N <new file>    # a new file is linked only once git knows it
-just arch-preview        # dry run: what a switch would add or replace in ~
+just home-preview        # dry run: what a switch would add or replace in ~
 just switch              # links new files, drops links to moved or deleted ones
 systemctl --user enable --now tv-check.timer   # optional weekly prune and revive
 ```

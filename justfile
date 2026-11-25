@@ -15,10 +15,10 @@ target := if home == "true" { "-c " + env("USER") + "@" } else { "-H " }
 default:
     @just --list --unsorted
 
-# Make this machine match the repo: build, show the diff, activate (Arch: also installs what arch/<host>.packages has that's missing, then asks about each package installed and not listed)
+# Make this machine match the repo: build, show the diff, activate (Arch/spark: also syncs listed packages, asking about removed, replaced, and unlisted ones)
 switch name=host:
     {{ if arch == "true" { "scripts/omarchy-links guard" } else { "true" } }}
-    {{ if home == "true" { "scripts/arch-system" } else { "true" } }}
+    {{ if home == "true" { "scripts/host-system" } else { "true" } }}
     {{nh}} switch . {{target}}{{name}}{{ if home == "true" { " -b hm-backup" } else { "" } }}
     {{ if arch == "true" { "scripts/arch-packages install " + name } else if apt == "true" { "scripts/apt-packages install " + name } else { "true" } }}
 
@@ -42,7 +42,7 @@ vm name=host:
 update *inputs:
     nix flake update {{inputs}}
 
-# Evaluate every configuration and the homelab test (evalTargets in flake.nix, the list CI uses) and check formatting, without building
+# Evaluate every configuration and the homelab test (evalTargets in flake.nix, the list CI uses), check formatting, and run repo-wide linters, without building
 check:
     #!/usr/bin/env bash
     set -uo pipefail
@@ -53,7 +53,12 @@ check:
       nix eval --raw ".#$target.drvPath" >/dev/null || { echo "FAILED: $target"; failed=1; }
     done <<<"$targets"
     nix fmt -- --ci || failed=1
+    scripts/lint || failed=1
     exit $failed
+
+# Run repo-wide Nix, shell, and Python linters (statix, deadnix, shellcheck, ruff)
+lint:
+    @scripts/lint
 
 # Format all Nix files
 fmt:
@@ -91,27 +96,27 @@ mac-copy name addr:
     nix build .#darwinConfigurations.{{name}}.system
     nix copy -s --to "ssh-ng://{{addr}}?remote-program=/nix/var/nix/profiles/default/bin/nix-daemon" ./result
 
-# Arch: show every file in ~ that `just switch` would replace or add, with diffs
-[group('arch')]
-arch-preview name=host:
-    @scripts/arch-preview {{name}}
+# Arch and spark: show every file in ~ that `just switch` would replace or add, with diffs
+[group('home')]
+home-preview name=host:
+    @scripts/home-preview {{name}}
 
-# Arch: the same, and archive the files it would touch to ~/hm-before-<date>.tar.gz
-[group('arch')]
-arch-backup name=host:
-    @scripts/arch-preview {{name}} --backup
+# Arch and spark: the same, and archive the files it would touch to ~/hm-before-<date>.tar.gz
+[group('home')]
+home-backup name=host:
+    @scripts/home-preview {{name}} --backup
 
 # Arch and spark: install the root-owned files (nix.conf, on Arch the Spotify hook) that differ from arch/ and add the firewall rules arch/<host>.ufw lists that are missing; `just switch` runs it, and `--check` only lists them
-[group('arch')]
-arch-system *args:
-    @scripts/arch-system {{args}}
+[group('home')]
+host-system *args:
+    @scripts/host-system {{args}}
 
-# Arch: rewrite arch/<host>.packages from what's installed, minus Omarchy's own lists (`just switch` does the reverse)
+# Arch: rewrite arch/<host>.packages from what's installed, minus Omarchy's own lists and arch/common.packages (`just switch` does the reverse)
 [group('arch')]
 arch-save name=host:
     @scripts/arch-packages save {{name}}
 
-# Arch: go through what's installed and not in arch/<host>.packages, one at a time: add, uninstall or leave (`just switch` asks too)
+# Arch: go through every difference between installed packages and arch/common.packages + arch/<host>.packages (uninstalled, replaced, and unlisted), one at a time (`just switch` asks too)
 [group('arch')]
 arch-review name=host:
     @scripts/arch-packages review {{name}}
@@ -121,7 +126,7 @@ arch-review name=host:
 apt-save name=host:
     @scripts/apt-packages save {{name}}
 
-# spark: go through what apt has that isn't in apt/<host>.packages, or that Nix installs too, one at a time (`just switch` asks too)
+# spark: go through apt package differences (uninstalled, unlisted, or duplicated by Nix), one at a time (`just switch` asks too)
 [group('apt')]
 apt-review name=host:
     @scripts/apt-packages review {{name}}

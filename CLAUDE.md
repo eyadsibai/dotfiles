@@ -10,14 +10,14 @@ has the longer procedures.
 
 ## Layout
 
-- `flake.nix`: inputs, mkNixos / mkDarwin / mkArch, outputs.
+- `flake.nix`: inputs, mkNixos / mkDarwin / mkArch / mkLinux, outputs.
 - `hosts/<name>/`: what's specific to one machine. Shared things never live here.
 - `modules/common` (Nix itself, binary caches), `modules/nixos`, `modules/darwin`,
   `modules/home` (Home Manager, every machine).
 - `files/<package>/`: plain config linked into `~` from the checkout (not the store),
   per host via `my.files`. Editing `~/.config/...` on an Arch machine edits the repo.
 - `pkgs/` (packages not in nixpkgs, as `pkgs.<name>` through `overlays/`), `overlays/`
-  (also fixes to nixpkgs packages, each saying when it can go), `scripts/`, `arch/`.
+  (also fixes to nixpkgs packages, each saying when it can go), `scripts/`, `arch/`, `apt/`.
 
 ## Checking a change
 
@@ -25,14 +25,15 @@ Nothing here can be switched from a session; check what can be checked:
 
 - `nix fmt` after editing Nix files (nixfmt-tree; CI rejects unformatted files).
 - Evaluate every configuration the change can reach. `just check` does all of them,
-  the homelab test and the formatting; the list is `evalTargets` in `flake.nix`, which
-  CI reads too. One alone: `nix eval --raw '.#<target>.drvPath' >/dev/null`.
+  the homelab test, formatting, and repo-wide linting (`statix`, `deadnix`,
+  `shellcheck`, `ruff`); the eval list is `evalTargets` in `flake.nix`, which CI reads
+  too. One alone: `nix eval --raw '.#<target>.drvPath' >/dev/null`.
 - On an Arch machine, build its own configs for real:
   `nix build --no-link '.#homeConfigurations."eyad@<host>".activationPackage'`.
 - New files must be known to git (`git add -N`) or the flake can't see them.
 - `files/tv` has tests: `uvx pre-commit run --files <changed files>`.
-- Options that are off by default (`my.ci.*`, `my.secureBoot`, `my.autoUpgrade.from`)
-  are checked by evaluating with them on through `extendModules`.
+- Options that are off by default (`my.secureBoot`, `modules/nixos/ci/buildkite.nix`,
+  `my.homelab.*`) are checked by evaluating with them on through `extendModules`.
 
 Say plainly what was evaluated, what was built, and what couldn't be tested (installs,
 anything on the Macs, anything needing sudo).

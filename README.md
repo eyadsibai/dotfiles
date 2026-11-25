@@ -46,14 +46,16 @@ system or the model stack; the workstation keeps the small ones.
 
 ```mermaid
 flowchart LR
-  flake["flake.nix<br/>mkNixos · mkDarwin · mkArch"]
+  flake["flake.nix<br/>mkNixos · mkDarwin · mkArch · mkLinux"]
 
   subgraph hosts["hosts/"]
     ws[workstation]
     lap[eyad-nixos]
     srv[home-server]
+    vms["vm-fusion · vm-utm"]
     mac["mac<br/>(eyad-m3, eyad-mac)"]
     arch["vector · cachy<br/>(Omarchy on Arch)"]
+    spark["spark<br/>(Ubuntu DGX)"]
   end
 
   subgraph modules["modules/"]
@@ -67,7 +69,7 @@ flowchart LR
   files["files/<br/>Omarchy configs · tv · media · scripts"]
 
   flake --> hosts
-  ws & lap & srv --> nixos
+  ws & lap & srv & vms --> nixos
   ws --> optin
   lap -->|desktop| optin
   mac --> darwin
@@ -75,10 +77,12 @@ flowchart LR
   nixos & darwin --> home
   arch -->|Home Manager only| home
   arch -->|my.files| files
+  spark -->|Home Manager only| home
+  spark -->|host-spark| files
 ```
 
 ```
-flake.nix          inputs, mkNixos / mkDarwin / mkArch, hosts, packages, checks
+flake.nix          inputs, mkNixos / mkDarwin / mkArch / mkLinux, hosts, packages, checks
 hosts/<name>/      hardware and what that machine is for; nothing shared lives here
 modules/common/    Nix itself: caches, GC, nh, trusted users (both platforms)
 modules/nixos/     every NixOS host gets default.nix; desktop, sunshine, ai and
@@ -93,9 +97,9 @@ scripts/           what the Arch and Omarchy `just` recipes run
 tests/             the homelab booted in a VM (a flake check, which CI runs)
 docs/              longer procedures: the Mac VMs, installing home-server, the homelab, CI
 omarchy-defaults/  the Omarchy default each file in files/ was last merged against
-arch/              the two root-owned files an Arch machine needs, <host>.packages: what
-                   it has installed beyond Omarchy's own lists, and <host>.ufw: what its
-                   firewall lets in beyond Omarchy's rules
+arch/              the two root-owned files an Arch/Ubuntu machine needs,
+                   common.packages + <host>.packages: what each Arch host has installed
+                   beyond Omarchy's own lists, and <host>.ufw: extra firewall rules
 apt/               <host>.packages: what I've installed with apt on spark on top of the image
 secrets/           sops-encrypted, recipients in .sops.yaml
 ```
@@ -104,8 +108,7 @@ The one rule: **a setting has one home.** Anything needing root, hardware or a d
 in `modules/nixos` or `modules/darwin`; everything else goes in Home Manager so every
 machine gets it. A host file only says what makes that machine different. Optional
 features are modules you import, and the few custom options live under `my.*`
-(`my.files`, `my.desktop.autoLogin`, `my.server`, `my.homelab`, `my.secureBoot`;
-`my.autoUpgrade` and `my.ci` are kept for later, with no host using them).
+(`my.files`, `my.desktop.autoLogin`, `my.server`, `my.homelab`, `my.secureBoot`).
 
 ## Omarchy on Arch
 
@@ -114,14 +117,14 @@ without NixOS. The two root-owned files they need are `arch/nix.conf` (flakes, a
 trusted user so my own `~/.config/nix/nix.conf`, written by Home Manager with the same
 caches as every other machine, is honoured) and the pacman hook `arch/spicetify.hook`
 that keeps Spotify patchable. `just switch` compares both with what's installed
-(`scripts/arch-system`) and asks for sudo only when one differs, after showing the
+(`scripts/host-system`) and asks for sudo only when one differs, after showing the
 difference. The same script keeps the firewall: `arch/<host>.ufw` lists what a machine
 lets in beyond Omarchy's rules (vector: sshd from the home LAN), and a rule that's listed
 and missing is added, never one removed.
 
 Pacman installs the system, Omarchy and every program, the CLI tools and shells included
-(`arch/<host>.packages`; `just switch` installs what it lists and the machine lacks,
-and never removes anything); Home Manager writes only their config. Where a
+(`arch/common.packages` plus `arch/<host>.packages`; `just switch` installs what they list
+and the machine lacks, and never removes anything); Home Manager writes only their config. Where a
 module can't be told to skip its program, it gets a link to pacman's copy
 (`modules/home/pacman-bin.nix`). Nix still installs its own tooling (nh, nil, nixd, devenv)
 and cava, which is easier from Nix than from Arch's repos.
@@ -255,8 +258,6 @@ has the fix.
 
 | Gap | Fix | Upstream |
 |---|---|---|
-| Chromium starts without Omarchy's bundled extensions (copy-url, yt-dlp, WhatsApp): Omarchy enables them through a flags file that Arch's launcher reads and nixpkgs' doesn't. | Flags built into the Chromium the Omarchy package installs; native-messaging hosts re-registered at every activation via a stable `/run/current-system` path. | [#1491](https://github.com/olafkfreund/nixarchy/issues/1491), fixed in main; workaround removed |
-| After an autologin boot the login keyring stays locked until some app asks for its password. | The lock screen's PAM service unlocks it, so the first unlock after boot opens the keyring. It stays encrypted. | [#1492](https://github.com/olafkfreund/nixarchy/issues/1492), fixed in main; workaround removed |
 | After a switch, a changed prompt stays stale until the next login or theme change: omatheme copies the new `starship.toml` but doesn't re-render from it. | An activation step runs `hyprchroma shell` after omatheme's own. | omatheme#60 |
 | Superwhisper, an Omarchy preinstall, isn't in nixarchy. | Packaged in `pkgs/` and installed for the user, with its user service and Omarchy bar panel. | not reported |
 | nixi, nixarchy's beginner guide, brings in codex through codex-acp. nixpkgs' codex isn't in the binary cache, so it compiled here on every update, with about 3 GB of downloads. | Off: `services.nixi.enable = false`. | not reported |
@@ -328,8 +329,8 @@ commands Nix installs as well, so a program ends up in one place: add it to
 - [docs/homelab.md](docs/homelab.md): home-server's services (Plex and the *arr apps,
   Miniflux, Immich, Paperless, games streamed to the TVs, ...), how to add one, and
   turning on disks, the domain, the VPN and backups as they're decided.
-- [docs/ci.md](docs/ci.md): GitHub Actions, and the self-hosted nixbot (parked until
-  needed).
+- [docs/ci.md](docs/ci.md): GitHub Actions, and the opt-in Buildkite agent module for
+  running builds and integration tests on `workstation`.
 - [CLAUDE.md](CLAUDE.md) (also `AGENTS.md`): how to check a change and write commits, for
   coding agents and for me.
 
@@ -360,13 +361,15 @@ day needs:
 | `just vm-install <host> <ip>` | Mac: install `vm-fusion` or `vm-utm` on a VM booted from the NixOS ISO |
 | `just mac-copy <name> <user@ip>` | Mac: copy a Mac's built system to a new Mac before its first switch |
 | `just update [input...]` | only move `flake.lock`, without switching: every input, or the ones named |
-| `just check` | evaluates every host and the homelab test and checks formatting, without building |
+| `just check` | evaluates every host and the homelab test, checks formatting, and runs `just lint`, without building |
+| `just lint` | run repo-wide Nix (`statix`, `deadnix`), shell (`shellcheck`), and Python (`ruff`) linters |
 | `just fmt` | format the Nix files |
 | `just generations` | NixOS: list the system generations |
 | `just clean` | drop old generations, GC the store |
 | `just secret <name>` | edit `secrets/<name>.yaml` |
-| `just arch-preview` / `arch-backup` | Arch: list every file in `~` a switch would replace or add, with diffs / and archive the existing ones first |
-| `just arch-save` | Arch: rewrite `arch/<host>.packages` from what's installed, after installing or removing something by hand (`just upgrade` offers it when the two differ) |
+| `just home-preview` / `home-backup` | Arch and spark: list every file in `~` a switch would replace or add, with diffs / and archive the existing ones first |
+| `just host-system [--check]` | Arch and spark: install root-owned files (`nix.conf`, Spotify hook) and missing firewall rules (`just switch` runs it) |
+| `just arch-save` | Arch: rewrite `arch/<host>.packages` from what's installed beyond `arch/common.packages`, after installing or removing something by hand (`just upgrade` offers it when the two differ) |
 | `just omarchy-check [--diff]` / `omarchy-review` | list every Omarchy default that changed since I last went through them (with the diffs) / go through them, merging in the ones I want |
 | `just omarchy-links` / `omarchy-adopt` | Arch: list linked files an Omarchy update detached / copy them into the repo and relink them |
 | `just omarchy-diff [paths]` | diff my setup against stock Omarchy |

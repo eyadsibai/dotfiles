@@ -1,0 +1,7 @@
+# Repo-wide Ruff settings; several scripts (tv-check, cast, dlna, lgtv, samsungtv)
+# are extensionless Python/uv executables checked explicitly by pre-commit, just check, and CI.
+line-length = 140
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "B", "UP", "PLW1510"]
