@@ -13,14 +13,7 @@ let
       p = "~/dev";
       c = "~/.config";
     };
-    src =
-      (pkgs.fetchFromGitHub {
-        owner = "jarun";
-        repo = "nnn";
-        rev = "v4.9";
-        sha256 = "sha256-g19uI36HyzTF2YUQKFP4DE2ZBsArGryVHhX79Y0XzhU=";
-      })
-      + "/plugins";
+    src = "${pkgs.nnn.src}/plugins";
     mappings = {
       p = "preview-tui";
       o = "fzopen";
@@ -64,6 +57,9 @@ in
       socat
       nmap
       caddy
+    ]
+    ++ lib.optional (!pkgs.stdenv.hostPlatform.isDarwin) netcat-openbsd
+    ++ [
 
       # misc
       cowsay
@@ -208,7 +204,7 @@ in
       split = 4;
       min-split-size = "1M";
       disk-cache = "64M";
-      file-allocation = "falloc";
+      file-allocation = if pkgs.stdenv.hostPlatform.isDarwin then "none" else "falloc";
       continue = true;
       max-concurrent-downloads = 5;
     };

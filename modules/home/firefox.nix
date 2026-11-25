@@ -60,7 +60,6 @@ in
         "browser.startup.homepage" = "https://lobste.rs";
         "browser.topsites.blockedSponsors" = ''["amazon"]'';
         "browser.newtabpage.enabled" = true;
-        "browser.newtabpage.activity-stream.enabled" = false;
         "browser.newtabpage.activity-stream.feeds.section.topstories" = false;
         "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar" = false;
         "browser.uiCustomization.state" =
@@ -68,7 +67,6 @@ in
         "browser.uidensity" = 1; # compact
         "browser.bookmarks.showMobileBookmarks" = true;
         "browser.ctrlTab.recentlyUsedOrder" = false;
-        "browser.search.hiddenOneOffs" = "Google,Yahoo,Bing,Amazon.com,Twitter";
         "browser.search.region" = "US";
         "browser.search.suggest.enabled" = true;
         "browser.urlbar.placeholderName" = "…";
@@ -83,9 +81,8 @@ in
         "dom.security.https_only_mode" = true;
         "device.sensors.enabled" = false;
         "dom.battery.enabled" = false;
-        "dom.webaudio.enabled" = false;
         "network.dns.disablePrefetch" = true;
-        "privacy.donottrackheader.enabled" = true;
+        "privacy.globalprivacycontrol.enabled" = true;
         "privacy.trackingprotection.enabled" = true;
         "privacy.trackingprotection.socialtracking.enabled" = true;
         "security.ssl.errorReporting.automatic" = false;
@@ -116,7 +113,6 @@ in
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true; # userChrome.css
         "browser.cache.disk.enable" = false;
         "browser.cache.memory.enable" = true;
-        "media.ffmpeg.vaapi.enabled" = true;
       };
     };
   };

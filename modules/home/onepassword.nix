@@ -29,17 +29,24 @@ in
   programs.ssh = {
     settings."Match host * exec ~/${useLocalAgent}".IdentityAgent = ''"${agentSocket}"'';
     # `ssh -A` forwards $SSH_AUTH_SOCK, which is launchd's empty agent on a Mac and
-    # gnome-keyring's on Omarchy, never 1Password's; name the socket so logging in to
-    # the workstation forwards it. Its own key below stays unforwarded, for unattended jobs.
+    # gnome-keyring's on Omarchy, never 1Password's; name the socket when using the
+    # local desktop app, and fall back to forwarding the incoming agent on headless
+    # hops (e.g. from spark). Its own key on cachy stays unforwarded for unattended jobs.
+    # Match `originalhost`, not `host`: home-lan.nix rewrites HostName to an IP first.
+    settings."Match originalhost workstation,workstation-ts exec ~/${useLocalAgent}" =
+      lib.hm.dag.entryBefore [ "Host workstation workstation-ts" ]
+        {
+          ForwardAgent = ''"${agentSocket}"'';
+        };
     settings."Host workstation workstation-ts" = {
-      ForwardAgent = ''"${agentSocket}"'';
+      ForwardAgent = "yes";
     };
   };
   home.file.${useLocalAgent} = {
     executable = true;
     text = ''
       #!/bin/sh
-      [ -z "$SSH_CONNECTION" ] || [ -z "$SSH_AUTH_SOCK" ]
+      [ -S "${agentSocket}" ] && { [ -z "$SSH_CONNECTION" ] || [ -z "$SSH_AUTH_SOCK" ]; }
     '';
   };
 

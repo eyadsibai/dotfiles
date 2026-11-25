@@ -16,6 +16,8 @@ in
         gnutar
         bzip2
         gzip
+        xz
+        zstd
         unzip
         p7zip
         unrar
@@ -37,7 +39,7 @@ in
     })
     (pkgs.writeShellScriptBin "wh" ''readlink -f "$(command -v "$1")"'') # where a command really lives
     (pkgs.writeShellScriptBin "gitignore" ''${pkgs.curl}/bin/curl -sL "https://www.toptal.com/developers/gitignore/api/$1"'')
-    (pkgs.writeShellScriptBin "getip" "${pkgs.curl}/bin/curl -s ifconfig.me; echo")
+    (pkgs.writeShellScriptBin "getip" "${pkgs.curl}/bin/curl -s https://ifconfig.me; echo")
   ];
 
   home.shellAliases = {
@@ -85,6 +87,20 @@ in
     enable = true;
     package = lib.mkIf isArch null;
     enableCompletion = true;
+    initContent = ''
+      pip() {
+        if [[ -n ''${VIRTUAL_ENV:-} ]]; then
+          command pip "$@"
+        else
+          echo 'pip is blocked outside a virtualenv. Use: uv venv .venv && source .venv/bin/activate && uv sync' >&2
+          return 1
+        fi
+      }
+      pip3() { pip "$@"; }
+
+      # Tokens and keys stay out of the repo (mode 600, untracked)
+      [[ -r ~/.config/secrets/env ]] && source ~/.config/secrets/env
+    '';
   };
 
   programs.nushell = {

@@ -48,15 +48,25 @@ let
       '';
 
   # Serialize local Whisper runs; macOS doesn't ship util-linux's flock.
+  # Run the locked critical section in a subshell so its EXIT trap never clobbers
+  # the caller's own cleanup trap, and recover stale locks left by a killed PID.
   withLockFn =
     if isDarwin then
       ''
         with_lock() {
-          local lock="''${TMPDIR:-/tmp}/transcribe.lock.d" rc=0
-          while ! mkdir "$lock" 2>/dev/null; do sleep 0.5; done
-          "$@" || rc=$?
-          rmdir "$lock" 2>/dev/null || true
-          return "$rc"
+          local lock="''${TMPDIR:-/tmp}/transcribe.lock.d"
+          (
+            while ! mkdir "$lock" 2>/dev/null; do
+              if [ -f "$lock/pid" ] && ! kill -0 "$(cat "$lock/pid" 2>/dev/null)" 2>/dev/null; then
+                rm -rf "$lock" 2>/dev/null || true
+                continue
+              fi
+              sleep 0.5
+            done
+            trap 'rm -rf "$lock" 2>/dev/null || true' EXIT INT TERM
+            echo "$BASHPID" > "$lock/pid"
+            "$@"
+          )
         }
       ''
     else
@@ -320,7 +330,7 @@ let
         pdf_url="https://arxiv.org/pdf/$id.pdf"
       else
         pdf_url=$(curl -fsSL "$url" |
-          grep -oiE "<meta[^>]+name=[\"']citation_pdf_url[\"'][^>]+>" |
+          grep -oiE "<meta[^>]+citation_pdf_url[^>]+>" |
           sed -nE "s/.*content=[\"']([^\"']+)[\"'].*/\1/p" | head -1 || true)
       fi
       [ -n "$pdf_url" ] || { echo "No PDF URL found for $url" >&2; exit 1; }

@@ -1,8 +1,20 @@
 # My machines at home reach each other over the LAN and fall back to the tailnet, under
 # the one name: `ssh cachy` is the same command on the sofa with Tailscale off and from
 # anywhere else with it on.
-{ lib, hostname, ... }:
+{
+  lib,
+  pkgs,
+  hostname,
+  isArch,
+  ...
+}:
 let
+  inherit (pkgs.stdenv.hostPlatform) isDarwin;
+  # Fixed path so Match exec works even under a minimal non-interactive PATH
+  # (and Nix attrset keys can't carry store-path context).
+  lanProbe = ".ssh/lan-probe";
+  ncBin = if isArch || isDarwin then "/usr/bin/nc" else lib.getExe' pkgs.netcat-openbsd "nc";
+
   # The LAN addresses are what the router hands out today and have to stay reserved
   # there; if one moves, that machine is simply reached over the tailnet again. The
   # tailnet side is an address too, because cachy doesn't take the tailnet's DNS.
@@ -32,13 +44,21 @@ let
   };
 in
 {
+  home.file.${lanProbe} = {
+    executable = true;
+    text = ''
+      #!/bin/sh
+      exec ${ncBin} -z -w1 "$1" 22 2>/dev/null
+    '';
+  };
+
   programs.ssh.settings = lib.concatMapAttrs (name: machine: {
     # Asked first, and before `Host` because the first HostName wins. It answers at
     # once on the LAN and gives up after a second anywhere else; an address rather
     # than <name>.local, which takes 10 s to fail to resolve away from home.
-    "Match originalhost ${name} exec \"nc -z -w1 ${machine.lan} 22 2>/dev/null\"" =
-      lib.hm.dag.entryBefore [ "Host ${name}" ]
-        { HostName = machine.lan; };
+    "Match originalhost ${name} exec \"~/${lanProbe} ${machine.lan}\"" = lib.hm.dag.entryBefore [
+      "Host ${name}"
+    ] { HostName = machine.lan; };
     "Host ${name}" = {
       HostName = machine.tailnet;
       # one known_hosts entry, whichever address it was reached at
