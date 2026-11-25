@@ -51,6 +51,7 @@ in
     "hypr"
     "lazygit"
     "media"
+    "meetings"
     "nvim"
     "omarchy"
     "scripts"
@@ -71,12 +72,10 @@ in
 
   home.shellAliases = {
     hx = "helix"; # Arch names the binary helix
-    yayaur = "yay -Syu --config /etc/pacman-aur.conf";
   };
 
   home.sessionVariables = {
     LC_ALL = "en_US.UTF-8";
-    BUN_INSTALL = "/mnt/scratch/bun"; # pacman's /usr/bin/bun stays first; only its data moves
     # The prompt in the current theme's colours: the theme-set hook
     # 60-omarchy-theme-apps.sh (from omarchy-eyad-theme) writes this copy of
     # ~/.config/starship.toml with the theme's palette added. Home Manager's own
@@ -106,7 +105,6 @@ in
     "$HOME/.kimi-code/bin"
     "$HOME/.maestro/bin"
     "$HOME/.grok/bin"
-    "/mnt/scratch/bun/bin"
   ];
 
   # The Omarchy shell saves shell.json by writing a new file and moving it over the
@@ -164,28 +162,5 @@ in
     }; then
       run /usr/bin/systemctl --user start --no-block spotify-theme.service || true
     fi
-  '';
-
-  # The keys allowed to log in here, the same list the NixOS hosts get (users.nix).
-  # Copied, not linked: sshd's StrictModes refuses a file whose real path passes
-  # through /nix/store, which is group-writable. Whatever was there before the first
-  # switch is kept once as authorized_keys.pre-hm.
-  home.activation.authorizedKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    keys="$HOME/.ssh/authorized_keys"
-    if ! cmp -s ${../nixos/authorized-keys} "$keys"; then
-      run install -d -m700 "$HOME/.ssh"
-      if [ -e "$keys" ] && [ ! -e "$keys.pre-hm" ]; then
-        run cp -p "$keys" "$keys.pre-hm"
-      fi
-      run install -m600 ${../nixos/authorized-keys} "$keys"
-    fi
-  '';
-
-  programs.bash.initExtra = ''
-    bwunlock() { export BW_SESSION=$(bw unlock --raw); }
-    gh-relogin() {
-      [ -z "$BW_SESSION" ] && bwunlock
-      bw get password "GitHub CLI" | gh auth login --hostname github.com --with-token
-    }
   '';
 }

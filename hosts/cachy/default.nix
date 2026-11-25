@@ -4,6 +4,10 @@
 {
   my.files = [ "host-cachy" ];
 
+  # Keep bun's cache and global installs on cachy's /mnt/scratch disk
+  home.sessionVariables.BUN_INSTALL = "/mnt/scratch/bun";
+  home.sessionPath = [ "/mnt/scratch/bun/bin" ];
+
   # pacman's fish. The module formats the config files it writes with fish_indent at
   # build time, where /usr/bin isn't reachable, so Nix's fish_indent stays for that;
   # pacman's fish ships its own completions, so the man-page ones aren't generated.
@@ -84,7 +88,6 @@
         end
       '';
       pip3 = "pip $argv";
-      bwunlock = "set -gx BW_SESSION (bw unlock --raw)";
     };
   };
 }
