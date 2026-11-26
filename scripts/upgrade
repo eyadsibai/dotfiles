@@ -2,7 +2,7 @@
 # `just upgrade`: one interactive pass that brings this machine to the newest of
 # everything, the same command on NixOS, macOS, Arch and Ubuntu (spark). The steps a
 # machine has no use for are skipped, so on NixOS and macOS it comes down to inputs,
-# switch, commit.
+# switch, commit, push.
 #
 #   pull      git pull, when the remote has commits this checkout doesn't
 #   mirrors   Arch: put Omarchy's mirror back first if it's gone (else packages run ahead)
@@ -17,6 +17,7 @@
 #   packages  Arch: rewrite arch/<host>.packages if it no longer matches the machine
 #             Ubuntu: rewrite apt/<host>.packages if it no longer matches the machine
 #   commit    flake.lock on its own, then whatever else this run changed
+#   push      git push, when this checkout is ahead of its upstream
 #   reboot    if the running kernel was replaced
 #
 # Each step asks first; a step with nothing to do is skipped without asking.
@@ -367,7 +368,18 @@ if ((${#untouched[@]})); then
   echo "Still uncommitted from before the upgrade: ${#untouched[@]} file(s), as they were."
 fi
 
-# 12. Reboot when the running kernel is no longer the installed one
+# 12. Push any commits ahead of upstream (from this run or committed earlier)
+if upstream=$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null) &&
+  ahead=$(git log --oneline "$upstream..HEAD") && [[ -n $ahead ]]; then
+  step "git push"
+  echo "Ahead of $upstream by $(git rev-list --count "$upstream..HEAD") commit(s):"
+  echo "$ahead"
+  if ask "Push to $upstream?"; then
+    git push || echo "git push failed; see above."
+  fi
+fi
+
+# 13. Reboot when the running kernel is no longer the installed one
 if reboot_due; then
   step "The running kernel was replaced"
   ask "Reboot now?" false && systemctl reboot
