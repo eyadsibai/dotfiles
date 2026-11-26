@@ -32,6 +32,7 @@ github-cli
 github-copilot-cli
 glow
 go-yq
+grok-bot
 grok-bot-bin
 helix
 hplip
@@ -40,7 +41,6 @@ just
 kitty
 libfido2
 llvm
-localsend-bin
 micro
 microsoft-edge-stable-bin
 mkinitcpio
