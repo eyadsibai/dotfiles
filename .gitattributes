@@ -1,0 +1,4 @@
+# Used by scripts/upgrade (via `-c merge.flake-lock.driver=...`) so `just upgrade`
+# automatically keeps the newer flake.lock when both sides updated inputs. Outside
+# `just upgrade`, git falls back to its normal merge driver when unset.
+flake.lock merge=flake-lock

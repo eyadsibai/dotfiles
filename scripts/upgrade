@@ -28,6 +28,30 @@
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit
 
+# True when $2's flake.lock has newer input timestamps than $1's (returns 1 if
+# older/equal, >=2 on invalid JSON). Comparing [max, sum] of lastModified picks the
+# lock with the newest input and breaks ties by whichever moved more inputs forward.
+lock_newer() {
+  jq -ne --slurpfile a "$1" --slurpfile b "$2" '
+    def score: [.nodes[].locked.lastModified? // 0] | [max // 0, add // 0];
+    ($b[0] | score) > ($a[0] | score)
+  ' >/dev/null
+}
+
+# One-shot git merge driver invoked by `git pull` below (via .gitattributes): keeps
+# whichever side (%A or %B) has the newer flake.lock, and exits non-zero on invalid
+# JSON so git falls back to a normal conflict instead of overwriting it.
+if [[ ${1:-} == --merge-lock ]]; then
+  lock_newer "$2" "$3"
+  rc=$?
+  if ((rc == 0)); then
+    cp "$3" "$2" || exit $?
+  elif ((rc != 1)); then
+    exit "$rc"
+  fi
+  exit 0
+fi
+
 step() { printf '\n\e[1;34m==> %s\e[0m\n' "$*"; }
 ask() { gum confirm "$1" ${2:+--default="$2"}; }
 ok() { printf '\e[32m%s\e[0m\n' "$*"; }
@@ -68,28 +92,46 @@ if [[ -z ${UPGRADE_PULLED:-} ]] && upstream=$(git rev-parse --abbrev-ref '@{upst
     echo "$upstream has $(wc -l <<<"$incoming") commit(s) this checkout doesn't:"
     echo "$incoming"
     if ask "Pull them?"; then
-      # A lock left over from an earlier `nix flake update` that never got committed
-      # can't be pulled over: the fast-forward refuses, and a stashing pull leaves
-      # conflict markers in it. Nothing in it needs keeping, since the inputs step
-      # below moves the pulled lock forward again.
-      if [[ -n $(git status --porcelain -- flake.lock) ]] && ! git diff --quiet HEAD "$upstream" -- flake.lock; then
-        echo "flake.lock has uncommitted changes, and $upstream has a different one."
-        ask "Drop the local flake.lock and take the pulled one? (the inputs step updates it after)" &&
-          git checkout HEAD -- flake.lock
+      saved_lock=
+      # A dirty flake.lock (e.g. from an uncommitted `nix flake update`) blocks a
+      # fast-forward pull and leaves conflict markers on a stashing rebase. Set it
+      # aside before pulling and keep whichever lock has newer input timestamps.
+      if [[ -f flake.lock && -n $(git status --porcelain -- flake.lock) ]] && ! git diff --quiet HEAD "$upstream" -- flake.lock; then
+        saved_lock=$(mktemp)
+        cp flake.lock "$saved_lock"
+        git checkout HEAD -- flake.lock
       fi
       self=$(fingerprint scripts/upgrade)
       # With no commits of its own the checkout only fast-forwards, which needs no
       # stash: uncommitted work stays where it is (a stash can't hold a file added
       # with `git add -N`), and a file both sides changed makes git refuse rather
       # than leave conflict markers in a config that's linked live into ~. With
-      # commits of its own it's a plain `git pull`, which rebases or merges the way
-      # git is configured to.
+      # commits of its own it's a plain `git pull`, with a one-shot merge driver so
+      # flake.lock conflicts always keep the newer lock.
       if [[ -z $(git rev-list -1 "$upstream..HEAD") ]]; then
         git merge --ff-only "$upstream"
       else
-        git pull
+        git -c "merge.flake-lock.driver=./scripts/upgrade --merge-lock %A %B" pull
       fi
       pulled=$?
+      if [[ -n $saved_lock ]]; then
+        if unfinished; then
+          echo "Uncommitted flake.lock was set aside at $saved_lock."
+        elif ((pulled)); then
+          cp "$saved_lock" flake.lock
+          rm -f "$saved_lock"
+        else
+          if cmp -s "$saved_lock" flake.lock; then
+            :
+          elif lock_newer flake.lock "$saved_lock" 2>/dev/null; then
+            cp "$saved_lock" flake.lock
+            echo "flake.lock: kept newer uncommitted lock over $upstream."
+          else
+            echo "flake.lock: kept newer lock from $upstream (dropped older uncommitted local one)."
+          fi
+          rm -f "$saved_lock"
+        fi
+      fi
       if unfinished; then
         echo "The pull stopped half way. Finish it (git status says how), then run just upgrade again."
         exit 1
