@@ -40,15 +40,27 @@ vm name=host:
 
 # Only move flake.lock, without switching: every input, or the ones named (just update nixpkgs home-manager).
 # Passes gh's GitHub token via NIX_CONFIG when logged in to avoid GitHub's 60 req/hr unauthenticated limit.
+# Bounded with a short timeout so a locked gnome-keyring over SSH never hangs the update.
 update *inputs:
     #!/usr/bin/env bash
     set -euo pipefail
     nix_config=${NIX_CONFIG:-}
-    if [[ $nix_config != *access-tokens* ]] && command -v gh >/dev/null && token=$(gh auth token --hostname github.com 2>/dev/null) && [[ -n $token ]]; then
-      if [[ -n $nix_config ]]; then
-        nix_config+=$'\n'
+    if [[ $nix_config != *access-tokens* ]] && command -v gh >/dev/null; then
+      rc=0
+      token=""
+      if command -v timeout >/dev/null; then
+        token=$(timeout 3 gh auth token --hostname github.com 2>/dev/null) || rc=$?
+      else
+        token=$(gh auth token --hostname github.com 2>/dev/null) || rc=$?
       fi
-      nix_config+="access-tokens = github.com=$token"
+      if ((rc == 124)); then
+        echo "warning: gh auth token timed out (keyring locked?); running nix flake update without GitHub auth" >&2
+      elif ((rc == 0)) && [[ -n $token ]]; then
+        if [[ -n $nix_config ]]; then
+          nix_config+=$'\n'
+        fi
+        nix_config+="access-tokens = github.com=$token"
+      fi
     fi
     NIX_CONFIG=$nix_config nix flake update {{inputs}}
 
