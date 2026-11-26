@@ -922,11 +922,11 @@
         "zen-browser": "zen-browser"
       },
       "locked": {
-        "lastModified": 1795598168,
-        "narHash": "sha256-+j4okbtRzX2R5xIaZeky45CJDU/wAS9gB2w8uV7oVmY=",
+        "lastModified": 1795683713,
+        "narHash": "sha256-beJlcXldwR2AWMBe4qh9zlV+3KL6mgHubUfZSDUiGG8=",
         "owner": "olafkfreund",
         "repo": "nixarchy",
-        "rev": "20c1f82c045e0b5d32be26c68327c1b50e694ddb",
+        "rev": "47901e4a2f4ead43d24c8635df68d9c7150238a8",
         "type": "github"
       },
       "original": {
