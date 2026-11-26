@@ -273,7 +273,7 @@ else
   age="last committed $(git log -1 --format=%cr -- flake.lock)"
 fi
 if ask "Update flake.lock? ($age)"; then
-  nix flake update || echo "nix flake update failed; see above."
+  just update || echo "nix flake update failed; see above."
 fi
 
 # 7. Review what landed in the repo. flake.lock is left out of the diff: it's all

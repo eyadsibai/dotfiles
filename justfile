@@ -38,9 +38,19 @@ boot name=host:
 vm name=host:
     nix run .#nixosConfigurations.{{name}}.config.system.build.vm
 
-# Only move flake.lock, without switching: every input, or the ones named (just update nixpkgs home-manager)
+# Only move flake.lock, without switching: every input, or the ones named (just update nixpkgs home-manager).
+# Passes gh's GitHub token via NIX_CONFIG when logged in to avoid GitHub's 60 req/hr unauthenticated limit.
 update *inputs:
-    nix flake update {{inputs}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    nix_config=${NIX_CONFIG:-}
+    if [[ $nix_config != *access-tokens* ]] && command -v gh >/dev/null && token=$(gh auth token --hostname github.com 2>/dev/null) && [[ -n $token ]]; then
+      if [[ -n $nix_config ]]; then
+        nix_config+=$'\n'
+      fi
+      nix_config+="access-tokens = github.com=$token"
+    fi
+    NIX_CONFIG=$nix_config nix flake update {{inputs}}
 
 # Evaluate every configuration and the homelab test (evalTargets in flake.nix, the list CI uses), check formatting, and run repo-wide linters, without building
 check:
